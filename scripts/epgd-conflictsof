@@ -1,0 +1,31 @@
+
+export MYSQL_PWD=epg
+
+if [ -z $1 ]; then
+   exit
+fi
+
+ID=$1
+
+mysql -u epg2vdr -Depg2vdr -e " \
+select t.id, SUBSTRING_INDEX(t.channelid, '-', 3) as transponder, v.name as vdr, t.source, t.state, \
+    t.eventid, from_unixtime(t.day, '%d.%m.%Y') as day, \
+    concat_ws(':', right(concat("00", t.starttime DIV 100), 2), right(concat("00", t.starttime%100), 2)) as start, \
+    concat_ws(':', right(concat("00", t.endtime DIV 100), 2), right(concat("00", t.endtime%100), 2)) as end, \
+    e.title, e.shorttext, t.file  \
+  from \
+    timers t left outer join events e on (t.eventid = e.masterid), vdrs v,  \
+    (select day, starttime, endtime, vdruuid from timers where id = $ID) ti \
+  where \
+    v.uuid = t.vdruuid \
+      and t.state in ('P','R') \
+      and t.active = 1 \
+      and \
+      (      (t.day + t.starttime div 100 * 60 * 60 + t.starttime % 100 * 60 >= ti.day + ti.starttime div 100 * 60 * 60 + ti.starttime % 100 * 60 \
+          and t.day + t.starttime div 100 * 60 * 60 + t.starttime % 100 * 60 <= ti.day + ti.endtime div 100 * 60 * 60 + ti.endtime % 100 * 60) \
+        or \
+             (t.day + t.endtime div 100 * 60 * 60 + t.endtime % 100 * 60 >= ti.day + ti.starttime div 100 * 60 * 60 + ti.starttime % 100 * 60 \
+          and t.day + t.endtime div 100 * 60 * 60 + t.endtime % 100 * 60 <= ti.day + ti.endtime div 100 * 60 * 60 + ti.endtime % 100 * 60) \
+      ) \
+      and t.vdruuid = ti.vdruuid \
+  order by t.day, start;" 

@@ -1,0 +1,9 @@
+To use the openrc init-scripts (i.e. on gentoo linux):
+
+cp ./contrib/epgd.init.d.openrc /etc/init.d/epgd
+chmod 0744 /etc/init.d/epgd
+
+cp ./contrib/epgd.conf.d.openrc /etc/conf.d/epgd
+chmod 0644 /etc/conf.d/epgd
+
+Edit /etc/conf.d/epgd to your preferences. epgd config is in /etc/epgd/epgd.conf (see README in source-root)

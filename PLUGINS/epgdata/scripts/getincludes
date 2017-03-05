@@ -1,0 +1,6 @@
+
+rm -f include.zip
+wget  "http://www.epgdata.com/index.php?action=sendInclude&iOEM=&pin=&dataType=xml" -q -O include.zip
+unzip include.zip
+rm -f include.zip
+

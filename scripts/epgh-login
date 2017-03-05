@@ -1,0 +1,43 @@
+
+if [ -z "$1" ]; then
+   _USER=nologin
+else
+   _USER="$1"
+fi
+
+if [ -z "$2" ]; then
+   _PASSWD=nologin
+else
+   _PASSWD="$2"
+fi
+
+if [ -z "$EPGD_HOST" ]; then
+   EPGD_HOST=localhost
+fi
+
+if [ -z "$EPGD_PORT" ]; then
+   EPGD_PORT=9999
+fi
+
+if [ "$_USER" == "logout" ]; then
+   wget -q -O - $EPGD_HOST:$EPGD_PORT/sid$EPG_HTTPD_SESSION/data/login --post-data="{ \"key\" : \"\" }" > /dev/null
+   # echo "logout succeeded"
+   exit
+fi
+
+KEY=`echo -n $_USER$_PASSWD | md5sum | sed s/" .*$"/""/g`
+RESULT=`wget -q -O - $EPGD_HOST:$EPGD_PORT/data/login --post-data="{ \"key\" : \"$KEY\" }"`
+
+if [ ! -z "$RESULT" ]; then
+  EPG_HTTPD_SESSION=`echo $RESULT | json_pp | grep session | sed s/".*: ."/""/ | sed s/"\".*"/""/`
+fi
+
+IS_JSON=`expr index "$RESULT" "{"`
+
+if [ ! -z $EPG_HTTPD_SESSION ] && [ $IS_JSON -ne 0 ]; then
+  export EPGD_PORT EPGD_HOST
+  export EPG_HTTPD_SESSION
+  echo "login succeeded, session is \"$EPG_HTTPD_SESSION\""
+else
+  echo "Error: Login at $EPGD_HOST/$EPGD_PORT failed!"
+fi

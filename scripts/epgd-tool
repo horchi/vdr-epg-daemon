@@ -1,0 +1,315 @@
+#!/bin/bash
+
+
+# MySQL helper script by 3PO
+# Update 26.02.2017
+
+
+PASSWORD=""
+HOST=""
+MY_CNF="/etc/mysql/my.cnf"
+MY_DB_SV="mysqld"
+TMPFILE="/tmp/.epgtool"
+
+DISTRI="$(grep "^NAME=" /etc/os-release |cut -d "=" -f2 | sed -e "s/\"//g")"
+RELEASE="$(grep "^VERSION_ID=" /etc/os-release |cut -d "=" -f2 | sed -e "s/\"//g")"
+
+if [ "$DISTRI" == Fedora ] ; then
+  MY_CNF="/etc/my.cnf"
+  if [ "$RELEASE" -gt 21 ] ; then
+    MY_DB_SV="mariadb"
+  fi
+fi 
+
+[ "$HOST" != "" ] && HOST="-h $HOST"
+
+rc_start ()
+{
+  MYSQL_START="/etc/init.d/mysql start"
+  MYSQL_RESTART="/etc/init.d/mysql restart"
+  EPGD_START="/etc/init.d/epgd start"
+  EPGD_STOP="/etc/init.d/epgd stop"
+  EPGD_RESTART="/etc/init.d/epgd restart"
+}
+
+systemd_start ()
+{
+  MYSQL_START="systemctl start "$MY_DB_SV""
+  MYSQL_RESTART="systemctl restart "$MY_DB_SV""
+  EPGD_START="systemctl epgd start"
+  EPGD_STOP="systemctl epgd stop"
+  EPGD_RESTART="systemctl epgd restart"
+}
+
+upstart_start ()
+{
+  MYSQL_START="/sbin/start mysql"
+  MYSQL_RESTART="/sbin/restart mysql"
+  EPGD_START="/sbin/start epgd"
+  EPGD_STOP="/sbin/stop epgd"
+  EPGD_RESTART="/sbin/restart epgd"
+}
+
+chkRootPwd ()
+{
+[ -f ~/.ssh/mysqlpasswd ] && . ~/.ssh/mysqlpasswd 
+if [ ! $PASSWORD ] ; then
+  echo "root Password for MySQL Database is not set!"
+  echo "Exit"
+  exit
+else
+  . ~/.ssh/mysqlpasswd
+  SQL_ROOT="mysql -u root -e "
+fi
+
+if [ "$PASSWORD" != "" ] ; then
+  export MYSQL_PWD="$PASSWORD"
+  SQL_ROOT="mysql -u root -e "
+fi
+}
+
+if [ "$(ps -p 1 -o comm=)" == 'systemd' ] ; then
+   systemd_start
+ elif [ -d /usr/lib/upstart ] ; then
+   upstart_start
+elif which rc > /dev/null 2>&1 ; then
+   rc_start
+ fi
+
+PID_DB="$(pidof mysqld | wc -l)"
+PID_EPGD="$(pidof epgd | wc -l)"
+[ "$(pidof epgd)" != "" ] && EPGD_RUN="1"
+[ "$(pidof mysqld)" != "" ] && MYSQL_RUN="1"
+SQL_EPG2VDR="mysql $HOST -u epg2vdr -D epg2vdr -e "
+
+EPGD_EXIST="$(which epgd |wc -l)"
+[ "$EPGD_EXIST" -eq 0 ] && PID_EPGD="0" && EPGD_RUN="0"
+
+
+
+DEL_DB ()
+{
+[ "$PID_DB" -lt 1 ] && $MYSQL_START
+[ "$PID_EPGD" -ne 0 ] && $EPGD_STOP
+chkRootPwd
+$SQL_ROOT "DROP DATABASE epg2vdr;"
+}
+
+DEL_U ()
+{
+[ "$PID_DB" -lt 1 ] && $MYSQL_START
+[ "$PID_EPGD" -ne 0 ] && $EPGD_STOP
+chkRootPwd 
+$SQL_ROOT "DROP USER epg2vdr;"
+} 
+
+DROP_PICS ()
+{
+export MYSQL_PWD=epg 
+$SQL_EPG2VDR "DROP TABLE images;"
+}
+
+DEL_ALL ()
+{
+[ "$PID_DB" -lt 1 ] && $MYSQL_START
+[ "$PID_EPGD" -ne 0 ] && $EPGD_STOP
+chkRootPwd 
+$SQL_ROOT "DROP DATABASE epg2vdr;"
+$SQL_ROOT "DROP USER epg2vdr;"
+}
+
+DROPVIEW ()
+{
+[ "$PID_DB" -lt 1 ] && $MYSQL_START
+[ "$PID_EPGD" -ne 0 ] && $EPGD_STOP
+export MYSQL_PWD=epg 
+$SQL_EPG2VDR "DROP VIEW eventsview;"
+[ "$EPGD_RUN" == 1 ] && $EPGD_START
+}
+   
+DROP_ALL ()
+{
+[ "$PID_DB" -lt 1 ] && $MYSQL_START
+[ "$PID_EPGD" -ne 0 ] && $EPGD_STOP
+
+export MYSQL_PWD=epg 
+$SQL_EPG2VDR "SHOW TABLES" |grep -v images > $TMPFILE
+
+while read TABLE; do
+    $SQL_EPG2VDR "DROP TABLE IF EXISTS $TABLE;"
+done < "$TMPFILE"
+
+rm -f $TMPFILE
+
+[ "$EPGD_RUN" == 1 ] && $EPGD_START
+CASE="DROP_PICS"
+echo -e "\nDelete all EPG Pictures from epg2vdr Database?\n"
+YES_NO
+}
+
+YES_NO ()
+{
+LOOP=0 
+while [ $LOOP -eq 0 ] 
+do 
+  echo -en 'Are You sure? [yes/no]: ' 
+  read CHOICE 
+  echo -en "\n" 
+ case $CHOICE in 
+
+   [yY][eE][sS]|[yY])  
+   $CASE 
+   LOOP=1 ;; 
+  
+   [nN][oO]|[nN])
+   echo -e "\nScript aborted by User\n" 
+   exit  ;; 
+ 
+   *) echo "Please enter \"yes\" or \"no\"." 
+   LOOP=0;; 
+ 
+ esac 
+done 
+}
+
+
+case $1 in
+
+   -new-db|new-db)
+   [ "$PID_DB" -lt 1 ] && $MYSQL_START 
+   chkRootPwd 
+   $SQL_ROOT "CREATE DATABASE epg2vdr charset utf8;"
+   $SQL_ROOT "DROP FUNCTION IF EXISTS epglv;"
+   $SQL_ROOT "DROP FUNCTION IF EXISTS epglvr;"
+   $SQL_ROOT "CREATE FUNCTION epglv RETURNS INT SONAME 'mysqlepglv.so';"
+   $SQL_ROOT "CREATE FUNCTION epglvr RETURNS INT SONAME 'mysqlepglv.so';"
+   exit
+   ;;
+
+   -new-u|new-u)
+   [ "$PID_DB" -lt 1 ] && $MYSQL_START 
+   chkRootPwd
+   $SQL_ROOT "CREATE USER 'epg2vdr'@'%' IDENTIFIED BY 'epg';"
+   $SQL_ROOT "GRANT ALL PRIVILEGES ON epg2vdr.* TO 'epg2vdr'@'%' IDENTIFIED BY 'epg';"
+   $SQL_ROOT "GRANT ALL PRIVILEGES ON epg2vdr.* TO 'epg2vdr'@'localhost' IDENTIFIED BY 'epg';"
+   $SQL_ROOT "FLUSH PRIVILEGES;"
+   exit
+   ;;
+
+   -del-db|del-db)
+   echo -e "\nDelete the complete epg2vdr Database?\n"
+   CASE="DEL_DB"
+   YES_NO
+   ;;
+
+   -del-u|del-u)
+   echo -e "\nDelete the User epg2vdr?\n"
+   CASE="DEL_U"
+   YES_NO
+   ;; 
+
+   -del-all|del-all)
+   echo -e "\nDelete the complete epg2vdr Database and User epg2vdr?\n"
+   CASE="DEL_ALL"
+   YES_NO
+   ;;
+
+   -show|show)
+   [ "$PID_DB" -lt 1 ] && $MYSQL_START
+   chkRootPwd
+   $SQL_ROOT "SELECT User,Host,Db FROM mysql.db;"
+   $SQL_ROOT "SHOW GRANTS FOR epg2vdr;"
+   $SQL_ROOT "SHOW DATABASES;"
+   export MYSQL_PWD=epg 
+   $SQL_EPG2VDR "SHOW TABLES;"
+   exit
+   ;;
+
+   -fix-cnf|fix-cnf)
+   if [ ! -f $MY_CNF ] ; then 
+     echo "$MY_CNF does not exist"
+     echo "Exit"
+     exit
+   else
+     chkRootPwd
+     $SQL_ROOT "Flush LOGS;"
+     $SQL_ROOT "RESET MASTER;"
+     sed -i $MY_CNF -e "s/^bind-address/# bind-address/"
+     sed -i $MY_CNF -e "s/^log-bin/# log-bin/"
+     [ "$MYSQL_RUN" == "1" ] && $MYSQL_RESTART
+     [ "$EPGD_RUN" == "1" ] && $EPGD_RESTART 
+   fi
+   exit
+   ;;
+   
+   -dropview|dropview)
+   echo -e "\nDrop all Views form database?\n"
+   CASE="DROPVIEW"
+   YES_NO
+   ;;
+   
+   -drop-all|drop-all)
+   echo -e "\nClean the complete epg2vdr Database?\n"
+   CASE="DROP_ALL"
+   YES_NO
+   ;;
+
+   -check-events|check-events)
+   export MYSQL_PWD=epg 
+   $SQL_EPG2VDR "SELECT count(1) AS Events, source FROM events group by source;"
+   exit
+   ;;
+
+   -check-pic|check-pic)
+   export MYSQL_PWD=epg 
+   $SQL_EPG2VDR "SELECT count(1) AS Pictures FROM images WHERE image IS NOT NULL;" 
+   exit
+   ;;
+   
+   -show-stats|show-stats)
+   export MYSQL_PWD=epg 
+   $SQL_EPG2VDR "SELECT version, master, ip, state, FROM_UNIXTIME(updsp,'%D %M %Y% %H:%i:%s') AS 'last touch', FROM_UNIXTIME(lastupd, '%D %M %Y% %H:%i:%s') AS 'last download', FROM_UNIXTIME(nextupd,'%D %M %Y% %H:%i:%s') AS 'next download' FROM vdrs ;"
+   exit
+   ;;
+
+   -show-size|show-size)
+   export MYSQL_PWD=epg 
+   $SQL_EPG2VDR "SELECT table_schema AS 'Database', ROUND(SUM(data_length + index_length) / 1024 / 1024, 2) AS 'Size in MB' FROM information_schema.TABLES  GROUP BY table_schema;"
+   echo ""
+   $SQL_EPG2VDR "SELECT table_name AS 'Tables', ROUND(((data_length + index_length) / 1024 / 1024), 2) 'Size in MB' FROM information_schema.TABLES WHERE table_schema = \"epg2vdr\" ORDER BY (data_length + index_length) DESC;"
+   exit
+   ;;
+
+   -drop-pics|drop-pics)
+   echo -e "\nDelete all EPG Pictures from epg2vdr Database?\n"
+   CASE="DROP_PICS"
+   YES_NO
+   ;;
+
+   *)
+   echo ""
+   echo " MySQL helper script by 3PO"
+   echo ""
+   echo " usage: [-new-db] [-new-u] [-del-db] [-del-u] [ -del-all] [-show] [-fix-cnf] [-dropview] [-drop-all] [-drop-pics] [-check-events] [-check-pic] [-show-stats] [-show-size]"
+   echo ""
+   echo "	-new-db         Create new Database for epg2vdr" 
+   echo "	-new-u          Create new User for epg2vdr" 
+   echo "	-del-db         Delete epg2vdr Database"
+   echo "	-del-u          Delete User epg2vdr"
+   echo "	-del-all        Delete epg2vdr Database and User epg2vdr"
+   echo "	-show           Shows GRANTS for epg2vdr and list Databases and Users"
+   echo "	-fix-cnf        Disable \"bind-address\" in $MY_CNF"
+   echo "	-dropview       Drop Table \"eventsview\" in Database"
+   echo "	-drop-all       Drop all Tables in epg2vdr Database"
+   echo "	-drop-pics      Delete all Pictures from epg2vdr Database"
+   echo "	-check-events   Shows quantity of Events in Database imported per source"
+   echo "	-check-pic      Shows quantity of EPG Pictures stored in Database"
+   echo "	-show-stats     Shows the Stats and Versions of EPGd and the connected VDRs"
+   echo "	-show-size      Shows the Size of the Tables in the epg2vdr Database"
+   echo ""
+   exit
+   ;;
+
+esac
+
+

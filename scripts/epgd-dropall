@@ -1,0 +1,156 @@
+#!/bin/bash
+
+export MYSQL_PWD=epg
+
+echo "------------------------"
+echo "-- Drop normal tables --"
+echo "------------------------"
+echo "This tables contain data which is restored automatically "
+echo " by downloading from internet and via the dvb stream and from your vdrs"
+echo -n "Are you sure? [y/N] "
+
+read -n 1 c
+echo ""
+
+if [ "${c}" = "y" ]; then
+
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists events;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists useevents;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists fileref;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists imagerefs;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists channelmap;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists episodes;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop view  if exists eventsview;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop view  if exists eventsviewplain;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists components;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists recordingdirs;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists recordinglist;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists vdrs;'
+
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists analyse;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists snapshot;'
+
+   echo "Now you have two choices for timers and timersdone:"
+   echo " 1. Automatic (without dropping the timers table):"
+   echo "      All created timers will be marked for delete action to force VDRs to remove them"
+   echo " 2. Drop table timers - you have to cleanup the timers.conf of your VDRs by hand"
+   echo " "
+   echo "In both cases all still pending timers will removed from timersdone to force epgd to create it again!"
+   echo " "
+   echo "Proceed with 1 (otherwise 2 will done)? [y/N] "
+
+   read -n 1 c
+   echo ""
+
+   if [ "${c}" = "y" ]; then
+       mysql -u epg2vdr -Depg2vdr -e "update timers set action = 'D' where state in ('P', 'R');"
+   else
+       mysql -u epg2vdr -Depg2vdr -e 'drop table if exists timers;'
+   fi
+
+   mysql -u epg2vdr -Depg2vdr -e "delete from timersdone where state in ('C', 'Q');"
+
+   echo ""
+   echo "Tables dropped!"
+fi
+
+echo "---------------------"
+echo "-- Drop procedures --"
+echo "---------------------"
+echo -n "Are you sure? [y/N] "
+
+read -n 1 c
+echo ""
+
+if [ "${c}" = "y" ]; then
+   mysql -u epg2vdr -Depg2vdr -e 'drop procedure if exists reverseepg;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop procedure if exists mergeepg;'
+
+   mysql -u epg2vdr -Depg2vdr -e 'drop function if exists getupdflg;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop function if exists getcrosslvr;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop function if exists getlvrmin;'
+
+   echo ""
+   echo "Procedures and Functions dropped!"
+fi
+
+echo "-------------------"
+echo "--  Drop images  --"
+echo "-------------------"
+echo "In most cases you do not need to drop the image table."
+echo -n "Drop image tables? [y/N] "
+
+read -n 1 i
+echo ""
+
+if [ "${i}" = "y" ]; then
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists images;'
+
+   echo ""
+   echo "Table images dropped!"
+fi
+
+echo "----------------------"
+echo "--  Scraper tables  --"
+echo "-----------------------"
+echo "In most cases you don't need to drop the scarper tables!"
+echo -n "Drop scraper tables? [y/N] "
+
+read -n 1 i
+echo ""
+
+if [ "${i}" = "y" ]; then
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists series;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists series_episode;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists series_media;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists series_actor;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists movie;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists movie_actor;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists movie_actors;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists movie_media;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop view  if exists thetvdbview;'
+
+   echo ""
+   echo "Scraper tables dropped!"
+fi
+
+
+echo "-----------------------------"
+echo "--  Tables with User Data  --"
+echo "-----------------------------"
+echo "In most cases you DON'T LIKE to drop tables with the USER data!"
+echo "If you proceed in the next step you will to backup it"
+echo -n "Drop tables with user data? [y/N] "
+
+read -n 1 i
+echo ""
+
+if [ "${i}" = "y" ]; then
+
+   echo -n "Backup User Data Tables now? [y/N] "
+
+   read -n 1 i
+   echo ""
+
+   if [ "${i}" = "y" ]; then
+       mysqldump --opt -u epg2vdr epg2vdr parameters | gzip > ./parameters-dump.sql.gz
+       echo "Table parameters dumped to ./parameters-dump.sql.gz"
+
+       mysqldump --opt -u epg2vdr epg2vdr users | gzip > ./users-dump.sql.gz
+       echo "Table parameters dumped to ./users-dump.sql.gz"
+
+       mysqldump --opt -u epg2vdr epg2vdr timersdone | gzip > ./timersdone-sump.sql.gz
+       echo "Table parameters dumped to ./timersdone-dump.sql.gz"
+
+       mysqldump --opt -u epg2vdr epg2vdr searchtimers | gzip > ./searchtimers-sump.sql.gz
+       echo "Table parameters dumped to ./searchtimers-dump.sql.gz"
+   fi
+
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists parameters;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists searchtimers;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists timersdone;'
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists users;'
+
+   echo ""
+   echo "User Data tables dropped!"
+fi

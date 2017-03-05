@@ -1,0 +1,39 @@
+#!/usr/bin/perl
+
+use strict;
+use Getopt::Long;
+
+
+if (($#ARGV!=0) || (! $ARGV[0]))
+{
+   print "Usage: $0 <channels.conf>\n";
+   exit 1;
+}
+
+open CHANNELS, $ARGV[0]
+  or die $!;
+
+my(@lines)=<CHANNELS>;
+
+foreach my $line (@lines)
+{
+  my @column=split(/:/, $line);
+  my @name=split(/;/, $column[0]);
+
+  # These are the names and field numbers from channels.conf:
+  #
+  #   Name: $column[0], Freq: $column[1], Param: $column[2], Src: $column[3], Symb: $column[4],
+  #   VPID: $column[5], APID: $column[6], TPID: $column[7], CAID: $column[8], SID: $column[9],
+  #   NID: $column[10], TID: $column[11], RID: $column[12]
+
+  # make sure to print the "data lines" only:
+
+  if (($column[3] =~ /^S/) || ($column[3] =~ /C/) || ($column[3] =~ /I/))
+  {
+    print "$column[3]-$column[10]-$column[11]-$column[9] \/\/ $name[0]\n";
+  }
+
+
+}
+
+close(CHANNELS);

@@ -1,0 +1,30 @@
+#!/sbin/runscript
+# Copyright 1999-2012 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
+depend() {
+	need net
+	need mysql
+}
+
+start() {
+	export LOGFILE
+	export LANG="de_DE.UTF-8"
+	export PIDFILE
+	export CLI_OPTIONS
+	export COMMAND="/usr/local/bin/epgd"
+	ebegin "Starting epgd"
+	start-stop-daemon --start --pidfile ${PIDFILE} -i -u root:root \
+		--progress --background --make-pidfile -1 ${LOGFILE} \
+		-2 ${LOGFILE} --exec ${COMMAND} --verbose -- ${CLI_OPTIONS}
+	eend $?
+}
+
+stop() {
+	ebegin "Stoping epgd"
+	start-stop-daemon --stop --pidfile ${PIDFILE} --progress \
+		--retry 30 --exec ${COMMAND} --verbose
+
+	eend $?
+}

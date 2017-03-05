@@ -1,0 +1,387 @@
+-----------------------------------------------------------------------------------
+- epgd
+-
+- This daemon is used to download EPG data from the internet and manage it in a mysql database.
+-
+- Written by: C++/SQL         - Jörg Wendel (vdr at jwendel dot de)
+-             SQL/Procedures  - Christian Kaiser
+-             Documentation   - Ingo Prochaska
+-
+- Homepage:    http://projects.vdr-developer.org/projects/vdr-epg-daemon
+- Source-code: http://projects.vdr-developer.org/git/vdr-epg-daemon.git
+-
+- This software is released under the GPL, version 2 (see COPYING).
+- Additionally, compiling, linking, and/or using the OpenSSL toolkit in
+- conjunction with this software is allowed.
+-----------------------------------------------------------------------------------
+
+Contents:
+---------
+
+Contents
+Description
+EPG Merge
+Get the source from git
+Requirements
+MySQL Setup
+epgd Installation
+epgd Configuration
+Starting epgd and init-Scripts
+Upgrade from older versions
+MySQL Hints
+Considerations
+
+
+Description:
+------------
+
+epgd is part of the double team epgd+epg2vdr to effectively retrieve, store and import epg data to vdr. It is designed to handle large amount of data and pictures in a distributed environment with one epg-server and many possible vdr-clients - therefore it relies on mysql.
+
+Though it is possible to use epgd alone with mysql it only makes sense to use it as backend to the vdr-plugin epg2vdr. That being said you need to install, setup and configure mysql, epgd and epg2vdr in order to get a working environment.
+
+
+EPG Merge:
+----------
+
+  The DVB and external events will be merged for the next 72 hours, DVB EPG is the main event provider which will
+  be enhanced by the external EPG and series data from constabel.net.
+  If events can be merged, just starttime, duration and vps-flag of the DVB event will be used
+  from external provider. The epgd can mix events with up to 20 minutes difference of the start time
+  depending on title and duration. If DVB and external EPG can't be merged (due to late program changes or sg.),
+  the DVB event will be placed in your EPG to avoid wrong events.
+  Due to the EPG-merge the x-components delivered by DVB are also available. Notice that they can only be handled for
+  DVB and merged events, not for events which are only provided by the external source.
+  The merge behavior is configured in the channlemap.conf, 0 disables the merge for the corresponding channel,
+  1 enables it and with merge 2 the provider ist hold in background and used as fall-back which is used in case
+  the merge 1 provider delivers poor data.
+
+
+Get the source from git:
+------------------------
+
+get the source - probably done, when you reading this locally:
+git clone git://projects.vdr-developer.org/vdr-epg-daemon.git
+
+
+update the source:
+cd /to/your/source/epgd
+git pull
+
+throwing away local changes and update to latest source:
+cd /to/your/source/epgd
+git checkout -f master
+git reset --hard
+git pull
+
+
+Requirements:
+-------------
+
+  - libarchive
+  - libcurl 7.10+
+  - libxslt 1.1.24+
+  - libxml2
+  - libmysql >= 5.07
+  - libz
+  - libssl-dev
+  - uuid uuid-dev
+  - libjansson4 libjansson-dev
+  - libmicrohttpd libmicrohttpd-dev    (epghttpd)
+  - libimlib2 libimlib2-dev            (epghttpd)
+  - libjpeg libjpeg-dev                (epghttpd)
+  - python libpython libpython-dev python-dev
+  - mailutils (deinstall heirloom-mailx) !!
+  - libsystemd-daemon-dev (if you like to use the systemd status interface)
+        -> debian previous to 'sid' maybe libsystemd-dev?
+
+ Example for Ubuntu (14.10):
+
+  - libarchive12, libarchive-dev
+  - libz, libz-dev
+  - libssl-dev
+  - libcurl4-nss-dev (oder libcurl3-nss-dev)
+  - libxslt1.1 libxslt1-dev libxml2 libxml2-dev
+  - libmysqlclient-dev libmysqlclient18
+  - libjpeg62-dev libjpeg62
+  - uuid uuid-dev
+  - libjansson4 libjansson-dev
+  - libmicrohttpd libmicrohttpd-dev    (epghttpd)
+  - libimlib2 libimlib2-dev            (epghttpd)
+  - libjpeg libjpeg-dev                (epghttpd)
+  - python libpython libpython-dev python-dev
+  - mailutils  (deinstall heirloom-mailx) !!
+  - libsystemd-daemon-dev (if you like to use the systemd status interface)
+
+My-SQL Setup:
+-------------
+
+You need a running mysql database.
+Consult the manual of your linux-flavour how to install and configure mysql.
+Remember to put your db-files in a large enough filesystem: with many channels,
+many prefetched days and many pictures you will easily need 3 or more Gb of disk space.
+When mysql is up and running you need to prepare the database and
+access-rights for use with epgd:
+
+- login as root:
+#> mysql -u root -p
+ CREATE DATABASE epg2vdr charset utf8;
+ CREATE USER 'epg2vdr'@'%' IDENTIFIED BY 'epg';
+ GRANT ALL PRIVILEGES ON epg2vdr.* TO 'epg2vdr'@'%';
+ GRANT ALL PRIVILEGES ON epg2vdr.* TO 'epg2vdr'@'localhost' IDENTIFIED BY 'epg';
+ FLUSH PRIVILEGES;
+
+- make sure the database characterset (character_set_database) is set to latin1,
+  otherwise the index size will be exeeded, you can adjust the client and session
+  character sets as you like.
+
+- adjust the bind address in my.cnf:
+adjust the line
+bind-address         = 127.0.0.1
+in youre my.cnf (mostly found here: /etc/mysql/my.cnf) to the address where
+the mysql serve should listen on - Or comment out if it should listen on all interfaces.
+
+- switch of binary logging:
+comment line starting with 'log_bin' in youre my.cnf
+
+Login as epg2vdr:
+-----------------
+#> mysql -u epg2vdr -pepg -Depg2vdr
+- or remote
+#> mysql -u epg2vdr -pepg -Depg2vdr -h <host>
+
+If you have problems with setting up and granting access rights to your epg2vdr
+read "MySQL Hints" near the end of this file.
+
+- show all users:
+ use mysql
+ SELECT * FROM user;
+
+
+Possible Create Index Problems:
+-------------------------------
+If you get this error on epgd start while epgd is creating indexes and tables:
+ "Index column size too large. The maximum column size is 767 bytes"
+Make sure the server charecter-set is set to latin1, file format is set to BARRACUDA and innodb_large_prefix ist active:
+  character-set-server = latin1
+  innodb_large_prefix  = ON
+  innodb_file_format = BARRACUDA
+Remove all other collations from your mysqld config.
+We use UTF8 only on client side!
+
+
+epgd Installation:
+------------------
+
+epgd is source distributed only. So you have to build your binary and make some
+adjustments to your system. So we try to help with some stuff in the contrib directory,
+it's not a bad idea to learn something about your linux's init-system and init-scripts.
+
+- Unpack
+- Modify Make.config (BINDEST, PLGDEST and INIT_SYSTEM) to meet your local systems requirements
+- Call "make"
+- Call "make plugins"
+- Call "make install"
+- Call "make install-plugins"
+- Create directory /etc/epgd
+- cp configs/* /etc/epgd
+- merge(*) the config parts of the epgd plugins (./PLUGINS/*/configs) to /etc/epgd
+  -> merge /etc/epgd/channelmap.conf and /etc/epgd/epgd.conf
+  -> copy ./PLUGINS/*/configs/*.xsl to /etc/epgd
+- modify config (/etc/epgd/channelmap.conf and /etc/epgd/epgd.conf) like your needs
+- Create the database (see below)
+- Install epglv - the lib installed by make install and the functions will installed
+   as described in epglv/README)
+- Start epgd (see below)
+
+If you don't know how to merge you can start of with
+
+#> cat ./PLUGINS/*/configs/channelmap.conf >>/etc/epgd/channelmap.conf
+#> cat ./PLUGINS/*/configs/epgd.conf >>/etc/epgd/epgd.conf
+
+This is only true if you use all plugins. If you use only one of them replace "*" with the plugin you use.
+
+Look carefully through your generated files!
+
+
+epgd Update:
+------------
+
+If a table alter is required the epgd alter and create tables automatically after start (if the new, modified epg.dat
+  is installed in the config directory). Therefore always start the epgd before starting the epghttpd and the VDR after an update.
+  Please be patient, the alter can take some time depending on the size of the table!
+
+Starting epgd and init-Scripts:
+-------------------------------
+
+There are many ways to start epgd. For a first try or debugging sessions you may want to start it simply by typing at the root command-prompt (paths have to be adjusted according to your changes to BINDEST and PLGDEST in Make.config):
+
+#> export LANG="de_DE.UTF-8"
+#> ulimit -c unlimited #so you can torture the developers with back traces
+#> /usr/local/bin/epgd -n -p /usr/local/lib/epgd/plugins
+
+epgd is configured in /etc/epgd/epgd.conf. But you can overwrite the following options on the command line:
+
+    -n              don't daemonize
+    -t              log to stdout
+    -c <config-dir> use config in <config-dir>
+    -p <plugin-dir> load plugins from <plugin-dir>
+    -l <log-level>  set log level
+
+For production use you should start epgd after net- and mysql services via your init-system. Some start-scripts have been put to ./contrib hopefully serving your needs (or at least giving you an idea of how to proceed).
+
+
+epgd Configuration:
+-------------------
+
+  DbHost =
+    ip/name of mysql server host (default localhost)
+
+  DbPort =
+    port of the mysql server (default 3306)
+
+  DbName =
+    name of the database (default epg2vdr)
+
+  DbUser =
+    database user (default epg2vdr)
+
+  DbPass =
+    database password (default epg)
+
+  DaysInAdvance =
+    (default 8)
+    Download (insert) EPG information for the next # days
+
+  DaysToUpdate =
+    (default 2)
+    Update # already insert days
+
+  UpdateTime = 0
+    Perform automatic update every # hours (default: 2 hours)
+
+  XmlStoreToFs =
+    Store XML files to the filesystem, for debugging (default 0)
+
+  GetEpgImages =
+    (default 0)
+    Download images with the EPG information
+
+  NetDevice =
+    (default fist device)
+    network device of epgd (not used this time)
+
+  HttpDevice
+    (default all devices)
+    epghttpd listen on this decive
+
+  MaxImagesPerEvent
+    How many pictures per event should be downloaded
+
+  EpgImageSize =
+    0 = 174x130
+    1 = 329x245
+    2 = 525x400
+
+  CachePath =
+    path to cache of the xml files if XmlStoreToFs or SeriesStoreToFs enabled (default /var/cache/epgd)
+
+  SeriesEnabled
+    get series from eplists.constabel.net (default 1)
+
+  SeriesPort
+    (default 2006)
+
+  SeriesStoreToFs
+    (default 0)
+
+  SeriesUrl
+    (default eplists.constabel.net)
+
+  ScrapEpg (default 1)
+    scrap EPG content 0/1
+
+  ScrapRecordings  (default 1)
+    scrap recordings 0/1
+
+  EpgView  (default eventsview.sql)
+    use this if you want to design your own view for detailed EPG views and live-plugin
+    eventsview.sql can be overwritten on updates, so use a different name
+
+  EpgViewWeb  (default eventsviewplain.sql)
+    use this if you want to design your own view for detailed EPG views in WebIF
+    eventsviewplain.sql can be overwritten on updates, so use a different name
+
+  CheckInitial = 1 (default 1)
+    enable or disable the initial update of your external EPG provider after starting epgd
+
+  UpdateThreshold = 500 (default 500)
+    call merging of DVB and external EPG after <x> DVB changes and update clients
+
+  UseProxy
+      Enable HTTP Proxy (default 0)
+
+  HttpProxy
+      Name of the proxy
+
+  UserName
+      Username of your proxy
+
+  Password
+      Password of your proxy
+
+  Loglevel #
+      Logging level 1-5 (Errors, Infos, Debug ...) (default 1)
+
+When choosing a loglevel consider carefully the impact on i/o-performance of your system. If you are using some kind of pattern driven logfile parsing software like logchecker you may want to use ./contrib/epgd.ignore
+
+HINTS / PITFALLS:
+-----------------
+
+- the recordings hosted on a central storage (NAS, ...) and the vdr2epg toggle some recordings in the table round robin without any changes on it
+    this can occor if:
+      - the VDRs use different options for the filesystem (--vfat and/or --dirnames)
+      - the VDRs use different cahracter encoding and language settings
+
+--vfat bzw. --dirnames
+
+MYSQL HINTS:
+-----------
+  - If you cannot figure out why you get Access denied, remove all entries from the user table
+    that have Host values with wildcards contained (entries that match '%' or '_' characters).
+    A very common error is to insert a new entry with Host='%' and User='some_user',
+    thinking that this allows you to specify localhost to connect from the same machine.
+    The reason that this does not work is that the default privileges include an
+    entry with Host='localhost' and User=''. Because that entry has a Host value 'localhost'
+    that is more specific than '%', it is used in preference to the new entry when connecting
+    from localhost! The correct procedure is to insert a second entry with Host='localhost'
+    and User='some_user', or to delete the entry with Host='localhost' and User=''.
+    After deleting the entry, remember to issue a "FLUSH PRIVILEGES" statement to reload the grant tables.
+
+
+  - *ATTENTION* if you have binary-logging (log_bin) enabled!
+     disable it OR add log-bin-trust-function-creators to your configuration:
+       > echo "log-bin-trust-function-creators = 1" >> /etc/mysql/my.cnf
+       > restart the database
+
+
+Considerations:
+---------------
+
+By design epgd can handle multiple clients. If you are looking for a solution for your vdr-network plan your implementation
+carefully. Which clients should be able to connect? Which epg-solution is in use on each client? Has any of the clients
+patches or plugins running manipulating the epg? And now the most important hint: read the epg2vdr README before you continue.
+
+epgd can generate large amounts of data, as well db-data and logging-data - so don't be surprised.
+Manipulating data (read, write, move around) does not only need appropriate disk space,
+but also appropriate I/O-performance.
+
+If you run into problems and want to start from a clean base, stop epgd and drop all data
+(take a look at the scripts in ./scripts) and restart epgd.
+
+
+============
+HOWTOs
+============
+
+select starttimes from table timers:
+   select from_unixtime(day), starttime, from_unixtime(_starttime) as 'event starttime', from_unixtime(day + ((starttime % 100) * 60) + ((starttime div 100) * 60 * 60)) as 'timer starttime' from timers;

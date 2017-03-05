@@ -1,0 +1,187 @@
+-----------------------------------
+ Legende
+-----------------------------------
+
++ pending
+- in Arbeit
+= erledigt oder nichts zu tun
+
+Erste Spalte 'Backend', Zweite Spalte 'Frontend'
+
+-----------------------------------
+ TODOs
+-----------------------------------
+
++= bei Nachrichten messages Tabelle optional, konfigurierbar zusätzlich Email Notifications versenden
++= Timer Job Check im epg2vdr geht nicht wenn epgd busy
++= Suchtimer Typ 'Umschalten' fertig stellen
++= Schutz vor 'SQL-Injection'
++= Format Erkennung (HD,SD) für Autotimer entspr. der konfigurierten Reihenfolge priorisieren
++= im Programm OSD Menü nach dones suchen
++= am OSD Sendung als „bereits aufgezeichnet“ markieren
++= am OSD aus Event einen Suchtimer erstellen lassen
++= auf events Tabelle scrap stamp mit constable stamp vergleichen und durch setzen von scrnew neu scrapen lassen
++= 'nach'-scrapen der Aufnahmen verbessern (auf neue Daten der recordinglist stützen) view von Christian
+
+=+ Anzeige des verbleibenden Platzes für Aufnahmen in HH:MM
+=+ Timerliste nach VDR's gruppieren
+=+ Kanallisten verwalten und bei Timern usw. als Auswahl anbieten
+=+ Zeit/Pixelverhältnis in Magazinansicht einstellbar machen
+=+ Suchtimer löschen als eigenen Dialog anzeigen und alle zugeordneten Timer anzeigen, damit die auch in einem
+   Rutsch mitgelöscht werden können.
+=+ am Suchtimer im WEB die erledigten Timer aus timersdone anzeigen (ist schon über 'testen' erledigt?)
+   dabie die Option zum  einzeln oder komplett löschen lassen anbieten
+=+ Channel/Aufnahme im Browser abspielen (ggf. auch streamen)
+=+ Magazineansicht: rechte Scrollbar sichtbar machen.
+=+ Hilfe Seiten fürs Web
+
+++ WEBIF Seite zum bearbeiten def Aufnahmen (Genre, Category, Serien-Titel, User-ScrapIDs)
+   Bearbeitung in in Gruppen also mit einem Click für alle ausgewählten, für ganze Folgen einer Serie oder Staffel
+++ logoSuffix: mehrere komma getrennt erfassen und im Backend dann in dieser Reihenfolge suchen (als Standard SVG,PNG???)
+++ Button zum aktualisieren der bestehenden Timer nach Anpassung der recordings.py
+++ im WebIf Sendung als „bereits aufgezeichnet“ markieren
+++ channlemap im web bearbeiten (Auswahl pro User ermöglichen)
+++ data/status zur Anzeige von Version und Status des epgd im webif
+++ Beim löschen eines Timers fragen ob die passenden Einträge aus der timersdone mit gelöscht werden sollen
+++ Suchtimer: Checkbox für "Neu" bzw. "Erstausstrahlung"
+++ Titel (Namen des Aufzeichnung) im Timer-Dialog bearbeitbar machen
+   -> http://www.vdr-portal.de/board1-news/board2-vdr-news/p1269286-announce-easteregg-epgd-epghttpd-1-0-0-beta1-jetzt-mit-web-serientimer-unterst%C3%BCtzung/#post1269286
+
+--------------------------------------------------------
+Baucht dass wirklich jemand - von wem war der Request?
+--------------------------------------------------------
+
++= Suchtimer am OSD anlegen und bearbeiten -> ist das wirklich nötig?
+++ hits bei Suchtimern aufteilen nach total und aktiven Timern
+++ Suchtimer auf einzelne VDR begrenzen, dies soll Suchtimer mit retundanten Aufnahmen (eine je VDR) ermöglichen,
+   dazu muss je VDR ein separater Suchtimer angelegt werden.
+    - Flag 'LOCAL' am Suchtimer und VDRUUID in die TIMERSDONE aufnehmen
+++ Wie erkennen wir sofortaufnahmen und timeshifting? Anderen Status geben und dann im Web nicht anzeigen
+   oder sollen wir dise gar nicht erst in die DB schreiben?
+    -> wo/warum würden diese in der Anzeige stören
+
+-----------------------------------
+ Fertig:
+-----------------------------------
+
+== Nachrichten Tabelle die im WEB angezeigt wird
+== bei entfernten (gelöschten) events
+     -> bei manuellen Timern per email warnen (aktuell per message ans WEBIF)
+     -> bei Auto-Timer canceln damit er neu angelegt wird und optional Mail Nachricht
+== timer automatisch verschieben (nachziehen)
+== falsch konfiguriertes 'http:://' bzw. 'https:://' präfix automatisch aus seriesUrl löschen
+== epg2vdr und WEB um Favoriten Suche erweitern
+     -> Favoriten im WEB konfigurierbar (Zeitraum bis, Kategorie, TagesTipp, TopTipp)
+== WOL für VDRs bei anstehenden Timern x Tage vor dem Event
+== im WebIf Magazine Ansicht farblich hinterlegte Balken über die gesammte Bildschirmbreite legen, die den quicklinks-zeiten entsprechen
+== im WEBIF bei schmalen Displays (Handy) ggf. rechte Zeitspalte im Magazin ausblenden
+== Datepicker: wenn die aktuelle Zeit um Mitternacht ist, bei den quicklinks ggf. den Tag auch mit verändern
+== In der Autotimer-Liste im WEB Knopf für "Suche" anbieten (ohne den Dialog öffnen zu müssen)
+== Entweder im Frontend Nextdays (im Backend bereits implementiert) implementieren
+== Timer/Suchtimer Typen einbauen (Aufnahme/Suche/Umschalten)
+== Im Suichtimer-Dialog 'Folgentitel' ind 'Serie' oder 'Serientitel' umbenennen
+== Default Netzwerk Interface sollte nach Plain Start ohne Config nicht
+   auf 'lo' stehen wenn es noch ein anderes Device gibt
+
+== Suchtimer Optionen:
+   unter "Erweiterte EPG Daten" gruppiert (zum aufklappen) kommt:
+   - Episode (wird in EPISODENAME gesucht oder wenn dort leer in TITLE)
+      -> suchtimerfeld wird "EPISODENAME"
+   - Staffel und Staffelfolge sind wir dran -> Dirk nenne am besten das Feld im Web auch Staffelfolge?!
+      -> suchtimerfelder sind "SEASON" und "SEASONPART"
+   - Kategorie (Komma getrennte Liste) z.B. "Spielfilm,Serie"
+     -> suchtimerfeld: "CATEGORY"
+   - Genre " 'Krimi','Action' " (GENRE) -> wie Kategorie
+   - Jahr (Format analog Staffel z.B. "-2004" oder "2010-2012")
+      -> suchtimerfeld: "YEAR"
+   - Tipp
+      -> suchtimerfeld: "TIPP"
+   - eine Checkbox für passt auch wenn die Erweiterten Daten bei einem Event nicht vorhanden sind
+      -> suchtimerfeld: "NOEPGMATCH"
+
+== Kanal-Ausschussliste für Suchtimer
+== HD Erkennung für Autotimer anhand des Feldes 'FORMAT' der channelmap
+== Suche für 'vorhandene Timer' im WEB einbauen
+== Sortierung der Events für die Suchtimer-Matches um den Kanal erweitert,
+   entspr. der im WEB konfigurierten Sortierung der Kanäle
+== data/timers Anfrage-Filter um action und notaction und notstate erweitern
+== Sortierung der Suchtimer nach HITS ist nicht numerisch
+== Sortierung für Aufnahmeliste im WEB
+== manuelle timer Anfragen durch das webif in die Vergangenheit im httpd ablehnen
+== force des epg seitens des epg2vdr wenn event beim Timer anlegen nicht gefunden werden kann
+== Endlose Versuche bei nicht gefundenem Autotimer Event verhindern
+== check autotimer update (only perform on change)
+== "Aufnahme läuft" Frage beim Timer löschen am OSD funktioniert noch nicht
+== im Programm Menü beim toggeln von den Zeiten auf Schedule die aktuelle Position (Sendung) merken
+== field owner der Aufnahmen in der tabelle recordinglist aktualisieren wenn im
+   vdr die 'NAS' Option (useCommonRecFolder) an- bzw ausschaltet wird
+    -> gelöst durch löschen und neu einlesen der Aufnahmen 'diese' VDR
+== Im Programm Menü mit '2' in Aufnahmen suchen
+== Wiederholungen anhand der episode Daten (EPISODECOMPSHORTNAME) vermeiden, automatisch sofern
+   vorhanden statt title
+       Christain:  Du nimmst einfach immer das höherwertigste:
+                Für den Titel:
+                  "COMPTITLE", => ist das schlechteste
+                  "EPISODECOMPNAME" => ist schon besser
+                  "EPISODECOMPSHORTNAME" => ist das ultimative
+                Und für die Folge:
+                  "COMPSHORTTEXT",
+                  "EPISODECOMPPARTNAME" => ist das bessere
+     Also brauchst du drei Knöpfe, nämlich noch einen dritten für die Beschreibung
+       -> im Web die Knöpfe für Episode und Episodenpart entfernen
+== Anzeige des Aufnahmedatums in der Aufnahmeliste im WEB
+== episodenfelder in timersdone NULL belassen wenn nicht verfügbar
+== Staffel und Folge in timersdone speichern
+== gelöschte timer verbleiben in der timersdone in state re'Q'uestet
+   -> fixed
+== Aktualisieren der recordinglist bei löschen eiern Aufnahme prüfen (klappt der trigger im epg2vdr?)
+   -> ja funktioniert! VDR hat hierfür keine Trigger daher wird es im 5 Minuten Zyklus geprüft :(
+== autotimerid in timersdone ablegen
+== Kannalnamen zur Anzeige im WEB auch in recordinglist ablegen, Hintergrund, alte Aufnahmen
+    können auf nicht mehr existierende Kanäle verweisen
+== auto-timer soll das nächst-mögliche Event nehmen
+    -> ist/war bereits so
+== Konfig am epg2vdr ob VDR im Web sein soll (also Timer und Aufnahmen im Web veröffentlichen möchte),
+   Neues Feld in vdrs Tabelle 'shareinweb'
+   Wenn nicht 'shareinweb' auch keine Auto-Timer etc. pp. (vdr nicht im WEBIF zu sehen.
+     Lösung, für dies shareinweb = no VDRS gilt:
+      -> ihre timer stehen nicht in der timers Tabelle
+      -> sie lesen und pflegen weder timerdistribution noch timersdone
+      -> sie werden bei data/vdrs nicht mehr ausgeliefert
+      -> ihre Aufnahmen werden bei data/recordins nicht ausgeliefert
+      -> sie erhalten keine svdrp Trigger vom epghttpd (alias WEB)
+      -> sie legen weiterhin (wegen scraper) ihre Aufnahmen in recordingslist ab!
+== Obsolete Kanäle automatisch via epg2vdr deaktivieren (vdr Feature und bei m Timer anlegen erkennen)
+    -> das VDR feature hängt lediglich OBSOLETE an den Kanalnamen und ist erst am 2.3.1 verfügbar
+    Lösung:
+      == Tabelle channelmap um Fels 'unknownatvdr' erweitert (default null)
+      == feld wird auf 1 gesetzt wenn der Kanal im handler als OBSOLETE erkannt wird
+      == dabei wird auch der Neune um OBSOLETE erweiterete Kanalname übernommen
+      == unknown wird ebenso gesetzt wenn ein VDR beim übernehmen eines Timers feststellt
+         dass er den Kanal nicht kennt, dann muss der User das im WEB erkennen können
+         und seine Konfiguration entspr. manuell nacharbeiten (channlelmap.conf, channels.conf's)
+      == die 'unknownatvdr' Kanäle werden beim Zuweisen der Timer zum VDR nicht mehr berücksichtigt
+           -> Fehlermeldung : "AUTOTIMER: Skipping hit, channelid '%s' is unknown at least on one VDR!"
+== cleanup der tabelle timerdistribution - >löschen alter erfolgreich verteilter
+   Aufträge (assumed = 'Y')
+== generisch die Parameter des epgd im WEB anzeigen, parameter Tabelle um valexp(regulärer Ausdruck) erweitert
+      Bei valexp = [01] wird eine checkbox angezeigt, sonst ein textfeld mit validierung beim Speichern
+== Aufnahme-Dauer in Tabelle in Sekunden (statt Minuten)
+== erledigte Timer (timersdone) im web anzeigen
+== Sicherheitsabfrage beim löschen von Autotimern und Timern?
+== Optische Aufbereitung der Seite 'Timer->Aufträge'
+   und seite ggf. umbenennen in eine Kurzform für  "Anstehende und fehlerhafte Aufträge"
+   mir fällt nix ein ;)
+== Konfig Option am epg2vdr ob vdr im NAS Verbund - wird in vdrs Tabelle ('usecommonrecfolder') gespeichert und
+   ersetzt Parameter globalRecDir bei Dirk
+     -> dazu auch Schlüssel der recordinglist auf vdruuid erweitern,
+        Feld heißt 'owner': leer, wenn vdr im NAS Verbund oder uuid des VDR wenn eigenes Aufnahmeverzeichnis verwendet wird
+        Feld 'vdruuid' bleibt wie gehabt und zeigt an welcher VDR den Datensatz hinzugefügt hat
+== TCC Mails an alle User entspr. derer Konfiguration versenden
+== Parameter vor dem speichern anhand der regexp prüfen
+== nach Wiederholungen suchen im WEB (alles bei dem Title 1:1 übereinstimmt) -> reicht nicht,
+   titel ist oft der Serienname, shorttext müsste mit übergeben werden können
+     => /data/search   ->       casesensitiv: 1, searchmode: 1,
+                                expression <title>, searchfields: 1,
+                                expression1 <shorttext>, searchfields1: 2
+== Aufnahmen selektierbar machen und dann zum Löschen anbieten

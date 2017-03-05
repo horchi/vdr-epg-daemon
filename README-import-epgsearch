@@ -1,0 +1,62 @@
+----------------------------------------------------------------------------
+ Übernehmen der 'erledigten Aufnahmen' von epgsearch aus epgsearchdone.data 
+----------------------------------------------------------------------------
+
+1.) epgsearchdone.data einlesen:
+	
+epgsearchdone.pl epgsearchdone.data loaddone
+
+
+2.) die Datensätze gegen die Episodentabelle abgleichen:
+	
+update
+ timersdone t,
+ (select distinct compname,comppartname,compshortname,lang,season,part from episodes) e
+set
+ t.episodecompname = e.compname,
+ t.episodecomppartname = e.comppartname,
+ t.episodecompshortname = e.compshortname,
+ t.episodelang = e.lang,
+ t.episodeseason = e.season,
+ t.episodepart = e.part
+where
+ t.comptitle=e.compname and
+ t.compshorttext=e.comppartname and
+ t.episodecompname is null and
+ t.source = 'epgsearch' and
+ t.state = 'R';
+
+
+3) optional ein paar Leichen löschen, also aufgenommene Events ohne brauchbaren Titel oder Untertitel (sofern man nur Serien übernehmen möchte):
+	
+delete from
+ timersdone
+where
+ source = 'epgsearch' and
+ state = 'R' and
+ (
+  comptitle = compshorttext or 
+  ifnull(comptitle,'') = '' or 
+  ifnull(compshorttext,'') = ''
+ );
+
+
+4) Testen der Treffer mit:
+	
+select
+  count(*),case when episodecompname is not Null then 'match' else 'no match' end status
+from
+  timersdone group by case when episodecompname is not Null then 'yes' else 'no' end;
+
+
+5) bei Bedarf Backup der tabelle erstellen:
+	
+epgsearchdone.pl epgddone.dump writedump
+
+
+6) Zurückspielen des Backup:
+	
+epgsearchdone.pl epgddone.dump loaddump
+
+  Wenn die Tabelle nicht leer ist, vorher truncaten, sonst hagelt es Primärschlüsselverletzungen:
+  truncate table timersdone;

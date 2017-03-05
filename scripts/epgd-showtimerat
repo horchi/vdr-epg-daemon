@@ -1,0 +1,14 @@
+
+export MYSQL_PWD=epg
+
+mysql -u epg2vdr -Depg2vdr -e " \
+select t.id, SUBSTRING_INDEX(t.channelid, '-', 3) as transponder, v.name, t.source, t.channelid, t.state as S, \
+    from_unixtime(t.day + t.starttime div 100 * 60 * 60 + t.starttime % 100 * 60) as start, \
+    from_unixtime(t.day + t.endtime div 100 * 60 * 60 + t.endtime % 100 * 60) as end \
+  from \
+    timers t left outer join events e on (t.eventid = e.masterid), vdrs v  \
+  where \
+    v.uuid = t.vdruuid and t.active = 1 and t.state in ('P','R') \
+    and ('$1' between from_unixtime(t.day + t.starttime div 100 * 60 * 60 + t.starttime % 100 * 60) and from_unixtime(t.day + t.endtime div 100 * 60 * 60 + t.endtime % 100 * 60)) \
+    and  v.name = '$2' \
+  order by t.day, start;" 

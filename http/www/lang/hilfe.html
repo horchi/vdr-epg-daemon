@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js">
+ <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>EPGd Hilfe</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1, minimum-scale=1">
+    <link rel="stylesheet" href="../epgd.css">
+    <script src="../common.js"></script>
+    <script src="../epgd.js"></script>
+</head>
+<body>
+    <div id="help">
+        <ul>
+            <li><a href="#h_intro">Allgemein</a></li>
+            <li><a href="#h_now">Aktuell</a></li>
+            <li><a href="#h_magazine">Magazin</a></li>
+            <li><a href="#h_eventDetail">Detailansicht</a></li>
+            <li><a href="#h_records">Aufnahmen</a></li>
+            <li><a href="#h_timer">Timer</a></li>
+            <li><a href="#h_search">Suche</a></li>
+            <li><a href="#h_options">Einstellungen</a></li>
+            <li><a href="#h_about">Über</a></li>
+        </ul>
+        <div id="h_intro">
+            <h3>Electronic Program Guide daemon</h3>
+            <p>
+                Verwaltung von <b>V</b>ideo <b>D</b>isc <b>R</b>ecorder
+            <ul>
+                <li>Anzeige vom aktuellen TV Programm</li>
+                <li>Verwalten deinen Aufnahmn</li>
+                <li>Erzeugen von Timern und Suchtimern</li>
+                </ul></p>
+            <div id="h_datepicker">
+                <h4>Auswahl von Datum und Zeit</h4>
+                Auf der linken Seite werden alle Tage angezeigt, wo Daten vorhanden sind. Auf der rechten Seite kann dann die Uhrzeit eingestellt werden.
+                Das kann dann auf verschiedene Arten passieren. Die obigen Zeiten sind sogenannte Quicklinks, die unter den <a href="#menu_help,h_options">Einstellungen</a> je Nutzer definiert werden können.
+                <br />Wenn das Datum/die Zeit dann eingestellt wurden, muss noch der Knopf "fertig" gedrückt werden oder auch einfach neben dem Datepicker in das Dokument geklickt werden, damit sich die Ansicht aktualisiert.
+            </div>
+        </div>
+        <div id="h_now">
+            <p>In der "Aktuell" Ansicht wird jeweils die aktuelle Sendung von allen für die Web-Oberfläche definierten Kanäle angezeigt.</p>
+            <p>
+                Neben dem Menüpunkt wird dabei <a class="help" id="bh_datepicker"><input type="text" readonly="readonly" value="Datum/Zeit" /></a> angezeigt, auf das sich die aktuelle Anzeige bezieht. Diese kann dort auch durch Anklicken verändert werden.
+                <br />Zusätzlich existiert noch der Knopf <span class="iAsButton i-check-empty">nachfolgend</span>, der jeweils immer die nachfolgende Sendung pro Kanal anzeigt.
+            </p>
+        </div>
+        <div id="h_magazine">
+            <p>In der Magazin-Ansicht wird für die Web-Oberfläche definierten Kanäle das Programm in einer Spaltenansicht angezeigt, je Spalte ein Kanal. Die Anzahl der Spalten/Kanäle richtet sich dabei nach der Bildschirmgröße. Ausgehend von der in der Menüleiste angezeigten <a class="help" id="bh_datepicker"><input type="text" readonly="readonly" value="Datum/Zeit" /></a> wird dann je nach Bildschirmgröße das Programm angezeigt.</p>
+            <p>Das aktuelle Sichtfeld kann dann durch Scrollen nach oben/unten bzw. links/rechts verschoben werden.
+               Auf Desktop-Systemen dazu einfach die Maus in den Randbereich bewegen. Die Empfindlichkeit für dieses Scrollen kann in den Einstellungen angepasst werden.
+               Durch die Buttons oben links/rechts kann dann noch kanalweise oder seitenweise (Anzahl Spalten/Bildschirm) geblättert werden.</p>
+            <p><h5>Warum sind die Programme nicht immer auf gleicher Höhe?</h5>
+            Die Höhe des Kastens für eine Sendung steht in Relation zur Sendedauer. Ist die Sendung kürzer als 10 Minuten, wird sie aber so trotzdem 20 px hoch gezeichnet, als wäre sie 10 Minuten lang, damit zumindest der Titel der vernünftig lesbar ist.
+            Das delta wird dann mit an die nächste Sendung gegeben und diese wird dann in der Höhe um dieses Delta verringert, damit es danach wieder passt. Ggf. wird das aber auch über mehrere Sendung so mitgeschleppt.
+            </p>
+        </div>
+        <div id="h_eventDetail">
+            <p>Hier werden sämtlich Informationen über ein Event/Sendung angezeigt. Dazu werden ggf. spezielle Serieninformtionen oder Filminformationen in einem eigenen Bereich angezeigt. Die Inhalte beschafft das Scraper Plugin.</p>
+            <h3>Constabel Episodenliste</h3>
+            <p>Hier werden alle Episoden aufgelistet, wenn sie bei constabel gepflegt wurden.</p>
+            <div id="h_constabel">
+                <h4>Editieren/ Link hinzufügen</h4>
+                <p>
+                    Die Informationen können direkt auf der constabel Seite gepflegt werden. Dazu muss man dort aber bereits eingeloggt sein. Leider kann an dieser Stelle nicht ermittelt werden, ob man bereits eingeloggt ist oder nicht.
+                    <br />Den benötigten Account kann man auf dieser Seite auch direkt anfordern.
+                </p>
+            </div>
+        </div>
+        <div id="h_records">
+            <p>
+                Hier werden die Aufnahmen von sämtlichen registrierten VDRs angezeigt.
+                <div id="h_recDD">
+                    Die Aufnahmen können hier per Drag and Drop in andere Ordner verschoben oder auch gelöscht werden, indem sie auf die Mülltonne oben links in der Ecke gezogen werden.
+                    <br />Für Touchgeräte wird es am Anfang erstmal ausgeschaltet, damit keine versehenliche Aktion ausgelöst wird.
+                </div>
+                Markierte Aufnahmen können auch über einen Klick auf die Mülltonne gelöscht werden.
+            </p>
+            <p>
+                Der Knopf <button class="iAsButton i-refresh">neu laden</button>
+                <span id="h_recRefresh">fordert alle VDRs auf, ihre Aufnahmeverzeichnisse neu einzulesen.
+                    <br /> Nach 5 Sekunden wird die Liste neu geladen, da es keine direkte Rückmeldung gibt, wann die mit Einlesen fertig sind.
+                </span>
+            </p>
+            <p>
+                <button class="iAsButton">&nbsp;∗</button><input type="text" /><button class="iAsButton">∗&nbsp;</button><span><button class="iAsButton i-rewind"></button><span id="rSCnt">5</span><button class="iAsButton i-forward"></button></span>
+                <div id="h_recSearch">
+                    Hier können Aufnahmen gesucht werden. Die Fundstellen werden dabei markiert.
+                    <br />Mit den Sternknöpfen links und rechts kann man das Wort am Anfang und/oder am Ende suchen.
+                    <br />Die einzelnen Treffer können mit den Pfeiltasten angesprungen werden.
+                </div>
+            </p>
+        </div>
+        <div id="h_timer" class="accordion">
+            <h3>allgemein</h3>
+            <div>
+                <p>Wenn man im WEB einen Timer für ein Event anlegt und dabei keine Zeiten angibt, wird eine Row in Timers
+                   für dieses Event anhand der Event ID erstellt, dabei werden keine Zeiten eingetragen.
+                   Übernimmt nun ein VDR bzw. das epg2vdr Plugin den Timer, wird zu dem Event über die Event ID ein Timer angelegt,
+                   hierzu werden Funktionen des VDR verwendet, somit kommt alles wie die Zeiten und Titel etc. vom VDR selbst
+                   - ohne Einfluss des epgd oder des Plugin.
+                   <br />Im Anschluss werden die von VDR gesetzten Daten des angelegten Timers in die Liste übernommen.</p>
+            </div>
+            <h3>Timer</h3>
+            <div>
+                <p>Hier werden alle aktuellen Timer angezeigt, die noch auf Ausführung warten oder die gerade ausgeführt (aufgenommen) werden.</p>
+            </div>
+            <h3>Suchtimer</h3>
+            <div id="h_sTimer">
+                <p>
+                    In der Liste sieht man alle gespeicherten Suchtimer. Diese werden unterschieden nach
+                    <div class="i-record">Aufnahme-Timer</div>
+                    <div class="i-tv">Umschalt-Timer</div>
+                    Erzeugt werde diese alle über einen Dialog. Dazu können diverse Parameter eingestellt werden, mit
+                    denen regelmäßig das aktuelle Programm durchsucht wird. Aus allen Treffern wird dann automatisch ein Timer erstellt.
+                    <div class="i-search">gespeicherte Suche</div>
+                    Hier können diverse Parameter in einer Suche gespeichert werden. Diese können dann in der Suche aufgerufen werden oder auch den Quicklinks hinzugefügt werden. Dadurch kann man sich Favoritensuchen erstellen, wie Primetime mit Spielfilmen.
+                </p>
+                Der Dialog beinhaltet folgende Bereiche:
+                <div><h4>Suchausdruck</h4> analog der <a class="help i-help iAsButton" id="bh_sExpr">Suche</a></div>
+                <div id="h_sTRepeat">
+                    <h4>Wiederholungen vermeiden</h4>Jeder Treffer wird mit allen bisher aufgenommenen Aufnahmen
+                    (siehe auch vorhandene Aufnahmen), bzw. bereits geplanten Aufnahmen anhand der Einstellung Titel, Kurztext und Beschreibung verglichen.
+                    Kommt es zu Doppelungen, wird der Treffer verworfen.
+                </div>
+                <div id="h_sTChFormat">
+                    <h4>bevorzugtes Sendeformat</h4>Wird eine Sendung sowohl auf einem SD, wie auch auf einem HD Sender gefunden, kann hier eine Priorität vergeben werden, welche Aufnahme genommen werden soll.
+                    In dem sich öffnenden Dialog kann per Drag and Drop die Reihenfolge definiert werden
+                </div>
+                <div id="h_sTNameMode">
+                    <h4>Ermittlung des Dateinamens</h4>
+                    Der Dateinamen wird, mit Ausnahme des Mode 'VDR', über das Python Skript (/etc/epgd/recording.py) ermittelt, er kann bereits Pfadangaben erhalten.
+                    <ul>
+                        <li>0 VDR: Keine Ermittlung des Dateinamens, die Bezeichnung der Aufnahme wird dem VDR überlassen lediglich das unten angegebene Verzeichnis wird vorangestellt.</li>
+                        <li>1 Auto: Automatische Auswahl des Mode Constable, Serie oder Kategorisiert</li>
+                        <li>2 Constable: Dateinamen basierend auf Daten von Constabel (Titel/Staffel/xTeil-Nummer/Untertitel) sofern verfügbar</li>
+                        <li>3 Serie: Serienaufnahme ohne Verwendung der Constabel Daten  (Titel/Untertitel)</li>
+                        <li>4 Kategorisiert: Einorden der Aufnahmen entsprechend der Film-Kategorie (Kategorie/Titel)</li>
+                        <li>5 User: Hier kann man sich selbst im Python Skript verewigen</li>
+                        <li>6 Template: Der Dateiname wird in Eingabefeld unten definiert, hierbei können Platzhalter (%...%) verwendet werden. Bei Eingabe von % erscheint die Auswahl der Platzhalter</li>
+                    </ul>
+                    <h4>Verzeichnis</h4>Das Verzeichnis wird dem ermittelten Dateinamen (welcher bereits Verzeichnissangaben enthalten kann) vorangestellt. Hier kann entweder aus einem vorhandenen Verzeichnis ausgewählt werden oder es kann ein neuer Verzeichnisname eingegeben werden.
+                </div>
+                <h4>VDR</h4>Es kann direkt ein teilnehmender VDR ausgewählt werden, der aufnehmen soll. Bei auto wird versucht, den VDR aufnehmen zu lassen, der gerade nicht beschäftigt ist.
+                Jörg: wenn aus irgendeinem Grund die Aufnhame nicht stattfindet, wird dann automatisch ein anderer beauftragt?
+                <hr />
+                <button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-icon-primary ui-state-hover" role="button"><span class="ui-button-icon-primary ui-icon ui-icon-transferthick-e-w"></span><span class="ui-button-text">Timer</span></button>
+                Hier kann man aus einem Suchtimer einen normalen (einmaligen) Timer machen. Soweit möglich werden alle Daten übernommen, die restlichen Daten verfallen.
+                <br /><button type="button" class="ui-button ui-widget ui-state-default ui-corner-all ui-button-text-only ui-state-hover" role="button"><span class="ui-button-text">testen</span></button>
+                ES wird direkt eine Live-Suche durchgeführt und das Ergebnis im Dialog angezeigt
+            </div>
+            <h3>kürzliche Aufnahmen</h3>
+            <div><p>Alle Aufnahmen, die kürzlich ausgeführt wurden. Dabei werden auch gelöschte oder fehlgeschlagene Timer angezeigt</p></div>
+            <h3>Auftragshistorie</h3>
+            <div><p>Alle Timer, die mal aufgenommen wurden, sind hier zu finden. Wenn neue Sendungen anhand eines Suchtimers gefunden wurden, werden die hiermit abgeglichen und dann ggf. verworfen, wenn sie bereits aufgenommen wurden, also in der Tabelle bereits existieren.</p></div>
+            <h3>asynchrone Aufträge</h3>
+            <div><p>Wenn über das WebIf oder durch Suchtimer durch den epgd neue Timer erzeugt werden oder vorhandene gelöscht werden, stehen diese Aufgaben solange in dieser Liste, bis der entsprechende VDR diese abgeholt hat.</p></div>
+        </div>
+        <div id="h_search">
+            <p>Gezielte Suche nach einer Sendung</p>
+            <div id="h_sExpr">
+                <h4>Suchausdruck</h4>
+                <p>
+                    Der in dem Eingabefeld eingegebene Begriff wird je nach Einstellung im Titel, Kurztext oder in der Beschreibung gesucht.
+                    Weiter kann eingestellt werden, wie genau der Begriff gefunden werden soll:
+                    <ul>
+                        <li>exakte Übereinstimmung</li>
+                        <li>regulärer Ausdruck<br />Hier kann mittels regulärem Ausdruck gesucht werden, <a href="http://Jörg, kennst du nen passenden InternetLink?" target="_blank">siehe</a></li>
+                        <li>Muster<br />Jörg todo</li>
+                        <li>enthalten in<br />der Suchbegriff muss nur zum Teil gefunden werden</li>
+                    </ul>
+                </p>
+            </div>
+            <div id="h_sTAdv">
+                <h4>erweitert</h4>
+                <h5>Serientitel</h5>
+                Was dort steht, wird mit dem Namen der Folge oder, wenn das Event keine Seriendaten hat, mit dem Kurztext verglichen
+                <h5>Staffel, Folge und Jahr</h5>
+                hier kann nummerisch eine Zahl oder Bereich eingetragen werden, z.B.
+                <br />Folge <b>5</b> für genau Folge 5
+                <br />Staffel <b>2-</b> für alles ab der 2. Staffel
+                <br />Jahr <b>-2012</b> für alle Folgen bis einschließlich 2012
+                <br />Folge<b>5-10</b> für die Folgen 5 bis 10
+                <h5>Kategorie und Genre</h5>
+                Hier werden alle Kategorien und Genres aufgelistet, die aktuell in den Events gefunden wurden
+                <h5>Tipp, TagesTipp und TopTipp</h5>
+                Jörg: werden die hier verodert?
+                <h5>Ignoriere fehlende EPG Info</h5>
+                Jörg todo
+            </div>
+            <div id="h_sTChannels">
+                <h4>Kanäle</h4>
+                <h5>Kanäle einschränken oder auschließen</h5>Hier können ein oder mehrere Kanäle definiert werden, die entweder aus der Suche ausgeschlossen werden oder auf denen die Suche eingeschränkt wird.
+            </div>
+            <div id="h_sTime">
+                <h4>Sendungsbeginn</h4>
+                Zeitspanne, in der die Sendung beginnen kann bzw. muss.
+                Zusätzlich kann man noch auf Wochentage einschränken.
+                Für die Favoriten-Suchen kann man dann das Ergebnis z.B. nur auf heute begrenzen, in dem man nur <i>innerhalb der nächsten</i> <b>1</b> Tage sucht.
+            </div>
+            <div id="h_sName">
+                <h4>Name des Timers</h4>
+                Hier kann ein aussagekräftiger Name vergeben werden, der auch in den Listen immer angezeigt wird.
+            </div>
+        </div>
+        <div id="h_options">
+            <h3>allgemein</h3>
+            <div id="h_opt_wif">
+                <p>Hier können diverse Einstellungen gemacht werden. Diese könne sowohl das WebIf als auch das Backend betreffen.</p>
+            </div>
+            <h3>Kanäle bearbeiten</h3>
+            <div><p>Zur Zeit können hier nur die Kanalinformationen für die Weboberfläche bearbeitet werden, zum einen die Reihenfolge und ob sie überhaupt im Web angezeigt werden soll.
+                <br />Dazu kann man sich Referenzlisten von channelpedia laden oder per Textfeld eine beliebig andere einfügen. Daraus können dann leere oder generell auch alle Kanalnamen übernommen werden.
+                Zusätzlich kann auch die Sortierung übernommen werden.</p></div>
+            <h3>Benutzer bearbeiten</h3>
+            <div><p>Hier können die Benutzer für die Weboberfläche verwaltet werden.</p></div>
+        </div>
+        <div id="h_about" class="accordion">
+            <h3>Programmierung</h3>
+            <div id="h_develop">
+                Backend (epg daemon, http daemon): Jörg Wendel
+                <br />SQL/Procedures: Christian Kaiser
+                <br />Frontend (Web): Dirk Hermes
+                <br />VDR Plugin <a href="https://projects.vdr-developer.org/git/vdr-epg-daemon.git/">epg2vdr</a>: Jörg Wendel
+                <br />VDR Plugin <a href="https://projects.vdr-developer.org/projects/plg-scraper2vdr/wiki">scraper2vdr</a>: Stefan Braun
+            </div>
+            <h3>Historie</h3>
+            <div id="h_history"><pre></pre></div>
+            <h3>ToDo's</h3>
+            <div id="h_todo"><pre></pre></div>
+            <h3>Fonts</h3>
+            <div id="h_fonts"><h4>Die Fonts wurden von <a href="http://fontello.com/">Fontello.com</a> eingebunden:</h4><pre></pre></div>
+        </div>
+        <script type="text/javascript">
+
+        </script>
+    </div>
+<script type="text/javascript" id="help_js">
+    epgd.pages.help.init = function () {
+        this.$con.tabs({
+            heightStyle: "content",
+            activate: function (event, ui) {
+                var panel = ui.newPanel[0],
+                    hash = panel.id;
+                ui.newPanel.parents('.ui-widget-content').each(function () { hash = this.id + ',' + hash });
+                location.hash = '#menu_' + hash;
+            }
+        });
+        this.initButtons(epgd.pages.help.$con);
+        $('.accordion').accordion({
+            heightStyle: "content",
+            collapsible: true,
+            activate: function (event, ui) {
+                var panel = ui.newPanel[0],
+                    hash = panel.id;
+                if (!panel.hasLoaded) {
+                    panel.hasLoaded = true;
+                    switch (hash) {
+                        case "h_fonts":
+                            $("pre", panel).load('/font/LICENSE.txt', function () { $('#help').tabs('refresh'); });
+                            break;
+                        case "h_history":
+                            epgd.ajax({ url: '/HISTORY.h', dataType: "html", contentType: "text/plain; charset=utf-8", cache: false }, function (data) {
+                                if (data.indexOf('Error:') == -1) {
+                                    $(panel).html('<pre>' + data.replace(/^#.*\n/gm, '') + '</pre>');
+                                }
+                            });
+                            break;
+                        case "h_todo":
+                            epgd.ajax({ url: '/TODO', dataType: "html", contentType: "text/plain; charset=utf-8", cache: false }, function (data) {
+                                if (data.indexOf('Error:') == -1) {
+                                    $(panel).html('<pre>' + data.replace(/^#.*\n/gm, '') + '</pre>');
+                                }
+                            });
+                            break;
+                    }
+                }
+                ui.newPanel.parents('.ui-widget-content').each(function () { hash = this.id + ',' + hash });
+                location.hash = '#menu_' + hash;
+            }
+        });
+    }
+</script>
+<script type="text/javascript">
+    epgd.pages.help.$con = $('#help');
+    epgd.pages.help.init();
+    try {
+        location.hash && location.hash.length > 10 && $(location.hash.slice(10).replace(/,/g, '],[aria-controls=').slice(2) + ']').each(function () {
+            if (this.className.indexOf('accordion-header') >= 0)
+                $(this).click();
+            else
+                $(this).find('a:first').click();
+        });
+    } catch (e) { }
+</script>
+</body>
+</html>

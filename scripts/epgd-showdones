@@ -1,0 +1,5 @@
+
+export MYSQL_PWD=epg
+
+mysql -u epg2vdr -Depg2vdr -e " \
+  select from_unixtime(updsp, '%d.%m %H:%m') as upd, id, state as s, substr(title,1,35), shorttext, episodecompname, episodecomppartname, expression from timersdone where state != 'D';"

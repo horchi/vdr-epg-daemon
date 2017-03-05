@@ -1,0 +1,18 @@
+export MYSQL_PWD=epg
+
+if [ -z $1 ]; then
+  STATE="(t.state != 'D' or t.state is null)"
+else
+  STATE="t.state like '$1'"
+fi
+
+mysql -u epg2vdr -Depg2vdr -e " \
+select from_unixtime(t.inssp, '%d.%m %H:%i') as ins, v.name, substr(t.source, 25) as source, t.id, t.autotimerid as aid, t.state as S, t.info, t.action as A, \
+    t.eventid, concat(from_unixtime(day, '%d.%m '), concat_ws(':', right(concat("00", t.starttime DIV 100), 2), right(concat("00", t.starttime%100), 2))) as start, \
+    concat_ws(':', right(concat("00", t.endtime DIV 100), 2), right(concat("00", t.endtime%100), 2)) as end, \
+    e.title, e.shorttext, t.file  \
+  from \
+    timers t left outer join events e on (t.eventid = e.masterid), vdrs v  \
+  where \
+    v.uuid = t.vdruuid and $STATE \
+  order by t.day, start;"

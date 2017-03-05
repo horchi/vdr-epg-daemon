@@ -1,0 +1,507 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!DOCTYPE genre [ 
+<!ELEMENT genre (data)+>
+<!ELEMENT data (g0,g1)>
+<!ENTITY nbsp    "&#160;" >
+<!ENTITY iexcl   "&#161;" >
+<!ENTITY cent    "&#162;" >
+<!ENTITY pound   "&#163;" >
+<!ENTITY curren  "&#164;" >
+<!ENTITY yen     "&#165;" >
+<!ENTITY brvbar  "&#166;" >
+<!ENTITY sect    "&#167;" >
+<!ENTITY uml     "&#168;" >
+<!ENTITY copy    "&#169;" >
+<!ENTITY ordf    "&#170;" >
+<!ENTITY laquo   "&#171;" >
+<!ENTITY not     "&#172;" >
+<!ENTITY shy     "&#173;" >
+<!ENTITY reg     "&#174;" >
+<!ENTITY macr    "&#175;" >
+<!ENTITY deg     "&#176;" >
+<!ENTITY plusmn  "&#177;" >
+<!ENTITY sup2    "&#178;" >
+<!ENTITY sup3    "&#179;" >
+<!ENTITY acute   "&#180;" >
+<!ENTITY micro   "&#181;" >
+<!ENTITY para    "&#182;" >
+<!ENTITY middot  "&#183;" >
+<!ENTITY cedil   "&#184;" >
+<!ENTITY sup1    "&#185;" >
+<!ENTITY ordm    "&#186;" >
+<!ENTITY raquo   "&#187;" >
+<!ENTITY frac14  "&#188;" >
+<!ENTITY frac12  "&#189;" >
+<!ENTITY frac34  "&#190;" >
+<!ENTITY iquest  "&#191;" >
+<!ENTITY Agrave  "&#192;" >
+<!ENTITY Aacute  "&#193;" >
+<!ENTITY Acirc   "&#194;" >
+<!ENTITY Atilde  "&#195;" >
+<!ENTITY Auml    "&#196;" >
+<!ENTITY Aring   "&#197;" >
+<!ENTITY AElig   "&#198;" >
+<!ENTITY Ccedil  "&#199;" >
+<!ENTITY Egrave  "&#200;" >
+<!ENTITY Eacute  "&#201;" >
+<!ENTITY Ecirc   "&#202;" >
+<!ENTITY Euml    "&#203;" >
+<!ENTITY Igrave  "&#204;" >
+<!ENTITY Iacute  "&#205;" >
+<!ENTITY Icirc   "&#206;" >
+<!ENTITY Iuml    "&#207;" >
+<!ENTITY ETH     "&#208;" >
+<!ENTITY Ntilde  "&#209;" >
+<!ENTITY Ograve  "&#210;" >
+<!ENTITY Oacute  "&#211;" >
+<!ENTITY Ocirc   "&#212;" >
+<!ENTITY Otilde  "&#213;" >
+<!ENTITY Ouml    "&#214;" >
+<!ENTITY times   "&#215;" >
+<!ENTITY Oslash  "&#216;" >
+<!ENTITY Ugrave  "&#217;" >
+<!ENTITY Uacute  "&#218;" >
+<!ENTITY Ucirc   "&#219;" >
+<!ENTITY Uuml    "&#220;" >
+<!ENTITY Yacute  "&#221;" >
+<!ENTITY THORN   "&#222;" >
+<!ENTITY szlig   "&#223;" >
+<!ENTITY agrave  "&#224;" >
+<!ENTITY aacute  "&#225;" >
+<!ENTITY acirc   "&#226;" >
+<!ENTITY atilde  "&#227;" >
+<!ENTITY auml    "&#228;" >
+<!ENTITY aring   "&#229;" >
+<!ENTITY aelig   "&#230;" >
+<!ENTITY ccedil  "&#231;" >
+<!ENTITY egrave  "&#232;" >
+<!ENTITY eacute  "&#233;" >
+<!ENTITY ecirc   "&#234;" >
+<!ENTITY euml    "&#235;" >
+<!ENTITY igrave  "&#236;" >
+<!ENTITY iacute  "&#237;" >
+<!ENTITY icirc   "&#238;" >
+<!ENTITY iuml    "&#239;" >
+<!ENTITY eth     "&#240;" >
+<!ENTITY ntilde  "&#241;" >
+<!ENTITY ograve  "&#242;" >
+<!ENTITY oacute  "&#243;" >
+<!ENTITY ocirc   "&#244;" >
+<!ENTITY otilde  "&#245;" >
+<!ENTITY ouml    "&#246;" >
+<!ENTITY divide  "&#247;" >
+<!ENTITY oslash  "&#248;" >
+<!ENTITY ugrave  "&#249;" >
+<!ENTITY uacute  "&#250;" >
+<!ENTITY ucirc   "&#251;" >
+<!ENTITY uuml    "&#252;" >
+<!ENTITY yacute  "&#253;" >
+<!ENTITY thorn   "&#254;" >
+<!ENTITY yuml    "&#255;" >
+<!ENTITY quot    "&#34;"  >
+<!ELEMENT g0 (#PCDATA)>  <!-- genreid -->
+<!ELEMENT g1 (#PCDATA)>  <!-- genre -->
+]>
+
+<genre>
+	<data>
+		<g0>101</g0>
+		<g1>Verschiedenes</g1>
+	</data>
+	<data>
+		<g0>102</g0>
+		<g1>Abenteuer</g1>
+	</data>
+	<data>
+		<g0>103</g0>
+		<g1>Action</g1>
+	</data>
+	<data>
+		<g0>104</g0>
+		<g1>Dokumentarfilm</g1>
+	</data>
+	<data>
+		<g0>105</g0>
+		<g1>Drama</g1>
+	</data>
+	<data>
+		<g0>106</g0>
+		<g1>Erotik</g1>
+	</data>
+	<data>
+		<g0>108</g0>
+		<g1>Fantasy</g1>
+	</data>
+	<data>
+		<g0>109</g0>
+		<g1>Heimat</g1>
+	</data>
+	<data>
+		<g0>110</g0>
+		<g1>Humor</g1>
+	</data>
+	<data>
+		<g0>112</g0>
+		<g1>Krimi</g1>
+	</data>
+	<data>
+		<g0>113</g0>
+		<g1>Kultur</g1>
+	</data>
+	<data>
+		<g0>114</g0>
+		<g1>Kurzfilm</g1>
+	</data>
+	<data>
+		<g0>115</g0>
+		<g1>Musik</g1>
+	</data>
+	<data>
+		<g0>116</g0>
+		<g1>Mystery + Horror</g1>
+	</data>
+	<data>
+		<g0>117</g0>
+		<g1>Romantik/Liebe</g1>
+	</data>
+	<data>
+		<g0>119</g0>
+		<g1>Science Fiction</g1>
+	</data>
+	<data>
+		<g0>121</g0>
+		<g1>Thriller</g1>
+	</data>
+	<data>
+		<g0>122</g0>
+		<g1>Western</g1>
+	</data>
+	<data>
+		<g0>123</g0>
+		<g1>Zeichentrick</g1>
+	</data>
+	<data>
+		<g0>201</g0>
+		<g1>Verschiedenes</g1>
+	</data>
+	<data>
+		<g0>202</g0>
+		<g1>Abenteuer</g1>
+	</data>
+	<data>
+		<g0>203</g0>
+		<g1>Action</g1>
+	</data>
+	<data>
+		<g0>205</g0>
+		<g1>Drama</g1>
+	</data>
+	<data>
+		<g0>206</g0>
+		<g1>Erotik</g1>
+	</data>
+	<data>
+		<g0>207</g0>
+		<g1>Familie</g1>
+	</data>
+	<data>
+		<g0>208</g0>
+		<g1>Fantasy</g1>
+	</data>
+	<data>
+		<g0>210</g0>
+		<g1>Humor</g1>
+	</data>
+	<data>
+		<g0>211</g0>
+		<g1>Krankenhaus</g1>
+	</data>
+	<data>
+		<g0>212</g0>
+		<g1>Krimi</g1>
+	</data>
+	<data>
+		<g0>214</g0>
+		<g1>Jugend</g1>
+	</data>
+	<data>
+		<g0>216</g0>
+		<g1>Mystery + Horror</g1>
+	</data>
+	<data>
+		<g0>218</g0>
+		<g1>Reality</g1>
+	</data>
+	<data>
+		<g0>219</g0>
+		<g1>Science Fiction</g1>
+	</data>
+	<data>
+		<g0>220</g0>
+		<g1>Soap</g1>
+	</data>
+	<data>
+		<g0>221</g0>
+		<g1>Thriller</g1>
+	</data>
+	<data>
+		<g0>222</g0>
+		<g1>Western</g1>
+	</data>
+	<data>
+		<g0>223</g0>
+		<g1>Zeichentrick</g1>
+	</data>
+	<data>
+		<g0>301</g0>
+		<g1>Verschiedenes</g1>
+	</data>
+	<data>
+		<g0>331</g0>
+		<g1>Boxen</g1>
+	</data>
+	<data>
+		<g0>332</g0>
+		<g1>Eishockey</g1>
+	</data>
+	<data>
+		<g0>334</g0>
+		<g1>Fußball</g1>
+	</data>
+	<data>
+		<g0>335</g0>
+		<g1>Olympia</g1>
+	</data>
+	<data>
+		<g0>336</g0>
+		<g1>Golf</g1>
+	</data>
+	<data>
+		<g0>337</g0>
+		<g1>Gymnastik</g1>
+	</data>
+	<data>
+		<g0>338</g0>
+		<g1>Handball</g1>
+	</data>
+	<data>
+		<g0>339</g0>
+		<g1>Motorsport</g1>
+	</data>
+	<data>
+		<g0>340</g0>
+		<g1>Radsport</g1>
+	</data>
+	<data>
+		<g0>341</g0>
+		<g1>Tennis</g1>
+	</data>
+	<data>
+		<g0>342</g0>
+		<g1>Wassersport</g1>
+	</data>
+	<data>
+		<g0>343</g0>
+		<g1>Wintersport</g1>
+	</data>
+	<data>
+		<g0>344</g0>
+		<g1>US-Sport</g1>
+	</data>
+	<data>
+		<g0>345</g0>
+		<g1>Leichtathletik</g1>
+	</data>
+	<data>
+		<g0>346</g0>
+		<g1>Volleyball</g1>
+	</data>
+	<data>
+		<g0>347</g0>
+		<g1>Extremsport</g1>
+	</data>
+	<data>
+		<g0>348</g0>
+		<g1>Reportagen</g1>
+	</data>
+	<data>
+		<g0>401</g0>
+		<g1>Verschiedenes</g1>
+	</data>
+	<data>
+		<g0>406</g0>
+		<g1>Erotik</g1>
+	</data>
+	<data>
+		<g0>418</g0>
+		<g1>Reality</g1>
+	</data>
+	<data>
+		<g0>450</g0>
+		<g1>Comedy</g1>
+	</data>
+	<data>
+		<g0>451</g0>
+		<g1>Familien-Show</g1>
+	</data>
+	<data>
+		<g0>452</g0>
+		<g1>Spielshows</g1>
+	</data>
+	<data>
+		<g0>453</g0>
+		<g1>Talkshows</g1>
+	</data>
+	<data>
+		<g0>454</g0>
+		<g1>Gerichtsshow</g1>
+	</data>
+	<data>
+		<g0>455</g0>
+		<g1>Homeshopping</g1>
+	</data>
+	<data>
+		<g0>456</g0>
+		<g1>Kochshow</g1>
+	</data>
+	<data>
+		<g0>457</g0>
+		<g1>Heimwerken</g1>
+	</data>
+	<data>
+		<g0>501</g0>
+		<g1>Verschiedenes</g1>
+	</data>
+	<data>
+		<g0>560</g0>
+		<g1>Geschichte</g1>
+	</data>
+	<data>
+		<g0>561</g0>
+		<g1>Magazin</g1>
+	</data>
+	<data>
+		<g0>564</g0>
+		<g1>Gesundheit</g1>
+	</data>
+	<data>
+		<g0>565</g0>
+		<g1>Motor + Verkehr</g1>
+	</data>
+	<data>
+		<g0>566</g0>
+		<g1>Nachrichten</g1>
+	</data>
+	<data>
+		<g0>567</g0>
+		<g1>Natur</g1>
+	</data>
+	<data>
+		<g0>568</g0>
+		<g1>Politik</g1>
+	</data>
+	<data>
+		<g0>569</g0>
+		<g1>Ratgeber</g1>
+	</data>
+	<data>
+		<g0>570</g0>
+		<g1>Reise</g1>
+	</data>
+	<data>
+		<g0>571</g0>
+		<g1>Wirtschaft</g1>
+	</data>
+	<data>
+		<g0>572</g0>
+		<g1>Wissen</g1>
+	</data>
+	<data>
+		<g0>573</g0>
+		<g1>Dokumentation</g1>
+	</data>
+	<data>
+		<g0>601</g0>
+		<g1>Verschiedenes</g1>
+	</data>
+	<data>
+		<g0>680</g0>
+		<g1>Jazz</g1>
+	</data>
+	<data>
+		<g0>681</g0>
+		<g1>Klassik</g1>
+	</data>
+	<data>
+		<g0>682</g0>
+		<g1>Musical</g1>
+	</data>
+	<data>
+		<g0>683</g0>
+		<g1>Rock</g1>
+	</data>
+	<data>
+		<g0>684</g0>
+		<g1>Volksmusik</g1>
+	</data>
+	<data>
+		<g0>685</g0>
+		<g1>Alternative</g1>
+	</data>
+	<data>
+		<g0>686</g0>
+		<g1>Pop</g1>
+	</data>
+	<data>
+		<g0>687</g0>
+		<g1>Clips</g1>
+	</data>
+	<data>
+		<g0>688</g0>
+		<g1>Show</g1>
+	</data>
+	<data>
+		<g0>689</g0>
+		<g1>Interview</g1>
+	</data>
+	<data>
+		<g0>690</g0>
+		<g1>Theater</g1>
+	</data>
+	<data>
+		<g0>691</g0>
+		<g1>Kino</g1>
+	</data>
+	<data>
+		<g0>692</g0>
+		<g1>Kultur</g1>
+	</data>
+	<data>
+		<g0>701</g0>
+		<g1>Verschiedenes</g1>
+	</data>
+	<data>
+		<g0>790</g0>
+		<g1>Filme</g1>
+	</data>
+	<data>
+		<g0>791</g0>
+		<g1>Nachrichten</g1>
+	</data>
+	<data>
+		<g0>792</g0>
+		<g1>Serien</g1>
+	</data>
+	<data>
+		<g0>793</g0>
+		<g1>Shows</g1>
+	</data>
+	<data>
+		<g0>795</g0>
+		<g1>Zeichentrick</g1>
+	</data>
+	<data>
+		<g0>796</g0>
+		<g1>Anime</g1>
+	</data>
+</genre>

@@ -1,0 +1,28 @@
+
+if [ -z "$1" ]; then
+   echo "Usage: epgh-request <request> [ <user> <passwd> ]"
+   exit
+fi
+
+#---------
+# login
+
+. epgh-login "$2" "$3"
+
+#---------
+# work
+
+# RES=$(wget -q -O - "$EPGD_HOST:$EPGD_PORT/sid$EPG_HTTPD_SESSION/data/$1")
+
+RES=$(curl -s  "$EPGD_HOST:$EPGD_PORT/sid$EPG_HTTPD_SESSION/data/$1")
+
+echo $RES | json_pp
+
+if [ $? -ne 0 ]; then 
+   echo "Got: $RES"
+fi
+
+#---------
+# logout
+
+epgh-login logout
