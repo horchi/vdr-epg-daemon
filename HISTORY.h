@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.103"
-#define VERSION_DATE "03.03.2017"
+#define _VERSION     "1.1.104"
+#define VERSION_DATE "06.03.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -17,7 +17,9 @@
 /*
  * ------------------------------------
 
- 
+2017-03-06: version 1.1.104 (horchi)
+   - change: Fixed order of push/tag in Makefile
+
 2017-03-03: version 1.1.103 (horchi)
    - bugfix: Fixed os release detection for SuSe (fixed by 3po)
 
