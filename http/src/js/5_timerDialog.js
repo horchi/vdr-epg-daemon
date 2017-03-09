@@ -444,8 +444,8 @@ epgd.searchTimerDialog.prototype.render = function (t) {
         form.tChExclude0.checked = 1;
     form.tChFormat.value = t.chformat || (t.id ? '' : epgd.profile.chFormat);
     form.tNameMode.defaultIndex = parseInt(t.category == 'Serie' ? epgd.profile.namingModeSearchSerie : epgd.profile.namingModeSearchMovie, 10);
-    form.tNameMode.selectedIndex = t.namingmode || form.tNameMode.defaultIndex;
-    form.tTemplate.value = t.template || (t.category == 'Serie' ? epgd.profile.namingModeSearchSerieTemplate : epgd.profile.namingModeSearchMovieTemplate);
+    form.tNameMode.selectedIndex =  typeof t.namingmode == "undefined" ? form.tNameMode.defaultIndex : t.namingmode;
+    form.tTemplate.value = typeof t.template == "undefined" ? (t.category == 'Serie' ? epgd.profile.namingModeSearchSerieTemplate : epgd.profile.namingModeSearchMovieTemplate) : 10;
     $(form.tNameMode).change();
     this.$win.parent().find('#tBCopy').toggle(!!t.id);
 };
@@ -590,7 +590,7 @@ epgd.searchDialog.prototype.create = function () {
     $(form.tSName).autocomplete({
         minLength: 0,
         maxHeight: 300,
-        source:function(){return false}, // damit bei einem focus kein error ausgelöst wird
+        source:function(){return false}, // damit bei einem focus kein error ausgelï¿½st wird
         select: function (ev, ui) {
             var d = ui.item.data || { id: '' };
             if (d.id) {
