@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.105"
+#define _VERSION     "1.1.106"
 #define VERSION_DATE "06.03.2017"
 #define DB_API       4
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-03-09: version 1.1.106 (horchi)
+   - bugfix: Fixed missing INIT_AFTER in Make.config
 
 2017-03-06: version 1.1.105 (horchi)
    - added: Added column for future features to vdrs table
