@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.107"
-#define VERSION_DATE "09.03.2017"
+#define _VERSION     "1.1.108"
+#define VERSION_DATE "12.03.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+2017-03-12: version 1.1.108 (rechner)
+   - bugfix: namingmode searchtimer shows always 10 instead of template
+   
 2017-03-09: version 1.1.106 (rechner)
    - bugfix: default namingmode on searchtimer was shown if VDR was stored
  
