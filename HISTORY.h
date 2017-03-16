@@ -5,7 +5,11 @@
  */
 
 #define _VERSION     "1.1.108"
+<<<<<<< HEAD
 #define VERSION_DATE "16.03.2017"
+=======
+#define VERSION_DATE "12.03.2017"
+>>>>>>> 01c04a4124a98183bd6294d8f52431ff0b2dab45
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,12 +20,19 @@
 
 /*
  * ------------------------------------
+<<<<<<< HEAD
 
 2017-03-16: version 1.1.108 (horchi)
    - change: Improved error message on failed downloads
    - added: sleep 1 second every 50 scraper downloads due to server limit
 
 2017-03-09: version 1.1.107 (rechner)
+=======
+2017-03-12: version 1.1.108 (rechner)
+   - bugfix: namingmode searchtimer shows always 10 instead of template
+   
+2017-03-09: version 1.1.106 (rechner)
+>>>>>>> 01c04a4124a98183bd6294d8f52431ff0b2dab45
    - bugfix: default namingmode on searchtimer was shown if VDR was stored
 
 2017-03-09: version 1.1.106 (horchi)

@@ -445,7 +445,7 @@ epgd.searchTimerDialog.prototype.render = function (t) {
     form.tChFormat.value = t.chformat || (t.id ? '' : epgd.profile.chFormat);
     form.tNameMode.defaultIndex = parseInt(t.category == 'Serie' ? epgd.profile.namingModeSearchSerie : epgd.profile.namingModeSearchMovie, 10);
     form.tNameMode.selectedIndex =  typeof t.namingmode == "undefined" ? form.tNameMode.defaultIndex : t.namingmode;
-    form.tTemplate.value = typeof t.template == "undefined" ? (t.category == 'Serie' ? epgd.profile.namingModeSearchSerieTemplate : epgd.profile.namingModeSearchMovieTemplate) : 10;
+    form.tTemplate.value = typeof t.template == "undefined" ? (t.category == 'Serie' ? epgd.profile.namingModeSearchSerieTemplate : epgd.profile.namingModeSearchMovieTemplate) : t.template;
     $(form.tNameMode).change();
     this.$win.parent().find('#tBCopy').toggle(!!t.id);
 };
