@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.109"
+#define _VERSION     "1.1.110"
 #define VERSION_DATE "16.03.2017"
 #define DB_API       4
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-03-16: version 1.1.110 (horchi)
+   - added: Congig option for MovieDb api-key
 
 2017-03-16: version 1.1.109 (horchi)
    - change: Fixed git merge problems

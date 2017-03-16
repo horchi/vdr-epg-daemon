@@ -366,6 +366,8 @@ int cEpgd::atConfigItem(const char* Name, const char* Value)
 
    else if (!strcasecmp(Name, "ScrapEpg"))           EpgdConfig.scrapEpg = atoi(Value);
    else if (!strcasecmp(Name, "ScrapRecordings"))    EpgdConfig.scrapRecordings = atoi(Value);
+   else if (!strcasecmp(Name, "ScrapMovieDbApiKey")) sstrcpy(EpgdConfig.scrapMovieDbApiKey, Value, sizeof(EpgdConfig.scrapMovieDbApiKey));
+
    else if (!strcasecmp(Name, "NetDevice"))          sstrcpy(EpgdConfig.netDevice, Value, sizeof(EpgdConfig.netDevice));
    else if (!strcasecmp(Name, "HttpDevice"))         sstrcpy(EpgdConfig.httpDevice, Value, sizeof(EpgdConfig.httpDevice));
    else if (!strcasecmp(Name, "HttpPort"))           EpgdConfig.httpPort = atoi(Value);
@@ -1340,7 +1342,7 @@ void cEpgd::loop()
 
    scheduleAutoUpdate(EpgdConfig.checkInitial ? 10 : 0);
 
-   scrapNewEvents();   // # debug scarper at Start
+   // scrapNewEvents();   // # to debug scarper at Start
 
    while (!doShutDown())
    {

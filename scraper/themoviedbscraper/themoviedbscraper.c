@@ -9,17 +9,19 @@
 
 #include "../../lib/curl.h"
 #include "../../tools/stringhelpers.h"
+#include "../../epgdconfig.h"
 #include "themoviedbscraper.h"
 
 using namespace std;
 
-cMovieDBScraper::cMovieDBScraper(string language) {
-    apiKey = "abb01b5a277b9c2c60ec0302d83c5ee9";
-    this->language = language;
-    baseURL = "api.themoviedb.org/3";
-    posterSize = "w500";
-    backdropSize = "w1280";
-    actorthumbSize = "h632";
+cMovieDBScraper::cMovieDBScraper(string language)
+{
+   apiKey = EpgdConfig.scrapMovieDbApiKey; // "abb01b5a277b9c2c60ec0302d83c5ee9";
+   this->language = language;
+   baseURL = "api.themoviedb.org/3";
+   posterSize = "w500";
+   backdropSize = "w1280";
+   actorthumbSize = "h632";
 }
 
 cMovieDBScraper::~cMovieDBScraper() {
@@ -55,7 +57,7 @@ bool cMovieDBScraper::parseJSON(string jsonString) {
     if(!json_is_object(images)) {
         return false;
     }
-    
+
     json_t *imgUrl;
     imgUrl = json_object_get(images, "base_url");
     if(!json_is_string(imgUrl)) {

@@ -39,6 +39,7 @@ cEpgdConfig::cEpgdConfig()
    sstrcpy(epgView, "eventsview.sql", sizeof(epgView));
    sstrcpy(epgViewWeb, "eventsviewplain.sql", sizeof(epgViewWeb));
    sstrcpy(theTvDBView, "thetvdbview.sql", sizeof(theTvDBView));
+   sstrcpy(scrapMovieDbApiKey, "abb01b5a277b9c2c60ec0302d83c5ee9", sizeof(scrapMovieDbApiKey));
    updateThreshold = 200;
    maintanance = no;
 
