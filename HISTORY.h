@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.107"
-#define VERSION_DATE "09.03.2017"
+#define _VERSION     "1.1.108"
+#define VERSION_DATE "16.03.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,9 +16,14 @@
 
 /*
  * ------------------------------------
-2017-03-09: version 1.1.106 (rechner)
+
+2017-03-16: version 1.1.108 (horchi)
+   - change: Improved error message on failed downloads
+   - added: sleep 1 second every 50 scraper downloads due to server limit
+
+2017-03-09: version 1.1.107 (rechner)
    - bugfix: default namingmode on searchtimer was shown if VDR was stored
- 
+
 2017-03-09: version 1.1.106 (horchi)
    - bugfix: Fixed missing INIT_AFTER in Make.config
 

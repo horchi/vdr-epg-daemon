@@ -137,58 +137,70 @@ int cCurl::exit()
 // Get Url
 //***************************************************************************
 
-int cCurl::GetUrl(const char *url, std::string *sOutput, const std::string &sReferer)
+int cCurl::GetUrl(const char* url, std::string* sOutput, const std::string& sReferer)
 {
-  CURLcode res;
+   CURLcode res;
 
-  init();
+   init();
 
-  curl_easy_setopt(handle, CURLOPT_URL, url);            // Set the URL to get
+   curl_easy_setopt(handle, CURLOPT_URL, url);            // Set the URL to get
 
-  if (sReferer != "")
-    curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
+   if (sReferer != "")
+      curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
 
-  curl_easy_setopt(handle, CURLOPT_HTTPGET, yes);
-  curl_easy_setopt(handle, CURLOPT_FAILONERROR, yes);
-  curl_easy_setopt(handle, CURLOPT_WRITEDATA, 0);       // Set option to write to string
-  sBuf = "";
+   curl_easy_setopt(handle, CURLOPT_HTTPGET, yes);
+   curl_easy_setopt(handle, CURLOPT_FAILONERROR, yes);
+   curl_easy_setopt(handle, CURLOPT_WRITEDATA, 0);       // Set option to write to string
+   sBuf = "";
 
-  res = curl_easy_perform(handle);
+   if ((res = curl_easy_perform(handle)) != CURLE_OK)
+   {
+      long httpCode = 0;
 
-  if (res != CURLE_OK)
-  {
-     *sOutput = "";
-     return 0;
-  }
+      curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
+      tell(1, "Error: Getting URL failed; %s (%d); http code was (%ld) [%s]",
+           curl_easy_strerror(res), res, httpCode, url);
 
-  *sOutput = sBuf;
-  return 1;
+      *sOutput = "";
+
+      return 0;
+   }
+
+   *sOutput = sBuf;
+
+   return 1;
 }
 
-int cCurl::GetUrlFile(const char *url, const char *filename, const std::string &sReferer)
+int cCurl::GetUrlFile(const char* url, const char* filename, const std::string& sReferer)
 {
-  int nRet = 0;
-  init();
+   int nRet = 0;
 
-  // Point the output to a file
+   init();
 
-  FILE *fp;
-  if ((fp = fopen(filename, "w")) == NULL)
-    return 0;
+   // Point the output to a file
 
-  curl_easy_setopt(handle, CURLOPT_WRITEDATA, fp);       // Set option to write to file
-  curl_easy_setopt(handle, CURLOPT_URL, url);            // Set the URL to get
-  if (sReferer != "")
-    curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
-  curl_easy_setopt(handle, CURLOPT_HTTPGET, yes);
-  if (curl_easy_perform(handle) == 0)
-    nRet = 1;
-  else
-    nRet = 0;
+   FILE *fp;
 
-  curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);     // Set option back to default (string)
-  fclose(fp);
-  return nRet;
+   if ((fp = fopen(filename, "w")) == NULL)
+      return 0;
+
+   curl_easy_setopt(handle, CURLOPT_WRITEDATA, fp);       // Set option to write to file
+   curl_easy_setopt(handle, CURLOPT_URL, url);            // Set the URL to get
+
+   if (sReferer != "")
+      curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
+
+   curl_easy_setopt(handle, CURLOPT_HTTPGET, yes);
+
+   if (curl_easy_perform(handle) == 0)
+      nRet = 1;
+   else
+      nRet = 0;
+
+   curl_easy_setopt(handle, CURLOPT_WRITEDATA, NULL);     // Set option back to default (string)
+   fclose(fp);
+
+   return nRet;
 }
 
 int cCurl::PostUrl(const char *url, const std::string &sPost, std::string *sOutput, const std::string &sReferer)
@@ -433,8 +445,13 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
 
    if ((res = curl_easy_perform(handle)) != 0)
    {
+      long httpCode = 0;
+
+      curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
+      tell(1, "Error: Download failed; %s (%d); http code was (%ld) [%s]",
+           curl_easy_strerror(res), res, httpCode, url);
+
       data->clear();
-      tell(1, "Error, download failed; %s (%d)", curl_easy_strerror(res), res);
 
       return fail;
    }

@@ -1340,6 +1340,8 @@ void cEpgd::loop()
 
    scheduleAutoUpdate(EpgdConfig.checkInitial ? 10 : 0);
 
+   scrapNewEvents();   // # debug scarper at Start
+
    while (!doShutDown())
    {
       setState(Es::esStandby);
@@ -2307,8 +2309,11 @@ int cEpgd::scrapNewEvents()
 
       cSystemNotification::check();
 
-      if (seriesCur%10 == 0)
+      if (seriesCur % 10 == 0)
          tell(0, "series episode %d / %d scraped...continuing scraping", seriesCur, seriesTotal);
+
+      if (seriesCur % 50 == 0)
+         sleep(1);
 
       tvdbManager->ProcessSeries(*it);
 
@@ -2351,8 +2356,11 @@ int cEpgd::scrapNewEvents()
    {
       movieCur++;
 
-      if (movieCur%10 == 0)
+      if (movieCur % 10 == 0)
          tell(0, "movie %d / %d scraped...continuing scraping", movieCur, moviesTotal);
+
+      if (movieCur % 50 == 0)
+         sleep(1);
 
       movieDbManager->ProcessMovie(*it);
 
