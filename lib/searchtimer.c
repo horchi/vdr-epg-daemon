@@ -1224,8 +1224,8 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
 
    if (repeatfields & sfFolge)
    {
-      selectDoneTimer->build(" and (field('%s',ifnull(compshorttext,''),ifnull(episodecomppartname,'')) > 0"
-                             "   or field('%s',ifnull(compshorttext,''),ifnull(episodecomppartname,'')) > 0)",
+      selectDoneTimer->build(" and (field('%s',ifnull(compshorttext,'NoShortnameAvailable'),ifnull(episodecomppartname,'NoShortnameAvailable')) > 0"
+                             "   or field('%s',ifnull(compshorttext,''),ifnull(episodecomppartname,'NoShortnameAvailable')) > 0)",
                              useeventsDb->getStrValue("COMPSHORTTEXT"), useeventsDb->getStrValue("EPISODECOMPPARTNAME"));
    }
 

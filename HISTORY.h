@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.110"
-#define VERSION_DATE "16.03.2017"
+#define _VERSION     "1.1.111"
+#define VERSION_DATE "18.03.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2017-03-18: version 1.1.111 (horchi)
+   - change: modified repeaing timer check statement to handle '' values like null values again
+   - added:  new view eventsview-perlbo.sql
+   - change: fixed some typos
 
 2017-03-16: version 1.1.110 (horchi)
    - added: Congig option for MovieDb api-key

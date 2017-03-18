@@ -10,7 +10,7 @@ if [ "$1" == "-h" ]; then
   exit 0
 fi
 
-mysql -u epg2vdr -Depg2vdr -e "select from_unixtime(lastmerge) as 'las merge was at' from vdrs where uuid = 'epgd';"
+mysql -u epg2vdr -Depg2vdr -e "select from_unixtime(lastmerge) as 'last merge was at' from vdrs where uuid = 'epgd';"
 mysql -u epg2vdr -Depg2vdr -e "select count(1) as 'events pending for merge' from events where source = 'vdr' and updsp > (select lastmerge from vdrs where uuid = 'epgd');"
 mysql -u epg2vdr -Depg2vdr -e "select count(source),source from events group by source;"
 
