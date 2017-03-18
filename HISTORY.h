@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.111"
+#define _VERSION     "1.1.112"
 #define VERSION_DATE "18.03.2017"
 #define DB_API       4
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-03-18: version 1.1.112 (horchi)
+   - bugfix: fixed imagecount value in events table
 
 2017-03-18: version 1.1.111 (horchi)
    - change: modified repeaing timer check statement to handle '' values like null values again

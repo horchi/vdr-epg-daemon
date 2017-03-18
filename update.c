@@ -1808,7 +1808,7 @@ int cEpgd::parseEvent(cDbRow* event, xmlNode* node)
            event->getBigintValue("EVENTID"),
            event->getStrValue("FILEREF"));
 
-   event->setValue("IMAGECOUNT", imgCnt);
+   event->setValue("IMAGECOUNT", min(imgCnt, EpgdConfig.maximagesperevent));
 
    free(images);
    free(imagetype);
@@ -1828,6 +1828,8 @@ int cEpgd::storeImageRefs(tEventId evtId, const char* source, const char* images
    int lfn = 0;
    char* imagesCsv = strdup(images);
    int count = 0;
+
+   // #TODO limit here to EpgdConfig.maximagesperevent
 
    for (char* p = imagesCsv; p && *p; p = next, lfn++)
    {
