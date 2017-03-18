@@ -690,7 +690,7 @@ int cSearchTimer::checkTimers()
 {
    int count = 0;
 
-   tell(1, "Checking timers against actual epg and serarchtimer settings");
+   tell(1, "Checking timers against actual epg and searchtimer settings");
 
    if (checkConnection() != success)
       return 0;

@@ -2316,9 +2316,6 @@ int cEpgd::scrapNewEvents()
       if (seriesCur % 10 == 0)
          tell(0, "series episode %d / %d scraped...continuing scraping", seriesCur, seriesTotal);
 
-      if (seriesCur % 50 == 0)
-         sleep(1);
-
       tvdbManager->ProcessSeries(*it);
 
       if (doShutDown())
@@ -2356,6 +2353,8 @@ int cEpgd::scrapNewEvents()
 
    tell(0, "%d new movies to scrap in db", moviesTotal);
 
+   time_t sectionStartAt = time(0);  // split download in parts of 40
+
    for (vector<sMovieResult>::iterator it = moviesToScrap.begin(); it != moviesToScrap.end(); ++it)
    {
       movieCur++;
@@ -2363,8 +2362,19 @@ int cEpgd::scrapNewEvents()
       if (movieCur % 10 == 0)
          tell(0, "movie %d / %d scraped...continuing scraping", movieCur, moviesTotal);
 
-      if (movieCur % 50 == 0)
-         sleep(1);
+      if (movieCur % 40 == 0)
+      {
+         int duration = time(0) - sectionStartAt;
+
+         if (duration < 10)
+         {
+            duration = 10 - duration;
+            tell(0, "Waiting %d seconds..", duration);
+            sleep(duration);
+         }
+
+         sectionStartAt = time(0);
+      }
 
       movieDbManager->ProcessMovie(*it);
 
