@@ -1052,7 +1052,7 @@ class cDbConnection
 
       MYSQL* mysql;
 
-      int initialized;
+      // int initialized;
       int attached;
       int inTact;
       int connectDropped;

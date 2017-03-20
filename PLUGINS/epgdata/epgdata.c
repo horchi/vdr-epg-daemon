@@ -58,7 +58,7 @@ int Epgdata::initDb()
 
    // --------
    // by fileref (for pictures)
-   // select name from fileref 
+   // select name from fileref
    //     where source = ? and fileref = ?
 
    stmtByFileRef = new cDbStatement(obj->fileDb);
@@ -68,12 +68,12 @@ int Epgdata::initDb()
    stmtByFileRef->build(" from %s where ", obj->fileDb->TableName());
    stmtByFileRef->bind("SOURCE", cDBS::bndIn | cDBS::bndSet);
    stmtByFileRef->bind("FILEREF", cDBS::bndIn | cDBS::bndSet, " and ");
-   
+
    status += stmtByFileRef->prepare();
 
    // ---------------
    // (for cleanup double)
-   // select name from fileref 
+   // select name from fileref
    //     where source = ? order by name desc
 
    stmtCleanDouble = new cDbStatement(obj->fileDb);
@@ -83,11 +83,11 @@ int Epgdata::initDb()
    stmtCleanDouble->build(" from %s where ", obj->fileDb->TableName());
    stmtCleanDouble->bind("SOURCE", cDBS::bndIn | cDBS::bndSet);
    stmtCleanDouble->build(" order by name desc");
-   
+
    status += stmtCleanDouble->prepare();
 
    // ---------
-   // select channelid, merge, mergesp from channelmap 
+   // select channelid, merge, mergesp from channelmap
    //     where source = ? and extid = ?
 
    selectId = new cDbStatement(obj->mapDb);
@@ -99,12 +99,12 @@ int Epgdata::initDb()
    selectId->build(" from %s where ", obj->mapDb->TableName());
    selectId->bind("SOURCE", cDBS::bndIn | cDBS::bndSet);
    selectId->bind("EXTERNALID", cDBS::bndIn | cDBS::bndSet, " and ");
-   
+
    status += selectId->prepare();
 
    // ---------
    // select name, tag from filerf
-   //  where source = 'epgdata' 
+   //  where source = 'epgdata'
    //    and name like ?
 
    valueName.setField(obj->fileDb->getField("NAME"));
@@ -115,7 +115,7 @@ int Epgdata::initDb()
    selectByDate->build("select ");
    selectByDate->bind(&valueName, cDBS::bndOut);
    selectByDate->bind("FILEREF", cDBS::bndOut, ", ");
-   selectByDate->build(" from %s where source = '%s' and ", 
+   selectByDate->build(" from %s where source = '%s' and ",
                        obj->fileDb->TableName(), getSource());
    selectByDate->bindCmp(0, &valueNameLike, "like");
 
@@ -123,13 +123,13 @@ int Epgdata::initDb()
 
 //    // --------
 //    // update events set delflg = ?, updflg = ?, fileref = ?, updsp = ?
-//    //    where fileref = ? 
+//    //    where fileref = ?
 //    //      and source = ?;
 //    //      and updflg in (....)
 
 //    valueFileRef.setField(obj->eventsDb->getField("FileRef"));
 //    stmtSetDelByFileref = new cDbStatement(obj->eventsDb);
-   
+
 //    stmtSetDelByFileref->build("update %s set ", obj->eventsDb->TableName());
 //    stmtSetDelByFileref->bind("DelFlg", cDbService::bndIn |cDbService:: bndSet);
 //    stmtSetDelByFileref->bind("UpdFlg", cDbService::bndIn |cDbService:: bndSet, ", ");
@@ -143,8 +143,8 @@ int Epgdata::initDb()
 //    status += stmtSetDelByFileref->prepare();
 
    // ----------
-   // update events 
-   //   set updflg = case when updflg in (...) then 'D' else updflg end, 
+   // update events
+   //   set updflg = case when updflg in (...) then 'D' else updflg end,
    //       delflg = 'Y',
    //       updsp = unix_timestamp()
    //   where source = '...'
@@ -158,7 +158,7 @@ int Epgdata::initDb()
    stmtMarkOldEvents->build(" where source = '%s'", getSource());
    stmtMarkOldEvents->build(" and  (source, fileref) not in (select source,fileref from fileref)");
 
-   status += stmtMarkOldEvents->prepare();  
+   status += stmtMarkOldEvents->prepare();
 
    // ----------
    // if no epgdata entry in fileref read files from FS to table
@@ -198,7 +198,7 @@ int Epgdata::initDb()
 
          asprintf(&tag, "%ld", sb.st_size);
          asprintf(&fileRef, "%s-%s", dp->d_name, tag);
-         
+
          // store file and let tag NULL to indicate that processing is needed
 
          obj->fileDb->clear();
@@ -207,7 +207,7 @@ int Epgdata::initDb()
          obj->fileDb->setValue("EXTERNALID", "0");
          obj->fileDb->setValue("FILEREF", fileRef);
          obj->fileDb->store();
-         
+
          tell(1, "Added '%s' to table fileref", dp->d_name);
          free(fileRef);
          free(tag);
@@ -250,8 +250,8 @@ int Epgdata::atConfigItem(const char* Name, const char* Value)
 // Ready
 //***************************************************************************
 
-int Epgdata::ready() 
-{ 
+int Epgdata::ready()
+{
    static int count = na;
 
    if (isEmpty(pin))
@@ -312,8 +312,8 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
 
    if (status != success || isEmpty(data.name))
    {
-      tell(1, "Download header for day (%d) at '%s' failed, aborting, got name '%s', status was %d", 
-           day, logurl, data.name ? data.name : "", status);
+      tell(1, "Download header for day (%d) at '%s' failed, aborting, got name '%s', status was %d",
+           day, logurl, data.name, status);
       status = fail;
       goto Exit;
    }
@@ -324,7 +324,7 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
    asprintf(&path, "%s/%s", directory, data.name);
 
    // lookup file
-   
+
    obj->fileDb->clear();
    obj->fileDb->setValue("NAME", data.name);
    obj->fileDb->setValue("SOURCE", getSource());
@@ -336,8 +336,8 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
    asprintf(&like, "%.8s_%%", data.name);
    valueNameLike.setValue(like);
    free(like);
-   
-   // check for update 
+
+   // check for update
 
    if (selectByDate->find())
    {
@@ -348,7 +348,7 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
    if (haveOneForThisDay && day >= EpgdConfig.upddays)
    {
       // don't check for update of existing files more than 'upddays' in the future
-      
+
       tell(2, "Skipping update check of file '%s' for day %d", data.name, day);
 
       statistic->nonUpdates++;
@@ -375,7 +375,7 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
    if (!load && fileExists(fspath))
    {
       tell(1, "File '%s' exist, loading from filesystem", fspath);
-      
+
       obj->loadFromFs(&data, valueName.getStrValue(), getSource());
 
       free(fileRef);
@@ -393,9 +393,9 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
    if (load)
    {
       tell(0, "Download file: '%s' to '%s", logurl, data.name);
-      
+
       data.clear();
-      
+
       if (obj->downloadFile(url, fileSize, &data, timeout) != success)
       {
          tell(0, "Download of day (%d) from '%s' failed", day, logurl);
@@ -407,36 +407,36 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
       statistic->files++;
 
       // store zip to FS
-      
-      obj->storeToFs(&data, data.name, getSource());   
+
+      obj->storeToFs(&data, data.name, getSource());
    }
 
    if (data.isEmpty())
       goto Exit;
 
    // unzip ...
-   
+
    uzdata.clear();
-   
+
    if (unzip(path, /*filter*/ ".xml", uzdata.memory, bSize, entryName) == success)
    {
-      tell(0, "Processing file '%s' for day %d (%d/%d)", 
+      tell(0, "Processing file '%s' for day %d (%d/%d)",
            fileRef, day, haveOneForThisDay, load);
 
       uzdata.size = bSize;
-             
+
       // store ?
-      
+
       if (EpgdConfig.storeXmlToFs)
          obj->storeToFs(&uzdata, entryName, getSource());
-      
+
       // process file ..
-      
+
       obj->connection->startTransaction();
-      
+
       if ((status = processFile(uzdata.memory, uzdata.size, fileRef)) != success)
          statistic->rejected++;
-      
+
       if (!obj->dbConnected())
       {
          status = fail;
@@ -449,9 +449,9 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
 //       {
 //          // mark 'old' entrys in events table as deleted
 //          // and 'fake' fileref to new to avoid deletion at cleanup
-         
+
 //          tell(0, "Removing events of fileref '%s' for day %d", oldFileRef, day);
-         
+
 //          obj->eventsDb->clear();
 //          obj->eventsDb->setValue("DelFlg", "Y");
 //          obj->eventsDb->setValue("UpdFlg", "D");
@@ -461,19 +461,19 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
 //          valueFileRef.setValue(oldFileRef);                             // old fileref
 //          stmtSetDelByFileref->execute();
 //       }
-      
+
       // Confirm processing of file
-      
+
       obj->fileDb->setValue("EXTERNALID", "0");
       obj->fileDb->setValue("TAG", data.tag);
       obj->fileDb->setValue("FILEREF", fileRef);
       obj->fileDb->store();
-      
+
       obj->connection->commit();
    }
 
   Exit:
-   
+
    // free(oldFileRef);
    obj->fileDb->reset();
    selectByDate->freeResult();
@@ -509,7 +509,7 @@ int Epgdata::processFile(const char* data, int size, const char* fileRef)
       tell(0, "Invalid xml document returned from xslt for '%s', ignoring", fileRef);
       return fail;
    }
-   
+
    // DEBUG: xmlSaveFile("/tmp/test.xml", transformedDoc);
 
    for (xmlNodePtr node = xmlRoot->xmlChildrenNode; node && obj->dbConnected(); node = node->next)
@@ -517,25 +517,25 @@ int Epgdata::processFile(const char* data, int size, const char* fileRef)
       char* prop = 0;
       tEventId eventid;
       char* extid = 0;
-      
+
       // skip all unexpected elements
-      
+
       if (node->type != XML_ELEMENT_NODE || strcmp((char*)node->name, "event") != 0)
          continue;
-      
+
       // get/check eventid
-      
+
       if (!(prop = (char*)xmlGetProp(node, (xmlChar*)"id")) || !*prop || !(eventid = atoll(prop)))
       {
          xmlFree(prop);
          tell(0, "Missing event id, ignoring!");
          continue;
       }
-      
+
       xmlFree(prop);
 
       // get/check provider id
-      
+
       if (!(prop = (char*)xmlGetProp(node, (xmlChar*)"provid")) || !*prop || !atoi(prop))
       {
          xmlFree(prop);
@@ -555,9 +555,9 @@ int Epgdata::processFile(const char* data, int size, const char* fileRef)
       {
          int insert;
          const char* channelId = obj->mapDb->getStrValue("CHANNELID");
-         
+
          // create event ..
-         
+
          obj->eventsDb->clear();
          obj->eventsDb->setBigintValue("EVENTID", eventid);
          obj->eventsDb->setValue("CHANNELID", channelId);
@@ -578,7 +578,7 @@ int Epgdata::processFile(const char* data, int size, const char* fileRef)
          int merge = obj->mapDb->getIntValue("MERGE");
 
          // store ..
-         
+
          if (insert)
          {
             // handle insert
@@ -643,7 +643,7 @@ int Epgdata::getPicture(const char* imagename, const char* fileRef, MemoryStruct
    obj->fileDb->setValue("SOURCE", getSource());
 
    if (stmtByFileRef->find())
-      asprintf(&path, "%s/epgdata/%s", EpgdConfig.cachePath, 
+      asprintf(&path, "%s/epgdata/%s", EpgdConfig.cachePath,
                obj->fileDb->getStrValue("Name"));
 
    stmtByFileRef->freeResult();
@@ -669,16 +669,16 @@ int Epgdata::getPicture(const char* imagename, const char* fileRef, MemoryStruct
 int Epgdata::cleanupAfter()
 {
    const char* ext = ".zip";
-   struct dirent* dirent;   
+   struct dirent* dirent;
    DIR* dir;
    char* pdir;
    int count = 0;
    char* last = 0;
 
-   // cleanup *.zip in FS cache ... 
+   // cleanup *.zip in FS cache ...
 
    // remove old versions for each day
- 
+
    obj->fileDb->clear();
    obj->fileDb->setValue("SOURCE", getSource());
 
@@ -694,17 +694,17 @@ int Epgdata::cleanupAfter()
          obj->fileDb->deleteWhere("%s", where);
          free(where);
       }
-       
+
       free(last);
       last = strdup(name);
    }
-   
+
    free(last);
    stmtCleanDouble->freeResult();
 
    // mark wasted events (delflg, ...)
 
-   stmtMarkOldEvents->execute();   
+   stmtMarkOldEvents->execute();
 
    // cleanup filesystem, remove files which not referenced in table
 
@@ -721,7 +721,7 @@ int Epgdata::cleanupAfter()
    tell(1, "Starting cleanup of epgdata zip's in '%s'", pdir);
 
    free(pdir);
- 
+
    while ((dirent = readdir(dir)))
    {
       // check extension
@@ -730,7 +730,7 @@ int Epgdata::cleanupAfter()
          continue;
 
       // lookup file
-   
+
       obj->fileDb->clear();
       obj->fileDb->setValue("NAME", dirent->d_name);
       obj->fileDb->setValue("SOURCE", getSource());
@@ -741,7 +741,7 @@ int Epgdata::cleanupAfter()
 
          if (!removeFile(pdir))
             count++;
-         
+
          free(pdir);
       }
 

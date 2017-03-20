@@ -62,16 +62,16 @@ HTTPOBJS += epgdconfig.o webstore.o webdo.o webauth.o webtools.o httpd.o svdrpcl
 all: hlib $(TARGET) $(HTTPTARGET) plugins lv
 
 eptest: eptest.c episode.c
-	$(CC) $(CFLAGS) $(DEFINES) eptest.c episode.c svdrpclient.c  -L./lib -lhorchi $(DLIBS) -o eptst
+	$(CC) $(DEFINES) eptest.c episode.c svdrpclient.c  -L./lib -lhorchi $(DLIBS) -o eptst
 
 hlib:
 	(cd lib && $(MAKE) lib)
 
 $(TARGET) : hlib $(OBJS)
-	$(CC) $(CFLAGS) -rdynamic $(OBJS) $(DLIBS) -o $@
+	$(CC) -rdynamic $(OBJS) $(DLIBS) -o $@
 
 $(HTTPTARGET) : hlib $(HTTPOBJS)
-	$(CC) $(CFLAGS) -rdynamic $(HTTPOBJS) $(HTTPLIBS) -o $@
+	$(CC) -rdynamic $(HTTPOBJS) $(HTTPLIBS) -o $@
 
 lv:
 	(cd epglv && $(MAKE))

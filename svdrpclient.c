@@ -449,7 +449,7 @@ int cSvdrpClient::connect()
    {
       if (errno != EINPROGRESS)
       {
-         tell(0, "Error: SVDRPCL: connect to %s:%hu failed: %s", ip, port, strerror(errno));
+         tell(0, "Error: SVDRPCL: connect to %s:%d failed: %s", ip, port, strerror(errno));
          return fail;
       }
 
@@ -490,7 +490,7 @@ int cSvdrpClient::connect()
 
       if (result != 0)
       {
-         tell(0, "Error: SVDRPCL: Cconnecting to '%s:%hu' %s failed", ip, port, strerror(errno));
+         tell(0, "Error: SVDRPCL: Cconnecting to '%s:%d' %s failed", ip, port, strerror(errno));
          ::close(sock);
 
          return fail;
@@ -533,7 +533,7 @@ int cSvdrpClient::open()
    if (greeting.First() && greeting.First()->Text())
       msg = greeting.First()->Text();
 
-   tell(2, "SVDRPCL: connected to %s:%hu '%s'", ip, port, msg);
+   tell(2, "SVDRPCL: connected to %s:%d '%s'", ip, port, msg);
 
    return success;
 }

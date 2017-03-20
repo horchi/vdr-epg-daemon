@@ -2,7 +2,7 @@
 
 
 # MySQL helper script by 3PO
-# Update 26.02.2017
+# Update 19.03.2017
 
 
 PASSWORD=""
@@ -10,6 +10,8 @@ HOST=""
 MY_CNF="/etc/mysql/my.cnf"
 MY_DB_SV="mysqld"
 TMPFILE="/tmp/.epgtool"
+EPGD_CONF="/etc/epgd/epgd.conf"
+
 
 DISTRI="$(grep "^NAME=" /etc/os-release |cut -d "=" -f2 | sed -e "s/\"//g")"
 RELEASE="$(grep "^VERSION_ID=" /etc/os-release |cut -d "=" -f2 | sed -e "s/\"//g")"
@@ -286,11 +288,27 @@ case $1 in
    YES_NO
    ;;
 
+   -apikey|apikey)
+   if [ ! -f "$EPGD_CONF" ] ; then
+     echo -e "\n $EPGD_CONF -> File not found!\n"
+     exit
+   fi
+   APIKEY="$(grep ScrapMovieDbApiKey "$EPGD_CONF" |sed -e 's/ //g' |cut -d "=" -f2)"
+   TMDBAPIURL="https://api.themoviedb.org/3/movie/550?"
+
+   if [ "$(curl -s "$TMDBAPIURL"api_key="$APIKEY" | grep '\"status_code\":7')" ] ; then
+     echo -e "\n Invalid API key: You must be granted a valid key\n"
+   else
+     echo -e "\n Your API key is valid: -> '$APIKEY'\n"
+   fi
+   ;;
+
+
    *)
    echo ""
    echo " MySQL helper script by 3PO"
    echo ""
-   echo " usage: [-new-db] [-new-u] [-del-db] [-del-u] [ -del-all] [-show] [-fix-cnf] [-dropview] [-drop-all] [-drop-pics] [-check-events] [-check-pic] [-show-stats] [-show-size]"
+   echo " usage: [-new-db] [-new-u] [-del-db] [-del-u] [ -del-all] [-show] [-fix-cnf] [-dropview] [-drop-all] [-drop-pics] [-check-events] [-check-pic] [-show-stats] [-show-size] [-apikey]"
    echo ""
    echo "	-new-db         Create new Database for epg2vdr" 
    echo "	-new-u          Create new User for epg2vdr" 
@@ -306,6 +324,7 @@ case $1 in
    echo "	-check-pic      Shows quantity of EPG Pictures stored in Database"
    echo "	-show-stats     Shows the Stats and Versions of EPGd and the connected VDRs"
    echo "	-show-size      Shows the Size of the Tables in the epg2vdr Database"
+   echo "	-apikey         Checks the validity of the API key for https://www.themoviedb.org"
    echo ""
    exit
    ;;

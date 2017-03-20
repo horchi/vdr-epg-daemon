@@ -133,7 +133,7 @@ void cTVDBManager::UpdateSeries(void) {
     tell(0, "%ld updated Series, %ld updatedEpisodes", updatedSeries.size(), updatedEpisodes.size());
     tell(0, "%ld series to update in db, %ld episodes to update in db", scrapSeriesIDs.size(), scrapEpisodeIDs.size());
     int seriesCur = 1;
-    for (set<int>::iterator it = scrapSeriesIDs.begin(); !cEpgd::doShutDown && it != scrapSeriesIDs.end(); it++) {
+    for (set<int>::iterator it = scrapSeriesIDs.begin(); !cEpgd::doShutDown() && it != scrapSeriesIDs.end(); it++) {
         if (seriesCur%10 == 0)
             tell(0, "ReScraped %d series...continuing rescraping", seriesCur);
         cTVDBSeries *series = ScrapSeries(*it);
@@ -147,7 +147,7 @@ void cTVDBManager::UpdateSeries(void) {
         tell(0, "ReScraped %d series", seriesCur-1);
 
     int episodeCur = 1;
-    for (set<int>::iterator it = scrapEpisodeIDs.begin(); !cEpgd::doShutDown && it != scrapEpisodeIDs.end(); it++) {
+    for (set<int>::iterator it = scrapEpisodeIDs.begin(); !cEpgd::doShutDown() && it != scrapEpisodeIDs.end(); it++) {
         if (episodeCur%10 == 0)
             tell(0, "ReScraped %d Episodes...continuing rescraping", episodeCur);
         cTVDBEpisode *episode = tvdbScraper->GetEpisode(*it);

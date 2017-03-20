@@ -19,7 +19,7 @@ CFLAGS += -I$(EPGD_SRC)
 all: $(SOFILE)
 
 $(SOFILE): $(OBJS)
-	$(CC) $(CFLAGS) -shared $(OBJS) $(LIBS) -o $@
+	$(CC) -shared $(OBJS) $(LIBS) -o $@
 
 install: $(SOFILE) install-config
 	install -D $(SOFILE) $(_PLGDEST)/

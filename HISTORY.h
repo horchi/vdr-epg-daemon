@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.110"
-#define VERSION_DATE "16.03.2017"
+#define _VERSION     "1.1.113"
+#define VERSION_DATE "20.03.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,6 +16,19 @@
 
 /*
  * ------------------------------------
+
+2017-03-20: version 1.1.113 (horchi)
+    -added: Add validity check of the API key for https://www.themoviedb.org (by 3po)
+   - change: Removed compiler warnings when using clang
+   - added:  Added clang++ to Make.config (as optional compiler)
+
+2017-03-18: version 1.1.112 (horchi)
+   - bugfix: fixed imagecount value in events table
+
+2017-03-18: version 1.1.111 (horchi)
+   - change: modified repeaing timer check statement to handle '' values like null values again
+   - added:  new view eventsview-perlbo.sql
+   - change: fixed some typos
 
 2017-03-16: version 1.1.110 (horchi)
    - added: Congig option for MovieDb api-key

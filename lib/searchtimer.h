@@ -79,7 +79,7 @@ class cSearchTimer
       cDbTable* timerDb;
       cDbTable* mapDb;
       cDbTable* vdrDb;
-      cDbTable* messageDb;
+      // cDbTable* messageDb;
 
       cDbStatement* selectChannelFromMap;
       cDbStatement* selectDoneTimer;
@@ -87,7 +87,7 @@ class cSearchTimer
       cDbStatement* selectSearchtimerMaxModSp;
       cDbStatement* selectSearchTimerByName;
       cDbStatement* selectSearchTimerById;
-      cDbStatement* selectActiveVdrs;
+      // cDbStatement* selectActiveVdrs;
       cDbStatement* selectAllTimer;
       cDbStatement* selectRPTimerByEvent;
       cDbStatement* selectTimerByEventId;

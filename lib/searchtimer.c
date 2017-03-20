@@ -774,7 +774,7 @@ int cSearchTimer::checkTimers()
       {
          // if difference < 2 minutes adjust silent
 
-         if (abs(timerDb->getIntValue("_STARTTIME") - useeventsDb->getIntValue("STARTTIME")) > 2*tmeSecondsPerMinute)
+         if (std::abs(timerDb->getIntValue("_STARTTIME") - useeventsDb->getIntValue("STARTTIME")) > 2*tmeSecondsPerMinute)
             parent->message(0, 'I', "EPGD: Timer action", "Info: Starttime of event (%ld) '%s' changed from '%s' to '%s', updating timer (%ld)",
                             timerDb->getIntValue("EVENTID"), useeventsDb->getStrValue("TITLE"),
                             l2pTime(timerDb->getIntValue("_STARTTIME")).c_str(), l2pTime(useeventsDb->getIntValue("STARTTIME")).c_str(),
