@@ -690,7 +690,7 @@ int cSearchTimer::checkTimers()
 {
    int count = 0;
 
-   tell(1, "Checking timers against actual epg and serarchtimer settings");
+   tell(1, "Checking timers against actual epg and searchtimer settings");
 
    if (checkConnection() != success)
       return 0;
@@ -1224,8 +1224,8 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
 
    if (repeatfields & sfFolge)
    {
-      selectDoneTimer->build(" and (field('%s',ifnull(compshorttext,''),ifnull(episodecomppartname,'')) > 0"
-                             "   or field('%s',ifnull(compshorttext,''),ifnull(episodecomppartname,'')) > 0)",
+      selectDoneTimer->build(" and (field('%s',ifnull(compshorttext,'NoShortnameAvailable'),ifnull(episodecomppartname,'NoShortnameAvailable')) > 0"
+                             "   or field('%s',ifnull(compshorttext,''),ifnull(episodecomppartname,'NoShortnameAvailable')) > 0)",
                              useeventsDb->getStrValue("COMPSHORTTEXT"), useeventsDb->getStrValue("EPISODECOMPPARTNAME"));
    }
 

@@ -108,6 +108,7 @@ int cCurl::init(const char* httpproxy)
       curl_easy_setopt(handle, CURLOPT_PROXY, httpproxy);   // Specify HTTP proxy
    }
 
+   curl_easy_setopt(handle, CURLOPT_HTTPHEADER, 0);
    curl_easy_setopt(handle, CURLOPT_WRITEFUNCTION, collect_data);
    curl_easy_setopt(handle, CURLOPT_WRITEDATA, 0);                        // Set option to write to string
    curl_easy_setopt(handle, CURLOPT_FOLLOWLOCATION, yes);
@@ -439,7 +440,7 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
    curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "gzip");                 //
 
    if (headerlist)
-       curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headerlist);
+      curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headerlist);
 
    // perform http-get
 

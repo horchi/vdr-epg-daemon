@@ -400,6 +400,7 @@ Table useevents
 
    MASTERID                ""                                               cnt_masterid                  UInt       0 Data|Meta,
    USEID                   ""                                               cnt_useid                     UInt       0 Data,
+// SOURCE                  ""                                               source                        Ascii     25 Data
 
    SUBSOURCE               ""                                               sub_source                    Ascii     10 Data|Meta,
    SUBEVENTID              ""                                               sub_eventid                   UBigInt    0 Data|Meta,

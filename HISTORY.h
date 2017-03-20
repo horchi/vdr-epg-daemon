@@ -18,7 +18,7 @@
  * ------------------------------------
 
 2017-03-20: version 1.1.113 (horchi)
-    -added: Add validity check of the API key for https://www.themoviedb.org (by 3po)
+    -added:  Add validity check of the API key for https://www.themoviedb.org (by 3po)
    - change: Removed compiler warnings when using clang
    - added:  Added clang++ to Make.config (as optional compiler)
 
