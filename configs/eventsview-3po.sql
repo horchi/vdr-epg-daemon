@@ -20,6 +20,16 @@ else
   case when length(ifnull(sub_genre,'')) + length(ifnull(sub_country,'')) + length(ifnull(sub_year,'')) > 0 then ')' else '' end
  )
 end shorttext,
+case when sub_longdescription is Null or (sub_category not in ('Serie','Spielfilm') and length(cnt_longdescription) / (length(sub_longdescription)/100) > 20) then
+  concat('sub_longdescription','|DVB: ',cnt_longdescription)
+else
+  sub_longdescription
+end longdescription,
+case when cnt_source <> sub_source then
+  concat(upper(replace(cnt_source,'vdr','dvb')),'/',upper(sub_source))
+else
+  upper(replace(cnt_source,'vdr','dvb'))
+end mergesource,
 cnt_starttime starttime, cnt_duration duration, cnt_parentalrating parentalrating, cnt_vps vps, cnt_contents contents, replace(
 concat(
   TRIM(LEADING '|' FROM

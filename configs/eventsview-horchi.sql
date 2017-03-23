@@ -11,6 +11,16 @@ case when sub_shorttext is null then
 else
  sub_shorttext
 end shorttext,
+case when sub_longdescription is Null or (sub_category not in ('Serie','Spielfilm') and length(cnt_longdescription) / (length(sub_longdescription)/100) > 20) then
+  concat('sub_longdescription','|DVB: ',cnt_longdescription)
+else
+  sub_longdescription
+end longdescription,
+case when cnt_source <> sub_source then
+  concat(upper(replace(cnt_source,'vdr','dvb')),'/',upper(sub_source))
+else
+  upper(replace(cnt_source,'vdr','dvb'))
+end mergesource,
 cnt_starttime starttime, cnt_duration duration, cnt_parentalrating parentalrating, cnt_vps vps, cnt_contents contents, replace(
 concat(
   TRIM(LEADING '|' FROM
@@ -20,13 +30,13 @@ concat(
     case when sub_country is Null then '' else concat('|','Land: ',sub_country) end,
     case when sub_year is Null then '' else concat('|','Jahr: ',substring(sub_year,1,4)) end,
     case when epi_episodename is Null then '' else concat('|Serie: ',epi_episodename,' - Staffel: ',epi_season,' / Folge: ',epi_part) end,
+    case when cnt_source <> sub_source then concat('|','Quelle: ',upper(replace(cnt_source,'vdr','dvb')),'/',upper(sub_source)) else concat('|','Quelle: ',upper(replace(cnt_source,'vdr','dvb'))) end,
     case when sub_flags is Null then '' else concat('|',sub_flags) end,
     case when sub_flags is Null or sub_audio is Null then '' else ' ' end,
     case when sub_audio is Null then '' else concat('[', replace(sub_audio, ' ', '] ['), ']') end,
     case when sub_flags is Null and sub_audio is Null then '|' else '' end,
     case when sub_flags is Null or sub_audio is Null then '' else ' ' end,
-    case when cnt_parentalrating is Null then '' else concat('[FSK ',cnt_parentalrating,']') end,
-    case when cnt_source <> sub_source then concat(' [EPG: ',upper(replace(cnt_source,'vdr','dvb')),'/',upper(sub_source),']') else concat(' [EPG: ',upper(replace(cnt_source,'vdr','dvb')),']') end
+    case when cnt_parentalrating is Null then '' else concat('[FSK ',cnt_parentalrating,']') end
    )
   ),
    case when sub_tipp is Null then '' else concat('||',sub_tipp) end,

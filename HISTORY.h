@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.113"
-#define VERSION_DATE "20.03.2017"
+#define _VERSION     "1.1.114"
+#define VERSION_DATE "23.03.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -17,8 +17,11 @@
 /*
  * ------------------------------------
 
+2017-03-23: version 1.1.114 (horchi)
+   - change: Minor view change for peding features
+
 2017-03-20: version 1.1.113 (horchi)
-    -added:  Add validity check of the API key for https://www.themoviedb.org (by 3po)
+   - added:  Add validity check of the API key for https://www.themoviedb.org (by 3po)
    - change: Removed compiler warnings when using clang
    - added:  Added clang++ to Make.config (as optional compiler)
 
