@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.114"
-#define VERSION_DATE "23.03.2017"
+#define _VERSION     "1.1.115"
+#define VERSION_DATE "16.05.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2017-05-16: version 1.1.115 (horchi)
+   - change: Changed apple-mobile-web-app-status-bar-style to black
+   - bugfix: Fixed typo in eventsviews
 
 2017-03-23: version 1.1.114 (horchi)
    - change: Minor view change for peding features

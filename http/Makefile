@@ -38,7 +38,7 @@ lang:
 	cp -ua ./src/lang/* ./www/lang/
 
 # baut das default-theme und hinter dann auch ggf. weitere themes
-style: 
+style:
 	$(LESS_Compiler) -f ./tools/less-rhino-1.7.0.js ./tools/lessc-rhino-1.7.0.js --ru ./src/css/theme/default.less ./www/epgd.css
 
 
@@ -51,10 +51,10 @@ install-core:
 	cp ./www/epgd.css $(HTTPDEST)/
 	if test -f ./custom.css; then \
 	    cat ./custom.css >> $(HTTPDEST)/epgd.css; \
-	fi   
+	fi
 	cp -u ../HISTORY.h $(HTTPDEST)/
 	cp -u ../TODO $(HTTPDEST)/
-   
+
 install-lang:
 	cp -ua ./www/lang/* $(HTTPDEST)/lang
 
@@ -80,5 +80,4 @@ install-env:
 	@if ! test -d $(HTTPDEST)/images/; then \
 		mkdir -p "$(HTTPDEST)/images/"; \
 		chmod a+rx $(HTTPDEST)/images/; \
-	fi	
-
+	fi

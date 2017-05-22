@@ -12,7 +12,7 @@ else
  sub_shorttext
 end shorttext,
 case when sub_longdescription is Null or (sub_category not in ('Serie','Spielfilm') and length(cnt_longdescription) / (length(sub_longdescription)/100) > 20) then
-  concat('sub_longdescription','|DVB: ',cnt_longdescription)
+  concat(sub_longdescription,'|DVB: ',cnt_longdescription)
 else
   sub_longdescription
 end longdescription,

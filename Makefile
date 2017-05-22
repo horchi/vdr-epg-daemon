@@ -264,5 +264,5 @@ upd: update
 update:
 	git pull
 	@make clean install
-	restart epgd
-	restart epghttpd
+	systemctrl restart epgd
+	systemctrl restart epghttpd

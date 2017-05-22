@@ -7,6 +7,7 @@ After = <AFTER>
 
 Type = forking
 ExecStart = <BINDEST>/epgd -c /etc/epgd -p <PLGDEST>
+Restart = always
 
 [Install]
 
