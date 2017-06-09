@@ -9,8 +9,8 @@ case
     concat('(S', lpad(format(epi_season, 0), 2, '0'), 'E', lpad(format(epi_part, 0), 2, '0'), ') ', epi_partname)
   end
 end shorttext,
-case when sub_longdescription is Null or (sub_category not in ('Serie','Spielfilm') and length(cnt_longdescription) / (length(sub_longdescription)/100) > 20) then
-  concat(sub_longdescription,'|DVB: ',cnt_longdescription)
+case when sub_longdescription is Null then
+  cnt_longdescription
 else
   sub_longdescription
 end longdescription,
