@@ -214,9 +214,7 @@ install-config:
 	install --mode=644 -D ./configs/epg.dat $(CONFDEST)
 
 	for i in ./configs/eventsview*.sql; do\
-	   if ! test -f "$(CONFDEST)/`basename $$i`"; then\
-	      install --mode=644 -D "$$i" $(CONFDEST)/; \
-	   fi;\
+      install --mode=644 -D "$$i" $(CONFDEST)/; \
 	done;
 	if ! test -f $(CONFDEST)/epgd.conf; then \
 	   install --mode=644 -D ./configs/epgd.conf $(CONFDEST)/; \

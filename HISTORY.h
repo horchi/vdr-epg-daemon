@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.116"
-#define VERSION_DATE "08.06.2017"
+#define _VERSION     "1.1.117"
+#define VERSION_DATE "09.06.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2017-06-09: version 1.1.117 (horchi)
+   - change: Fixed install of eventviews*
 
 2017-06-08: version 1.1.116 (horchi)
    - change: Modified user views for better skin support
