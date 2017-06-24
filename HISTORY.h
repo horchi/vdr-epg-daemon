@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.117"
+#define _VERSION     "1.1.118"
 #define VERSION_DATE "09.06.2017"
 #define DB_API       4
 
@@ -16,6 +16,8 @@
 
 /*
  * ------------------------------------
+2017-06-24: version 1.1.118 (rechner)
+   - fixed: Fixed error while click on channel in pageNow View
 
 2017-06-09: version 1.1.117 (horchi)
    - change: Fixed install of eventviews*

@@ -48,7 +48,7 @@ epgd.pages.now = {
                             epgd.vdrs.current.switchChannel(ev.target.parentNode.id);
                         else {
                             epgd.$menu.menu("select", { target: "#menu_magazine" });
-                            epgd.pages.magazine.setChannel(ev.target.parentNode.id);
+                            epgd.pages.magazine.setChannel($(ev.target).closest('.channel').attr("id")); 
                         }
                         return;
                     }
