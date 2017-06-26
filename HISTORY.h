@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.118"
-#define VERSION_DATE "09.06.2017"
+#define _VERSION     "1.1.119"
+#define VERSION_DATE "25.06.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+2017-06-25: version 1.1.119 (rechner)
+   - fixed: check, if channel list is loaded in magazine View
+
 2017-06-24: version 1.1.118 (rechner)
    - fixed: Fixed error while click on channel in pageNow View
 
