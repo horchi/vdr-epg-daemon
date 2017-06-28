@@ -550,7 +550,7 @@ epgd.init = function () {
                     + ((epgd.login.rights & epgd.rights.umConfigUsers) == epgd.rights.umConfigUsers ? '<li id="menu_editUser"><a href="#menu_editUser">' + epgd.tr.pages.options.editUser + '</a></li>' : '')
                 + '</ul></li>');
             epgd.$menu.append('<li id="menu_help"><a href="#menu_help">' + epgd.tr.menu.help + '</a></li>');
-            epgd.$menu.append('<li id="menu_vdrs"><a href="#menu_vdrs">VDR</a><select></select></li>');
+            epgd.$menu.append('<li id="menu_vdrs"><a href="#menu_vdrs">VDR</a><select></select><span><a id="osd2web">-&gt;OSD</a></span></li>');
         }
         epgd.profile.needLogin == "1" && epgd.$menu.append('<li id="menu_login"><a href="#menu_login">'
             + (epgd.login.session ? epgd.login.user + ' ' + epgd.tr.pages.login.logout : epgd.tr.pages.login.label )
@@ -571,13 +571,22 @@ epgd.init = function () {
             html += '<option value="' + uuid + '"' + (uuid == epgd.vdrs.current.uuid ? 'selected' : '') + '>' + epgd.vdrs.list[uuid].name + '</option>';
         }
         $('<select>' + html + '</select>').replaceAll('#menu_vdrs > select').show().change(function () {
-            epgd.vdrs.current = epgd.vdrs.get(this[this.selectedIndex].value);
+            var vdr= epgd.vdrs.current = epgd.vdrs.get(this[this.selectedIndex].value);
+            if (vdr && vdr.osd2webp)
+                $('#osd2web').prop("target", "osd2web_" + vdr.name)
+                    .prop("href", "http://" + vdr.ip + ":" + vdr.osd2webp)
+                    .click(function(ev){
+                        ev.stopPropagation();
+                        return true;                   
+                    }).show();
+            else 
+                $('#osd2web').hide();
         }).mousedown(function (ev) {
             ev.stopPropagation();
             return true;
         }).click(function (ev) {
             return false;
-        });
+        }).change();
     }).bind("unload", function () {
         if (epgd.login.session)
             epgd.pages.login.doLogin('logout');

@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.119"
-#define VERSION_DATE "25.06.2017"
+#define _VERSION     "1.1.120"
+#define VERSION_DATE "28.06.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+2017-06-28: version 1.1.119 (rechner)
+   - added: Link to osd2web, if available
+
 2017-06-25: version 1.1.119 (rechner)
    - fixed: check, if channel list is loaded in magazine View
 
