@@ -290,7 +290,10 @@ epgd.eventDetail.win.prototype.render = function (detail) {
         + (e.year ? tr.year + '<b>' + e.year + '</b><br />' : '');
     info2 = (ep.part ? tr.part + '<b>' + ep.part + (ep.parts ? ' / ' + ep.parts + '' : '') + '</b><br />' : '')
         + (ep.season ? tr.season + '<b>' + ep.season + '</b><br />' : '')
-        + (ep.number ? tr.number + '<b>' + ep.number + '</b><br />' : '');
+        + (ep.number ? tr.number + '<b>' + ep.number + '</b><br />' : '')
+        + (ep.extracol1 ? ep.extracol1 + '<br />' : '')
+        + (ep.extracol2 ? ep.extracol2 + '<br />' : '')
+        + (ep.extracol3 ? ep.extracol3 + '<br />' : '');
 
    /*
     e.recordings = [
@@ -366,7 +369,7 @@ epgd.eventDetail.win.prototype.render = function (detail) {
             + '<div class="colFull desc">' + (desc ? desc.replace(/\n/g, '<br />') : '') + '</div>'
           + '</div>'
           + extInfo
-          + (e.category == 'Serie' || sc.isSerie ? '<h3 data-conti="' + constTitle + '"><span>' + tr.constabelInfo + '</span></h3><div class="desc">'
+          + (e.category == 'Serie' || sc.isSerie || ep.episodename ? '<h3 data-conti="' + constTitle + '"><span>' + tr.constabelInfo + '</span></h3><div class="desc">'
             + '<a class="iAsButton i-edit" href="' + epgd.profile.constabelEditPath + encodeURIComponent(constTitle) + '.episodes' + '" target="constabel">' + epgd.tr.edit + '</a>'
             + '<a class="iAsButton i-link-ext" href="' + epgd.profile.constabelLinkPath + encodeURIComponent(constTitle) + '" target="constabel">' + epgd.tr.pages.eventDetail.addConstableLink + '</a>'
             + epgd.pages.help.getButton('constabel',true)

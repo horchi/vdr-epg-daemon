@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.120"
-#define VERSION_DATE "28.06.2017"
+#define _VERSION     "1.1.121"
+#define VERSION_DATE "25.07.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+2017-07-25: version 1.1.120 (rechner)
+   - added: show constable in eventdetail, if episodename is available
+   - added: show constable extracol 1-3 in eventdetail 
+   - fixed: if recording view was reloaded the functionallity in bar was lost
+   
 2017-06-28: version 1.1.119 (rechner)
    - added: Link to osd2web, if available
 
