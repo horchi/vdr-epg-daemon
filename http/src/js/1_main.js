@@ -571,14 +571,14 @@ epgd.init = function () {
             html += '<option value="' + uuid + '"' + (uuid == epgd.vdrs.current.uuid ? 'selected' : '') + '>' + epgd.vdrs.list[uuid].name + '</option>';
         }
         $('<select>' + html + '</select>').replaceAll('#menu_vdrs > select').show().change(function () {
-            var vdr= epgd.vdrs.current = epgd.vdrs.get(this[this.selectedIndex].value);
+            var vdr= epgd.vdrs.current = this.selectedIndex >= 0 ? epgd.vdrs.get(this[this.selectedIndex].value) : {};
             if (vdr && vdr.osd2webp)
                 $('#osd2web').prop("target", "osd2web_" + vdr.name)
                     .prop("href", "http://" + vdr.ip + ":" + vdr.osd2webp)
                     .click(function(ev){
                         ev.stopPropagation();
                         return true;                   
-                    }).show();
+                    }).show(); 
             else 
                 $('#osd2web').hide();
         }).mousedown(function (ev) {

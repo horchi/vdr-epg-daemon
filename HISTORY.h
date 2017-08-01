@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.121"
-#define VERSION_DATE "25.07.2017"
+#define _VERSION     "1.1.122"
+#define VERSION_DATE "01.08.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+2017-08-01: version 1.1.121 (rechner)
+   - fixed: error, if no vdr available
+ 
 2017-07-25: version 1.1.120 (rechner)
    - added: show constable in eventdetail, if episodename is available
    - added: show constable extracol 1-3 in eventdetail 
