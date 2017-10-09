@@ -63,7 +63,7 @@ int cCurl::create()
    {
       // call only once per process and *before* any thread is started!
 
-      if (curl_global_init(CURL_GLOBAL_NOTHING /*CURL_GLOBAL_ALL*/) != 0)
+      if (curl_global_init(CURL_GLOBAL_SSL /*CURL_GLOBAL_ALL*/) != 0)
       {
          tell(0, "Error, something went wrong with curl_global_init()");
          return fail;

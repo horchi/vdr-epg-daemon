@@ -668,8 +668,11 @@ int main(int argc, char** argv)
 
       data.clear();
 
-      asprintf(&url, "%s/eplist.cgi?action=show&file=%s",
-               "www.eplists.de", argv[1]);
+      if (strncmp(argv[1], "http", 4) == 0)
+         asprintf(&url, "%s", argv[1]);
+      else
+         asprintf(&url, "%s/eplist.cgi?action=show&file=%s",
+                  "www.eplists.de", argv[1]);
 
       tell(0, "try to download [%s]", url);
 
