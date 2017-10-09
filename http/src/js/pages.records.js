@@ -23,33 +23,34 @@ epgd.pages.records = {
                     + tr.ddLabel + epgd.pages.help.getIcon('recDD')
                 + '</div>'
               +'</div>');
-            this.$trash = this.$bar.find('.i-trash').droppable({
-                accept: ".rec",
-                hoverClass: "ui-state-hover",
-                tolerance: "pointer",
-                drop: function (ev, ui) {
-                    var elem = ui.helper.context;
-                    epgd.utils.confirm(epgd.tr.pages.records.deleteMessage.replace("$src$", elem.getAttribute('data-path')), function (ok) {
-                        ok && epgd.pages.records.del(elem);
-                    });
-                    return false;
-                }
-            }).click(function () {
-                var $recs = $("#records").find('.rec.selected');
-                $recs.length && epgd.utils.confirm(epgd.tr.confirmDelete + ($recs.length > 1 ? '<br />' + $recs.length + epgd.tr.entries : ''), function (ok) {
-                    ok && $recs.each(function () {
-                        epgd.pages.records.del(this);
-                    });
-                });
-            });
+            this.$trash = this.$bar.find('.i-trash');
             this.curSearch = {
                 pattern: '', searchValue: '', hits: $(), cur: 0, $count: this.$bar.find('#rSCnt')
                 , fromStart: this.$bar.find('#rSVal').prev('button')[0]
                 , toEnd: this.$bar.find('#rSVal').next('button')[0]
             }
-            epgd.pages.help.initButtons(this.$bar);
         }
         this.$bar.insertAfter(epgd.$menu);
+        this.$trash.droppable({
+            accept: ".rec",
+            hoverClass: "ui-state-hover",
+            tolerance: "pointer",
+            drop: function (ev, ui) {
+                var elem = ui.helper.context;
+                epgd.utils.confirm(epgd.tr.pages.records.deleteMessage.replace("$src$", elem.getAttribute('data-path')), function (ok) {
+                    ok && epgd.pages.records.del(elem);
+                });
+                return false;
+            }
+        }).click(function () {
+            var $recs = $("#records").find('.rec.selected');
+            $recs.length && epgd.utils.confirm(epgd.tr.confirmDelete + ($recs.length > 1 ? '<br />' + $recs.length + epgd.tr.entries : ''), function (ok) {
+                ok && $recs.each(function () {
+                    epgd.pages.records.del(this);
+                });
+            });
+        });
+        epgd.pages.help.initButtons(this.$bar);
         epgd.$menu.checkMenuSize();
         $(window).bind("epgd_close.records", function () {
             epgd.pages.records.$bar.remove();

@@ -223,7 +223,16 @@ epgd.pages.magazine = {
             pan = false;
         });
     },
-    setChannel: function (channel) { this.setMain(0, this.list[channel].index); },
+    setChannel: function (channel) { 
+        if (this.list.lengt > 0)
+            this.setMain(0, this.list[channel].index); 
+        else{
+            var self= this; 
+            $(window).one("resize.pages_magazine",function(){
+                self.setMain(0, self.list[channel].index); 
+            })
+        }
+    },
     setMain: function (delta, baseIndex, dontScroll) {
         var optList = this.select,
             i = isNaN(baseIndex) ? optList.selectedIndex : baseIndex;
