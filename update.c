@@ -798,8 +798,9 @@ int cEpgd::initDb()
    selectActiveVdrs = new cDbStatement(vdrDb);
 
    selectActiveVdrs->build("select ");
-   selectActiveVdrs->bind("Ip", cDBS::bndOut);
-   selectActiveVdrs->bind("Svdrp", cDBS::bndOut, ", ");
+   selectActiveVdrs->bind("IP", cDBS::bndOut);
+   selectActiveVdrs->bind("SVDRP", cDBS::bndOut, ", ");
+   selectActiveVdrs->bind("OSD2WEBP", cDBS::bndOut, ", ");
    selectActiveVdrs->build(" from %s where state = 'attached' and svdrp > 0", vdrDb->TableName());
 
    status += selectActiveVdrs->prepare();
@@ -1223,7 +1224,7 @@ void cEpgd::setState(Es::State state, time_t lastUpdate, int silent)
       // inform clients about state change
 
       actualState = state;
-      triggerVdrs("STATE", Es::toName(actualState));
+      triggerVdrs("STATE", "epg2vdr", Es::toName(actualState));
 
       if (actualState >= Es::esBusy && actualState <= Es::esBusyScraping)
          sleep(2);      // wait until vdrs detecting the busy state
@@ -1411,6 +1412,7 @@ void cEpgd::loop()
                   scrapNewRecordings(newRecCount.getIntValue());
 
                setState(Es::esStandby, 0, no);
+               triggerVdrs("UPDREC", "osd2web");
             }
 
             countNewRecordings->freeResult();
@@ -1627,7 +1629,7 @@ int cEpgd::updateSearchTimers(int force, const char* reason)
    searchTimerTrigger = no;
 
    if (hits)
-      triggerVdrs("TIMERJOB");
+      triggerVdrs("TIMERJOB", "epg2vdr");
 
    // check 'not assumed' timers and wakeup VDR if necessary
 
@@ -2681,24 +2683,29 @@ bool cEpgd::checkRecOtherClients(string uuid, string recPath, int recStart)
    return res;
 }
 
-
 //***************************************************************************
 // Trigger VDRs
 //***************************************************************************
 
-int cEpgd::triggerVdrs(const char* trg, const char* options)
+int cEpgd::triggerVdrs(const char* trg, const char* plug, const char* options)
 {
-   const char* plgs[] = { "epg2vdr", 0 };
+   // wait for dbInit ;)
 
-   if (!selectActiveVdrs)  // wait for dbInit ;)
+   if (!selectActiveVdrs)
       return done;
 
    vdrDb->clear();
 
    for (int f = selectActiveVdrs->find(); f; f = selectActiveVdrs->fetch())
    {
-      const char* ip = vdrDb->getStrValue("Ip");
-      unsigned int port = vdrDb->getIntValue("Svdrp");
+      const char* ip = vdrDb->getStrValue("IP");
+      unsigned int port = vdrDb->getIntValue("SVDRP");
+
+      if (strcmp(plug, "osd2web") == 0)
+      {
+         if (vdrDb->getIntValue("OSD2WEB") <= 0)
+            continue;
+      }
 
       cSvdrpClient cl(ip, port);
 
@@ -2706,26 +2713,25 @@ int cEpgd::triggerVdrs(const char* trg, const char* options)
 
       if (cl.open() == success)
       {
-         for (int i = 0; plgs[i]; i++)
-         {
-            char* command = 0;
-            cList<cLine> result;
+         char* command = 0;
+         cList<cLine> result;
 
-            asprintf(&command, "PLUG %s %s %s", plgs[i], trg, !isEmpty(options) ? options : "");
+         if (!isEmpty(plug))
+            asprintf(&command, "PLUG %s %s %s", plug, trg, !isEmpty(options) ? options : "");
+         else
+            asprintf(&command, "%s %s", trg, !isEmpty(options) ? options : "");
 
-            tell(1, "Send '%s' to '%s' at '%s:%d'", command, plgs[i], ip, port);
+         tell(1, "Send '%s' to '%s:%d'", command,ip, port);
 
-            if (!cl.send(command))
-               tell(0, "Error: Send '%s' to '%s' at '%s:%d' failed!",
-                    command, plgs[i], ip, port);
-            else
-               cl.receive(&result, 2);
+         if (!cl.send(command))
+            tell(0, "Error: Send '%s' to '%s:%d' failed!", command, ip, port);
+         else
+            cl.receive(&result, 2);
 
-            free(command);
-         }
-
-         cl.close(no);
+         free(command);
       }
+
+      cl.close(no);
    }
 
    selectActiveVdrs->freeResult();

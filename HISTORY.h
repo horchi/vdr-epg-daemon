@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.122"
-#define VERSION_DATE "01.08.2017"
+#define _VERSION     "1.1.123"
+#define VERSION_DATE "02.12.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -17,17 +17,21 @@
 /*
  * ------------------------------------
  *
+
+2017-12-02: version 1.1.123 (horchi)
+   - added: Trigger osd2web plugins of running VDRs on new recording
+
 2017-10-09: version 1.1.122 (horchi)
-   - change: Fixed curl SSL mode 
+   - change: Fixed curl SSL mode
 
 2017-08-01: version 1.1.121 (rechner)
    - fixed: error, if no vdr available
- 
+
 2017-07-25: version 1.1.120 (rechner)
    - added: show constable in eventdetail, if episodename is available
-   - added: show constable extracol 1-3 in eventdetail 
+   - added: show constable extracol 1-3 in eventdetail
    - fixed: if recording view was reloaded the functionallity in bar was lost
-   
+
 2017-06-28: version 1.1.119 (rechner)
    - added: Link to osd2web, if available
 

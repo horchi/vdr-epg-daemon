@@ -141,7 +141,7 @@ class cEpgd : public cFrame, public cSystemNotification
       static int doShutDown()           { return shutdown; }
 
       int wakeupVdr(const char* uuid);
-      int triggerVdrs(const char* trg, const char* options = "");
+      int triggerVdrs(const char* trg, const char* plug = 0, const char* options = 0);
       int __attribute__ ((format(printf, 5, 6)))  message(int level, char type, const char* title, const char* format, ...);
       int sendTccMail(string& mailBody);
       int sendTccTestMail();

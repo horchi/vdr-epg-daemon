@@ -190,8 +190,8 @@ int cEpgHttpd::doUpdateSearchtimer(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doUpdateRecordingTable(MHD_Connection* tcp, json_t* obj)
 {
-   triggerVdrs("UPDR");
-   triggerVdrs("UPDREC", "epg2vdr");
+   triggerVdrs("UPDR");                // trigger all vdrs re-read of the recordings directory
+   triggerVdrs("UPDREC", "epg2vdr");   // trigger epg2vdr tu update their data
 
    return buildResponse(obj, MHD_HTTP_OK, "done");
 }
