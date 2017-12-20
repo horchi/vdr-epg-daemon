@@ -2703,7 +2703,7 @@ int cEpgd::triggerVdrs(const char* trg, const char* plug, const char* options)
 
       if (strcmp(plug, "osd2web") == 0)
       {
-         if (vdrDb->getIntValue("OSD2WEB") <= 0)
+         if (vdrDb->getIntValue("OSD2WEBP") <= 0)
             continue;
       }
 
