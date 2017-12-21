@@ -1,5 +1,5 @@
 /*
- * thread.c: 
+ * thread.c:
  *
  * See the README file for copyright information and how to reach the author.
  *
@@ -17,12 +17,12 @@
 // get abs time plus 'millisecondsFromNow'
 //***************************************************************************
 
-static bool absTime(struct timespec* abstime, int millisecondsFromNow)
+static int absTime(struct timespec* abstime, int millisecondsFromNow)
 {
   struct timeval now;
 
-  if (gettimeofday(&now, 0) == 0) 
-  {           
+  if (gettimeofday(&now, 0) == 0)
+  {
      // get current time
 
      now.tv_sec  += millisecondsFromNow / 1000;           // add full seconds
@@ -30,8 +30,8 @@ static bool absTime(struct timespec* abstime, int millisecondsFromNow)
 
      // take care of an overflow
 
-     if (now.tv_usec >= 1000000) 
-     {               
+     if (now.tv_usec >= 1000000)
+     {
         now.tv_sec++;
         now.tv_usec -= 1000000;
      }
@@ -56,7 +56,7 @@ cThread::cThread(const char* Description, bool LowPriority)
   childThreadId = 0;
   description = 0;
   silent = no;
-  
+
   if (Description)
      SetDescription("%s", Description);
 
@@ -74,7 +74,7 @@ void cThread::SetDescription(const char *Description, ...)
   free(description);
   description = NULL;
 
-  if (Description) 
+  if (Description)
   {
      va_list ap;
      va_start(ap, Description);
@@ -86,7 +86,7 @@ void cThread::SetDescription(const char *Description, ...)
 void *cThread::StartThread(cThread *Thread)
 {
   Thread->childThreadId = ThreadId();
-  if (Thread->description) 
+  if (Thread->description)
   {
      tell(Thread->silent ? 2 : 0, "'%s' thread started (pid=%d, tid=%d, prio=%s)", Thread->description, getpid(), Thread->childThreadId, Thread->lowPriority ? "low" : "high");
 #ifdef PR_SET_NAME
@@ -95,7 +95,7 @@ void *cThread::StartThread(cThread *Thread)
 #endif
   }
 
-  if (Thread->lowPriority) 
+  if (Thread->lowPriority)
   {
      Thread->SetPriority(19);
      Thread->SetIOPriority(7);
@@ -138,10 +138,10 @@ void cThread::SetIOPriority(int priority)
 bool cThread::Start(int s)
 {
   silent = s;
-   
-  if (!running) 
+
+  if (!running)
   {
-     if (active) 
+     if (active)
      {
         // Wait until the previous incarnation of this thread has completely ended
         // before starting it newly:
@@ -151,15 +151,15 @@ bool cThread::Start(int s)
         while (!running && active && RestartTimeout.Elapsed() < THREAD_STOP_TIMEOUT)
               cCondWait::SleepMs(THREAD_STOP_SLEEP);
      }
-     if (!active) 
+     if (!active)
      {
         active = running = true;
 
-        if (pthread_create(&childTid, NULL, (void *(*) (void *))&StartThread, (void *)this) == 0) 
+        if (pthread_create(&childTid, NULL, (void *(*) (void *))&StartThread, (void *)this) == 0)
         {
            pthread_detach(childTid); // auto-reap
         }
-        else 
+        else
         {
            tell(0, "Error: Thread won't start");
            active = running = false;
@@ -173,11 +173,11 @@ bool cThread::Start(int s)
 
 bool cThread::Active(void)
 {
-  if (active) 
+  if (active)
   {
      int err;
-     
-     if ((err = pthread_kill(childTid, 0)) != 0) 
+
+     if ((err = pthread_kill(childTid, 0)) != 0)
      {
         if (err != ESRCH)
            tell(0, "Error: Thread ...");
@@ -195,11 +195,11 @@ void cThread::Cancel(int WaitSeconds)
 {
   running = false;
 
-  if (active && WaitSeconds > -1) 
+  if (active && WaitSeconds > -1)
   {
-     if (WaitSeconds > 0) 
+     if (WaitSeconds > 0)
      {
-        for (time_t t0 = time(NULL) + WaitSeconds; time(NULL) < t0; ) 
+        for (time_t t0 = time(NULL) + WaitSeconds; time(NULL) < t0; )
         {
            if (!Active())
               return;
@@ -247,16 +247,16 @@ void cCondWait::SleepMs(int TimeoutMs)
 bool cCondWait::Wait(int TimeoutMs)
 {
    pthread_mutex_lock(&mutex);
-   
-   if (!signaled) 
+
+   if (!signaled)
    {
-      if (TimeoutMs) 
+      if (TimeoutMs)
       {
          struct timespec abstime;
-         
-         if (absTime(&abstime, TimeoutMs) == success) 
+
+         if (absTime(&abstime, TimeoutMs) == success)
          {
-            while (!signaled) 
+            while (!signaled)
             {
                if (pthread_cond_timedwait(&cond, &mutex, &abstime) == ETIMEDOUT)
                   break;
@@ -266,11 +266,11 @@ bool cCondWait::Wait(int TimeoutMs)
       else
          pthread_cond_wait(&cond, &mutex);
    }
-   
+
    bool r = signaled;
    signaled = false;
    pthread_mutex_unlock(&mutex);
-   
+
    return r;
 }
 
@@ -299,7 +299,7 @@ cCondVar::~cCondVar()
 
 void cCondVar::Wait(cMyMutex &Mutex)
 {
-   if (Mutex.locked) 
+   if (Mutex.locked)
    {
       int locked = Mutex.locked;
       Mutex.locked = 0; // have to clear the locked count here, as pthread_cond_wait
@@ -312,12 +312,12 @@ void cCondVar::Wait(cMyMutex &Mutex)
 bool cCondVar::TimedWait(cMyMutex &Mutex, int TimeoutMs)
 {
    bool r = true;     // true = condition signaled, false = timeout
-   
+
    if (Mutex.locked)
    {
       struct timespec abstime;
-      
-      if (absTime(&abstime, TimeoutMs) == success) 
+
+      if (absTime(&abstime, TimeoutMs) == success)
       {
          int locked = Mutex.locked;
 
@@ -328,11 +328,11 @@ bool cCondVar::TimedWait(cMyMutex &Mutex, int TimeoutMs)
 
          if (pthread_cond_timedwait(&cond, &Mutex.mutex, &abstime) == ETIMEDOUT)
             r = false;
-         
+
          Mutex.locked = locked;
      }
    }
-   
+
    return r;
 }
 

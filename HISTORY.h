@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.123"
-#define VERSION_DATE "02.12.2017"
+#define _VERSION     "1.1.124"
+#define VERSION_DATE "21.12.2017"
 #define DB_API       4
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2017-12-21: version 1.1.124 (horchi)
+   - change: gcc 7 porting
 
 2017-12-02: version 1.1.123 (horchi)
    - added: Trigger osd2web plugins of running VDRs on new recording

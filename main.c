@@ -115,15 +115,16 @@ int main(int argc, char** argv)
          case 'c': if (argv[i+1]) confDir = argv[++i];        break;
          case 'M': EpgdConfig.maintanance = yes;              break;
          case 'u': doValidateAlterDatabase = yes;             break;
-         case 'i': if (argv[i+1])
+         case 'i':
          {
-            cSystemNotification::setPidFile(argv[++i]);
+            if (argv[i+1])
+               cSystemNotification::setPidFile(argv[++i]);
             break;
          }
-         case 'p': if (argv[i+1])
+         case 'p':
          {
-            sstrcpy(EpgdConfig.pluginPath, argv[++i],
-                    sizeof(EpgdConfig.pluginPath));
+            if (argv[i+1])
+               sstrcpy(EpgdConfig.pluginPath, argv[++i], sizeof(EpgdConfig.pluginPath));
             break;
          }
          case 'l':

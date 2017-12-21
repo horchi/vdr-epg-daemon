@@ -2223,9 +2223,10 @@ int main(int argc, char** argv)
          case 'n': nofork = yes;                              break;
          case 'l': if (argv[i+1]) loglevel = atoi(argv[++i]); break;
          case 'c': if (argv[i+1]) confDir = argv[++i];        break;
-         case 'i': if (argv[i+1])
+         case 'i':
          {
-            cSystemNotification::setPidFile(argv[++i]);
+            if (argv[i+1])
+               cSystemNotification::setPidFile(argv[++i]);
             break;
          }
 
