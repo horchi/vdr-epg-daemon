@@ -4,9 +4,9 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.124"
+#define _VERSION     "1.1.125"
 #define VERSION_DATE "21.12.2017"
-#define DB_API       4
+#define DB_API       5
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2017-12-22: version 1.1.125 (horchi)
+   - change: new field in 'recordinglist' to store the original description
 
 2017-12-21: version 1.1.124 (horchi)
    - change: gcc 7 porting

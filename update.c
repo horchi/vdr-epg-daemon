@@ -459,9 +459,26 @@ int cEpgd::initDb()
 
    if (initial)
    {
-      if (registerMe() != success)
+      if (!dbConnected())
          return fail;
 
+      vdrDb->clear();
+      vdrDb->setValue("UUID", "epgd");
+      vdrDb->find();
+
+      int lastApi = vdrDb->getIntValue("DBAPI");
+
+      // migration some specials
+
+      if (lastApi <= 4)
+      {
+         // we have to migrate the recording description
+
+         if (migrateFromDbApi4() != success)
+            return fail;
+      }
+
+      registerMe();   // and update DB_API info at vdrs table
       initial = no;
    }
 
@@ -1054,6 +1071,87 @@ int cEpgd::exitDb()
 }
 
 //***************************************************************************
+// migrateFromDbApi4
+//***************************************************************************
+
+int startWith(const char* buf, const char* token)
+{
+   return strncmp(buf, token, strlen(token)) == 0;
+}
+
+int cEpgd::migrateFromDbApi4()
+{
+   int status = success;
+
+   recordingListDb = new cDbTable(connection, "recordinglist");
+   if ((status = recordingListDb->open()) != success) return status;
+
+   tell(0, "Migration of table '%s' from version <= 4 ...", recordingListDb->TableName());
+
+   // we have to port the longdescription ito description
+   //  and create a longdescription by best guess of it :o
+
+   cDbStatement* select = new cDbStatement(recordingListDb);
+   select->build("select ");
+   select->bindAllOut();
+   select->build(" from %s where %s is null", recordingListDb->TableName(),
+                 recordingListDb->getField("DESCRIPTION")->getDbName());
+
+   status += select->prepare();
+
+   if (status == success)
+   {
+      for (int f = select->find(); f; f = select->fetch())
+      {
+         const char* longDesc = recordingListDb->getStrValue("LONGDESCRIPTION");
+         recordingListDb->setValue("DESCRIPTION", longDesc);
+
+         // try patching the 'description' created by the view to likely the real original event description
+
+         const char* p = longDesc;
+
+         while (true)
+         {
+            int toSkip = startWith(p, "Kategorie: ") ||
+               startWith(p, "Genre: ") ||
+               startWith(p, "Land: ") ||
+               startWith(p, "Jahr: ") ||
+               startWith(p, "Bewertung: ") ||
+               startWith(p, "Thema: ") ||
+               startWith(p, "Serie: ") ||
+               startWith(p, "Quelle: ") ||
+               startWith(p, "Audio: ") ||
+               startWith(p, "Flags: ") ||
+               startWith(p, "Originaltitel: ") ||
+               startWith(p, "TagesTipp") ||
+               startWith(p, "Tagestipp") ||
+               startWith(p, "TopTipp") ||
+               startWith(p, "Toptipp") ||
+               startWith(p, "Tipp") ||
+               startWith(p, "[") ||
+               *p == '\n';
+
+            if (!toSkip)
+               break;
+
+            if (!(p = strchr(p, '\n')) || !*(p++))
+                break;
+         }
+
+         recordingListDb->setValue("LONGDESCRIPTION", p);
+         recordingListDb->update();
+      }
+   }
+
+   tell(0, "... done");
+
+   delete select;
+   delete recordingListDb; recordingListDb = 0;
+
+   return status;
+}
+
+//***************************************************************************
 // Check Function
 //***************************************************************************
 
@@ -1165,16 +1263,6 @@ int cEpgd::registerMe()
    vdrDb->clear();
    vdrDb->setValue("UUID", "epgd");
    vdrDb->find();
-
-   if (!vdrDb->isNull("DBAPI") &&
-       vdrDb->getIntValue("DBAPI") != DB_API)
-   {
-      tell(0, "Fatal: Found dbapi %ld, expected %d, please alter the tables first! Aborting now.",
-           vdrDb->getIntValue("DBAPI"), DB_API);
-      free(v);
-
-      return fail;
-   }
 
    vdrDb->setValue("IP", getIpOf(EpgdConfig.netDevice));
    vdrDb->setValue("NAME", getHostName());
@@ -2445,6 +2533,8 @@ int cEpgd::cleanupSeriesAndMovies()
 
 void cEpgd::scrapNewRecordings(int count)
 {
+   int total = 0;
+
    if (!tvdbManager || !movieDbManager)
       return ;
 
@@ -2476,6 +2566,8 @@ void cEpgd::scrapNewRecordings(int count)
       int isSeries = category == "Serie" ? yes : no;
 
       cSystemNotification::check();
+
+      total++;
 
       tell(1, "-------------------------------------------------------");
       tell(1, "Found new recording '%s'/'%s'", recTitle.c_str(), recSubtitle.c_str());
@@ -2614,7 +2706,8 @@ void cEpgd::scrapNewRecordings(int count)
 
    connection->commit();
 
-   tell(0, "SCRAP: Scraping new recordings done");
+   tell(1, "-------------------------------------------------------");
+   tell(0, "SCRAP: Scraping %d new recordings done", total);
 }
 
 //***************************************************************************

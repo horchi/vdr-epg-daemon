@@ -201,6 +201,7 @@ class cEpgd : public cFrame, public cSystemNotification
 
       int initDb();
       int exitDb();
+      int migrateFromDbApi4();
       int checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* fp = 0);
       int checkView(const char* name, const char* file);
       int registerMe();
