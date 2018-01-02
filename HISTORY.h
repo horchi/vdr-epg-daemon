@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.125"
-#define VERSION_DATE "21.12.2017"
+#define _VERSION     "1.1.126"
+#define VERSION_DATE "02.01.2017"
 #define DB_API       5
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2017-01-02: version 1.1.126 (ckone)
+   - change: improved handling of reinstated events in merge procedure
 
 2017-12-22: version 1.1.125 (horchi)
    - change: new field in 'recordinglist' to store the original description

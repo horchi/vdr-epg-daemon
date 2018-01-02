@@ -45,7 +45,7 @@ update
    events v
    left join
    events e
-   on e.masterid = v.useid and v.masterid != e.masterid and e.updflg in ('T','C') and e.delflg is Null
+   on e.masterid = v.useid and v.masterid != e.masterid and e.updflg in ('T','C') and ifnull(e.delflg,'N') = 'N'
   where
    v.updflg in('L') and
    v.starttime + v.duration >= unix_timestamp()

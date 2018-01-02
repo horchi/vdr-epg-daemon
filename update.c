@@ -25,6 +25,7 @@
 int cEpgd::shutdown = no;
 int cEpgd::epgTrigger = no;
 int cEpgd::searchTimerTrigger = no;
+int cEpgd::recTableFixTrigger = no;
 
 //***************************************************************************
 // Signal Handler
@@ -37,6 +38,9 @@ void cEpgd::triggerF(int aSignal)
 
    else if (aSignal == SIGUSR1)
       searchTimerTrigger = yes;
+
+   else if (aSignal == SIGUSR2)
+      recTableFixTrigger = yes;
 }
 
 //***************************************************************************
@@ -1079,6 +1083,13 @@ int startWith(const char* buf, const char* token)
    return strncmp(buf, token, strlen(token)) == 0;
 }
 
+const char* endOf(const char* buf, const char* token)
+{
+   if (strncmp(buf, token, strlen(token)) == 0)
+      return buf + strlen(token);
+   return 0;
+}
+
 int cEpgd::migrateFromDbApi4()
 {
    int status = success;
@@ -1147,6 +1158,110 @@ int cEpgd::migrateFromDbApi4()
 
    delete select;
    delete recordingListDb; recordingListDb = 0;
+
+   return status;
+}
+
+const char* getLine(const char* buf, const char* startChar = 0, const char* endChar = 0)
+{
+   static char line[100+TB];
+
+   const char* p;
+   int len = strlen(buf);
+
+   if (startChar && strchr(buf, *startChar))
+   {
+      buf = strchr(buf, *startChar);
+      len = strlen(buf);
+   }
+
+   if ((p = strchr(buf, '\n')))
+      len = p - buf;
+
+   if (endChar && (p = strchr(buf, *endChar)))
+      len = p - buf;
+
+   if (len > 100)
+      len = 100;
+
+   sprintf(line, "%.*s", len, buf);
+
+   return line;
+}
+
+int cEpgd::tryFillEmptyRecTableFields()
+{
+   int status = success;
+
+   recTableFixTrigger = no;
+
+   tell(0, "tryFillEmptyRecTableFields ...");
+
+   cDbStatement* select = new cDbStatement(recordingListDb);
+   select->build("select ");
+   select->bindAllOut();
+   select->build(" from %s", recordingListDb->TableName());
+   status += select->prepare();
+
+   if (status == success)
+   {
+      for (int f = select->find(); f; f = select->fetch())
+      {
+         const char* description = recordingListDb->getStrValue("DESCRIPTION");
+         const char* p = description;
+         const char* s = 0;
+
+         while (true)
+         {
+            if ((s = endOf(p, "Actor: ")) && recordingListDb->getValue("ACTOR")->isEmpty())
+               recordingListDb->setValue("ACTOR", getLine(s));
+            else if ((s = endOf(p, "Audio: ")) && recordingListDb->getValue("AUDIO")->isEmpty())
+               recordingListDb->setValue("AUDIO", getLine(s));
+            else if ((s = endOf(p, "Kategorie: ")) && recordingListDb->getValue("CATEGORY")->isEmpty())
+               recordingListDb->setValue("CATEGORY", getLine(s));
+            else if ((s = endOf(p, "Genre: ")) && recordingListDb->getValue("GENRE")->isEmpty())
+               recordingListDb->setValue("GENRE", getLine(s));
+            else if ((s = endOf(p, "Land: ")) && recordingListDb->getValue("COUNTRY")->isEmpty())
+               recordingListDb->setValue("COUNTRY", getLine(s));
+            else if ((s = endOf(p, "Jahr: ")) && recordingListDb->getValue("YEAR")->isEmpty())
+            {
+               recordingListDb->setValue("YEAR", getLine(s, 0, "["));
+
+               // #TODO don't work
+               //  Examples:  select flags, year, title, genre, category, description from recordinglist  where description like '%Jahr: 2014[%';
+               if ((strchr(getLine(s, 0, "["), '[')) && recordingListDb->getValue("FLAGS")->isEmpty())
+                  recordingListDb->setValue("FLAGS", getLine(s, "["));
+            }
+            else if ((s = endOf(p, "Flags: ")) && recordingListDb->getValue("FLAGS")->isEmpty())
+               recordingListDb->setValue("FLAGS", getLine(s));
+            else if ((s = endOf(p, "Kamera: ")) && recordingListDb->getValue("CAMERA")->isEmpty())
+               recordingListDb->setValue("CAMERA", getLine(s));
+            else if ((s = endOf(p, "Musik: ")) && recordingListDb->getValue("MUSIC")->isEmpty())
+               recordingListDb->setValue("MUSIC", getLine(s));
+            else if ((s = endOf(p, "TagesTipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+               recordingListDb->setValue("TIPP", "TagesTipp");
+            else if ((s = endOf(p, "Tagestipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+               recordingListDb->setValue("TIPP", "TagesTipp");
+            else if ((s = endOf(p, "TopTipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+               recordingListDb->setValue("TIPP", "TopTipp");
+            else if ((s = endOf(p, "Toptipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+               recordingListDb->setValue("TIPP", "TopTipp");
+            else if ((s = endOf(p, "Tipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+               recordingListDb->setValue("TIPP", "Tipp");
+            else if ((s = endOf(p, "Bewertung: ")) && recordingListDb->getValue("RATING")->isEmpty())
+               recordingListDb->setValue("RATING", getLine(s));
+
+            if (!(p = strchr(p, '\n')) || !*(p++))
+               break;
+         }
+
+         recordingListDb->update();
+      }
+   }
+
+   tell(0, "... done");
+
+   delete select;
 
    return status;
 }
@@ -1558,6 +1673,9 @@ void cEpgd::loop()
 
          if (search->modified() || searchTimerTrigger)
             updateSearchTimers(searchTimerTrigger, searchTimerTrigger ? "triggered by user" : "search timer changed");
+
+         if (recTableFixTrigger)
+            tryFillEmptyRecTableFields();
 
          // print sql statistic for statement debugging
 

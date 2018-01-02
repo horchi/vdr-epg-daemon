@@ -205,6 +205,7 @@ int main(int argc, char** argv)
    ::signal(SIGTERM, cEpgd::downF);
    ::signal(SIGHUP,  cEpgd::triggerF);
    ::signal(SIGUSR1, cEpgd::triggerF);
+   ::signal(SIGUSR2, cEpgd::triggerF);
 
    // do work ...
 
