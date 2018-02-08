@@ -185,6 +185,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
       int eventid = getIntFromJson(jInData, "eventid", na);
       int timerid = getIntFromJson(jInData, "id", na);
       time_t day = getIntFromJson(jInData, "day", na);
+      const char* type = getStringFromJson(jInData, "type", "");
 
       if (eventid != na)
       {
@@ -244,7 +245,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
 
          getParameter("epgd", "manualTimer2Done", manualTimer2Done);
 
-         if (timerid == na && manualTimer2Done)
+         if (timerid == na && manualTimer2Done && *type != ttView)
          {
             timersDoneDb->clear();
             timersDoneDb->setCharValue("STATE", tdsTimerRequested);

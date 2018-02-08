@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.127"
+#define _VERSION     "1.1.128"
 #define VERSION_DATE "08.02.2018"
 #define DB_API       5
 
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2018-02-08: version 1.1.128 (horchi)
+   - change: dont store 'switch' timer to timersdone
 
 2018-02-08: version 1.1.127 (horchi)
    - change: store timer type to support 'switch' timer
