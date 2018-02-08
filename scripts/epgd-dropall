@@ -30,7 +30,7 @@ if [ "${c}" = "y" ]; then
    mysql -u epg2vdr -Depg2vdr -e 'drop table if exists analyse;'
    mysql -u epg2vdr -Depg2vdr -e 'drop table if exists snapshot;'
 
-   echo "Now you have two choices for timers and timersdone:"
+   echo "Now you have two choices for timers and timersdone (only the pending ones):"
    echo " 1. Automatic (without dropping the timers table):"
    echo "      All created timers will be marked for delete action to force VDRs to remove them"
    echo " 2. Drop table timers - you have to cleanup the timers.conf of your VDRs by hand"

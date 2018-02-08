@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.126"
-#define VERSION_DATE "02.01.2017"
+#define _VERSION     "1.1.127"
+#define VERSION_DATE "08.02.2018"
 #define DB_API       5
 
 #ifdef GIT_REV
@@ -18,7 +18,10 @@
  * ------------------------------------
  *
 
-2017-01-02: version 1.1.126 (ckone)
+2018-02-08: version 1.1.127 (horchi)
+   - change: store timer type to support 'switch' timer
+
+2018-01-02: version 1.1.126 (ckone)
    - change: improved handling of reinstated events in merge procedure
 
 2017-12-22: version 1.1.125 (horchi)

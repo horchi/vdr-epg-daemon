@@ -343,6 +343,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
       getFieldFromJson(jInData, &timerRow, "CHILDLOCK");
       getFieldFromJson(jInData, &timerRow, "CHANNELID");
       getFieldFromJson(jInData, &timerRow, "DIRECTORY");
+      getFieldFromJson(jInData, &timerRow, "TYPE");
 
       modifyCreateTimer(&timerRow);
    }
