@@ -14,8 +14,6 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
 
 += bei Nachrichten messages Tabelle optional, konfigurierbar zusätzlich Email Notifications versenden
 += Timer Job Check im epg2vdr geht nicht wenn epgd busy
-+= Suchtimer Typ 'Umschalten' fertig stellen
-+= Schutz vor 'SQL-Injection'
 += Format Erkennung (HD,SD) für Autotimer entspr. der konfigurierten Reihenfolge priorisieren
 += im Programm OSD Menü nach dones suchen
 += am OSD Sendung als „bereits aufgezeichnet“ markieren
@@ -43,14 +41,14 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
 ++ channlemap im web bearbeiten (Auswahl pro User ermöglichen)
 ++ data/status zur Anzeige von Version und Status des epgd im webif
 ++ Beim löschen eines Timers fragen ob die passenden Einträge aus der timersdone mit gelöscht werden sollen
+
+--------------------------------------------------------
+Braucht man dass wirklich?
+--------------------------------------------------------
+
 ++ Suchtimer: Checkbox für "Neu" bzw. "Erstausstrahlung"
 ++ Titel (Namen des Aufzeichnung) im Timer-Dialog bearbeitbar machen
    -> http://www.vdr-portal.de/board1-news/board2-vdr-news/p1269286-announce-easteregg-epgd-epghttpd-1-0-0-beta1-jetzt-mit-web-serientimer-unterst%C3%BCtzung/#post1269286
-
---------------------------------------------------------
-Baucht dass wirklich jemand - von wem war der Request?
---------------------------------------------------------
-
 += Suchtimer am OSD anlegen und bearbeiten -> ist das wirklich nötig?
 ++ hits bei Suchtimern aufteilen nach total und aktiven Timern
 ++ Suchtimer auf einzelne VDR begrenzen, dies soll Suchtimer mit retundanten Aufnahmen (eine je VDR) ermöglichen,

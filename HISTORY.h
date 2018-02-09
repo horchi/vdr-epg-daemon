@@ -4,9 +4,9 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.128"
-#define VERSION_DATE "08.02.2018"
-#define DB_API       5
+#define _VERSION     "1.1.129"
+#define VERSION_DATE "09.02.2018"
+#define DB_API       6
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -18,8 +18,11 @@
  * ------------------------------------
  *
 
+2018-02-09: version 1.1.129 (horchi)
+   - added: Table for recording images
+
 2018-02-08: version 1.1.128 (horchi)
-   - change: dont store 'switch' timer to timersdone
+   - change: don't store 'switch' timer to timersdone
 
 2018-02-08: version 1.1.127 (horchi)
    - change: store timer type to support 'switch' timer

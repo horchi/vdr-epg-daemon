@@ -482,6 +482,12 @@ int cEpgd::initDb()
             return fail;
       }
 
+      if (lastApi <= 5)
+      {
+         if (migrateFromDbApi5() != success)
+            return fail;
+      }
+
       registerMe();   // and update DB_API info at vdrs table
       initial = no;
    }
@@ -1161,6 +1167,54 @@ int cEpgd::migrateFromDbApi4()
 
    return status;
 }
+
+//***************************************************************************
+// Migrate From DB API 5
+//***************************************************************************
+
+int cEpgd::migrateFromDbApi5()
+{
+   int status = success;
+
+   recordingListDb = new cDbTable(connection, "recordinglist");
+   if ((status = recordingListDb->open()) != success) return status;
+
+   tell(0, "Migration of table '%s' from version <= 5 ...", recordingListDb->TableName());
+
+   cDbStatement* select = new cDbStatement(recordingListDb);
+   select->build("select ");
+   select->bindAllOut();
+   select->build(" from %s where %s is null", recordingListDb->TableName(),
+                 recordingListDb->getField("IMGID")->getDbName());
+
+   status += select->prepare();
+
+   if (status == success)
+   {
+      md5Buf md5Id;
+
+      for (int f = select->find(); f; f = select->fetch())
+      {
+         std::string text = std::string(recordingListDb->getStrValue("TITLE"))
+            + std::string(recordingListDb->getStrValue("SHORTTEXT"));
+         createMd5(text.c_str(), md5Id);
+
+         recordingListDb->setValue("IMGID", md5Id);
+         recordingListDb->update();
+      }
+   }
+
+   tell(0, "... done");
+
+   delete select;
+   delete recordingListDb; recordingListDb = 0;
+
+   return status;
+}
+
+//***************************************************************************
+// Try Fill Empty Rec Table Fields
+//***************************************************************************
 
 const char* getLine(const char* buf, const char* startChar = 0, const char* endChar = 0)
 {
