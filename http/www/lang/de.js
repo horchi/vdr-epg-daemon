@@ -98,7 +98,7 @@ epgd.tr = {
                 'D': 'gelöscht',
                 'E': 'Fehler',
                 'F': 'Aufnahme erfolgreich',
-                'P': 'wartet auf Aufnahmebeginn',
+                'P': 'wartet auf Start',
                 'R': 'nimmt gerade auf...',
                 'U': 'unbekannt'
             },

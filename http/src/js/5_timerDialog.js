@@ -272,12 +272,15 @@ epgd.timerDialog.prototype.getData = function (dontValid) {
     if (form.tFolder.value)
         data.file = form.tFolder.value + '~' + data.file;
         */
+    data.type = $(form.tType).val();
     d = $(form.tVdr).val();
-    if (d) data.vdruuid = d;
+    if (!d && data.type == 'V')
+        d= epgd.vdrs.current.uuid || '';
+    if (d) 
+        data.vdruuid = d;
     //if (!dontValid || form.tNameMode.defaultIndex != form.tNameMode.selectedIndex)
     data.namingmode = form.tNameMode.selectedIndex;
     data.template = form.tTemplate.value;
-    data.type = $(form.tType).val();
     if (data.type == 'V' && !d && !dontValid)
         return this.showError(epgd.tr.error.emptyField.replace("$field$", "VDR"), form.tVdr);
     data.directory = form.tFolder.value;

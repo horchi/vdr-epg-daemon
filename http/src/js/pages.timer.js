@@ -225,6 +225,7 @@ epgd.timerListBase.prototype.update = function () {
                         'P': '<div class="i-clock">' + epgd.tr.pages.timerList.timerStates.P + '</div>',            // wartet auf Aufnhemebeginn
                         'U': '<div class="i-help">' + epgd.tr.pages.timerList.timerStates.U + '</div>'             // unbekannt
                     },
+                    typeIcons = { 'V': 'i-tv', 'R': 'i-record', 'S': 'i-search' },
                     timerActions = epgd.tr.pages.timerList.timerActions,
                     searchTimerIcon = '<span class="iAsButton i-flashlight edit" title="' + epgd.tr.pages.timer.searchTimerList + ' ' + epgd.tr.edit + '" data-id="$id$">$title$</span>';
                 $.each(data.timers, function (id, t) {
@@ -245,7 +246,7 @@ epgd.timerListBase.prototype.update = function () {
                         + new String(100 + parseInt(t.starttime / 100, 10)).slice(1) + ':' + new String(100 + parseInt(t.starttime % 100, 10)).slice(1)
                         + '</td><td>'
                         + new String(100 + parseInt(t.endtime / 100, 10)).slice(1) + ':' + new String(100 + parseInt(t.endtime % 100, 10)).slice(1)
-                        + '</td><td' + (t.eventid ? ' data-evId="' + t.eventid + '">' + (t.title || '') + '<br />' + (t.shorttext || '') : '>') + '</td><td>'
+                        + '</td><td' + (t.eventid ? ' data-evId="' + t.eventid + '" class="' + typeIcons[t.type] + '">' + (t.title || '') + '<br />' + (t.shorttext || '') : '>') + '</td><td>'
                         + vdr.name + '<br />' + (t.directory ? t.directory + '~' : '') + (t.file || '') + '</td><td>'
                         + (t.autotimerid ? searchTimerIcon.replace('$id$', t.autotimerid).replace('$title$', t.autotimername || t.expression || epgd.tr.pages.timer.searchTimerList) : '')
                          + (noEditStates.indexOf(t.state) == -1 ? editIcons : '') + '</td></tr>')[0];

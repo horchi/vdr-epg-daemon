@@ -66,10 +66,20 @@ epgd.eventDetail.prototype.doRepeat = function (checkAvail) {
 }
 epgd.eventDetail.prototype.doPlay = function (checkAvail) {
     var t = parseInt(epgd.utils.now().getTime() / 1000, 10) - this.data.starttime;
-    if (t < 0 || t > this.data.duration)
+    if (t > this.data.duration)
         return false;
-    if (checkAvail) return true;
-    epgd.vdrs.current.switchChannel(this.data.channelid);
+    if (checkAvail) return !!epgd.vdrs.current.uuid;
+    if (t < 0 ){ // Umschalttimer 
+        epgd.pages.timerList.save({
+            type: 'V',
+            active: 1,
+            vdruuid: epgd.vdrs.current.uuid,
+            eventid: this.data.id,
+            channelid: this.data.channelid,
+            title: this.data.title
+        });
+    } else
+        epgd.vdrs.current.switchChannel(this.data.channelid);
 }
 epgd.eventDetail.prototype.doPrev = function (checkAvail) {
     var t = this.data.starttime - 500,

@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.129"
+#define _VERSION     "1.1.130"
 #define VERSION_DATE "09.02.2018"
 #define DB_API       6
 
@@ -17,7 +17,10 @@
 /*
  * ------------------------------------
  *
-
+2018-02-09: version 1.1.130 (rechner)
+   - added: Icons for timertypes
+   - added: switchtimer on eventDetail 
+ 
 2018-02-09: version 1.1.129 (horchi)
    - added: Table for recording images
 
