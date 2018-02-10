@@ -114,8 +114,7 @@ int cEpgHttpd::deleteTimerJobs(json_t* jInData, json_t* response)
 
    for (int i = 0; i < length; ++i)
    {
-      json_t* obj = json_array_get(idArray, i);
-      long id = json_integer_value(obj);
+      json_t* obj = json_array_get(idArray, i);      long id = json_integer_value(obj);
 
       // delete olny if not assumed in meanwhile!
 
@@ -176,6 +175,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
    else
    {
       long int eventStartTime = 0;
+      long int eventEndTime = 0;
       cDbRow timerRow("timers");
 
       timerRow.clear();
@@ -202,10 +202,10 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
                                  "aborting request!", eventid);
          }
 
-         long int endTime = useeventsDb->getIntValue("STARTTIME") + useeventsDb->getIntValue("DURATION");
+         eventEndTime = useeventsDb->getIntValue("STARTTIME") + useeventsDb->getIntValue("DURATION");
          eventStartTime = useeventsDb->getIntValue("STARTTIME");
 
-         if (endTime < time(0))
+         if (eventEndTime < time(0))
          {
             selectEvent->freeResult();
 
@@ -318,6 +318,18 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
       timerRow.setValue("TEMPLATE", tmplExpression);
       timerRow.setValue("NAMINGMODE", namingmode);
 
+      if (*type != ttView)
+      {
+         getFieldFromJson(jInData, &timerRow, "STARTTIME");
+         getFieldFromJson(jInData, &timerRow, "ENDTIME");
+      }
+      else
+      {
+         day = eventStartTime;
+         timerRow.setValue("STARTTIME", l2hhmm(hhmmOf(eventStartTime)));
+         timerRow.setValue("ENDTIME", l2hhmm(hhmmOf(eventEndTime)));
+      }
+
       if (day != na)
       {
          day = midnightOf(day);
@@ -335,8 +347,6 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
       if (timerRow.getValue("VDRUUID")->isEmpty())
          timerRow.setValue("VDRUUID", "any");              // the default
 
-      getFieldFromJson(jInData, &timerRow, "STARTTIME");
-      getFieldFromJson(jInData, &timerRow, "ENDTIME");
       getFieldFromJson(jInData, &timerRow, "WEEKDAYS");
       getFieldFromJson(jInData, &timerRow, "VPS");
       getFieldFromJson(jInData, &timerRow, "PRIORITY");

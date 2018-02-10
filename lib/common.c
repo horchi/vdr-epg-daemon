@@ -662,11 +662,11 @@ int l2hhmm(time_t t)
 // HHMM to Pretty Time
 //***************************************************************************
 
-std::string hhmm2pTime(int hhmm)
+std::string hhmm2pTime(int hhmm, const char* delim)
 {
    char txt[100];
 
-   sprintf(txt, "%02d:%02d", hhmm / 100, hhmm % 100);
+   sprintf(txt, "%02d%s%02d", hhmm / 100, delim, hhmm % 100);
 
    return std::string(txt);
 }
@@ -882,7 +882,7 @@ int isLink(const char* path)
    if (lstat(path, &sb) == 0)
       return S_ISLNK(sb.st_mode);
 
-   tell(0, "Error: Detecting state for '%s' failed, error was '%s'", path, strerror(errno));
+   tell(0, "Warning: Detecting file state for '%s' failed, error was '%s'", path, strerror(errno));
 
    return false;
 }
@@ -904,7 +904,7 @@ int fileSize(const char* path)
    if (lstat(path, &sb) == 0)
       return sb.st_size;
 
-   tell(0, "Error: Detecting state for '%s' failed, error was '%s'", path, strerror(errno));
+   tell(0, "Warning: Detecting size for '%s' failed, error was '%s'", path, strerror(errno));
 
    return 0;
 }
@@ -916,7 +916,7 @@ time_t fileModTime(const char* path)
    if (lstat(path, &sb) == 0)
       return sb.st_mtime;
 
-   tell(0, "Error: Detecting state for '%s' failed, error was '%s'", path, strerror(errno));
+   tell(0, "Warning: Detecting modification timer for '%s' failed, error was '%s'", path, strerror(errno));
 
    return 0;
 }

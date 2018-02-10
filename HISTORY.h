@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.130"
-#define VERSION_DATE "09.02.2018"
+#define _VERSION     "1.1.131"
+#define VERSION_DATE "10.02.2018"
 #define DB_API       6
 
 #ifdef GIT_REV
@@ -17,10 +17,15 @@
 /*
  * ------------------------------------
  *
+
+2018-02-10: version 1.1.131 (horchi)
+   - added: Support delete for switch timer
+   - added: Table for recording images (still under development)
+
 2018-02-09: version 1.1.130 (rechner)
    - added: Icons for timertypes
-   - added: switchtimer on eventDetail 
- 
+   - added: switchtimer on eventDetail
+
 2018-02-09: version 1.1.129 (horchi)
    - added: Table for recording images
 

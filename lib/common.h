@@ -290,7 +290,7 @@ int weekdayOf(time_t t);
 const char* toWeekdayName(uint day);
 time_t hhmmOf(time_t t);
 int l2hhmm(time_t t);
-std::string hhmm2pTime(int hhmm);
+std::string hhmm2pTime(int hhmm, const char* delim = ":");
 time_t midnightOf(time_t t);
 std::string l2pTime(time_t t, const char* format = "%d.%m.%Y %T");
 std::string l2pDate(time_t t);
