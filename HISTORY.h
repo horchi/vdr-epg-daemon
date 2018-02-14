@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.133"
+#define _VERSION     "1.1.134"
 #define VERSION_DATE "14.02.2018"
 #define DB_API       6
 
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2018-02-14: version 1.1.134 (horchi)
+   - bugfix: Fixed handling of timer type change by WEBIF
 
 2018-02-14: version 1.1.133 (horchi)
    - bugfix: Fixed display of external timer in WEBIF lists

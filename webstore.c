@@ -369,7 +369,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
 //***************************************************************************
 // Modify Timer (copy paste from cMenuDb of epg2vdr)
 //
-//    - timerRow contains the destination vdrUuid
+//    - timerRow contains the new/modified values
 //***************************************************************************
 
 int cEpgHttpd::modifyCreateTimer(cDbRow* timerRow)
@@ -404,6 +404,11 @@ int cEpgHttpd::modifyCreateTimer(cDbRow* timerRow)
       // move to another vdr?
 
       if (!timerDb->hasValue("VDRUUID", timerRow->getStrValue("VDRUUID")))
+         move = yes;
+
+      // move to another timer type?
+
+      if (!timerDb->hasValue("TYPE", timerRow->getStrValue("TYPE")))
          move = yes;
    }
    else
