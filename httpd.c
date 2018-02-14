@@ -881,7 +881,7 @@ int cEpgHttpd::initDb()
    //    from timers t left outer join events e
    //       on (t.eventid = e.masterid and e.updflg in (...))
    //    where
-   //      t.state in (?)
+   //      e.updflg in in (<visible>)
 
    // timerIncState.setField(&timerStateDef);
    // timerExcState.setField(&timerStateDef);

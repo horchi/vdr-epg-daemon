@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.132"
-#define VERSION_DATE "10.02.2018"
+#define _VERSION     "1.1.133"
+#define VERSION_DATE "14.02.2018"
 #define DB_API       6
 
 #ifdef GIT_REV
@@ -17,8 +17,12 @@
 /*
  * ------------------------------------
  *
+
+2018-02-14: version 1.1.133 (horchi)
+   - bugfix: Fixed display of external timer in WEBIF lists
+
 2018-02-10: version 1.1.132 (rechner)
-   - chanhed: text for swichtimer and highlight recIcon on success
+   - change: text for swichtimer and highlight recIcon on success
 
 2018-02-10: version 1.1.131 (horchi)
    - added: Support delete for switch timer

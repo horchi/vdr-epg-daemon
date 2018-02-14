@@ -1547,13 +1547,13 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
 
       // state / action
 
-      if (!isEmpty(action) && !strchr(action, *timerDb->getStrValue("ACTION")))
+      if (!isEmpty(action) && !strchr(action, toupper(*timerDb->getStrValue("ACTION"))))
          continue;
 
       if (!isEmpty(state)&& !strchr(state, *timerDb->getStrValue("STATE")))
          continue;
 
-      if (!isEmpty(naction) && strchr(naction, *timerDb->getStrValue("ACTION")))
+      if (!isEmpty(naction) && strchr(naction, toupper(*timerDb->getStrValue("ACTION"))))
          continue;
 
       if (!isEmpty(nstate) && strchr(nstate, *timerDb->getStrValue("STATE")))
