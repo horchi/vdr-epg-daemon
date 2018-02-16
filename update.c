@@ -1901,7 +1901,7 @@ int cEpgd::updateSearchTimers(int force, const char* reason)
 
       if (timerDb->getIntValue("_STARTTIME") < time(0) + 2*tmeSecondsPerDay)
       {
-         if (!timerDb->hasValue("VDRUUID", "any"))
+         if (!timerDb->hasValue("VDRUUID", "any") && !timerDb->hasCharValue("TYPE", ttView))
          {
             tell(1, "Info: Timer (%ld) for '%s' start in the next 48 hours, "
                  "try to wakeup VDR to permit takeover",

@@ -2,7 +2,7 @@
 
 
 # MySQL helper script by 3PO
-# Update 19.03.2017
+# Update 16.02.2018
 
 
 PASSWORD=""
@@ -270,7 +270,7 @@ case $1 in
    
    -show-stats|show-stats)
    export MYSQL_PWD=epg 
-   $SQL_EPG2VDR "SELECT version, master, ip, state, FROM_UNIXTIME(updsp,'%D %M %Y% %H:%i:%s') AS 'last touch', FROM_UNIXTIME(lastupd, '%D %M %Y% %H:%i:%s') AS 'last download', FROM_UNIXTIME(nextupd,'%D %M %Y% %H:%i:%s') AS 'next download' FROM vdrs ;"
+   $SQL_EPG2VDR "SELECT version, dbapi, master, ip, state, FROM_UNIXTIME(updsp,'%D %M %Y% %H:%i:%s') AS 'last touch', FROM_UNIXTIME(lastupd, '%D %M %Y% %H:%i:%s') AS 'last download', FROM_UNIXTIME(nextupd,'%D %M %Y% %H:%i:%s') AS 'next download' FROM vdrs ;"
    exit
    ;;
 
