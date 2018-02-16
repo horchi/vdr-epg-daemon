@@ -68,8 +68,9 @@ epgd.eventDetail.prototype.doPlay = function (checkAvail) {
     var t = parseInt(epgd.utils.now().getTime() / 1000, 10) - this.data.starttime;
     if (t > this.data.duration)
         return false;
-    if (checkAvail) return !!epgd.vdrs.current.uuid;
+    if (checkAvail) return !epgd.vdrs.current.uuid ? false : (t < 0 ? epgd.tr.pages.timerList.newTimer + ': ' : '') + epgd.tr.pages.eventDetail.ch_switch;
     if (t < 0 ){ // Umschalttimer 
+        t= this.win.$rec;
         epgd.pages.timerList.save({
             type: 'V',
             active: 1,
@@ -77,6 +78,8 @@ epgd.eventDetail.prototype.doPlay = function (checkAvail) {
             eventid: this.data.id,
             channelid: this.data.channelid,
             title: this.data.title
+        },null,null,function(){
+            t.addClass("hasTimer")
         });
     } else
         epgd.vdrs.current.switchChannel(this.data.channelid);
@@ -149,7 +152,7 @@ epgd.eventDetail.win.prototype._create = function () {
         toolbar = this.$win.find('.toolbar')[0];
     this.$rec= $('<button class="iAsButton i-record"/>').css('float', 'left').appendTo(toolbar).click(function () { win.detail.doRecord() });
     $('<button class="iAsButton i-buffer" title="' + tr.repeat + '" />').css('float', 'left').appendTo(toolbar).click(function () { win.detail.doRepeat() });
-    this.$play = $('<button class="iAsButton i-tv" title="' + tr.ch_switch + '" />').css('float', 'left').appendTo(toolbar).click(function () { win.detail.doPlay() });
+    this.$play = $('<button class="iAsButton i-tv" />').css('float', 'left').appendTo(toolbar).click(function () { win.detail.doPlay() });
     this.$prev = $('<button class="iAsButton i-rewind" title="' + tr.eventPrev + '" />').appendTo(toolbar).click(function () { win.detail.doPrev() });
     this.$next = $('<button class="iAsButton i-forward" title="' + tr.eventNext + '" />').appendTo(toolbar).click(function () { win.detail.doNext() });
     $('<button class="iAsButton i-cancel" title="' + epgd.tr.close + '" />').css('float', 'right').appendTo(toolbar).click(function () { $(window).trigger("epgd_close.eventDetail"); });
@@ -427,7 +430,8 @@ epgd.eventDetail.win.prototype.render = function (detail) {
         }
     });
     this.$rec.toggleClass("hasTimer", !!e.timerid).prop("title", this.detail.doRecord(true));
-    this.$play.toggle(this.detail.doPlay(true));
+    i= this.detail.doPlay(true);
+    this.$play.toggle(!!i).prop("title", i);
     this.$prev.toggle(this.detail.doPrev(true));
     this.$next.toggle(this.detail.doNext(true));
     this.$con.find('.channel .i-tv').click(function () { epgd.vdrs.current.switchChannel(this.parentNode.id); });
@@ -468,7 +472,7 @@ epgd.recordDetail.prototype.doRecord = function (eData) {
     epgd.eventDetail.prototype.doRecord.call(this, eData);
 }
 epgd.recordDetail.prototype.doPlay = function (checkAvail) {
-    if (checkAvail) return true;
+    if (checkAvail) return epgd.tr.pages.eventDetail.play;
     epgd.ajax({ url: epgd.login.url + 'data/replayrecording?vdruuid=' + ( !epgd.vdrs.list[this.data.vdruuid].usecommonrecfolder ? this.data.vdruuid : epgd.vdrs.current.uuid ) + '&starttime=' + this.data.starttime + '&md5path=' + this.data.md5path + '&owner=' + (this.data.owner || ''), cache: false }, function (data) {
         epgd.utils.popup(data.result.message, { title: 'VDR', autoClose: 5000 });
     });

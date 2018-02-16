@@ -1,16 +1,5 @@
 CREATE VIEW eventsview as select cnt_useid useid, cnt_eventid eventid, cnt_channelid channelid, cnt_source source, all_updsp updsp, cnt_updflg updflg, cnt_delflg delflg, cnt_fileref fileref, cnt_tableid tableid, cnt_version version, sub_title title,
-case when sub_shorttext is null then
- concat(
-  case when length(ifnull(sub_genre,'')) > 0 then sub_genre else '' end,
-  case when length(ifnull(sub_genre,'')) > 0 and length(ifnull(sub_country,'')) + length(ifnull(sub_year,'')) > 0 then ' (' else '' end,
-  case when length(ifnull(sub_country,'')) > 0 then sub_country else '' end,
-  case when length(ifnull(sub_country,'')) > 0 and length(ifnull(sub_year,'')) > 0 then ' ' else '' end,
-  case when length(ifnull(sub_year,'')) > 0 then sub_year else '' end,
-  case when length(ifnull(sub_genre,'')) > 0 and length(ifnull(sub_country,'')) + length(ifnull(sub_year,'')) > 0 then ')' else '' end
- )
-else
- sub_shorttext
-end shorttext,
+case when sub_shorttext is null or sub_compshorttext = sub_comptitle then '' else sub_shorttext end shorttext,
 case when sub_longdescription is Null then
   cnt_longdescription
 else

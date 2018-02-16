@@ -133,6 +133,7 @@ epgd.tr = {
             record: "Aufnehmen",
             repeat: "Wiederholungen",
             ch_switch: "umschalten",
+            play: "abspielen",
             eventNext: "nachfolgend",
             eventPrev: "vorher",
             parentalrating: 'ab ',
