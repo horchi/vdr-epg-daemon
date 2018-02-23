@@ -1831,6 +1831,9 @@ int cEpgHttpd::doSendMail(json_t* jInData, json_t* response)
    const char* subject = getStringFromJson(jInData, "subject", "test");
    const char* mimeType = getStringFromJson(jInData, "mimetype", "text/plain");
 
+   if (isEmpty(mimeType))
+      mimeType = "text/plain";
+
    getParameter("epgd", "mailScript", mailScript);
 
    if (isEmpty(mailScript))
@@ -1841,7 +1844,7 @@ int cEpgHttpd::doSendMail(json_t* jInData, json_t* response)
 
    // send HTML mail
 
-   tell(0, "Send mail '%s' with [%s] to '%s'", subject, body, receiver);
+   tell(0, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receiver, mimeType);
 
    asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
             subject, body, mimeType, receiver);
