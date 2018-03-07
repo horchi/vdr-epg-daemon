@@ -218,7 +218,7 @@ int cFrame::sendMail(const char* mimeType, const char* receivers,
    mailBody = strReplace("\"", "'", body);
    // mailBody = strReplace("!", "", mailBody);
 
-   tell(0, "Send mail '%s' with [%s] to '%s'", subject, body, receivers);
+   tell(0, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receivers, mimeType);
 
    asprintf(&command, "%s \"%s\" \"%s\" \"%s\" %s", mailScript,
             subject, mailBody.c_str(), mimeType, receivers);
