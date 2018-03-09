@@ -16,7 +16,7 @@
 
 cParameters::Parameter cParameters::parameters[] =
 {
-   // owner,     name,                             type,      default,                    regexp,         readonly, visible
+   // owner,     name,                             type,      default,                    regexp,           readonly,  visible
 
    // --------------------------------------------
    // epgd / epghttpd
@@ -61,7 +61,7 @@ cParameters::Parameter cParameters::parameters[] =
    { "@",        "timerDefaultVDRuuid",            ptAscii,   "",                         "^.{0,150}$",           no,    yes },
    { "@",        "quickTimes",                     ptAscii,   "Jetzt=@Now~Nächste=@Next~PrimeTime=20:20~EarlyNight=!22:20~MidNight=!00:00~LateNight=!02:00~Tipp=@TagesTipps~Action=@Action",
                                                                                     "^(~?[^=]+=!?(([0-1]?[0-9]|2[0-4]):[0-5]?[0-9]|@Now|@Next|@[A-Za-z0-9]*))*$",
-                                                                                                            no,    yes },
+                                                                                                                  no,    yes },
    { "@",        "startWithSched",                 ptBool,    "0",                        "^[01]$",               no,    yes },
    { "@",        "searchAdv",                      ptBool,    "1",                        "^[01]$",               no,    yes },
    { "@",        "namingModeSerie",                ptNum,     "1",                        "^[0-6]$",              no,    yes },
@@ -81,6 +81,7 @@ cParameters::Parameter cParameters::parameters[] =
    { "@",        "namingModeSearchSerieTemplate",  ptAscii,   "",                         "^.{0,150}$",           no,    yes },
    { "@",        "namingModeMovieTemplate",        ptAscii,   "",                         "^.{0,150}$",           no,    yes },
    { "@",        "namingModeSearchMovieTemplate",  ptAscii,   "",                         "^.{0,150}$",           no,    yes },
+   { "@",        "osdTimerNotify",                 ptBool,    "0",                        "^[01]$",               no,    yes },
 
    { 0, 0, 0, 0, 0, 0, 0 }
 };
