@@ -1215,7 +1215,7 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
    selectDoneTimer->build(" %s not in ('F','J')",      // mysql ignoring case by default!
                           timersDoneDb->getField("STATE")->getDbName());
 
-   if (repeatfields & sfTitle)
+   if (repeatfields & sfTitle || repeatfields & sfFolge)  // 'Folge' vergelichen und 'Titel' nicht macht keinen Sinn
    {
       selectDoneTimer->build(" and (field('%s', ifnull(comptitle,''),ifnull(episodecompshortname,'')) > 0"
                              "   or field('%s',ifnull(comptitle,''),ifnull(episodecompshortname,'NoShortnameAvailable')) > 0)",
