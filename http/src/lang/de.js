@@ -226,6 +226,7 @@ epgd.tr = {
             caseSensitive: "Klein-/Großschreibung",
             searchModes: ["exakte Übereinstimmung", "regulärer Ausdruck", "Muster", "enthalten in"],
             searchFields: ["Titel", "Kurztext", "Beschreibung"],
+            repeatFields: ["Titel", "Kurztext"],
             empty: "Leider nichts gefunden.",
             matchdensity: "Treffergenauigkeit"
         },
@@ -260,7 +261,8 @@ epgd.tr = {
                 label: "epgd Backend"
             },
             vdr: {
-                startWithSched:'EPG Menü startet mit Schedule'
+                startWithSched:'EPG Menü startet mit Schedule',
+                osdTimerNotify:'Info anzeigen, wenn der VDR einen Timer übernommen hat'
             },
             record: {
                 subFolderSort: 'Sortierung der Unterordner'

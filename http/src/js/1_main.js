@@ -19,6 +19,7 @@ epgd.userProfile_defaults = {
     pickerFirstDay: '6',
     quickTimes: '',
     startWithSched: 0,
+    osdTimerNotify: 0,
     startPage: "menu_options",
     namingModeSerie: "0",
     namingModeSearchSerie: "0",

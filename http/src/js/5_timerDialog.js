@@ -364,7 +364,7 @@ epgd.searchTimerDialog.prototype.create = function () {
         + '<div class="full"><select id="tSMode" style="width:auto">' + sModes + '</select>'
         + '&nbsp;&nbsp;<input type="checkbox" id="tCaseSens" />&nbsp;<label for="tCaseSens">'
         + trS.caseSensitive + '</label></div>'
-        + '<div class="ui-corner-all week">' + [""].concat(trS.searchFields).join('<input type="checkbox" name="tSFields" />') + '</div>'
+        + '<div class="ui-corner-all week">' + [" "].concat(trS.searchFields).join('<input type="checkbox" name="tSFields" />') + '</div>'
         + '<div><label for="tAdv"><input type="checkbox" id="tAdv" />&nbsp;' + epgd.tr.advanced + epgd.pages.help.getIcon('sTAdv') + '</label><div class="ui-corner-all week">'
             + '<span>' + tr.episode + '</span><input type="text" id="tSFEpisode" style="width:200px" /> '
             + '<span>' + epgd.tr.pages.eventDetail.season + '</span><input type="text" id="tSFSeason" style="width:40px" /> '
@@ -376,7 +376,7 @@ epgd.searchTimerDialog.prototype.create = function () {
             + '<br /><input type="checkbox" id="tSFNoEpgMatch" />' + tr.noEpgMatch
         + '</div></div>'
         + '<div class="noTypeS"><div><label for="tRepeat"><input type="checkbox" id="tRepeat" />&nbsp;'
-            + tr.noRepeat + epgd.pages.help.getIcon('sTRepeat') + '</label><div class="ui-corner-all week">' + [""].concat(trS.searchFields).join('<input type="checkbox" name="tRFields" />') + '</div></div></div>'
+            + tr.noRepeat + epgd.pages.help.getIcon('sTRepeat') + '</label><div class="ui-corner-all week">' + [""].concat(trS.repeatFields).join('<input type="checkbox" name="tRFields" />') + '</div></div></div>'
         + '<div><input type="radio" name="tChExclude" value="1" id="tChExclude0" /><label for="tChInclude">' + tr.chInclude
             + '</label>' + epgd.pages.help.getIcon('sTChannels') + '<input type="radio" name="tChExclude" value="0" id="tChExclude1" /><label for="tChExclude">' + tr.chExclude
             + '</label></div><input type="text" id="tChannels" class="full"/>'
@@ -389,6 +389,12 @@ epgd.searchTimerDialog.prototype.create = function () {
     });
     $([form.tTime, form.tRepeat, form.tAdv]).change(function () {
         $(this).parent().next().toggle(this.checked);
+    });
+    $(form.tRFields).change(function () {
+        if (this.checked)
+            $(this).prev().prop("disabled", true).prop("checked", true).change();
+        else
+            $(this).prev().prop("disabled", false)
     });
     $([form.tSFSeason, form.tSFSPart, form.tSFYear]).change(function () {
         this.value = this.value.replace(/[^0-9-]/g, '');
@@ -424,7 +430,7 @@ epgd.searchTimerDialog.prototype.render = function (t) {
         form.tRFields[i].checked = (d & f);
     form.tRepeat.checked = d > 0;
     $(form.tRepeat).change();
-
+    $(form.tRFields).change();
     form.tSFEpisode.value = t.episodename || '';
     form.tSFSeason.value = t.season || '';
     form.tSFSPart.value = t.seasonpart || '';

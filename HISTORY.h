@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.135"
+#define _VERSION     "1.1.136"
 #define VERSION_DATE "07.03.2018"
 #define DB_API       6
 
@@ -17,7 +17,11 @@
 /*
  * ------------------------------------
  *
-
+2018-03-08: version 1.1.136 (rechner)
+   - added: if repeatFields shorttext checked, title is also checked and disabled
+   - removed: description field in repeatFields
+   - added: parameter osdTimerNotify
+ 
 2018-03-07: version 1.1.135 (horchi)
    - bugfix: Fixed minor problem with auto timer and empty episode/shorttext
 

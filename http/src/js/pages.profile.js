@@ -42,6 +42,7 @@ epgd.pages.profile = {
                     + '<tr><td>' + epgd.tr.advanced + '</td><td><input type="checkbox" id="searchAdv" /></td></tr>'
                 + '<tr><th colspan="2">VDR OSD</th><tr>'
                     + '<tr><td>' + epgd.tr.pages.profile.vdr.startWithSched + '</td><td><input type="checkbox" id="startWithSched"' + (epgd.profile.startWithSched == "1" ? ' checked="checked"' : '') + ' /></td></tr>'
+                    + '<tr><td>' + epgd.tr.pages.profile.vdr.osdTimerNotify + '</td><td><input type="checkbox" id="osdTimerNotify"' + (epgd.profile.osdTimerNotify == "1" ? ' checked="checked"' : '') + ' /></td></tr>'
                 + '<tr><th colspan="2">' + epgd.tr.menu.records + '</th><tr>'
                     + '<tr><td>' + epgd.tr.pages.profile.record.subFolderSort + '</td><td><select id="recordSubFolderSort"><option value="1">' + epgd.tr.pages.eventDetail.title + ' up</option><option value="2">' + epgd.tr.pages.eventDetail.title + ' down</option><option value="3">' + epgd.tr.pages.timerList.folder + ' up</option><option value="4">' + epgd.tr.pages.timerList.folder + ' down</option><option value="5">' + epgd.tr.pages.timerList.recordTime + ' up</option><option value="6">' + epgd.tr.pages.timerList.recordTime + ' down</option></select></td></tr>'
              + '</table></div>';
@@ -161,6 +162,7 @@ epgd.pages.profile = {
         checkData({ name: "defaultVDRuuid", value: $(form.defaultVDRuuid).val() || '', owner: owner });
         checkData({ name: "quickTimes", value: form.quickTimes.value.replace(/\n/g, '~'), owner: owner });
         checkData({ name: "startWithSched", value: $(form.startWithSched).prop('checked') ? "1" : "0", owner: owner });
+        checkData({ name: "osdTimerNotify", value: $(form.osdTimerNotify).prop('checked') ? "1" : "0", owner: owner });
         checkData({ name: "pickerFirstDay", value: new String(form.pickerFirstDay.selectedIndex), owner: owner });
         checkData({ name: "startPage", value: $(form.startPage).val() || '', owner: owner });
         checkData({ name: "namingModeSerie", value: new String(this.form.namingModeSerie.selectedIndex), owner: owner });
