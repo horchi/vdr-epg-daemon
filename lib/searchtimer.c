@@ -706,7 +706,7 @@ int cSearchTimer::checkTimers()
 
       // check only active and pending timers with eventid
 
-      if (!timerDb->getIntValue("ACTIVE") || !timerDb->hasValue("STATE", "P") || !timerDb->getIntValue("EVENTID"))
+      if (!timerDb->getIntValue("ACTIVE") || !timerDb->hasCharValue("STATE", tsPending) || !timerDb->getIntValue("EVENTID"))
          continue;
 
       if (timerDb->hasValue("SOURCE", "epgs"))   // 'epgs' => epgsearch plugin
@@ -780,7 +780,7 @@ int cSearchTimer::checkTimers()
                             l2pTime(timerDb->getIntValue("_STARTTIME")).c_str(), l2pTime(useeventsDb->getIntValue("STARTTIME")).c_str(),
                             timerDb->getIntValue("ID"));
 
-         modifyTimer(timerDb, taAdjust);
+         modifyTimer(timerDb, timerDb->hasCharValue("ACTION", taCreate) ? taCreate : taAdjust);
          count++;
       }
 
@@ -799,7 +799,7 @@ int cSearchTimer::checkTimers()
                                ptyRecName->getResult(), timerDb->getIntValue("ID"));
 
                timerDb->setValue("FILE", ptyRecName->getResult());
-               modifyTimer(timerDb, taModify);
+               modifyTimer(timerDb, timerDb->hasCharValue("ACTION", taCreate) ? taCreate : taModify);
                count++;
             }
          }
@@ -829,8 +829,7 @@ int cSearchTimer::modifyTimer(cDbTable* timerDb, TimerAction action)
    timerDb->update();
 
    tell(0, "Created '%s' request for timer (%ld) at vdr '%s'",
-        toName(action),
-        timerDb->getIntValue("ID"), timerDb->getStrValue("VDRUUID"));
+        toName(action), timerDb->getIntValue("ID"), timerDb->getStrValue("VDRUUID"));
 
    // triggerVdrs("TIMERJOB", timerDb->getStrValue("VDRUUID"));
 

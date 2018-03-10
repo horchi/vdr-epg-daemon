@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.136"
-#define VERSION_DATE "07.03.2018"
+#define _VERSION     "1.1.137"
+#define VERSION_DATE "09.03.2018"
 #define DB_API       6
 
 #ifdef GIT_REV
@@ -17,11 +17,14 @@
 /*
  * ------------------------------------
  *
+2018-03-09: version 1.1.137 (horchi)
+     bugfix: Try to fixed potential problem at timer modification
+
 2018-03-08: version 1.1.136 (rechner)
    - added: if repeatFields shorttext checked, title is also checked and disabled
    - removed: description field in repeatFields
    - added: parameter osdTimerNotify
- 
+
 2018-03-07: version 1.1.135 (horchi)
    - bugfix: Fixed minor problem with auto timer and empty episode/shorttext
 
