@@ -490,7 +490,7 @@ int cSvdrpClient::connect()
 
       if (result != 0)
       {
-         tell(0, "Error: SVDRPCL: Cconnecting to '%s:%d' %s failed", ip, port, strerror(errno));
+         tell(0, "Error: SVDRPCL: Connecting to '%s:%d' %s failed", ip, port, strerror(errno));
          ::close(sock);
 
          return fail;

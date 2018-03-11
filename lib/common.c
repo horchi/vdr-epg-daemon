@@ -261,6 +261,21 @@ const char* toCase(Case cs, char* str)
    return str;
 }
 
+
+char* replaceChars(char* string, const char* chars, const char to)
+{
+   char* p = string;
+
+   while (*p)
+   {
+      if (strchr(chars, *p))
+         *p = to;
+      p++;
+   }
+
+   return string;
+}
+
 void removeChars(std::string& str, const char* ignore)
 {
    const char* s = str.c_str();

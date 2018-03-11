@@ -77,6 +77,14 @@ class Plugin
       virtual int hasSource(const char* source) { return strcmp(getSource(), source) == 0; }
 
       virtual int getPicture(const char* imagename, const char* fileRef, MemoryStruct* data) = 0;
+
+      virtual char* fsNameOfPicture(const char* imagename)  // caller has to free the result!
+      {
+         char* buffer = strdup(imagename);
+         replaceChars(buffer, "<>:\"/\\:|?*", '_');
+         return buffer;
+      }
+
       virtual int processDay(int day, int fullupdate, Statistic* stat) = 0;
 
       virtual int cleanupBefore()  { return done; }
@@ -203,6 +211,7 @@ class cEpgd : public cFrame, public cSystemNotification
       int exitDb();
       int migrateFromDbApi4();
       int migrateFromDbApi5();
+      int migrateFromDbApi6();
       int tryFillEmptyRecTableFields();
       int checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* fp = 0);
       int checkView(const char* name, const char* file);

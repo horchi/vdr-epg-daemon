@@ -25,6 +25,7 @@ class Epgdata : public Plugin
 
       const char* getSource() { return "epgdata"; }
 
+      char* fsNameOfPicture(const char* imagename);  // caller has to free the result!
       int getPicture(const char* imagename, const char* fileRef, MemoryStruct* data);
       int processDay(int day, int fullupdate, Statistic* statistic);
       int cleanupAfter();

@@ -4,9 +4,9 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.137"
-#define VERSION_DATE "09.03.2018"
-#define DB_API       6
+#define _VERSION     "1.1.138"
+#define VERSION_DATE "11.03.2018"
+#define DB_API       7
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,6 +17,11 @@
 /*
  * ------------------------------------
  *
+
+2018-03-11: version 1.1.138 (horchi)
+     change: Fixed image problem with epgdata
+             due to interface change by epgdata (patch by seahawk1986)
+
 2018-03-09: version 1.1.137 (horchi)
      bugfix: Try to fixed potential problem at timer modification
 

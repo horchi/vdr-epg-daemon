@@ -625,43 +625,48 @@ int Epgdata::processFile(const char* data, int size, const char* fileRef)
 }
 
 //***************************************************************************
+// Create FS Name Of Picture
+//     - caller has to free the result!
+//***************************************************************************
+
+char* Epgdata::fsNameOfPicture(const char* imagename)
+{
+   char* buffer = 0;
+
+   if (const char* p = strstr(imagename, "://"))
+      buffer = strdup(p+strlen("://"));
+   else
+      buffer = strdup(imagename);
+
+   replaceChars(buffer, "<>:\"/\\:|?*", '_');
+   return buffer;
+}
+
+//***************************************************************************
 // Get Picture
 //***************************************************************************
 
 int Epgdata::getPicture(const char* imagename, const char* fileRef, MemoryStruct* data)
 {
    int fileSize = 0;
-   char* path = 0;
-   char entryName[200+TB];
+   int status;
 
    data->clear();
 
-   // lookup file information
-
-   obj->fileDb->clear();
-   obj->fileDb->setValue("FILEREF", fileRef);
-   obj->fileDb->setValue("SOURCE", getSource());
-
-   if (stmtByFileRef->find())
-      asprintf(&path, "%s/epgdata/%s", EpgdConfig.cachePath,
-               obj->fileDb->getStrValue("Name"));
-
-   stmtByFileRef->freeResult();
-
-   if (!path)
+   if (!imagename)
    {
-      tell(0, "Error: No entry with fileref '%s' to lookup image '%s' found",
-           fileRef, imagename);
+      tell(0, "Error: No image url given, skipping image");
       return 0;
    }
 
-   if (unzip(path, imagename, data->memory, fileSize, entryName) == success)
-   {
-      data->size = fileSize;
-      tell(2, "Unzip of image '%s' succeeded", imagename);
-   }
+   tell(0, "Downloading image '%s'", imagename);
+   status = obj->downloadFile(imagename, fileSize, data);
 
-   free(path);
+   if (status != success)
+   {
+      tell(0, "Error: downloading image from url '%s' failed", imagename);
+      return 0;
+   }
 
    return fileSize;
 }

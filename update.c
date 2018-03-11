@@ -159,9 +159,7 @@ cEpgd::~cEpgd()
 
    cDbConnection::exit();
 
-   vector<PluginLoader*>::iterator it;
-
-   for (it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); it++)
       delete *it;
 
    plugins.clear();
@@ -485,6 +483,12 @@ int cEpgd::initDb()
       if (lastApi <= 5)
       {
          if (migrateFromDbApi5() != success)
+            return fail;
+      }
+
+      if (lastApi <= 6)
+      {
+         if (migrateFromDbApi6() != success)
             return fail;
       }
 
@@ -1208,6 +1212,52 @@ int cEpgd::migrateFromDbApi5()
 
    delete select;
    delete recordingListDb; recordingListDb = 0;
+
+   return status;
+}
+
+//***************************************************************************
+// Migrate From DB API 6
+//***************************************************************************
+
+int cEpgd::migrateFromDbApi6()
+{
+   int status = success;
+
+   imageRefDb = new cDbTable(connection, "imagerefs");
+   if ((status = imageRefDb->open()) != success) return status;
+
+   tell(0, "Migration of table '%s' from version <= 6 ...", imageRefDb->TableName());
+
+   cDbStatement* select = new cDbStatement(imageRefDb);
+
+   select->build("update %s set imagenamefs = imagename where imagenamefs is null",
+                 imageRefDb->TableName());
+
+   status += select->prepare();
+
+   if (status == success)
+      select->execute();
+
+   // select->bindAllOut();
+   // select->build(" from %s where %s is null", imageRefDb->TableName(),
+   //               imageRefDb->getField("IMGNAMEFS")->getDbName());
+
+   // status += select->prepare();
+
+   // if (status == success)
+   // {
+   //    for (int f = select->find(); f; f = select->fetch())
+   //    {
+   //       imageRefDb->setValue("IMGNAMEFS", imageRefDb->getStrValue("IMGNAME"));
+   //       imageRefDb->update();
+   //    }
+   // }
+
+   tell(0, "... done");
+
+   delete select;
+   delete imageRefDb; imageRefDb = 0;
 
    return status;
 }
@@ -2111,6 +2161,24 @@ int cEpgd::storeImageRefs(tEventId evtId, const char* source, const char* images
       imageRefDb->setValue("SOURCE", source);
       imageRefDb->setValue("FILEREF", fileRef);
 
+      for (auto it = plugins.begin(); it < plugins.end(); it++)
+      {
+         Plugin* p = (*it)->getPlugin();
+
+         cSystemNotification::check();
+
+         if (p->ready() && p->hasSource(source))
+         {
+            char* fsName = p->fsNameOfPicture(image);
+            imageRefDb->setValue("IMGNAMEFS", fsName);
+            free(fsName);
+            break;
+         }
+      }
+
+      // strReplace(image, '/', '_');
+      // imageRefDb->setValue("IMGNAMEFS", image);
+
       imageRefDb->store();
       count++;
 
@@ -2392,9 +2460,7 @@ int cEpgd::loadFromFs(MemoryStruct* data, const char* filename, const char* subP
 
 int cEpgd::cleanupBefore()
 {
-   vector<PluginLoader*>::iterator it;
-
-   for (it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); it++)
    {
       Plugin* p = (*it)->getPlugin();
 
@@ -2413,9 +2479,7 @@ int cEpgd::cleanupBefore()
 
 int cEpgd::cleanupAfter()
 {
-   vector<PluginLoader*>::iterator it;
-
-   for (it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); it++)
    {
       Plugin* p = (*it)->getPlugin();
 
@@ -2435,9 +2499,7 @@ int cEpgd::cleanupAfter()
 int cEpgd::getPicture(const char* source, const char* imagename,
                       const char* fileRef, MemoryStruct* data)
 {
-   vector<PluginLoader*>::iterator it;
-
-   for (it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); it++)
    {
       Plugin* p = (*it)->getPlugin();
 
@@ -2456,9 +2518,7 @@ int cEpgd::getPicture(const char* source, const char* imagename,
 
 int cEpgd::processDay(int day, int fullupdate, Statistic* stat)
 {
-   vector<PluginLoader*>::iterator it;
-
-   for (it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); it++)
    {
       Plugin* p = (*it)->getPlugin();
 
