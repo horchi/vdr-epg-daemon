@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.138"
-#define VERSION_DATE "11.03.2018"
+#define _VERSION     "1.1.139"
+#define VERSION_DATE "18.04.2018"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2018-04-18: version 1.1.139 (horchi)
+     change: Prepared search timer filter by channel number (to be added to WEBIF)
 
 2018-03-11: version 1.1.138 (horchi)
      change: Fixed image problem with epgdata

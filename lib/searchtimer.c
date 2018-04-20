@@ -205,7 +205,7 @@ int cSearchTimer::initDb()
    selectChannelFromMap = new cDbStatement(mapDb);
 
    selectChannelFromMap->build("select ");
-   selectChannelFromMap->bind("CHANNELNAME", cDBS::bndOut);
+   selectChannelFromMap->bindAllOut();
    selectChannelFromMap->build(" from %s where ", mapDb->TableName());
    selectChannelFromMap->bind("CHANNELID", cDBS::bndIn | cDBS::bndSet);
 
@@ -847,6 +847,9 @@ int cSearchTimer::matchCriterias(cDbRow* searchTimer, cDbRow* event)
    int rangeStart = searchTimer->getValue("STARTTIME")->isNull() ? (int)na : searchTimer->getIntValue("STARTTIME");
    int rangeEnd = searchTimer->getValue("ENDTIME")->isNull() ? (int)na : searchTimer->getIntValue("ENDTIME");
    int nextDays = searchTimer->getValue("NEXTDAYS")->isNull() ? (int)na : searchTimer->getIntValue("NEXTDAYS");
+   int chNumMin = searchTimer->getIntValue("CHNUMMIN");
+   int chNumMax = searchTimer->getIntValue("CHNUMMAX");
+   int chNumber = na;
 
    const char* channelid = event->getStrValue("CHANNELID");
    time_t starttime = event->getIntValue("STARTTIME");
@@ -865,9 +868,24 @@ int cSearchTimer::matchCriterias(cDbRow* searchTimer, cDbRow* event)
       return no;
    }
 
+   chNumber = mapDb->getIntValue("ORDER");
    mapDb->reset();
 
-   // check channel matches
+   // check channel number
+
+   if (chNumMax > 0 && chNumber > chNumMax)
+   {
+      tell(3, "AUTOTIMER: Skipping hit due to channel number - '%d' > '%d'", chNumber, chNumMax);
+      return no;
+   }
+
+   if (chNumMin > 0 && chNumber < chNumMin)
+   {
+      tell(3, "AUTOTIMER: Skipping hit due to channel number - '%d' < '%d'", chNumber, chNumMin);
+      return no;
+   }
+
+   // check channelid matches
 
    if (!isEmpty(channelids))
    {

@@ -672,7 +672,8 @@ Table searchtimers
    CHANNELIDS           "comma separated list of channleids or empty"          channelids           Ascii      500 Data,
    CHEXCLUDE            ""                                                     chexclude            UInt         0 Data,
    CHFORMAT             "HD,SD"                                                chformat             Ascii       50 Data,
-
+   CHNUMMIN             "min channel number"                                   chnummin             UInt         0 Data,
+   CHNUMMAX             "max channel number"                                   chnummax             UInt         0 Data,
    NAME                 "Bezeichung des Suchtimers"                            name                 Ascii      100 Data,
    EXPRESSION           ""                                                     expression           Ascii      200 Data,
    EXPRESSION1          ""                                                     expression1          Ascii      200 Data,

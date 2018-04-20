@@ -116,13 +116,17 @@ int getFieldFromJson(json_t* obj, cDbRow* row, const char* fname, const char* ex
       case cDBS::ffInt:
       case cDBS::ffUInt:
       {
-         int v = getIntFromJson(obj, jname, na);
-         const char* s = getStringFromJson(obj, jname, "");
+         int v = getIntFromJson(obj, jname, 0);
+         const char* s = getStringFromJson(obj, jname, "_not_set_");
+
+         if (s && strcmp(s, "_not_set_") == 0)
+            break;
 
          if (s && strcmp(s, "null") == 0)
             value->setNull();
-         else if (v != na || !value->isEmpty())
+         else
             value->setValue(v);
+
          break;
       }
 

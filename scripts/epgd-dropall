@@ -110,10 +110,14 @@ if [ "${i}" = "y" ]; then
    mysql -u epg2vdr -Depg2vdr -e 'drop table if exists movie_media;'
    mysql -u epg2vdr -Depg2vdr -e 'drop view  if exists thetvdbview;'
 
+   mysql -u epg2vdr -Depg2vdr -e 'update events set scrseriesid = null, scrseriesepisode = null, scrmovieid = null, scrsp = null;'
+   mysql -u epg2vdr -Depg2vdr -e 'update recordinglist set scrseriesid = null, scrseriesepisode = null, scrmovieid = null, scrnew = null, scrsp = null;'
+
+   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists usevents;'
+
    echo ""
    echo "Scraper tables dropped!"
 fi
-
 
 echo "-----------------------------"
 echo "--  Tables with User Data  --"
