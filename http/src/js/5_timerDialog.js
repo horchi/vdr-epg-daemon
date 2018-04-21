@@ -380,6 +380,7 @@ epgd.searchTimerDialog.prototype.create = function () {
         + '<div><input type="radio" name="tChExclude" value="1" id="tChExclude0" /><label for="tChInclude">' + tr.chInclude
             + '</label>' + epgd.pages.help.getIcon('sTChannels') + '<input type="radio" name="tChExclude" value="0" id="tChExclude1" /><label for="tChExclude">' + tr.chExclude
             + '</label></div><input type="text" id="tChannels" class="full"/>'
+        + '<div><label for="tChRange">' + tr.chRange + epgd.pages.help.getIcon('sTChannels') + '</label><input id="tChRangeMin" style="width:40px" /> - <input id="tChRangeMax" style="width:40px" /></div>'
         + '<div class="noTypeS"><label for="tChFormat">' + tr.chFormat + epgd.pages.help.getIcon('sTChFormat') + '</label><input id="tChFormat" readonly onclick="epgd.timerEditChFormat(this)" /></div>'
         + '<div><label for="tTime"><input type="checkbox" id="tTime" />&nbsp;' + epgd.tr.dateTimePicker.timeText + epgd.pages.help.getIcon('sTime') + '</label></div>');
     $(form.tWeek[0]).before('<span>' + epgd.tr.dateTimePicker.timeTextBetween + ' <input type="text" id="tStart" style="width:40px" /> - <input type="text" id="tEnd" style="width:40px" /></span>')
@@ -451,6 +452,9 @@ epgd.searchTimerDialog.prototype.render = function (t) {
         form.tChExclude1.checked = 1;
     else
         form.tChExclude0.checked = 1;
+    tChRangeMin.value= t.chnummin || '';
+    tChRangeMax.value= t.chnummax || '';
+             
     form.tChFormat.value = t.chformat || (t.id ? '' : epgd.profile.chFormat);
     form.tNameMode.defaultIndex = parseInt(t.category == 'Serie' ? epgd.profile.namingModeSearchSerie : epgd.profile.namingModeSearchMovie, 10);
     form.tNameMode.selectedIndex =  typeof t.namingmode == "undefined" ? form.tNameMode.defaultIndex : t.namingmode;
@@ -502,6 +506,13 @@ epgd.searchTimerDialog.prototype.getData = function (dontValid) {
     data.channelids = epgd.utils.getAutoCompleteValues(form.tChannels);
     data.chformat = form.tChFormat.value;
     data.chexclude = form.tChExclude1.checked ? 1 : 0;
+    data.chnummin = parseInt(form.tChRangeMin.value,10);
+    if (isNaN(data.chnummin))
+        data.chnummin= 0;
+    data.chnummax = parseInt(form.tChRangeMax.value, 10);
+    if (isNaN(data.chnummax))
+        data.chnummax= 0;
+
     if (form.tTime.checked) {
         data.starttime = parseInt(form.tStart.value.replace(':', ''), 10);
         data.endtime = parseInt(form.tEnd.value.replace(':', ''), 10);

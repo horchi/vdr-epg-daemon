@@ -92,6 +92,7 @@ epgd.tr = {
             searchTimerReload: "Suchtimer updaten",
             chInclude: "Auf Kanäle einschränken",
             chExclude: "Kanäle ausschließen",
+            chRange: "Kanal von/bis",
             nextDays: "innerhalb der nächsten $field$ Tage",
             confirmSaveBigResult: "Die Suche ergibt $cnt$ Treffer, trotzdem speichern?",
             timerStates: {
@@ -126,7 +127,8 @@ epgd.tr = {
                 'W': 'Warnung',
                 'E': 'Fehler',
                 'F': 'Fataler Fehler'
-            }, chFormat: "bevorzugtes Sendeformat"
+            }, 
+            chFormat: "bevorzugtes Sendeformat"
             //channelModes: ["SD", "HD", "3D", "HD,SD", "SD,HD", "3D,HD,SD", "SD,HD,3D"]
         },
         eventDetail: {
