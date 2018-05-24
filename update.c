@@ -1395,6 +1395,9 @@ int cEpgd::checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* f
    asprintf(&param, "%s.md5", name);
    p = fp ? fp : new cDbProcedure(connection, name, type);
 
+   if (!connection || !connection->getMySql())
+      return fail;
+
    if (p->created())
    {
       getParameter("epgd", param, md5);

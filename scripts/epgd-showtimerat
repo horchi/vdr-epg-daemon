@@ -1,3 +1,4 @@
+#!/bin/bash
 
 export MYSQL_PWD=epg
 
@@ -11,4 +12,4 @@ select t.id, SUBSTRING_INDEX(t.channelid, '-', 3) as transponder, v.name, t.sour
     v.uuid = t.vdruuid and t.active = 1 and t.state in ('P','R') \
     and ('$1' between from_unixtime(t.day + t.starttime div 100 * 60 * 60 + t.starttime % 100 * 60) and from_unixtime(t.day + t.endtime div 100 * 60 * 60 + t.endtime % 100 * 60)) \
     and  v.name = '$2' \
-  order by t.day, start;" 
+  order by t.day, start;"

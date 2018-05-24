@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.140"
-#define VERSION_DATE "21.04.2018"
+#define _VERSION     "1.1.141"
+#define VERSION_DATE "14.05.2018"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -18,9 +18,13 @@
  * ------------------------------------
  *
 
+2018-05-14: version 1.1.141 (horchi)
+     added: Compatibility for newer MariaBD librarys (patch by provided by marco)
+     added: execution shell to scripts
+
 2018-04-21: version 1.1.140 (rechner)
-     change: Added UI for Prepared search timer filter by channel number 
-     
+     change: Added UI for Prepared search timer filter by channel number
+
 2018-04-18: version 1.1.139 (horchi)
      change: Prepared search timer filter by channel number (to be added to WEBIF)
 

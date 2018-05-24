@@ -1,3 +1,4 @@
+#!/bin/bash
 
 export MYSQL_PWD=epg
 
@@ -28,4 +29,4 @@ select t.id, SUBSTRING_INDEX(t.channelid, '-', 3) as transponder, v.name as vdr,
           and t.day + t.endtime div 100 * 60 * 60 + t.endtime % 100 * 60 <= ti.day + ti.endtime div 100 * 60 * 60 + ti.endtime % 100 * 60) \
       ) \
       and t.vdruuid = ti.vdruuid \
-  order by t.day, start;" 
+  order by t.day, start;"

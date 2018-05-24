@@ -1296,7 +1296,7 @@ class cDbProcedure : public cDbService
       int created()
       {
          if (!connection || !connection->getMySql())
-            return fail;
+            return no;
 
          cDbStatement stmt(connection);
 
