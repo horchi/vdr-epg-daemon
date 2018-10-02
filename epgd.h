@@ -178,6 +178,8 @@ class cEpgd : public cFrame, public cSystemNotification
       cDbTable* messageDb;
 
       cDbStatement* selectAllMap;
+      cDbStatement* selectMapByUpdFlg;
+      cDbStatement* selectMapByExt;
       cDbStatement* selectByCompTitle;
       cDbStatement* selectMaxUpdSp;
       cDbStatement* selectDistCompname;

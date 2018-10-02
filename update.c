@@ -52,6 +52,8 @@ cEpgd::cEpgd()
    const char* lang;
 
    selectAllMap = 0;
+   selectMapByUpdFlg = 0;
+   selectMapByExt = 0;
    selectByCompTitle = 0;
    selectMaxUpdSp = 0;
    selectDistCompname = 0;
@@ -594,6 +596,38 @@ int cEpgd::initDb()
    status += selectAllMap->prepare();
 
    // ----------
+   // select extid, source
+   //   from channelmap where
+   //  updflg = ?
+
+   selectMapByUpdFlg = new cDbStatement(mapDb);
+
+   selectMapByUpdFlg->build("select ");
+   selectMapByUpdFlg->bind("EXTERNALID", cDBS::bndOut);
+   selectMapByUpdFlg->bind("CHANNELID", cDBS::bndOut, ", ");
+   selectMapByUpdFlg->bind("SOURCE", cDBS::bndOut, ", ");
+   selectMapByUpdFlg->build(" from %s where ", mapDb->TableName());
+   selectMapByUpdFlg->bind("UPDFLG", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectMapByUpdFlg->prepare();
+
+   // ----------
+   // select channelid
+   //   from channelmap where
+   //  updflg = ? and externalid = ? and source = ?
+
+   selectMapByExt = new cDbStatement(mapDb);
+
+   selectMapByExt->build("select ");
+   selectMapByExt->bind("CHANNELID", cDBS::bndOut);
+   selectMapByExt->build(" from %s where ", mapDb->TableName());
+   selectMapByExt->bind("UPDFLG", cDBS::bndIn | cDBS::bndSet);
+   selectMapByExt->bind("EXTERNALID", cDBS::bndIn | cDBS::bndSet, " and ");
+   selectMapByExt->bind("SOURCE", cDBS::bndIn | cDBS::bndSet, " and ");
+
+   status += selectMapByExt->prepare();
+
+   // ----------
    // update useevents u, events e
    //    set
    //      u.sub_scrseriesid = e.scrseriesid,
@@ -1045,6 +1079,8 @@ int cEpgd::exitDb()
    delete selectMaxMapOrd;           selectMaxMapOrd = 0;
    delete selectMapOrdOf;            selectMapOrdOf = 0;
    delete selectAllMap;              selectAllMap = 0;
+   delete selectMapByUpdFlg;         selectMapByUpdFlg = 0;
+   delete selectMapByExt;            selectMapByExt = 0;
    delete selectByCompTitle;         selectByCompTitle = 0;
    delete selectMaxUpdSp;            selectMaxUpdSp = 0;
    delete selectDistCompname;        selectDistCompname = 0;

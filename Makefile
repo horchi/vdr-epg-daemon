@@ -114,9 +114,9 @@ install-upstart:
 	chmod a+r $(UPSTARTDEST)/epghttpd.conf
 
 install-systemd:
-	cat contrib/epgd.service | sed s:"<BINDEST>":"$(BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | sed s:"<PLGDEST>":"$(PLGDEST)":g | install -C -D /dev/stdin $(SYSTEMDDEST)/epgd.service
+	cat contrib/epgd.service | sed s:"<BINDEST>":"$(BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | sed s:"<PLGDEST>":"$(PLGDEST)":g | install --mode=644 -C -D /dev/stdin $(SYSTEMDDEST)/epgd.service
 	chmod a+r $(SYSTEMDDEST)/epgd.service
-	cat contrib/epghttpd.service | sed s:"<BINDEST>":"$(BINDEST)":g | install -C -D /dev/stdin $(SYSTEMDDEST)/epghttpd.service
+	cat contrib/epghttpd.service | sed s:"<BINDEST>":"$(BINDEST)":g | install --mode=644 -C -D /dev/stdin $(SYSTEMDDEST)/epghttpd.service
 	chmod a+r $(SYSTEMDDEST)/epghttpd.service
    ifeq ($(DESTDIR),)
 		systemctl daemon-reload

@@ -120,6 +120,7 @@ int cCurl::init(const char* httpproxy)
    curl_easy_setopt(handle, CURLOPT_TIMEOUT, 30);                         // Set timeout
    curl_easy_setopt(handle, CURLOPT_NOBODY, 0);                           //
    curl_easy_setopt(handle, CURLOPT_USERAGENT, CURL_USERAGENT);           // Some servers don't like requests
+   curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
 
    return success;
 }
@@ -437,7 +438,8 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
    curl_easy_setopt(handle, CURLOPT_TIMEOUT, timeout);                        // Set timeout
    curl_easy_setopt(handle, CURLOPT_NOBODY, data->headerOnly ? 1 : 0);        //
    curl_easy_setopt(handle, CURLOPT_USERAGENT, userAgent);                    // Some servers don't like requests without a user-agent field
-   curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "gzip");                 //
+//    curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "gzip");                 //
+   curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
 
    if (headerlist)
       curl_easy_setopt(handle, CURLOPT_HTTPHEADER, headerlist);

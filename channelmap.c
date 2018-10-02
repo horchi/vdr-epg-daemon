@@ -223,10 +223,7 @@ int cEpgd::updateMapRow(char* extid, const char* source, const char* chan,
    if (changed || insert)
    {
       tell(1, "Channel '%s' %s, source '%s', extid %s, merge %d",
-           chan, insert ? "inserted" : "updated",
-           source,
-           extid,
-           merge);
+           chan, insert ? "inserted" : "updated", source, extid, merge);
 
       mapDb->setValue("MERGESP", 0L);   // reset mergesp!
       mapDb->setValue("UPDFLG", insert ? "I" : "U");
@@ -241,7 +238,7 @@ int cEpgd::updateMapRow(char* extid, const char* source, const char* chan,
    }
    else
    {
-      mapDb->setValue("UPDFLG", "S");
+      mapDb->setValue("UPDFLG", "S");  // 'S'tay - no change
    }
 
    mapDb->store();
@@ -257,6 +254,64 @@ int cEpgd::updateMapRow(char* extid, const char* source, const char* chan,
 int cEpgd::applyChannelmapChanges()
 {
    connection->startTransaction();
+
+   mapDb->clear();
+   mapDb->setValue("UPDFLG", "D");
+
+   // search matching 'I'nserted rows for all 'D'eleted rows to check if only the channelid has changed
+
+   for (int f = selectMapByUpdFlg->find(); f; f = selectMapByUpdFlg->fetch())
+   {
+      std::string oldChannelId = mapDb->getStrValue("CHANNELID");
+
+      mapDb->setValue("UPDFLG", "I");
+
+      if (selectMapByExt->find())
+      {
+         std::string newChannelId = mapDb->getStrValue("CHANNELID");
+
+         tell(0, "channelid '%s' was changed to '%s'", oldChannelId.c_str(), newChannelId.c_str());
+
+         // change the 'I'nserted row and remove the 'D'eleted row -> no further action is necessary later on
+
+         mapDb->find();
+         mapDb->setValue("UPDFLG", "S");
+         mapDb->update();
+         mapDb->deleteWhere("channelid = '%s' and extid = '%s' and source = '%s'",
+                            oldChannelId.c_str(), mapDb->getStrValue("EXTERNALID"), mapDb->getStrValue("SOURCE"));
+
+         // now patch tables with channelid field
+
+         std::map<std::string, cDbTableDef*>::iterator t;
+
+         for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); t++)
+         {
+            cDbTableDef* td = t->second;
+
+            if (td->hasName("CHANNELMAP"))
+               continue;
+
+            if (td->getField("CHANNELID", yes))
+            {
+               tell(3, "Table '%s' has a channelid field", td->getName());
+
+               cDbTable* table = new cDbTable(connection, t->first.c_str());
+               char* stmt;
+
+               asprintf(&stmt, "update %s set %s = '%s' where %s = '%s'",
+                        td->getName(),
+                        table->getField("CHANNELID")->getDbName(), newChannelId.c_str(),
+                        table->getField("CHANNELID")->getDbName(), oldChannelId.c_str());
+
+               tell(0, "Executing '%s'", stmt);
+               connection->query("%s", stmt);
+
+               free(stmt);
+               delete table;
+            }
+         }
+      }
+   }
 
    mapDb->clear();
 

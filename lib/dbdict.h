@@ -308,6 +308,8 @@ class cDbTableDef : public cDbService
       }
 
       const char* getName()            { return name; }
+
+      int hasName(const char* n)       { return strcasecmp(name, n) == 0; }
       int fieldCount()                 { return dfields.size(); }
       cDbFieldDef* getField(int id)    { return _dfields[id]; }
 

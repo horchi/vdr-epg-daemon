@@ -12,14 +12,9 @@ Copyright (C) 2013 Jörg Wendel
 
 #ifdef STANDARD
 # include <string.h>
-#else
-# include <my_global.h>
-# include <my_sys.h>
 #endif
 
 #include <mysql.h>
-#include <m_ctype.h>
-#include <m_string.h>
 
 #include <locale.h>
 #include <stdio.h>
