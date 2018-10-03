@@ -1036,7 +1036,7 @@ int cEpgd::initDb()
       {
          string comp;
 
-         tell(0, "Update comp of %ld in 'Maintanance Mode'", eventsDb->getBigintValue("EVENTID"));
+         tell(0, "Update comp of %" PRId64 "in 'Maintanance Mode'", eventsDb->getBigintValue("EVENTID"));
 
          if (!eventsDb->isNull("TITLE"))
          {
@@ -2155,7 +2155,7 @@ int cEpgd::parseEvent(cDbRow* event, xmlNode* node)
                               event->getStrValue("FILEREF"));
 
    else
-      tell(4, "no images for event %ld in %s",
+      tell(4, "no images for event %" PRId64 " in %s",
            event->getBigintValue("EVENTID"),
            event->getStrValue("FILEREF"));
 

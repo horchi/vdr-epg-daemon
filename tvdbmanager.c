@@ -130,18 +130,18 @@ void cTVDBManager::UpdateSeries(void) {
     set_intersection(updatedEpisodes.begin(), updatedEpisodes.end(), storedEpisodes.begin(),
                      storedEpisodes.end(), std::inserter(scrapEpisodeIDs, scrapEpisodeIDs.begin()));
 
-    tell(0, "%ld updated Series, %ld updatedEpisodes", updatedSeries.size(), updatedEpisodes.size());
-    tell(0, "%ld series to update in db, %ld episodes to update in db", scrapSeriesIDs.size(), scrapEpisodeIDs.size());
+    tell(0, "%" PRIuMAX " updated Series, %ld updatedEpisodes", updatedSeries.size(), updatedEpisodes.size());
+    tell(0, "%" PRIuMAX " series to update in db, %ld episodes to update in db", scrapSeriesIDs.size(), scrapEpisodeIDs.size());
     int seriesCur = 1;
     for (set<int>::iterator it = scrapSeriesIDs.begin(); !cEpgd::doShutDown() && it != scrapSeriesIDs.end(); it++) {
-        if (seriesCur%10 == 0)
-            tell(0, "ReScraped %d series...continuing rescraping", seriesCur);
-        cTVDBSeries *series = ScrapSeries(*it);
-        if (series) {
-            SaveSeries(series);
-        }
-        delete series;
-        seriesCur++;
+       if (seriesCur % 10 == 0)
+          tell(0, "ReScraped %d series...continuing rescraping", seriesCur);
+       cTVDBSeries *series = ScrapSeries(*it);
+       if (series) {
+          SaveSeries(series);
+       }
+       delete series;
+       seriesCur++;
     }
     if (seriesCur > 1)
         tell(0, "ReScraped %d series", seriesCur-1);

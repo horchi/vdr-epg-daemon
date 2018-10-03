@@ -297,7 +297,7 @@ int cEpgHttpd::init()
    {
       struct sockaddr_in localSockAddr;
       const char* bindIp = getIpOf(EpgdConfig.httpDevice);
-      long localAddr;
+      in_addr_t localAddr;
 
       memset((char*)&localSockAddr, 0, sizeof(localSockAddr));
       localSockAddr.sin_family = AF_INET;

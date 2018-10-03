@@ -271,19 +271,19 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
 
       if (!isEmpty(ex1) && !isEmpty(col1Name))
       {
-         snprintf(ex, 250, "%s: %s", col1Name, ex1);
+         sprintf(ex, "%.20s: %.220s", col1Name, ex1);
          episodeDb->setValue("EXTRACOL1", ex);
       }
 
       if (!isEmpty(ex2) && !isEmpty(col2Name))
       {
-         snprintf(ex, 250, "%s: %s", col2Name, ex2);
+         sprintf(ex, "%.20s: %.220s", col2Name, ex2);
          episodeDb->setValue("EXTRACOL2", ex);
       }
 
       if (!isEmpty(ex3) && !isEmpty(col3Name))
       {
-         snprintf(ex, 250, "%s: %s", col3Name, ex3);
+         sprintf(ex, "%.20s: %.220s", col3Name, ex3);
          episodeDb->setValue("EXTRACOL3", ex);
       }
 

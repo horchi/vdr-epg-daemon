@@ -1060,7 +1060,7 @@ int cSearchTimer::getDoneFor(cDbRow* searchTimer, cDbRow* useevent, json_t* obj)
 
    if (!useeventsDb->find())
    {
-      tell(0, "Warning: Event '%s/%lu/%s' not found",
+      tell(0, "Warning: Event '%s/%" PRId64 "/%s' not found",
            useevent->getStrValue("CHANNELID"),
            useevent->getBigintValue("CNTEVENTID"),
            useevent->getStrValue("CNTSOURCE"));

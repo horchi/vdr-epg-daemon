@@ -196,7 +196,7 @@ int Epgdata::initDb()
          stat(file, &sb);
          free(file);
 
-         asprintf(&tag, "%ld", sb.st_size);
+         asprintf(&tag, "%" PRId64, sb.st_size);
          asprintf(&fileRef, "%s-%s", dp->d_name, tag);
 
          // store file and let tag NULL to indicate that processing is needed
