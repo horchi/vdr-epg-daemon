@@ -130,8 +130,8 @@ void cTVDBManager::UpdateSeries(void) {
     set_intersection(updatedEpisodes.begin(), updatedEpisodes.end(), storedEpisodes.begin(),
                      storedEpisodes.end(), std::inserter(scrapEpisodeIDs, scrapEpisodeIDs.begin()));
 
-    tell(0, "%" PRIuMAX " updated Series, %" PRIuMAX "updatedEpisodes", updatedSeries.size(), updatedEpisodes.size());
-    tell(0, "%" PRIuMAX " series to update in db, %" PRIuMAX " episodes to update in db", scrapSeriesIDs.size(), scrapEpisodeIDs.size());
+    tell(0, "%d updated Series, %d updatedEpisodes", (int)updatedSeries.size(), (int)updatedEpisodes.size());
+    tell(0, "%d series to update in db, %d episodes to update in db", (int)scrapSeriesIDs.size(), (int)scrapEpisodeIDs.size());
     int seriesCur = 1;
     for (set<int>::iterator it = scrapSeriesIDs.begin(); !cEpgd::doShutDown() && it != scrapSeriesIDs.end(); it++) {
        if (seriesCur % 10 == 0)

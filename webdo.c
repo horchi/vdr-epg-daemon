@@ -587,7 +587,7 @@ int cEpgHttpd::doChannelLogo(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
             if (strcasecmp(suffixOf(path), "svg") == 0)
             {
                if (loadFromFile(path, data) == success)
-                  sprintf(data->name, "%.*s", (int)sizeof(data->name), path);
+                  sprintf(data->name, "%.*s", (int)sizeof(data->name)-1, path);
             }
             else
             {

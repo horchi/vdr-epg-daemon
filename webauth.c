@@ -44,7 +44,8 @@ char* string2base64(const char* message)
    }
 
    if (length % 3)
-      strncat(tmp, "===", 3 - length % 3);
+      sprintf(tmp+strlen(tmp), "%.*s", (int)(3 - length % 3), "===");
+      // strncat(tmp, "===", 3 - length % 3);
 
    return tmp;
 }

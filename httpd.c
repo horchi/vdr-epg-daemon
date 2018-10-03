@@ -1617,7 +1617,7 @@ int cEpgHttpd::performHttpGet(MHD_Connection* tcp, const char* inurl, MemoryStru
       {
          const char* encoding = MHD_lookup_connection_value(tcp, MHD_HEADER_KIND, "Accept-Encoding");
 
-         sprintf(data->name, "%.*s", (int)sizeof(data->name), url);
+         sprintf(data->name, "%.*s", (int)sizeof(data->name)-1, url);
 
          if (encoding && strstr(encoding, "gzip"))
          {
