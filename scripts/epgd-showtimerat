@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export MYSQL_PWD=epg
+MYSQL_PWD=${MYSQL_PWD:-epg}
+export MYSQL_PWD
 
 mysql -u epg2vdr -Depg2vdr -e " \
 select t.id, SUBSTRING_INDEX(t.channelid, '-', 3) as transponder, v.name, t.source, t.channelid, t.state as S, \

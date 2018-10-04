@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export MYSQL_PWD=epg
+MYSQL_PWD=${MYSQL_PWD:-epg}
+export MYSQL_PWD
 
 if [ -z $1 ]; then
   STATE="(t.state != 'D' or t.state is null)"
