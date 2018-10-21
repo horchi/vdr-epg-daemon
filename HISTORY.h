@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.144"
-#define VERSION_DATE "03.10.2018"
+#define _VERSION     "1.1.145"
+#define VERSION_DATE "21.10.2018"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,10 @@
 /*
  * ------------------------------------
  *
+
+2018-10-21: version 1.1.145 (horchi)
+     change: Fixed gentoo compile problem
+
 2018-10-03: version 1.1.144 (horchi)
      change: Fixed g++-8 warnings
 
