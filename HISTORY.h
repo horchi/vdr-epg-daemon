@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.145"
+#define _VERSION     "1.1.146"
 #define VERSION_DATE "21.10.2018"
 #define DB_API       7
 
@@ -18,8 +18,11 @@
  * ------------------------------------
  *
 
-2018-10-21: version 1.1.145 (horchi)
+2018-10-21: version 1.1.146 (horchi)
      change: Fixed gentoo compile problem
+
+2018-10-04: version 1.1.145 (horchi)
+     change: Optimized mysql password handling in epgd scripts
 
 2018-10-03: version 1.1.144 (horchi)
      change: Fixed g++-8 warnings

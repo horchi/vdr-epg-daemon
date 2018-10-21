@@ -1,8 +1,7 @@
-#!/bin/bash 
+#!/bin/bash
 
-if [ -z MYSQL_PWD ]; then
-   export MYSQL_PWD=epg
-fi
+MYSQL_PWD=${MYSQL_PWD:-epg}
+export MYSQL_PWD
 
 mysql -u root -e "DROP FUNCTION IF EXISTS epglv;"
 mysql -u root -e "DROP FUNCTION IF EXISTS epglvr;"

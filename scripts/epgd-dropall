@@ -1,6 +1,7 @@
 #!/bin/bash
 
-export MYSQL_PWD=epg
+MYSQL_PWD=${MYSQL_PWD:-epg}
+export MYSQL_PWD
 
 echo "------------------------"
 echo "-- Drop normal tables --"
