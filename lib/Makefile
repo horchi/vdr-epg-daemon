@@ -26,7 +26,7 @@ ifdef USECURL
    LIBOBJS += curl.o
 endif
 
-BASELIBS = -lrt -lz -luuid
+BASELIBS += -lrt -lz -luuid
 BASELIBS += $(shell mysql_config --libs_r)
 
 ifdef USECURL
@@ -38,7 +38,6 @@ ifdef USEEPGS
 endif
 
 ifdef USEPYTHON
-	BASELIBS += $(shell python-config --libs)
    LIBOBJS += python.o
 endif
 
@@ -62,10 +61,6 @@ endif
 
 CFLAGS += $(shell mysql_config --include)
 DEFINES += $(USES)
-
-ifdef USEPYTHON
-	CFLAGS += $(shell python-config --includes)
-endif
 
 all: lib $(TEST) $(DEMO)
 lib: $(LIBTARGET).a

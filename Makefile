@@ -10,8 +10,10 @@ TARGET = epgd
 HTTPTARGET = epghttpd
 HISTFILE = "HISTORY.h"
 
-BASELIBS = -lrt -lz -larchive -ldl -lcrypto -luuid
-BASELIBS += $(shell mysql_config --libs_r) $(shell python-config --libs) $(shell pkg-config --cflags --libs jansson)
+BASELIBS += -lrt -lz -larchive -ldl -lcrypto -luuid
+BASELIBS += $(shell mysql_config --libs_r)
+BASELIBS += $(shell pkg-config --cflags --libs jansson)
+
 
 HLIB     = -L./lib -lhorchi
 DLIBS    = $(HLIB) $(BASELIBS) -lcurl $(shell xml2-config --libs) $(shell xslt-config --libs) -lexslt

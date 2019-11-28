@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.146"
-#define VERSION_DATE "21.10.2018"
+#define _VERSION     "1.1.147"
+#define VERSION_DATE "28.11.2019"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2019-11-28: version 1.1.147 (horchi)
+   - added: Support of python 3.8 (by Alexander Grothe)
 
 2018-10-21: version 1.1.146 (horchi)
      change: Fixed gentoo compile problem
