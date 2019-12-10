@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.147"
-#define VERSION_DATE "28.11.2019"
+#define _VERSION     "1.1.148"
+#define VERSION_DATE "09.12.2019"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2019-12-09: version 1.1.148 (horchi)
+   - change: Improved epglv method to avoid problems on some special characters
 
 2019-11-28: version 1.1.147 (horchi)
    - added: Support of python 3.8 (by Alexander Grothe)
