@@ -1719,10 +1719,10 @@ void cEpgd::loop()
                               " and from_unixtime(updsp) < (now() - interval 5 minute);");
 
 
-//             connection->query("%s", "update timers set"
-//                               " state = 'D' "
-//                               " where state = 'R'"
-// #todo                              " and from_unixtime(updsp) < (now() - interval 5 minute);");
+            connection->query(" update timers set"
+                              " state = 'F', action = 'A', info = 'cleanuped'"
+                              " where (state = 'R' or state = 'P')"
+                              " and from_unixtime(_endtime) < (now() - interval 5 minute);");
          }
 
          if (!dbConnected())
