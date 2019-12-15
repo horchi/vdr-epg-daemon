@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.148"
-#define VERSION_DATE "09.12.2019"
+#define _VERSION     "1.1.149"
+#define VERSION_DATE "15.12.2019"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,10 @@
 /*
  * ------------------------------------
  *
+
+2019-12-15: version 1.1.149 (horchi)
+   - added: Added cleanup for old wasted timers
+   - added: Added _endtime to table timers
 
 2019-12-09: version 1.1.148 (horchi)
    - change: Improved epglv method to avoid problems on some special characters

@@ -1717,6 +1717,12 @@ void cEpgd::loop()
                               " state = 'crashed', master = 'n'"
                               " where state = 'attached'"
                               " and from_unixtime(updsp) < (now() - interval 5 minute);");
+
+
+//             connection->query("%s", "update timers set"
+//                               " state = 'D' "
+//                               " where state = 'R'"
+// #todo                              " and from_unixtime(updsp) < (now() - interval 5 minute);");
          }
 
          if (!dbConnected())
