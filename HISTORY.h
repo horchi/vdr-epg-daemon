@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.149"
-#define VERSION_DATE "15.12.2019"
+#define _VERSION     "1.1.150"
+#define VERSION_DATE "28.01.2020
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+ *
+2020-01-28: version 1.1.150 (horchi)
+   - added: Using pkg-config for libxml2 (by Alexander Grothe)
 
 2019-12-15: version 1.1.149 (horchi)
    - added: Added cleanup for old wasted timers

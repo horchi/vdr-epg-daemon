@@ -16,8 +16,8 @@ BASELIBS += $(shell pkg-config --cflags --libs jansson)
 
 
 HLIB     = -L./lib -lhorchi
-DLIBS    = $(HLIB) $(BASELIBS) -lcurl $(shell xml2-config --libs) $(shell xslt-config --libs) -lexslt
-HTTPLIBS = $(HLIB) -lmicrohttpd $(BASELIBS) -lcurl $(shell xml2-config --libs) $(shell xslt-config --libs) -lexslt -ljpeg $(shell imlib2-config --libs)
+DLIBS    = $(HLIB) $(BASELIBS) -lcurl $(shell pkg-config libxml-2.0 --libs) $(shell pkg-config libxslt --libs) -lexslt
+HTTPLIBS = $(HLIB) -lmicrohttpd $(BASELIBS) -lcurl $(shell pkg-config libxml-2.0 --libs) $(shell pkg-config libxslt --libs) -lexslt -ljpeg $(shell pkg-config imlib2 --libs)
 CFLAGS   += $(shell mysql_config --include)
 
 VERSION = $(shell grep 'define _VERSION ' $(HISTFILE) | awk '{ print $$3 }' | sed -e 's/[";]//g')
