@@ -5,7 +5,7 @@
  */
 
 #define _VERSION     "1.1.150"
-#define VERSION_DATE "28.01.2020
+#define VERSION_DATE "28.01.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
