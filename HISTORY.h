@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.150"
-#define VERSION_DATE "22.12.2019"
+#define _VERSION     "1.1.151"
+#define VERSION_DATE "09.02.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,9 +17,13 @@
 /*
  * ------------------------------------
  *
-
-2019-12-22: version 1.1.150 (horchi)
+ *
+2020-02-09: version 1.1.151 (horchi)
    - bugfix: Added missing commit after timer cleanup
+   - added: Debug messages for alter table
+
+2020-01-28: version 1.1.150 (horchi)
+   - added: Using pkg-config for libxml2 (by Alexander Grothe)
 
 2019-12-15: version 1.1.149 (horchi)
    - added: Added cleanup for old wasted timers
