@@ -952,6 +952,12 @@ int cDbTable::validateStructure(int allowAlter)
              strcasecmp(fieldInfo->description.c_str(), getField(i)->getDescription()) != 0 ||
              (strcasecmp(fieldInfo->def.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary)))
          {
+            if (strcasecmp(fieldInfo->columnFormat.c_str(), colType) != 0)
+               tell(4, "Debug: Format of '%s' changed from '%s' to '%s'", getField(i)->getDbName(), fieldInfo->columnFormat.c_str(), colType);
+
+            if (strcasecmp(fieldInfo->description.c_str(), getField(i)->getDescription()) != 0)
+               tell(4, "Debug: Description of '%s' changed from '%s' to '%s'", getField(i)->getDbName(), fieldInfo->description.c_str(), getField(i)->getDescription());
+
             alterModifyField(getField(i));
          }
       }

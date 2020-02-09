@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.149"
-#define VERSION_DATE "15.12.2019"
+#define _VERSION     "1.1.150"
+#define VERSION_DATE "22.12.2019"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2019-12-22: version 1.1.150 (horchi)
+   - bugfix: Added missing commit after timer cleanup
 
 2019-12-15: version 1.1.149 (horchi)
    - added: Added cleanup for old wasted timers

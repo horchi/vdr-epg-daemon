@@ -1723,6 +1723,8 @@ void cEpgd::loop()
                               " state = 'F', action = 'A', info = 'cleanuped'"
                               " where (state = 'R' or state = 'P')"
                               " and from_unixtime(_endtime) < (now() - interval 5 minute);");
+
+            connection->commit();
          }
 
          if (!dbConnected())
