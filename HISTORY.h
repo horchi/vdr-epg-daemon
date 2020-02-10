@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.151"
-#define VERSION_DATE "09.02.2020"
+#define _VERSION     "1.1.152"
+#define VERSION_DATE "10.02.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,7 +17,10 @@
 /*
  * ------------------------------------
  *
- *
+
+2020-02-10: version 1.1.152 (horchi)
+   - bugfix: Fixed problem with detection of table changes
+
 2020-02-09: version 1.1.151 (horchi)
    - bugfix: Added missing commit after timer cleanup
    - added: Debug messages for alter table

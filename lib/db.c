@@ -923,8 +923,8 @@ int cDbTable::validateStructure(int allowAlter)
    while ((row = mysql_fetch_row(result)))
    {
       fields[row[0]].columnFormat = row[1];
-      fields[row[0]].description = row[2];
-      fields[row[0]].def = row[6] ? row[6] : "";
+      fields[row[0]].description = row[2] ? row[2] : "";
+      fields[row[0]].def = row[6] ? strcasecmp(row[6], "NULL") == 0 ? "" : row[6] : "";
    }
 
    mysql_free_result(result);
@@ -953,10 +953,12 @@ int cDbTable::validateStructure(int allowAlter)
              (strcasecmp(fieldInfo->def.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary)))
          {
             if (strcasecmp(fieldInfo->columnFormat.c_str(), colType) != 0)
-               tell(4, "Debug: Format of '%s' changed from '%s' to '%s'", getField(i)->getDbName(), fieldInfo->columnFormat.c_str(), colType);
+               tell(5, "Debug: Format of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
+                    fieldInfo->columnFormat.c_str(), colType);
 
             if (strcasecmp(fieldInfo->description.c_str(), getField(i)->getDescription()) != 0)
-               tell(4, "Debug: Description of '%s' changed from '%s' to '%s'", getField(i)->getDbName(), fieldInfo->description.c_str(), getField(i)->getDescription());
+               tell(5, "Debug: Description of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
+                    fieldInfo->description.c_str(), getField(i)->getDescription());
 
             alterModifyField(getField(i));
          }
