@@ -960,6 +960,10 @@ int cDbTable::validateStructure(int allowAlter)
                tell(5, "Debug: Description of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
                     fieldInfo->description.c_str(), getField(i)->getDescription());
 
+            if (strcasecmp(fieldInfo->def.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary))
+               tell(5, "Debug: Default value of '%s' changed from from '%s' to '%s'", getField(i)->getDbName(),
+                    fieldInfo->def.c_str(), getField(i)->getDefault());
+
             alterModifyField(getField(i));
          }
       }
