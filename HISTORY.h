@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.153"
+#define _VERSION     "1.1.154"
 #define VERSION_DATE "10.02.2020"
 #define DB_API       7
 
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2020-02-10: version 1.1.154 (horchi)
+   - change: Tray to fix mysterious sql result (mariaDb)
 
 2020-02-10: version 1.1.153 (horchi)
    - added: More debug messages

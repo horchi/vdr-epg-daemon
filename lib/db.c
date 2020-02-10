@@ -873,7 +873,7 @@ struct FieldInfo
 {
    std::string columnFormat;
    std::string description;
-   std::string def;
+   std::string defaulValue;
 };
 
 int cDbTable::validateStructure(int allowAlter)
@@ -924,7 +924,15 @@ int cDbTable::validateStructure(int allowAlter)
    {
       fields[row[0]].columnFormat = row[1];
       fields[row[0]].description = row[2] ? row[2] : "";
-      fields[row[0]].def = row[6] ? strcasecmp(row[6], "NULL") == 0 ? "" : row[6] : "";
+      fields[row[0]].defaulValue = row[6] ? strcasecmp(row[6], "NULL") == 0 ? "" : row[6] : "";
+
+      if (fields[row[0]].defaulValue.length() > 2 &&
+          fields[row[0]].defaulValue.back() == '\'' &&
+          fields[row[0]].defaulValue.front() == '\'')
+      {
+         fields[row[0]].defaulValue.pop_back();
+         fields[row[0]].defaulValue.erase(0, 1);
+      }
    }
 
    mysql_free_result(result);
@@ -950,7 +958,7 @@ int cDbTable::validateStructure(int allowAlter)
 
          if (strcasecmp(fieldInfo->columnFormat.c_str(), colType) != 0 ||
              strcasecmp(fieldInfo->description.c_str(), getField(i)->getDescription()) != 0 ||
-             (strcasecmp(fieldInfo->def.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary)))
+             (strcasecmp(fieldInfo->defaulValue.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary)))
          {
             if (strcasecmp(fieldInfo->columnFormat.c_str(), colType) != 0)
                tell(5, "Debug: Format of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
@@ -960,9 +968,9 @@ int cDbTable::validateStructure(int allowAlter)
                tell(5, "Debug: Description of '%s' changed from '%s' to '%s'", getField(i)->getDbName(),
                     fieldInfo->description.c_str(), getField(i)->getDescription());
 
-            if (strcasecmp(fieldInfo->def.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary))
+            if (strcasecmp(fieldInfo->defaulValue.c_str(), getField(i)->getDefault()) != 0 && !(getField(i)->getType() & ftPrimary))
                tell(5, "Debug: Default value of '%s' changed from from '%s' to '%s'", getField(i)->getDbName(),
-                    fieldInfo->def.c_str(), getField(i)->getDefault());
+                    fieldInfo->defaulValue.c_str(), getField(i)->getDefault());
 
             alterModifyField(getField(i));
          }
