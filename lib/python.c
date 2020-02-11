@@ -8,6 +8,7 @@
 #include "python.h"
 
 cDbTable* Python::globalEventsDb = 0;
+int Python::usages = 0;
 int Python::globalNamingMode = 0;
 const char* Python::globalTmplExpression = "";
 
@@ -221,13 +222,15 @@ int Python::init(const char* modulePath)
 
 #if PY_MAJOR_VERSION >= 3
    PyImport_AppendInittab("event", &PyInitEvent);
-   Py_Initialize();                         // initialize the Python interpreter
+   if (!usages) Py_Initialize();            // initialize the Python interpreter
    pName = PyUnicode_FromString(file);
 #else
-   Py_Initialize();                         // initialize the Python interpreter
+   if (!usages) Py_Initialize();            // initialize the Python interpreter
    Py_InitModule("event", eventMethods);
    pName = PyString_FromString(file);
 #endif
+
+   usages++;
 
    // add search path for Python modules
 
@@ -272,13 +275,16 @@ int Python::init(const char* modulePath)
 
 int Python::exit()
 {
+   usages--;
+
    if (pFunc)
       Py_XDECREF(pFunc);
 
    if (pModule)
       Py_DECREF(pModule);
 
-   Py_Finalize();
+   if (!usages)
+      Py_Finalize();
 
    return success;
 }

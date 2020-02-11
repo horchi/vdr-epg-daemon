@@ -63,6 +63,7 @@ class Python
 
       // static stuff
 
+      static int usages;
       static cDbTable* globalEventsDb;
       static int globalNamingMode;
       static const char* globalTmplExpression;
