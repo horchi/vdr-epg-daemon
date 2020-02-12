@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.155"
-#define VERSION_DATE "11.02.2020"
+#define _VERSION     "1.1.156"
+#define VERSION_DATE "12.02.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+ *
+2020-02-12: version 1.1.156 (horchi)
+   - added: New fields for future fetures
 
 2020-02-11: version 1.1.155 (horchi)
    - bugfix: Fixed crash due to wrong handling of python object (thx to Alexander Grothe)

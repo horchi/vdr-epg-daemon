@@ -517,6 +517,9 @@ Table recordinglist
    INUSE                ""                        inuse            UInt         1 Data,
    JOB                  ""                        job              Ascii        1 Data,
 
+   GROUP                "category/genre group (for menu)"  recgroup   Ascii      100 Data,
+   NGENRE               "normalized genre (for menu)"      ngenre     Ascii      50  Data,
+
    // enriched by 'external' data of events
 
    ACTOR                ""                        actor           MText     5000 Data,
