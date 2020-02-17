@@ -339,7 +339,8 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
       if (eventid != na)
       {
          timerRow.setValue("EVENTID", eventid);
-         timerRow.setValue("_STARTTIME", eventStartTime);
+         // timerRow.setValue("_STARTTIME", eventStartTime);
+         timerRow.setValue("EVTSTARTTIME", eventStartTime);
          timerRow.setValue("_ENDTIME", eventEndTime);
       }
 

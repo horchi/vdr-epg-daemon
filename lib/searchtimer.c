@@ -770,14 +770,14 @@ int cSearchTimer::checkTimers()
 
       // Check Start Time
 
-      if (!timerDb->hasValue("_STARTTIME", useeventsDb->getIntValue("STARTTIME")))
+      if (!timerDb->hasValue("EVTSTARTTIME", useeventsDb->getIntValue("STARTTIME")))
       {
          // if difference < 2 minutes adjust silent
 
-         if (std::abs(timerDb->getIntValue("_STARTTIME") - useeventsDb->getIntValue("STARTTIME")) > 2*tmeSecondsPerMinute)
+         if (std::abs(timerDb->getIntValue("EVTSTARTTIME") - useeventsDb->getIntValue("STARTTIME")) > 2*tmeSecondsPerMinute)
             parent->message(0, 'I', "EPGD: Timer action", "Info: Starttime of event (%ld) '%s' changed from '%s' to '%s', updating timer (%ld)",
                             timerDb->getIntValue("EVENTID"), useeventsDb->getStrValue("TITLE"),
-                            l2pTime(timerDb->getIntValue("_STARTTIME")).c_str(), l2pTime(useeventsDb->getIntValue("STARTTIME")).c_str(),
+                            l2pTime(timerDb->getIntValue("EVTSTARTTIME")).c_str(), l2pTime(useeventsDb->getIntValue("STARTTIME")).c_str(),
                             timerDb->getIntValue("ID"));
 
          modifyTimer(timerDb, timerDb->hasCharValue("ACTION", taCreate) ? taCreate : taAdjust);
@@ -1337,7 +1337,8 @@ int cSearchTimer::createTimer(int id)
    timerRow.setValue("TYPE", searchtimerDb->getStrValue("TYPE"));
    timerRow.setValue("SOURCE", "epgd");
    timerRow.setValue("EVENTID", useeventsDb->getIntValue("USEID"));
-   timerRow.setValue("_STARTTIME", useeventsDb->getIntValue("STARTTIME"));
+//    timerRow.setValue("_STARTTIME", useeventsDb->getIntValue("STARTTIME"));
+   timerRow.setValue("EVTSTARTTIME", useeventsDb->getIntValue("STARTTIME"));
    timerRow.setValue("CHANNELID", useeventsDb->getStrValue("CHANNELID"));
    timerRow.setValue("NAMINGMODE", namingmode);
    timerRow.setValue("TEMPLATE", tmplExpression);

@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.156"
-#define VERSION_DATE "12.02.2020"
+#define _VERSION     "1.1.157"
+#define VERSION_DATE "17.02.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -18,6 +18,10 @@
  * ------------------------------------
  *
  *
+
+2020-02-17: version 1.1.157 (horchi)
+   - bugfix: Fixed conflicting timer start times
+
 2020-02-12: version 1.1.156 (horchi)
    - added: New fields for future fetures
 
