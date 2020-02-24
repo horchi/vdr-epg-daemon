@@ -389,9 +389,12 @@ int cEpgHttpd::modifyCreateTimer(cDbRow* timerRow)
 
    if (knownTimer)
    {
-      timerDb->copyValues(timerRow, cDBS::ftPrimary);
+      // timerDb->copyValues(timerRow, cDBS::ftPrimary);
+      timerDb->setValue("ID", timerRow->getIntValue("ID"));
 
-      if (!timerDb->find())
+      // if (!timerDb->find())
+
+      if (!selectTimerById->find())
       {
          connection->commit();
 
@@ -431,13 +434,13 @@ int cEpgHttpd::modifyCreateTimer(cDbRow* timerRow)
       // create new on other vdr
 
       timerDb->copyValues(timerRow, cDBS::ftData);          // takeover all data (possibly modified by user)
+      timerDb->setValue("VDRUUID", timerRow->getStrValue("VDRUUID"));
       timerDb->setValue("ID", 0);
       timerDb->setCharValue("ACTION", taCreate);
       status += timerDb->insert();
 
       if (status == success)
-         tell(1, "Created 'move' request for timer (%d) at vdr '%s'",
-              timerid, timerDb->getStrValue("VDRUUID"));
+         tell(1, "Created 'move' request for timer (%d) to '%s'", timerid, timerDb->getStrValue("VDRUUID"));
    }
    else
    {
