@@ -341,7 +341,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
          timerRow.setValue("EVENTID", eventid);
          // timerRow.setValue("_STARTTIME", eventStartTime);
          timerRow.setValue("EVTSTARTTIME", eventStartTime);
-         timerRow.setValue("_ENDTIME", eventEndTime);
+         // timerRow.setValue("_ENDTIME", eventEndTime);
       }
 
       getFieldFromJson(jInData, &timerRow, "VDRUUID");
