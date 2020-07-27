@@ -1712,7 +1712,7 @@ int cEpgHttpd::performPostData(const char* url, MemoryStruct* data)
 // Debug ...
 //***************************************************************************
 
-int debugPrint(void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
+MHD_Result debugPrint(void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
 {
    if (kind == MHD_GET_ARGUMENT_KIND)
       tell(0, "Parameter: '%s' - '%s'", key, value);
@@ -1722,7 +1722,7 @@ int debugPrint(void *cls, enum MHD_ValueKind kind, const char *key, const char *
    return MHD_YES;
 }
 
-int parameterInfo(void* cls, enum MHD_ValueKind kind, const char* key, const char* value)
+MHD_Result parameterInfo(void* cls, enum MHD_ValueKind kind, const char* key, const char* value)
 {
    if (strlen((char*)cls) < 1000 - strlen(notNull(value)) - strlen(notNull(key)) - 10)
       sprintf(eos((char*)cls), "%s:%s;", notNull(key), notNull(value));
@@ -1734,10 +1734,10 @@ int parameterInfo(void* cls, enum MHD_ValueKind kind, const char* key, const cha
 // Dispatcher
 //***************************************************************************
 
-int cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
-                          const char* url, const char* method,
-                          const char* version, const char* upload_data,
-                          size_t* upload_data_size, void** con_cls)
+MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
+                                 const char* url, const char* method,
+                                 const char* version, const char* upload_data,
+                                 size_t* upload_data_size, void** con_cls)
 {
    const char* contentNotFound = "<html><body>Page not found</body></html>";
    unsigned int statusCode = MHD_HTTP_OK;
@@ -1746,7 +1746,7 @@ int cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
    double requestStartAt = cMyTimeMs::Now();
 
    // int acceptRequest = no;
-   int state;
+   MHD_Result state;
 
    // reset session
 

@@ -54,9 +54,9 @@ char* string2base64(const char* message)
 // Ask For Authentication
 //***************************************************************************
 
-int cEpgHttpd::askForAuthentication(struct MHD_Connection* connection, const char* realm)
+MHD_Result cEpgHttpd::askForAuthentication(struct MHD_Connection* connection, const char* realm)
 {
-   int status;
+   MHD_Result status;
    struct MHD_Response* response;
    char* headervalue = 0;
 

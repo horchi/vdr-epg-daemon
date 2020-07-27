@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.160"
+#define _VERSION     "1.1.161"
 #define VERSION_DATE "27.07.2020"
 #define DB_API       7
 
@@ -18,6 +18,9 @@
  * ------------------------------------
  *
  *
+
+2020-07-27: version 1.1.161 (Alexander Grothe, horchi)
+   - change: Porting to new libmicrohttpd
 
 2020-07-27: version 1.1.160 (horchi)
    - change: Minor change of README

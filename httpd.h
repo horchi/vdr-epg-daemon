@@ -16,6 +16,10 @@
 
 #include <microhttpd.h>
 
+#if MHD_VERSION < 0x00097002
+#  define MHD_Result int
+#endif
+
 #include "lib/epgservice.h"
 #include "lib/json.h"
 #include "lib/configuration.h"
@@ -198,12 +202,12 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
 
       // static
 
-      static int dispatcher(void* cls, struct MHD_Connection* connection,
-                            const char* url, const char* method,
-                            const char* version, const char* upload_data,
-                            size_t* upload_data_size, void** con_cls);
+      static MHD_Result dispatcher(void* cls, struct MHD_Connection* connection,
+                                   const char* url, const char* method,
+                                   const char* version, const char* upload_data,
+                                   size_t* upload_data_size, void** con_cls);
 
-      static int askForAuthentication(struct MHD_Connection* connection, const char* realm);
+      static MHD_Result askForAuthentication(struct MHD_Connection* connection, const char* realm);
       static int isAuthenticated(struct MHD_Connection* connection,
                                  const char* username, const char* password);
 
