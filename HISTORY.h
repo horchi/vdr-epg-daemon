@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.159"
-#define VERSION_DATE "29.02.2020"
+#define _VERSION     "1.1.160"
+#define VERSION_DATE "27.07.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -18,6 +18,9 @@
  * ------------------------------------
  *
  *
+
+2020-07-27: version 1.1.160 (horchi)
+   - change: Minor change of README
 
 2020-02-29: version 1.1.159 (horchi)
    - change: Don't set end of timer by webif

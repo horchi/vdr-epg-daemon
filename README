@@ -267,8 +267,8 @@ epgd Configuration:
     Download images with the EPG information
 
   NetDevice =
-    (default fist device)
-    network device of epgd (not used this time)
+    (default first device)
+    network device of epgd (used eg. for WOL)
 
   HttpDevice
     (default all devices)
