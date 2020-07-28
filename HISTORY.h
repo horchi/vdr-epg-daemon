@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.161"
-#define VERSION_DATE "27.07.2020"
+#define _VERSION     "1.1.162"
+#define VERSION_DATE "28.07.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -18,6 +18,9 @@
  * ------------------------------------
  *
  *
+
+2020-07-28: version 1.1.162 (Alexander Grothe, horchi)
+   - change: Improved curl handling
 
 2020-07-27: version 1.1.161 (Alexander Grothe, horchi)
    - change: Porting to new libmicrohttpd

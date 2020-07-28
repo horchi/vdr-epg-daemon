@@ -99,6 +99,10 @@ int cCurl::init(const char* httpproxy)
          return fail;
       }
    }
+   else
+   {
+      curl_easy_reset(handle);
+   }
 
    // Reset Options
 
@@ -451,10 +455,11 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
       long httpCode = 0;
 
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
-      tell(1, "Error: Download failed; %s (%d); http code was (%ld) [%s]",
-           curl_easy_strerror(res), res, httpCode, url);
+      tell(1, "Error: Download failed, got %ld bytes; %s (%d); http code was (%ld) [%s]",
+           data->size, curl_easy_strerror(res), res, httpCode, url);
 
       data->clear();
+      exit();
 
       return fail;
    }
@@ -465,6 +470,7 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
    if (code == 404)
    {
       data->clear();
+      exit();
       return fail;
    }
 

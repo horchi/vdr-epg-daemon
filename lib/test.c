@@ -666,25 +666,35 @@ int main(int argc, char** argv)
       char* url = 0;
       MemoryStruct data;
 
-      data.clear();
+      curl.init("");
 
       if (strncmp(argv[1], "http", 4) == 0)
          asprintf(&url, "%s", argv[1]);
       else
-         asprintf(&url, "%s/eplist.cgi?action=show&file=%s",
-                  "www.eplists.de", argv[1]);
+         asprintf(&url, "%s/eplist.cgi?action=show&file=%s", "www.eplists.de", argv[1]);
 
       tell(0, "try to download [%s]", url);
 
-      if (curl.downloadFile(url, size, &data) == success)
+      data.clear();
+      data.headerOnly = yes;
+
+      if (curl.downloadFile(url, size, &data, 30, "libcurl-agent/1.0") == success)
+         tell(0, "Got header for '%s-%s' with %d bytes", data.name, data.tag, size);
+      else
+         tell(0, "downloadFile failed!");
+
+      data.clear();
+
+      if (curl.downloadFile(url, size, &data, 30, "libcurl-agent/1.0") == success)
       {
          tell(0, "succeeded!");
-         tell(0, "Got: !");
+         tell(0, "Got: %d bytes", size);
          tell(0, "%s", data.memory);
+         storeToFile("./data", data.memory, size);
+         tell(0, "stored to './data'");
       }
       else
          tell(0, "FAILED!");
-
 
       free(url);
 
