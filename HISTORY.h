@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.162"
-#define VERSION_DATE "28.07.2020"
+#define _VERSION     "1.1.163"
+#define VERSION_DATE "17.08.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -18,6 +18,9 @@
  * ------------------------------------
  *
  *
+
+2020-08-17: version 1.1.163 (horchi, patch by kfb77)
+   - change: Improved match of series
 
 2020-07-28: version 1.1.162 (Alexander Grothe, horchi)
    - change: Improved curl handling
