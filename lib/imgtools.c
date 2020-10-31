@@ -8,26 +8,54 @@
 #include "imgtools.h"
 
 //***************************************************************************
+// Here's the routine that will replace the standard error_exit method:
+//***************************************************************************
+
+#include <setjmp.h>
+
+struct my_error_mgr
+{
+   struct jpeg_error_mgr pub; // public" fields
+   jmp_buf setjmp_buffer;     // for return to caller
+};
+
+typedef struct my_error_mgr * my_error_ptr;
+
+METHODDEF(void) my_error_exit (j_common_ptr cinfo)
+{
+   my_error_ptr myerr = (my_error_ptr) cinfo->err;
+   (*cinfo->err->output_message) (cinfo);
+   longjmp(myerr->setjmp_buffer, 1);
+}
+
+//***************************************************************************
 // Image converting stuff
 //***************************************************************************
 
 int fromJpeg(Imlib_Image& image, unsigned char* buffer, int size)
 {
    struct jpeg_decompress_struct cinfo;
-   struct jpeg_error_mgr jerr;
+   struct my_error_mgr jerr;
    int w, h;
    DATA8 *ptr, *line[16], *data;
    DATA32 *ptr2, *dest;
    int x, y;
 
-   cinfo.err = jpeg_std_error(&jerr);
-   
+   cinfo.err = jpeg_std_error(&jerr.pub);
+   jerr.pub.error_exit = my_error_exit;
+
+   if (setjmp(jerr.setjmp_buffer))
+   {
+      jpeg_destroy_decompress(&cinfo);
+      return 0;
+   }
+
    jpeg_create_decompress(&cinfo);
    jpeg_mem_src(&cinfo, buffer, size);
    jpeg_read_header(&cinfo, TRUE);
    cinfo.do_fancy_upsampling = FALSE;
    cinfo.do_block_smoothing = FALSE;
-   
+
    jpeg_start_decompress(&cinfo);
 
    w = cinfo.output_width;
@@ -41,17 +69,17 @@ int fromJpeg(Imlib_Image& image, unsigned char* buffer, int size)
 
    for (int i = 0; i < cinfo.rec_outbuf_height; i++)
       line[i] = data + (i * w * cinfo.output_components);
-   
+
    for (int l = 0; l < h; l += cinfo.rec_outbuf_height)
    {
       jpeg_read_scanlines(&cinfo, line, cinfo.rec_outbuf_height);
       int scans = cinfo.rec_outbuf_height;
-      
+
       if (h - l < scans)
          scans = h - l;
-      
+
       ptr = data;
-      
+
       for (y = 0; y < scans; y++)
       {
          for (x = 0; x < w; x++)
@@ -76,15 +104,22 @@ int fromJpeg(Imlib_Image& image, unsigned char* buffer, int size)
 long toJpeg(Imlib_Image image, MemoryStruct* data, int quality)
 {
    struct jpeg_compress_struct cinfo;
-   struct jpeg_error_mgr jerr;
+   struct my_error_mgr jerr;
    DATA32* ptr;
    DATA8* buf;
 
    imlib_context_set_image(image);
 
    data->clear();
-   
-   cinfo.err = jpeg_std_error(&jerr);
+
+   cinfo.err = jpeg_std_error(&jerr.pub);
+   jerr.pub.error_exit = my_error_exit;
+
+   if (setjmp(jerr.setjmp_buffer))
+   {
+      jpeg_destroy_compress(&cinfo);
+      return 0;
+   }
 
    jpeg_create_compress(&cinfo);
    jpeg_mem_dest(&cinfo, (unsigned char**)(&data->memory), &data->size);
@@ -102,12 +137,12 @@ long toJpeg(Imlib_Image image, MemoryStruct* data, int quality)
 
    if (!(ptr = imlib_image_get_data_for_reading_only()))
       return 0;
-   
+
    // allocate a small buffer to convert image data */
 
    buf = (DATA8*)malloc(imlib_image_get_width() * 3 * sizeof(DATA8));
 
-   while (cinfo.next_scanline < cinfo.image_height) 
+   while (cinfo.next_scanline < cinfo.image_height)
    {
       // convert scanline from ARGB to RGB packed
 
@@ -124,11 +159,11 @@ long toJpeg(Imlib_Image image, MemoryStruct* data, int quality)
 
       jpeg_write_scanlines(&cinfo, (JSAMPROW*)(&buf), 1);
    }
-   
+
    free(buf);
    jpeg_finish_compress(&cinfo);
    jpeg_destroy_compress(&cinfo);
-   
+
    return data->size;
 }
 
@@ -143,7 +178,7 @@ int scaleImageToJpegBuffer(Imlib_Image image, MemoryStruct* data, int width, int
       int imgWidth = imlib_image_get_width();
       int imgHeight = imlib_image_get_height();
       double ratio = (double)imgWidth / (double)imgHeight;
-      
+
       if ((double)width/(double)imgWidth < (double)height/(double)imgHeight)
          height = (int)((double)width / ratio);
       else
@@ -155,10 +190,10 @@ int scaleImageToJpegBuffer(Imlib_Image image, MemoryStruct* data, int width, int
       imlib_context_set_color(240, 240, 240, 255);
       imlib_image_fill_rectangle(0, 0, width, height);
 
-      imlib_blend_image_onto_image(image, 0, 0, 0, 
-                                   imgWidth, imgHeight, 0, 0, 
+      imlib_blend_image_onto_image(image, 0, 0, 0,
+                                   imgWidth, imgHeight, 0, 0,
                                    width, height);
-      
+
       toJpeg(scaledImage, data, 70);
 
       imlib_context_set_image(scaledImage);
@@ -181,7 +216,7 @@ int scaleJpegBuffer(MemoryStruct* data, int width, int height)
    fromJpeg(image, (unsigned char*)data->memory, data->size);
 
    scaleImageToJpegBuffer(image, data, width, height);
-   
+
    imlib_context_set_image(image);
    imlib_free_image();
 
@@ -207,11 +242,11 @@ const char* strImlibError(Imlib_Load_Error err)
       case IMLIB_LOAD_ERROR_PATH_POINTS_OUTSIDE_ADDRESS_SPACE:  return "Path points outside address space";
       case IMLIB_LOAD_ERROR_TOO_MANY_SYMBOLIC_LINKS:            return "Too many symbolic links";
       case IMLIB_LOAD_ERROR_OUT_OF_MEMORY:                      return "Out of memory";
-      case IMLIB_LOAD_ERROR_OUT_OF_FILE_DESCRIPTORS:            return "Out of file descriptors"; 
+      case IMLIB_LOAD_ERROR_OUT_OF_FILE_DESCRIPTORS:            return "Out of file descriptors";
       case IMLIB_LOAD_ERROR_PERMISSION_DENIED_TO_WRITE:         return "Permission denied to write";
       case IMLIB_LOAD_ERROR_OUT_OF_DISK_SPACE:                  return "Out of disk space";
       case IMLIB_LOAD_ERROR_UNKNOWN:                            return "Unknown format";
    }
-   
+
    return "";
 }

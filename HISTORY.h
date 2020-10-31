@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.163"
-#define VERSION_DATE "17.08.2020"
+#define _VERSION     "1.1.164"
+#define VERSION_DATE "31.10.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -18,6 +18,9 @@
  * ------------------------------------
  *
  *
+2020-31-31: version 1.1.164 (horchi)
+   - bugfix: fixed error handling in curl downloadFile (thx to Alexander Grothe)
+   - bugfix: improved error handling of jpeg processing (patch by NemoN)
 
 2020-08-17: version 1.1.163 (horchi, patch by kfb77)
    - change: Improved match of series

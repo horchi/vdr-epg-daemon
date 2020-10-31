@@ -465,9 +465,10 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
    }
 
    curl_easy_getinfo(handle, CURLINFO_HTTP_CODE, &code);
+   tell(3, "got http code (%ld)", code);
    data->statusCode = code;
 
-   if (code != 200)
+   if (code == 404)
    {
       data->clear();
       exit();
