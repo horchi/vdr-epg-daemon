@@ -158,6 +158,16 @@ const char* getStringFromJson(json_t* obj, const char* name, const char* def)
    return json_string_value(o);
 }
 
+int getBoolFromJson(json_t* obj, const char* name, bool def)
+{
+   json_t* o = json_object_get(obj, name);
+
+   if (!o)
+      return def;
+
+   return json_boolean_value(o);
+}
+
 int getIntFromJson(json_t* obj, const char* name, int def)
 {
    json_t* o = json_object_get(obj, name);
@@ -166,6 +176,68 @@ int getIntFromJson(json_t* obj, const char* name, int def)
       return def;
 
    return json_integer_value(o);
+}
+
+long getLongFromJson(json_t* obj, const char* name, long def)
+{
+   json_t* o = json_object_get(obj, name);
+
+   if (!o)
+      return def;
+
+   return json_integer_value(o);
+}
+
+double getDoubleFromJson(json_t* obj, const char* name, double def)
+{
+   json_t* o = json_object_get(obj, name);
+
+   if (!o)
+      return def;
+
+   return json_real_value(o);
+}
+
+
+int jStringValid(const char* s)
+{
+   json_t* obj = json_string(s);
+
+   if (!obj)
+      return no;
+
+   json_decref(obj);
+
+   return yes;
+}
+
+//***************************************************************************
+// Add Element
+//***************************************************************************
+
+int addToJson(json_t* obj, const char* name, const char* value, const char* def)
+{
+   json_t* j = json_string(value ? value : def);
+
+   if (!j)
+      j = json_string("");
+
+   return json_object_set_new(obj, name, j);
+}
+
+int addToJson(json_t* obj, const char* name, long value)
+{
+   return json_object_set_new(obj, name, json_integer(value));
+}
+
+int addToJson(json_t* obj, const char* name, int value)
+{
+   return json_object_set_new(obj, name, json_integer(value));
+}
+
+int addToJson(json_t* obj, const char* name, json_t* o)
+{
+   return json_object_set_new(obj, name, o);
 }
 
 //***************************************************************************

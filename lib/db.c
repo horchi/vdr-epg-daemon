@@ -355,8 +355,7 @@ int cDbStatement::bindCmp(const char* ctable, const char* fname, cDbValue* value
    return success;
 }
 
-int cDbStatement::bindText(const char* text, cDbValue* value,
-                           const char* comp, const char* delim)
+int cDbStatement::bindText(const char* text, cDbValue* value, const char* comp, const char* delim)
 {
    if (!value)
    {
@@ -1522,11 +1521,15 @@ int cDbTable::truncate()
    tmp = "delete from " + std::string(TableName());
 
    if (connection->query("%s", tmp.c_str()))
+      return connection->errorSql(connection, "truncate() 'delete from'", 0, tmp.c_str());
+
+   tmp = "truncate table " + std::string(TableName());
+
+   if (connection->query("%s", tmp.c_str()))
       return connection->errorSql(connection, "truncate()", 0, tmp.c_str());
 
    return success;
 }
-
 
 //***************************************************************************
 // Store

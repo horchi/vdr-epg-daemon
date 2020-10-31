@@ -463,18 +463,13 @@ class cDbStatement : public cDbService
       int bind(cDbFieldDef* field, int mode, const char* delim = 0);
       int bindAllOut(const char* delim = 0);
 
-      int bindCmp(const char* ctable, cDbValue* value,
-                  const char* comp, const char* delim = 0);
-      int bindCmp(const char* ctable, cDbFieldDef* field, cDbValue* value,
-                  const char* comp, const char* delim = 0);
-      int bindCmp(const char* ctable, const char* fname, cDbValue* value,
-                  const char* comp, const char* delim = 0);
-      int bindText(const char* text, cDbValue* value,
-                   const char* comp, const char* delim = 0);
-      int bindTextFree(const char* text, cDbValue* value, int mode = bndIn);
+      int bindCmp(const char* ctable, cDbValue* value, const char* comp, const char* delim = 0);
+      int bindCmp(const char* ctable, cDbFieldDef* field, cDbValue* value, const char* comp, const char* delim = 0);
+      int bindCmp(const char* ctable, const char* fname, cDbValue* value, const char* comp, const char* delim = 0);
 
-      int bindInChar(const char* ctable, const char* fname,
-                     cDbValue* value = 0, const char* delim = 0);
+      int bindText(const char* text, cDbValue* value, const char* comp, const char* delim = 0);
+      int bindTextFree(const char* text, cDbValue* value, int mode = bndIn);
+      int bindInChar(const char* ctable, const char* fname, cDbValue* value = 0, const char* delim = 0);
 
       int appendBinding(cDbValue* value, BindType bt);  // use this interface method seldom from external and with care!
 
@@ -684,6 +679,7 @@ class cDbRow : public cDbService
       float getFloatValue(cDbFieldDef* f)             const { return dbValues[f->getIndex()].getFloatValue(); }
       int isNull(cDbFieldDef* f)                      const { return dbValues[f->getIndex()].isNull(); }
 
+      time_t getTimeValue(const char* n)              const { GET_FIELD_RES(n, 0);   return dbValues[f->getIndex()].getTimeValue(); }
       const char* getStrValue(const char* n)          const { GET_FIELD_RES(n, "");  return dbValues[f->getIndex()].getStrValue(); }
       long getIntValue(const char* n)                 const { GET_FIELD_RES(n, 0);   return dbValues[f->getIndex()].getIntValue(); }
       int64_t getBigintValue(const char* n)           const { GET_FIELD_RES(n, 0);   return dbValues[f->getIndex()].getBigintValue(); }
@@ -1145,12 +1141,14 @@ class cDbTable : public cDbService
       long getIntValue(cDbFieldDef* f)              const             { return row->getIntValue(f); }
       int64_t getBigintValue(cDbFieldDef* f)        const             { return row->getBigintValue(f); }
       float getFloatValue(cDbFieldDef* f)           const             { return row->getFloatValue(f); }
+      time_t getTimeValue(cDbFieldDef* f)           const             { return row->getTimeValue(f); }
       int isNull(cDbFieldDef* f)                    const             { return row->isNull(f); }
 
       const char* getStrValue(const char* n)        const             { return row->getStrValue(n); }
       long getIntValue(const char* n)               const             { return row->getIntValue(n); }
       int64_t getBigintValue(const char* n)         const             { return row->getBigintValue(n); }
       float getFloatValue(const char* n)            const             { return row->getFloatValue(n); }
+      time_t getTimeValue(const char* n)            const             { return row->getTimeValue(n); }
       int isNull(const char* n)                     const             { return row->isNull(n); }
 
       cDbValue* getValue(cDbFieldDef* f)                              { return row->getValue(f); }
