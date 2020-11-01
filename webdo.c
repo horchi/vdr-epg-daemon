@@ -677,8 +677,10 @@ int cEpgHttpd::doEpgImage(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
                data->memory = (char*)malloc(data->size);
                memcpy(data->memory, imageImage->getStrValue(), data->size);
 
-               scaleJpegBuffer(data, maxW, maxH);
-               sprintf(data->contentType, "image/jpg");
+               if (scaleJpegBuffer(data, maxW, maxH) != success)
+                  data->clear();
+               else
+                  sprintf(data->contentType, "image/jpg");
             }
          }
 
@@ -743,8 +745,10 @@ int cEpgHttpd::doMovieMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* data
          data->memory = (char*)malloc(data->size);
          memcpy(data->memory, moviemediaMediaContent->getStrValue(), data->size);
 
-         scaleJpegBuffer(data, maxW, maxH);
-         sprintf(data->contentType, "image/jpg");
+         if (scaleJpegBuffer(data, maxW, maxH) != success)
+            data->clear();
+         else
+            sprintf(data->contentType, "image/jpg");
       }
    }
 
@@ -806,8 +810,10 @@ int cEpgHttpd::doSeriesMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
          data->memory = (char*)malloc(data->size);
          memcpy(data->memory, seriesmediaMediaContent->getStrValue(), data->size);
 
-         scaleJpegBuffer(data, maxW, maxH);
-         sprintf(data->contentType, "image/jpg");
+         if (scaleJpegBuffer(data, maxW, maxH) != success)
+            data->clear();
+         else
+            sprintf(data->contentType, "image/jpg");
       }
    }
 

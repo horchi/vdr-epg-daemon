@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.164"
-#define VERSION_DATE "31.10.2020"
+#define _VERSION     "1.1.165"
+#define VERSION_DATE "01.11.2020"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -18,7 +18,12 @@
  * ------------------------------------
  *
  *
-2020-31-31: version 1.1.164 (horchi)
+
+2020-11-01: version 1.1.165 (horchi)
+   - change: Check HTTP Codes 600 nad 500
+   - change: Add result check of fromJpeg/scaleJpegBuffer
+
+2020-10-31: version 1.1.164 (horchi)
    - bugfix: fixed error handling in curl downloadFile (thx to Alexander Grothe)
    - bugfix: improved error handling of jpeg processing (patch by NemoN)
 

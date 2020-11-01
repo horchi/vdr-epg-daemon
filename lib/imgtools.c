@@ -47,7 +47,7 @@ int fromJpeg(Imlib_Image& image, unsigned char* buffer, int size)
    if (setjmp(jerr.setjmp_buffer))
    {
       jpeg_destroy_decompress(&cinfo);
-      return 0;
+      return fail;
    }
 
    jpeg_create_decompress(&cinfo);
@@ -213,7 +213,8 @@ int scaleJpegBuffer(MemoryStruct* data, int width, int height)
 {
    Imlib_Image image;
 
-   fromJpeg(image, (unsigned char*)data->memory, data->size);
+   if (fromJpeg(image, (unsigned char*)data->memory, data->size) != success)
+      return fail;
 
    scaleImageToJpegBuffer(image, data, width, height);
 
