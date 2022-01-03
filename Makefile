@@ -14,7 +14,6 @@ BASELIBS += -lrt -lz -larchive -ldl -lcrypto -luuid
 BASELIBS += $(shell mysql_config --libs_r)
 BASELIBS += $(shell pkg-config --cflags --libs jansson)
 
-
 HLIB     = -L./lib -lhorchi
 DLIBS    = $(HLIB) $(BASELIBS) -lcurl $(shell pkg-config libxml-2.0 --libs) $(shell pkg-config libxslt --libs) -lexslt
 HTTPLIBS = $(HLIB) -lmicrohttpd $(BASELIBS) -lcurl $(shell pkg-config libxml-2.0 --libs) $(shell pkg-config libxslt --libs) -lexslt -ljpeg $(shell pkg-config imlib2 --libs)

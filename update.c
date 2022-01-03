@@ -129,6 +129,8 @@ cEpgd::cEpgd()
    // set a locale to "" means 'reset it to the environment'
    // as defined by the ISO-C standard the locales after start are C
 
+   // #TODO - did we have to use LC_ALL at least for strftime ?!!
+
    setlocale(LC_CTYPE, "");
    lang = setlocale(LC_CTYPE, 0);  // 0 for query the setting
 
