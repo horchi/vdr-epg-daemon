@@ -1,7 +1,7 @@
 -----------------------------------------------------------------------------------
 - epgd
 -
-- This daemon is used to download EPG data from the internet and manage it in a mysql database.
+- This daemon is used to download EPG data from the internet and manage it in a maria database.
 -
 - Written by: C++/SQL         - Jörg Wendel (vdr at jwendel dot de)
 -             SQL/Procedures  - Christian Kaiser
@@ -23,21 +23,21 @@ Description
 EPG Merge
 Get the source from git
 Requirements
-MySQL Setup
+MariaDb Setup
 epgd Installation
 epgd Configuration
 Starting epgd and init-Scripts
 Upgrade from older versions
-MySQL Hints
+MariaDb Hints
 Considerations
 
 
 Description:
 ------------
 
-epgd is part of the double team epgd+epg2vdr to effectively retrieve, store and import epg data to vdr. It is designed to handle large amount of data and pictures in a distributed environment with one epg-server and many possible vdr-clients - therefore it relies on mysql.
+epgd is part of the double team epgd+epg2vdr to effectively retrieve, store and import epg data to vdr. It is designed to handle large amount of data and pictures in a distributed environment with one epg-server and many possible vdr-clients - therefore it relies on mariadb.
 
-Though it is possible to use epgd alone with mysql it only makes sense to use it as backend to the vdr-plugin epg2vdr. That being said you need to install, setup and configure mysql, epgd and epg2vdr in order to get a working environment.
+Though it is possible to use epgd alone with mariadb it only makes sense to use it as backend to the vdr-plugin epg2vdr. That being said you need to install, setup and configure mariadb, epgd and epg2vdr in order to get a working environment.
 
 
 EPG Merge:
@@ -81,7 +81,7 @@ Requirements:
   - libcurl 7.10+
   - libxslt 1.1.24+
   - libxml2
-  - libmysql >= 5.07
+  - libmariadb >= 10.x
   - libz
   - libssl-dev
   - uuid uuid-dev
@@ -94,14 +94,14 @@ Requirements:
   - libsystemd-daemon-dev (if you like to use the systemd status interface)
         -> debian previous to 'sid' maybe libsystemd-dev?
 
- Example for Ubuntu (14.10):
+ Example for Ubuntu (21.10):
 
   - libarchive12, libarchive-dev
   - libz, libz-dev
   - libssl-dev
   - libcurl4-nss-dev (oder libcurl3-nss-dev)
   - libxslt1.1 libxslt1-dev libxml2 libxml2-dev
-  - libmysqlclient-dev libmysqlclient18
+  - libmariadb-dev mariadb-common
   - libjpeg62-dev libjpeg62
   - uuid uuid-dev
   - libjansson4 libjansson-dev
@@ -115,11 +115,11 @@ Requirements:
 My-SQL Setup:
 -------------
 
-You need a running mysql database.
-Consult the manual of your linux-flavour how to install and configure mysql.
+You need a running mariadb database.
+Consult the manual of your linux-flavour how to install and configure mariadb.
 Remember to put your db-files in a large enough filesystem: with many channels,
 many prefetched days and many pictures you will easily need 3 or more Gb of disk space.
-When mysql is up and running you need to prepare the database and
+When mariadb is up and running you need to prepare the database and
 access-rights for use with epgd:
 
 - login as root:
@@ -137,8 +137,8 @@ access-rights for use with epgd:
 - adjust the bind address in my.cnf:
 adjust the line
 bind-address         = 127.0.0.1
-in youre my.cnf (mostly found here: /etc/mysql/my.cnf) to the address where
-the mysql serve should listen on - Or comment out if it should listen on all interfaces.
+in youre my.cnf (mostly found here: /etc/mysql/...) to the address where
+the mariadb server should listen on - Or comment out if it should listen on all interfaces.
 
 - switch of binary logging:
 comment line starting with 'log_bin' in youre my.cnf
@@ -165,7 +165,7 @@ Make sure the server charecter-set is set to latin1, file format is set to BARRA
   character-set-server = latin1
   innodb_large_prefix  = ON
   innodb_file_format = BARRACUDA
-Remove all other collations from your mysqld config.
+Remove all other collations from your mariadb config.
 We use UTF8 only on client side!
 
 
@@ -227,17 +227,17 @@ epgd is configured in /etc/epgd/epgd.conf. But you can overwrite the following o
     -p <plugin-dir> load plugins from <plugin-dir>
     -l <log-level>  set log level
 
-For production use you should start epgd after net- and mysql services via your init-system. Some start-scripts have been put to ./contrib hopefully serving your needs (or at least giving you an idea of how to proceed).
+For production use you should start epgd after net- and mariadb services via your init-system. Some start-scripts have been put to ./contrib hopefully serving your needs (or at least giving you an idea of how to proceed).
 
 
 epgd Configuration:
 -------------------
 
   DbHost =
-    ip/name of mysql server host (default localhost)
+    ip/name of mariadb server host (default localhost)
 
   DbPort =
-    port of the mysql server (default 3306)
+    port of the mariadb server (default 3306)
 
   DbName =
     name of the database (default epg2vdr)
@@ -344,8 +344,8 @@ HINTS / PITFALLS:
 
 --vfat bzw. --dirnames
 
-MYSQL HINTS:
------------
+MariaBb HINTS:
+---------------
   - If you cannot figure out why you get Access denied, remove all entries from the user table
     that have Host values with wildcards contained (entries that match '%' or '_' characters).
     A very common error is to insert a new entry with Host='%' and User='some_user',
@@ -359,9 +359,7 @@ MYSQL HINTS:
 
 
   - *ATTENTION* if you have binary-logging (log_bin) enabled!
-     disable it OR add log-bin-trust-function-creators to your configuration:
-       > echo "log-bin-trust-function-creators = 1" >> /etc/mysql/my.cnf
-       > restart the database
+     disable it OR add log-bin-trust-function-creators to your configuration and restart the database
 
 
 Considerations:

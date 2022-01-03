@@ -43,5 +43,5 @@ Copyright (C) 2013 Jörg Wendel
 
 my_bool base_epglv_init(UDF_INIT* init, UDF_ARGS* args, char* message);
 void base_epglv_deinit(UDF_INIT* init);
-long long base_epglv(UDF_INIT* init, UDF_ARGS* args, char* is_null, 
+long long base_epglv(UDF_INIT* init, UDF_ARGS* args, char* is_null,
                      char* error, long long* l1, long long* l2);

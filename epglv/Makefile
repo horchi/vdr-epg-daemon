@@ -19,13 +19,14 @@ CPP_FLAGS := $(CPP_FLAGS_$(ARCH)) -Wall \
 	-L/usr/lib/mysql \
 	-L/usr/local/lib/mysql \
 	-I/usr/include/mysql \
-	$(shell mysql_config --libs) \
+	$(shell $(SQLCFG) --libs) \
+	$(shell $(SQLCFG) --include) \
 	-DMYSQL_DYNAMIC_PLUGIN \
 	-DDEBUG_MYSQL=0
 
 CC := gcc
 
-MYSQL_PLGDIR := $(shell mysql_config --plugindir)
+MYSQL_PLGDIR := $(shell $(SQLCFG) --plugindir)
 TARGET  = mysqlepglv.so
 OBJS    = src/epglvbase.o src/epglv.o
 

@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.1.165"
-#define VERSION_DATE "01.11.2020"
+#define _VERSION     "1.2.0"
+#define VERSION_DATE "03.01.2022"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,7 +17,9 @@
 /*
  * ------------------------------------
  *
- *
+
+2022-01-03: version 1.2.0 (horchi)
+   - change: Removed dependency to mysql-compat package
 
 2020-11-01: version 1.1.165 (horchi)
    - change: Check HTTP Codes 600 nad 500

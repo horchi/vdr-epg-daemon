@@ -27,7 +27,7 @@ ifdef USECURL
 endif
 
 BASELIBS += -lrt -lz -luuid
-BASELIBS += $(shell mysql_config --libs_r)
+BASELIBS += $(shell $(SQLCFG) --libs_r)
 
 ifdef USECURL
    BASELIBS += -lcurl
@@ -59,7 +59,7 @@ ifdef DEBUG
   CFLAGS += -ggdb -O0
 endif
 
-CFLAGS += $(shell mysql_config --include)
+CFLAGS += $(shell $(SQLCFG) --include)
 DEFINES += $(USES)
 
 all: lib $(TEST) $(DEMO)
