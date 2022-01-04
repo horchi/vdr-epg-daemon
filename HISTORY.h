@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.2.0"
-#define VERSION_DATE "03.01.2022"
+#define _VERSION     "1.2.1"
+#define VERSION_DATE "04.01.2022"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2022-01-04: version 1.2.1 (horchi)
+   - change: Makefile change du to more distribution compatibility
 
 2022-01-03: version 1.2.0 (horchi)
    - change: Removed dependency to mysql-compat package
