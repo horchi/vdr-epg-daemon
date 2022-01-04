@@ -15,10 +15,6 @@ endif
 
 CPP_FLAGS := $(CPP_FLAGS_$(ARCH)) -Wall \
 	-fPIC \
-	-I/usr/local/include/mysql \
-	-L/usr/lib/mysql \
-	-L/usr/local/lib/mysql \
-	-I/usr/include/mysql \
 	$(shell $(SQLCFG) --libs) \
 	$(shell $(SQLCFG) --include) \
 	-DMYSQL_DYNAMIC_PLUGIN \
