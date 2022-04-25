@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.2.2"
-#define VERSION_DATE "04.01.2022"
+#define _VERSION     "1.2.3"
+#define VERSION_DATE "25.04.2022"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2022-04-25: version 1.2.3 (horchi)
+   - bugfix: Fixed syntax error in Makefile (thx to Michael Schaffner)
 
 2022-01-04: version 1.2.2 (horchi)
    - bugfix: Fixed build dependencies

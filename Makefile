@@ -190,7 +190,7 @@ install-plugins: plugins
 
 install-scripts:
 	if ! test -d $(_BINDEST); then \
-		mkdir -p "$(_BINDEST)" \
+		mkdir -p $(_BINDEST); \
 	   chmod a+rx $(_BINDEST); \
 	fi
 	install -D ./scripts/epgd-*[!~] $(_BINDEST)/

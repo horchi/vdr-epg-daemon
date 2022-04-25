@@ -144,10 +144,10 @@ if [ "${i}" = "y" ]; then
        mysqldump --opt -u epg2vdr epg2vdr users | gzip > ./users-dump.sql.gz
        echo "Table users dumped to ./users-dump.sql.gz"
 
-       mysqldump --opt -u epg2vdr epg2vdr timersdone | gzip > ./timersdone-sump.sql.gz
+       mysqldump --opt -u epg2vdr epg2vdr timersdone | gzip > ./timersdone-dump.sql.gz
        echo "Table timersdone dumped to ./timersdone-dump.sql.gz"
 
-       mysqldump --opt -u epg2vdr epg2vdr searchtimers | gzip > ./searchtimers-sump.sql.gz
+       mysqldump --opt -u epg2vdr epg2vdr searchtimers | gzip > ./searchtimers-dump.sql.gz
        echo "Table searchtimers dumped to ./searchtimers-dump.sql.gz"
    fi
 
