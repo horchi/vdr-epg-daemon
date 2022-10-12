@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html class="no-js">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>EPGd - VDR epg daemon</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no, maximum-scale=1, minimum-scale=1">
+        <link rel="stylesheet" href="epgd.css?%VERSION%">
+        <script src="common.js?%VERSION%"></script>
+        <script src="epgd.js?%VERSION%"></script>
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <link rel="icon" sizes="192x192" href="/images/epgd-4x.png">
+        <link rel="apple-touch-icon" href="/images/epgd-4x.png"> 
+    </head>
+    <body>
+        <!--[if lt IE 10]>
+            <p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> to improve your experience.</p>
+        <![endif]-->
+        <script type="text/javascript">
+            $(document).ready(function () {
+                epgd.utils.loader.process(epgd.init);
+            });
+        </script>
+    </body>
+</html>

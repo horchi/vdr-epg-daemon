@@ -1,0 +1,3 @@
+LOGFILE="/var/log/epgd.log"
+PIDFILE="/var/run/epgd.pid"
+CLI_OPTIONS="-n -p /usr/local/lib/epgd/plugins"

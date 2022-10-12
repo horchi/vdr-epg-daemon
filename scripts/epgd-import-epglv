@@ -1,0 +1,9 @@
+#!/bin/bash
+
+MYSQL_PWD=${MYSQL_PWD:-epg}
+export MYSQL_PWD
+
+mysql -u root -e "DROP FUNCTION IF EXISTS epglv;"
+mysql -u root -e "DROP FUNCTION IF EXISTS epglvr;"
+mysql -u root -e "CREATE FUNCTION epglv RETURNS INT SONAME 'mysqlepglv.so';"
+mysql -u root -e "CREATE FUNCTION epglvr RETURNS INT SONAME 'mysqlepglv.so';"

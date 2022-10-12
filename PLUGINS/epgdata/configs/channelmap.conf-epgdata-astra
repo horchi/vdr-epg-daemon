@@ -1,0 +1,176 @@
+epgdata:71 = S19.2E-1-1019-10301		// Das Erste HD
+epgdata:37 = S19.2E-1-1011-11110		// ZDF HD
+epgdata:194 = S19.2E-1-1025-10331		// PHOENIX HD
+epgdata:56 = S19.2E-1-1010-11150		// 3sat HD
+epgdata:58 = S19.2E-1-1019-10302		// arte HD
+epgdata:146 = S19.2E-1-1201-28396		// Einsfestival HD
+epgdata:57 = S19.2E-1-1010-11160		// KiKA HD
+epgdata:275 = S19.2E-1-1011-11140		// zdf.kultur HD
+epgdata:276 = S19.2E-1-1010-11170		// ZDFinfo HD
+epgdata:659 = S19.2E-1-1011-11130		// zdf_neo HD
+
+epgdata:71  = S19.2E-1-1101-28106		// Das Erste
+epgdata:37  = S19.2E-1-1079-28006		// ZDF
+epgdata:194 = S19.2E-1-1051-28725		// PHOENIX
+epgdata:56  = S19.2E-1-1079-28007		// 3sat
+epgdata:58  = S19.2E-1-1051-28724		// arte
+epgdata:146 = S19.2E-1-1051-28722		// Einsfestival
+epgdata:475 = S19.2E-1-1051-28723		// EinsPlus
+epgdata:57  = S19.2E-1-1079-28008		// KiKA
+epgdata:100 = S19.2E-1-1051-28721		// tagesschau24
+epgdata:275 = S19.2E-1-1079-28016		// zdf.kultur
+epgdata:276 = S19.2E-1-1079-28011		// ZDFinfo
+epgdata:659 = S19.2E-1-1079-28014		// zdf_neo
+
+epgdata:38  = S19.2E-1-1089-12003		// RTL Television
+epgdata:41  = S19.2E-1-1089-12020		// RTL2
+epgdata:43  = S19.2E-1-1089-12040		// SUPER RTL
+epgdata:763 = S19.2E-1-1089-12061		// RTLNITRO
+epgdata:39  = S19.2E-1-1107-17500		// SAT.1
+epgdata:774 = S19.2E-1-1107-17504		// SAT.1 Gold
+epgdata:40  = S19.2E-1-1107-17501		// ProSieben
+epgdata:44  = S19.2E-1-1107-17502		// kabel eins
+epgdata:507 = S19.2E-133-33-63			// DMAX
+epgdata:694 = S19.2E-133-5-776			// SIXX
+epgdata:42  = S19.2E-1-1089-12060		// VOX
+epgdata:660 = S19.2E-1-1115-13110		// ServusTV Deutschland
+epgdata:64  = S19.2E-133-33-9001		// SPORT1
+epgdata:65  = S19.2E-1-1091-31200		// Eurosport Deutschland
+epgdata:66  = S19.2E-1-1089-12090		// n-tv
+epgdata:175 = S19.2E-1-1107-17503		// N24
+epgdata:391 = S19.2E-1-1115-13102		// GoTV
+// = S19.2E-133-7-65		// DELUXE MUSIC
+// = S19.2E-1-1078-28676		// VIVA Germany
+// = S19.2E-1-1021-4600		// a.tv
+
+epgdata:471 = S19.2E-133-1-42			// 13th Street
+epgdata:123 = S19.2E-133-17-21			// Beate-Uhse.TV
+epgdata:133 = S19.2E-133-17-24			// Classica
+epgdata:138 = S19.2E-133-4-14			// Discovery Channel
+epgdata:139 = S19.2E-133-17-34			// Disney Channel
+epgdata:460 = S19.2E-133-17-26			// Disney Junior
+epgdata:657 = S19.2E-133-17-28			// Disney XD
+// = S19.2E-133-1-16		// Fox Serie
+epgdata:152 = S19.2E-133-17-518			// Goldstar TV
+epgdata:154 = S19.2E-133-17-22			// Heimatkanal
+epgdata:160 = S19.2E-133-17-19			// Junior
+epgdata:627 = S19.2E-133-1-168			// Motorvision TV
+epgdata:626 = S19.2E-133-4-12			// NatGeo Wild
+epgdata:453 = S19.2E-133-4-13			// National Geographic Channel
+epgdata:527 = S19.2E-133-1-27			// RTL Crime
+epgdata:529 = S19.2E-133-1-29			// RTL Passion
+epgdata:701 = S19.2E-133-10-117			// Sky 3D
+epgdata:615 = S19.2E-133-1-23			// Sky Krimi
+epgdata:625 = S19.2E-133-4-52			// Spiegel Geschichte
+epgdata:472 = S19.2E-133-17-36			// Syfy
+epgdata:590 = S19.2E-133-1-50			// TNT Serie
+
+// = S19.2E-133-13-127		// 13th Street HD
+// = S19.2E-133-10-125		// AXN HD
+epgdata:490 = S19.2E-133-6-130			// Discovery HD
+// = S19.2E-133-11-116		// Disney Channel HD
+// = S19.2E-133-14-128		// E! Entertainm. HD
+// = S19.2E-133-10-124		// Fox HD
+epgdata:632 = S19.2E-133-11-113			// History HD
+// = S19.2E-133-6-118		// Nat Geo Wild HD
+// = S19.2E-133-13-112		// NatGeo HD
+epgdata:762 = S19.2E-133-12-108			// Sky Sport News HD
+// = S19.2E-133-12-126		// Syfy HD
+// = S19.2E-133-11-123		// TNT Serie HD
+// = S19.2E-133-14-101		// Universal HD
+epgdata:10058 = S19.2E-133-10-106		// Sky Action HDD
+epgdata:10059 = S19.2E-133-12-107		// Sky Hits HD 
+
+epgdata:539 = S19.2E-1-1037-5253		// Animax
+// = S19.2E-133-15-37		// AXN Action
+epgdata:536 = S19.2E-133-15-57			// Biography Channel
+epgdata:127 = S19.2E-133-15-56			// Bloomberg TV
+epgdata:531 = S19.2E-133-15-39			// Cartoon Network (S)
+// = S19.2E-1-1115-13105		// ESPN America (S)
+epgdata:452 = S19.2E-133-15-58			// History
+epgdata:492 = S19.2E-1-1107-17506		// kabel eins classics
+epgdata:450 = S19.2E-133-15-33			// Kinowelt TV
+// = S19.2E-133-15-38		// Romance TV
+epgdata:528 = S19.2E-1-1089-12030		// RTL Living
+epgdata:766 = S19.2E-1-1015-4701		// SAT.1 emotions
+// = S19.2E-1-1107-17505		// ProSieben MAXX
+epgdata:633 = S19.2E-133-15-35			// TNT Film (TCM)
+
+epgdata:631 = S19.2E-133-13-111			// Disney Cinemagic HD
+// = S19.2E-133-12-115		// MGM HD
+// = S19.2E-133-10-106		// Sky Action HD
+epgdata:767 = S19.2E-133-13-110			// Sky Atlantic HD
+epgdata:629 = S19.2E-133-6-131			// Sky Cinema HD
+// = S19.2E-133-12-107		// Sky Hits HD
+
+epgdata:610 = S19.2E-133-2-10			// Sky Cinema
+epgdata:611 = S19.2E-133-2-11			// Sky Cinema +1
+epgdata:612 = S19.2E-133-2-43			// Sky Cinema +24
+epgdata:630 = S19.2E-133-3-25			// Disney Cinemagic
+epgdata:1196 = S19.2E-133-3-515			// MGM
+epgdata:613 = S19.2E-133-2-9			// Sky Action 
+epgdata:617 = S19.2E-133-2-8			// Sky Comedy
+epgdata:616 = S19.2E-133-2-20			// Sky Emotion
+epgdata:618 = S19.2E-133-3-41			// Sky Hits
+epgdata:614 = S19.2E-133-3-516			// Sky Nostalgie
+// = S19.2E-133-3-17		// Sky Sport News
+
+epgdata:784 = S19.2E-133-14-119			// Sport1 US HD
+epgdata:621 = S19.2E-133-6-129			// Sky Sport HD 1
+epgdata:697 = S19.2E-133-13-114			// Sky Sport HD 2
+// = S19.2E-133-6-268		// Sky Sport HD 3
+// = S19.2E-133-11-122		// Sport1+ HD
+epgdata:619 = S19.2E-133-4-221			// Sky Sport 1
+epgdata:620 = S19.2E-133-4-222			// Sky Sport 2
+epgdata:564 = S19.2E-133-15-59			// sportdigital
+ 
+// = S19.2E-133-11-132		// Eurosport HD
+// = S19.2E-133-14-109		// Eurosport 2 HD
+
+epgdata:54 = S19.2E-1-1117-13001	// ORF1
+epgdata:55 = S19.2E-1-1117-13002	// ORF2
+epgdata:757 = S19.2E-1-1115-13101	// ORF III
+epgdata:759 = S19.2E-1-1003-13221	// ORF SPORT+
+
+epgdata:115 = S19.2E-1-1117-13012	// ATV
+epgdata:761 = S19.2E-1-1003-13223	// ATV2
+// = S19.2E-1-1082-20007	// PULS 4 Austria
+epgdata:622 = S19.2E-133-1-30		// Sky Sport Austria
+// = S19.2E-1-1115-13104	// LT1-OOE
+// = S19.2E-1-1115-13111	// ServusTV Oesterreich
+
+// epgdata:10100		// Sat.1 Emotions HD
+epgdata:104 = S19.2E-1-1093-28487		// BR alpha
+
+// epgdata:1183 =		// Animal Planet
+// epgdata:211 = 		// Rhein-Neckar-Fernsehen
+// epgdata:266 =		// VIVA
+epgdata:277 = S19.2E-133-33-51			// Tele 5
+// epgdata:455 = 		// Fashion TV
+// epgdata:465 = 		// MTV Dance
+// epgdata:466 = 		// MTV Hits UK
+// epgdata:468 = 		// AXN
+// epgdata:469 = 		// Extreme Sports Channel
+// epgdata:46  = 		// WDR
+// epgdata:473 = 		// ESPN Classic
+// epgdata:47  = 		// NDR
+epgdata:486 = S19.2E-133-5-1793 		// Das VIERTE
+// epgdata:48  = 		// MDR
+// epgdata:49  = 		// HR
+// epgdata:504 = 		// Eurosport 2
+// epgdata:50  = 		// SWR
+// epgdata:51  = 		// BR
+// epgdata:52  = 		// RBB
+// epgdata:537 = 		// Anixe HD
+// epgdata:590 = 		// TNT Serie
+
+// epgdata:623 =		// Sky Bundesliga
+// epgdata:624 =		// National Geographic Channel HD
+// epgdata:628 =		// Sky Select
+// epgdata:698 =		// SPORT1+
+// epgdata:743 =		// Sky Sport HD Extra
+// epgdata:756 =		// Spiegel TV Wissen
+// epgdata:758 =		// E! Entertainment
+
+
+

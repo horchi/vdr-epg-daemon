@@ -1,0 +1,37 @@
+
+path="/tmp/epgdata/"
+file=$path/"info.zip"
+
+mkdir -p $path
+
+cd $path
+rm -f *
+
+wget "http://www.epgdata.com/index.php?action=sendInclude&iOEM=&pin=XYZ&dataType=xml" -q -O $file
+
+unzip $file > /dev/null 2>&1
+rm $file
+
+chanfile="channel_y.xml"
+
+cat $chanfile | while read line; do 
+
+   if [[ ${line} =~ "<ch0>" ]]; then
+
+     chan=${line#*>}
+     chan=${chan%<*}
+
+   else 
+
+     if [[ ${line} =~ "<ch4>" ]]; then
+
+       id=${line#*>}
+       id=${id%<*}
+
+       echo "epgdata:$id    // $chan"
+
+     fi
+
+   fi  
+
+done | sort

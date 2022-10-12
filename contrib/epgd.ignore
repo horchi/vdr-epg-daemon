@@ -1,0 +1,48 @@
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: .*channel mappings read.
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Cleanup of events finished
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Cleanup of events finished
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Delete events
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Delete fileref.*source.*and starttime.*duration
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Download header for day
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Downloaded file.*with.*Bytes
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Downloaded image
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: EPG Update finished, loaded.*files.*non-updates skipped, 0 rejected due to format error.
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: EPG Update started
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Got \'Setting encoding to utf8\'
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Got info for day.*file.*with tag
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Got.*Setting encoding to utf8
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Image cleanup finished
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Info: Stylesheet
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Loaded.*images.*, checked
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Loading
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Lookup done for.*series, matched.*parts by compare and.*parts by lv in.*seconds
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Processing file.*for day
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Read.*option from /etc/epgd/epgd.conf
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Received.*episode files
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Requesting episode changes of last.*minutes
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: SQL client character now
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: SVDRPCL: connected to eplists.constabel.net
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Scheduled next update in
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Set locale to
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Shutdown triggered with signal 15
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Skipping download of day.*due to non-update
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Skipping update check of file.*for day
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Start download of new images
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Starting cleanup of events
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Starting cleanup of image
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Starting episode download
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Starting episode lookup
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Statement.*insert|select
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Statement.*update|delete
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Still updating images, now.*checked and.*loaded
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: There are.*images for event
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Updating day today.*now
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Updating day today.*now
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: Updating.*day today.*now
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: View.*eventsview.*already exist
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: XML File.*processed, updated.*events
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: action ended
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: detected UTF-8
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: no images for event
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: shutdown
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: try loading image from 

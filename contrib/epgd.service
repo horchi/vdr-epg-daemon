@@ -1,0 +1,14 @@
+[Unit]
+
+Description = Database driven EPG Data collector
+After = <AFTER>
+
+[Service]
+
+Type = forking
+ExecStart = <BINDEST>/epgd -c /etc/epgd -p <PLGDEST>
+Restart = always
+
+[Install]
+
+WantedBy = multi-user.target

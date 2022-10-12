@@ -1,0 +1,122 @@
+Installation instructions for Fedora 23 and above
+-------------------------------------------------
+
+Installation of mysql database
+------------------------------
+
+[root@fc23 tmp]# dnf -y install mariadb mariadb-libs mariadb-server
+
+- enable mysql service
+
+[root@fc23 tmp]# systemctl enable mariadb.service
+
+- start mysql service
+
+[root@fc23 tmp]# systemctl start mariadb.service
+
+- check mysql status
+
+[root@fc23 tmp]# systemctl status mariadb.service
+? mariadb.service - MariaDB 10.1 database server
+   Loaded: loaded (/usr/lib/systemd/system/mariadb.service; enabled; vendor preset: disabled)
+   Active: active (running) since Mi 2016-04-06 08:35:23 CEST; 3s ago
+  Process: 55587 ExecStartPost=/usr/libexec/mysql-check-upgrade (code=exited, status=0/SUCCESS)
+  Process: 55403 ExecStartPre=/usr/libexec/mysql-prepare-db-dir %n (code=exited, status=0/SUCCESS)
+  Process: 55375 ExecStartPre=/usr/libexec/mysql-check-socket (code=exited, status=0/SUCCESS)
+ Main PID: 55557 (mysqld)
+   Status: "Taking your SQL requests now..."
+    Tasks: 25 (limit: 512)
+   CGroup: /system.slice/mariadb.service
+           +-55557 /usr/libexec/mysqld --basedir=/usr
+
+Apr 06 08:35:09 fc24 mysql-prepare-db-dir[55403]: 2016-04-06  8:35:09 139857994893504 [Note] /usr/libexec/mysqld (mysqld 10.1.12-MariaDB) start
+Apr 06 08:35:18 fc24 mysql-prepare-db-dir[55403]: 2016-04-06  8:35:18 139836914665664 [Note] /usr/libexec/mysqld (mysqld 10.1.12-MariaDB) start
+Apr 06 08:35:20 fc24 mysql-prepare-db-dir[55403]: 2016-04-06  8:35:20 139732787038400 [Note] /usr/libexec/mysqld (mysqld 10.1.12-MariaDB) start
+Apr 06 08:35:23 fc24 mysql-prepare-db-dir[55403]: PLEASE REMEMBER TO SET A PASSWORD FOR THE MariaDB root USER !
+Apr 06 08:35:23 fc24 mysql-prepare-db-dir[55403]: To do so, start the server, then issue the following commands:
+Apr 06 08:35:23 fc24 mysql-prepare-db-dir[55403]: '/usr/bin/mysqladmin' -u root password 'new-password'
+Apr 06 08:35:23 fc24 mysql-prepare-db-dir[55403]: '/usr/bin/mysqladmin' -u root -h fc24 password 'new-password'
+Apr 06 08:35:23 fc24 mysql-prepare-db-dir[55403]: Alternatively you can run:
+Apr 06 08:35:23 fc24 mysqld[55557]: 2016-04-06  8:35:23 140367759493312 [Note] /usr/libexec/mysqld (mysqld 10.1.12-MariaDB) starting as process
+Apr 06 08:35:23 fc24 systemd[1]: Started MariaDB 10.1 database server.
+
+- install the necessary vdr plugins for a working epg environment
+
+[root@fc23 tmp]# dnf install vdr-scraper2vdr vdr-epg2vdr vdr-epg-daemon
+
+- create mysql root password for epgd-tool and save it in the root folder
+
+[root@fc23 tmp]# mysqladmin -u root -p password "password"
+[root@fc23 tmp]# mkdir -p ~/.ssh
+[root@fc23 tmp]# echo 'export PASSWORD="password"' > ~/.ssh/mysqlpasswd
+
+- create new mysql database and user with the helper script epgd-tool
+
+[root@fc23 tmp]# epgd-tool -fix-cnf
+[root@fc23 tmp]# epgd-tool -new-db
+[root@fc23 tmp]# epgd-tool -new-u
+
+- customize the channelmap.conf
+
+modify the config files (/etc/epgd/channelmap.conf and /etc/epgd/epgd.conf) like your needs or take a prepared one from
+http://www.vdr-portal.de/index.php?page=Attachment&attachmentID=35919&h=2f0cb1b9698645550cd789acf335c3bb99cc7051&s=2d0ac4c6400452abd71b1e36cd9c51f5b4811f7f
+
+- enable the epgd service
+
+[root@fc23 tmp]# systemctl enable epgd.service
+
+- start the epgd service
+
+[root@fc23 tmp]# systemctl start epgd.service
+
+- check the epgd status
+
+[root@fc23 tmp]# systemctl status epgd.service
+epgd.service - Database driven EPG Data collector
+   Loaded: loaded (/usr/lib/systemd/system/epgd.service; enabled)
+   Active: active (running) since Do 2016-04-01 14:51:08 CEST; 7s ago
+  Process: 18714 ExecStart=/usr/bin/epgd -c /etc/epgd (code=exited, status=0/SUCCESS)
+ Main PID: 18719 (epgd)
+   CGroup: /system.slice/epgd.service
+           └─18719 /usr/bin/epgd -c /etc/epgd
+Apr 01 14:51:07 fc23 epgd[18714]: Loading '/etc/epgd/channelmap.conf'
+Apr 01 14:51:07 fc23 epgd[18714]: 26 channel mappings read.
+Apr 01 14:51:07 fc23 epgd[18714]: Creating directory '/var/cache/epgd/epgdata'
+Apr 01 14:51:07 fc23 epgd[18714]: No external events on database, force initial check!
+Apr 01 14:51:07 fc23 epgd[18714]: using scrapping language de
+Apr 01 14:51:07 fc23 epgd[18714]: tvdb scraper connected
+Apr 01 14:51:08 fc23 epgd[18714]: moviedb scraper connected
+Apr 01 14:51:08 fc23 epgd[18719]: Scheduled next update in 10 second(s)
+Apr 01 14:51:08 fc23 epgd[18719]: State now 'standby'
+Apr 01 14:51:08 fc23 systemd[1]: Started Database driven EPG Data collector.
+
+- enable the epghttpd service
+
+[root@fc23 tmp]# systemctl enable epghttpd.service
+
+- start the epghttpd service
+
+[root@fc23 tmp]# systemctl start epghttpd.service
+
+- check the epghttpd status
+
+[root@fc23 tmp]# systemctl status epghttpd.service
+● epghttpd.service - EPG HTTP Daemon that provides a web interface
+   Loaded: loaded (/usr/lib/systemd/system/epghttpd.service; enabled; vendor preset: disabled)
+   Active: active (running) since Di 2016-04-26 19:55:49 CEST; 1h 33min ago
+ Main PID: 3252 (epghttpd)
+   CGroup: /system.slice/epghttpd.service
+           └─3252 /usr/bin/epghttpd -c /etc/epgd
+
+Apr 26 19:55:49 fc23 epghttpd[3252]: Initialize python script '/etc/epgd/recording.py'
+Apr 26 19:55:49 fc23 epghttpd[3252]: Dictionary '/etc/epgd/epg.dat' loaded
+Apr 26 19:55:49 fc23 epghttpd[3252]: Info: Calling mysql_library_init()
+Apr 26 19:55:49 fc23 epghttpd[3252]: Connecting to database at 'localhost:3306'
+Apr 26 19:55:49 fc23 epghttpd[3252]: Calling mysql_init(3252)
+Apr 26 19:55:49 fc23 epghttpd[3252]: SQL client character now 'utf8'
+Apr 26 19:55:49 fc23 epghttpd[3252]: Calling mysql_init(3252)
+Apr 26 19:55:49 fc23 epghttpd[3252]: Listener at port 9999 established, waiting for connections
+Apr 26 19:55:49 fc23 epghttpd[3252]: Info: Systemd support not enabled, epgd won't be sending notifications!
+Apr 26 21:29:05 fc23 systemd[1]: Started EPG HTTP Daemon that provides a web interface.
+
+For more information, please read the document /usr/share/doc/vdr-epg-daemon/README.

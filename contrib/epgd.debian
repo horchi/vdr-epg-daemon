@@ -1,0 +1,68 @@
+#! /bin/bash
+#
+# Author: 
+#
+# /etc/init.d/epg
+#
+### BEGIN INIT INFO
+# Provides:          epgd
+# Required-Start:    $syslog mysql
+# Required-Stop:    
+# Default-Start:     2 3 5
+# Default-Stop:      0 1 2 6
+# Short-Description: EPG Daemon
+# Description: 	     EPG Daemon - collects EPG Data from VDR's
+#                     and other ressources
+### END INIT INFO
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+NAME=EPGD
+DESC="EPG Daemon"
+ 
+# Check for missing binaries (stale symlinks should not happen)
+EPGD_BIN=/usr/local/bin/epgd
+test -x $EPGD_BIN || exit 5
+ 
+# Check for existence of needed config directory
+EPGD_CONFDIR=/etc/epgd
+test -d $EPGD_CONFDIR || exit 6
+
+# Check for existence of needed config file and read it
+EPGD_CONFIG=${EPGD_CONFDIR}/epgd.conf
+test -r $EPGD_CONFIG || exit 6
+
+# Check for existence of needed plugin directory
+EPGD_PLGDIR=/usr/local/lib/epgd/plugins
+test -d $EPGD_PLGDIR || exit 6
+ 
+start_epgd() {
+    echo -n "Starting $DESC: "
+    start-stop-daemon --start --verbose --background --oknodo --exec ${EPGD_BIN} -- -n -c ${EPGD_CONFDIR} -p ${EPGD_PLGDIR}
+    echo "$NAME."
+}
+
+stop_epgd()
+{
+    echo -n "Stoppig $DESC: "
+    start-stop-daemon --stop --signal KILL --verbose --oknodo --exec ${EPGD_BIN}
+    echo "$NAME."
+}
+
+case "$1" in
+    start)
+	start_epgd
+	;;
+    stop)
+	stop_epgd
+	;;
+    restart)
+	stop_epgd
+	sleep 2
+	start_epgd
+	;;
+    *)
+        N=/etc/init.d/$NAME
+        echo "Usage: $N {start|stop|restart|force-reload}" >&2
+        exit 1
+        ;;
+esac

@@ -1,0 +1,66 @@
+
+wget -q -O - 192.168.200.101:9999/data/save-timer --post-data='{ "channel" : "S19.2E-1-1017-61301", "eventid" : 41920 }'
+
+{
+   "channelid" : "S19.2E-1-1057-61205",
+   "eventid"   : 131954,
+
+   // ab hier optional 
+
+   "vdruuid"   : "D355D2A5-C29F-4321-94AE-B2F2B07A31FE",
+   "active"    : 1,
+   "day"       : 1406706337,
+   "start"     : 2015,
+   "stop"      : 2210,
+   "weekdays"  : 0,                // < bitmask, lowest bits: SSFTWTM  (the 'M' is the LSB)
+   "vps"       : 0,
+   "priority"  : 50,
+   "lifetime"  : 99,
+   "directory" : "Falling_Skies",
+   "childlock" : 0
+}
+
+
+wget -q -O - 192.168.200.101:9999/data/search --post-data='{ "autotimerid": 13 }' | json_pp 
+
+wget -q -O - 192.168.200.101:9999/data/save-parameters --post-data='{ "parameters": [{"value": "bla bla", "owner": "webif", "name": "test", "readonly": 1}] }'
+
+wget -q -O - 192.168.200.101:9999/data/save-parameters --post-data='{
+   "channels" : 
+   {
+      "S19.2E-1-1057-61205" : 
+      {
+         "sources" : {},
+         "visible" : 1,
+         "ord" : 5,
+         "name" : "RTLII HD"
+      },
+      "S19.2E-1-1017-61302" : 
+      {
+         "sources" : {},
+         "visible" : 1,
+         "ord" : 8,
+         "name" : "kabel eins HD"
+      },
+      "S19.2E-1-1201-28327" : 
+      {
+         "sources" : {},
+         "visible" : 0,
+         "ord" : 2,
+         "name" : "WDR HD Dortmund"
+      }
+   } 
+}'
+
+
+set log level:
+----------------
+wget -q -O - "192.168.200.101:9999/data/debug?level=3"
+
+login and get a session:
+--------------------------
+KEY=21f4ab03ab3dda6b87656dcf419a7b5b
+
+SESSION=`wget -q -O - 192.168.200.101:9999/data/login --post-data="{ \"key\" : \"$KEY\" }" | json_pp | grep session | sed s/".*: ."/""/ | sed s/"\".*"/""/`
+
+

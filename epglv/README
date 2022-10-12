@@ -1,0 +1,57 @@
+EPG2VDR Levenshtein Distance for MySQL
+Supports UTF-8 insensitive calculation throught iconv.
+
+Copyright (C) 2013 Jörg Wendel
+
+Redistribute as you wish, but leave this information intact.
+
+The build process is integrated in epgd's makefile, to build epglv 
+separately follow this steps:
+
+Compiling:
+----------
+
+   Run 
+   make
+   make install
+
+Installing UDFs in MySQL:
+-------------------------
+
+    Loading UDFs in MySQL, at the mysql prompt call:
+
+      DROP FUNCTION IF EXISTS epglv;
+      DROP FUNCTION IF EXISTS epglvr;
+      CREATE FUNCTION epglv RETURNS INT SONAME 'mysqlepglv.so';
+      CREATE FUNCTION epglvr RETURNS INT SONAME 'mysqlepglv.so';
+
+   Check te installtion by:
+
+      mysql> SELECT * FROM mysql.func;
+      +-----------+-----+-------------------+----------+
+      | name      | ret | dl                | type     |
+      +-----------+-----+-------------------+----------+
+      | epglv     |   2 | mysqlepglv.so     | function |
+      +-----------+-----+-------------------+----------+
+
+Attention:
+----------
+
+    Before changing the lib in MySQLs plugin dir DROP the function if it already exist.
+    Otherwise you can get mysql in a undefined state and a mysql reinstall may necessary!
+
+Using epglv:
+------------
+
+    mysql> select epglv();
+      ERROR: EPGLV() requires two arguments (string, string)
+
+    First string is compared against second string.
+
+      mysql> select epglv('€uro', 'Euro');
+       +----------------------------+
+       | epglv('€uro', 'Euro')      |
+       +----------------------------+
+       |                          1 |
+       +----------------------------+
+

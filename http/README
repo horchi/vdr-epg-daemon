@@ -1,0 +1,77 @@
+WebInterface für VDR, basierend auf vdr-epg-daemon
+
+Autor: Dirk Hermes
+
+====================================================================================================================================
+das webIf basiert aktuell auf folgenden Frameworks und ist eine sogenannte Single Page Application
+   boilerplate5                           https://html5boilerplate.com/
+   modernizr                              http://modernizr.com
+   jQuery 2.1.4                           http://jquery.com/
+      jquery-autocomplete-multiselect     http://www.jqueryscript.net/form/jQuery-jQuery-UI-Plugin-For-Simle-Tokenized-Autocomplete-Autocomplete-Multiselect.html
+      jquery-scrollstop-master            https://github.com/ssorallen/jquery-scrollstop
+      jQuery-Timepicker-Addon-master      http://trentrichardson.com/examples/timepicker/
+      jQueryUI 1.11.4                     http://jqueryui.com/
+         jquery.ui.touch-punch            http://touchpunch.furf.com/
+   yaMD5                                  https://github.com/gorhill/yamd5.js
+   fontello                               http://fontello.com/
+         
+Ordnerstruktur:
+http/
+   3rdParty/                           Framework und Plugins von anderen Entwicklern
+   tools/                              Werkzeuge zum compilieren von css und JS
+   src/                                Die Quelldateien für das WebIf
+   
+      css/
+         theme/                        Hier können verschiedene themes definiert werden
+            default.less               Diese Datei ist der Startpunkt für ein theme und ist eine import-list von mehreren Stylesheetdateien, 
+                                       die per less zu eine gesamt-css-datei compiliert werden     
+         epgd.less                     Das ist das eigentliche css für das webIf
+         
+      js/
+         0_translate.js                default-ressourcendatei; diese kann dann mal in mehreren Sprachen übersetzt werden und sollte dann 
+                                       unter www/lang abgelegt werden. Zur Zeit aber noch nicht implementiert
+         main.js                       Haupdatei, die allgemeine Funktionen bereitstellt und die Seite initialisiert
+         pages.editChannels.js         Bearbeiten der Kanallisten usw.
+         pages.help.js                 die Hilfeseite
+         pages.magazine.js             stellt das aktuelle Programm als Magazin dar
+         pages.now.js                  zeigt alle aktuell laufenden Sendungen an
+         pages.profile.js              Bearbeiten von Benutzerprofilen
+         pages.search.js               Suchseite
+         pages.timer.js                Timer erstellen und bearbeiten
+         vdr.js                        Funktionen für den/die VDR
+         
+      lang/                            Hier liegen für jede Sprache die Sprach-Ressourcendateien (de.js), die dann hinter her mal währen der Laufzeit
+                                       gewechselt werden kann(noch nicht implementiert).
+                                       Zusätzlich gibt es dann noch die Hilfe-Dateien (hilfe.html) pro Sprache.
+
+      build.sh                         baut aus allen Files innerhalb von js/ eine gesamt Javascriptdatei -> www/epgd.js
+      build-common.sh                  baut aus allen benötigten 3rdParty-scripten eine gesamt Javascriptdatei -> www/common.js
+      
+   www/                                Diese Verzeichnis wird durch make normalerweise nach /var/epgd/www kopiert
+      images/                          Bilder, die für das webIf benötigt werden, teilweise auch aus jquery-ui
+      font/                            Font-dateien für die Icons
+      lang/                            Sprachabhängige Dateien
+         hilfe.html                    deutsche Hilfe Datei
+         de.js                         deutsche Sprach-Ressourcendatei
+         
+      common.js                        gemergte Datei aus 3rdParty-Scripten
+      epgd.css                         compilierte Stylesheet-Datei
+      epgd.js                          gemergte Datei aus allen src-js-scripten
+      favicon.ico
+      index.html                       Hauptdatei für das WebIf
+   
+   custom.css                          optional, wenn diese Datei existiert, wird sie an die epgd.css angehangen. Darin kann dann css überschrieben werden.
+                                       Achtung, bitte darauf achten, dass die Datei UTF OHNE BOM kodiert ist.
+   dev-watch.sh                        Kann zum Entwickeln aufgerufen werden. Diese Datei überwacht per inotifywait die sourcen-Dateien auf Änderunegn
+                                       und compiliert/builded bei Änderungen die Dateien und kopiert die Dateien nach /var/epgd/www. 
+                                       Vorraussetzung dafür ist ein installiertes Rhino.
+   
+Entwicklung:
+============================================================================================================================
+Wenn Änderungen an den src/js Dateien gemacht werden, muss anschliessend immer "make core" aufgerufen werden 
+und dann die erstellte Datei www/epgd.js nach /var/epgd/www kopiert werden. 
+Bei Änderungen an den less Dateien müssen diese compiliert werden "make style" und die dann die erstellte Datei www/epgd.css nach /var/epgd/www kopiert werden.
+Um den Entwicklungsprozess zu erleichtern, gibt es die Datei dev-watch.sh die man in einer Konsole aufrufen kann. 
+
+
+
