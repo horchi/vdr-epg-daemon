@@ -29,9 +29,9 @@ const char* realm = "Maintenance";
 // EPG Http Daemon
 //***************************************************************************
 
-int cEpgHttpd::shutdown = no;
-cEpgHttpd* cEpgHttpd::singleton = 0;
-const char* confDir = (char*)confDirDefault;
+bool cEpgHttpd::shutdown {false};
+cEpgHttpd* cEpgHttpd::singleton {};
+const char* confDir {(char*)confDirDefault};
 
 //***************************************************************************
 // Rights Management
@@ -1644,7 +1644,7 @@ int cEpgHttpd::performHttpGet(MHD_Connection* tcp, const char* inurl, MemoryStru
 
 int cEpgHttpd::performPostData(const char* url, MemoryStruct* data)
 {
-   int statusCode = MHD_HTTP_OK;;
+   int statusCode = MHD_HTTP_OK;
    json_t* response = json_object();
    json_error_t error;
    json_t* jInData = json_loads(data->memory, 0, &error);

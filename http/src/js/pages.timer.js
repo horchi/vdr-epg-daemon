@@ -136,7 +136,7 @@ epgd.sortTable.prototype = {
             tr = this.trs[l];
             hide = '';
             for (i in cells) {
-                if (tr.cells[i].innerHTML.toLowerCase().indexOf(cells[i][0]) == -1) 
+                if (tr.cells[i].innerHTML.toLowerCase().indexOf(cells[i][0]) == -1)
                     hide = 'none';
                 else
                     cells[i][1]++;
@@ -191,7 +191,7 @@ epgd.timerListBase = epgd.utils.inherits(function (options, dialog) {
     if (!options.conSel) options.conSel = '#content';//'#tabCon';
     if (!options.empty) options.empty = epgd.tr.pages.timerList.empty;
     epgd.sortTable.call(this,options);
-}, epgd.sortTable);                  
+}, epgd.sortTable);
 epgd.timerListBase.prototype.getTable = function () {
     var tr = epgd.tr.pages.timerList;
     return '<table id="timerList" class="timerTable"><thead><tr><th style="min-width:120px">' + epgd.tr.channel + this.sortIcons
@@ -409,7 +409,7 @@ epgd.searchResultList.prototype.update = function (d) {
                 timerList.showHead();
             }
             epgd.utils.loader.close();
-            timerList.dialog && timerList.dialog.resize && window.setTimeout(function(){timerList.dialog.resize();},100); 
+            timerList.dialog && timerList.dialog.resize && window.setTimeout(function(){timerList.dialog.resize();},100);
         });
     },true);
 };
@@ -470,11 +470,21 @@ epgd.pages.timerList = new epgd.timerListBase({
     addNew: true,
     right: epgd.rights.umTimer
 }, new epgd.timerDialog());
+
 // Küzlich erledigte Timer
 epgd.pages.timersDone = new epgd.timerListBase({
     updateUrl: 'data/timers?state=D,F,E&action=A',
+    saveUrl: 'data/delete-timerjobs',
     right: epgd.rights.umTimer
 });
+epgd.pages.timersDone.editIcons= '<span class="iAsButton i-trash edit" title="' + epgd.tr.del + '"></span>';
+
+// Küzlich erledigte Timer
+//epgd.pages.timersDone = new epgd.timerListBase({
+//    updateUrl: 'data/timers?state=D,F,E&action=A',
+//    right: epgd.rights.umTimer
+//});
+
 epgd.pages.timersDone.getTable = function () {
     return epgd.timerListBase.prototype.getTable.call(this).replace('data-defaultSort="1"', 'data-defaultSort="-1"')
 }
@@ -496,7 +506,7 @@ epgd.pages.timerListDone.getTable = function () {
        + '</th></tr></thead><tbody></tbody></table>';
 }
 epgd.pages.timerListDone.action = function ($el, iconName,data) {
-    if (iconName == 'detail' && !$el[0].eventDetail) 
+    if (iconName == 'detail' && !$el[0].eventDetail)
        $el[0].eventDetail = new epgd.doneTimerDetail($el.parent()[0]);
     epgd.timerListBase.prototype.action.call(this, $el, iconName, data);
 }
@@ -505,7 +515,7 @@ epgd.pages.timerListDone.stateIcons = {
     'F': '<div class="i-warning">' + epgd.tr.pages.timerList.doneStates.F + '</div>',          // Aufnahme fehlgeschlagen
     'f': '<div class="i-warning">' + epgd.tr.pages.timerList.doneStates.f + '</div>',          // Timer konnte nicht erstellt werden
     'R': '<div class="i-ok">' + epgd.tr.pages.timerList.doneStates.R + '</div>',               // Aufnahme fertig
-    'C': '<div class="i-buffer">' + epgd.tr.pages.timerList.doneStates.C + '</div>',         // Timer bereits erstellt 
+    'C': '<div class="i-buffer">' + epgd.tr.pages.timerList.doneStates.C + '</div>',         // Timer bereits erstellt
     'Q': '<div class="i-clock">' + epgd.tr.pages.timerList.doneStates.Q + '</div>'             // Timer in Vorbereitung
 }
 epgd.pages.timerListDone.update = function () {
@@ -741,4 +751,3 @@ epgd.pages.messageList.action = function ($el, iconName, data) {
     }
     return epgd.timerListBase.prototype.action.call(this, $el, iconName, data);
 }
-

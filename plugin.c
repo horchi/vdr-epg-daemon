@@ -17,7 +17,6 @@ PluginLoader::PluginLoader(const char* name, Plugin* p)
 {
    fileName = strdup(name);
    plugin = p;    // normally 0, set for testing only
-   handle = 0;
 }
 
 PluginLoader::~PluginLoader()
@@ -36,7 +35,7 @@ int PluginLoader::load()
 
    tell(0, "Loading plugin: %s", fileName);
 
-   if (handle) 
+   if (handle)
    {
       tell(0, "Warning: Attempt to load plugin '%s' twice!", fileName);
       return fail;
@@ -46,7 +45,7 @@ int PluginLoader::load()
    handle = dlopen(fileName, RTLD_NOW);
    error = dlerror();
 
-   if (!error) 
+   if (!error)
    {
       void *(*creator)(void);
 
@@ -60,6 +59,6 @@ int PluginLoader::load()
 
    if (error)
       tell(0, "Error: %s", error);
-   
+
    return plugin ? success : fail;
 }

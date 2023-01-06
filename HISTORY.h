@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.2.4"
-#define VERSION_DATE "12.10.2022"
+#define _VERSION     "1.2.5"
+#define VERSION_DATE "06.01.2023"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,11 @@
 /*
  * ------------------------------------
  *
+
+2023-01-06: version 1.2.5 (horchi)
+   - bugfix: Fixed delete button of page 'Timer' -> 'kürzliche Aufträge'
+   - bugfix: Fixed compile problem (again)
+
 2022-10-12: version 1.2.4 (horchi)
    - bugfix: Fixed compile problem
 

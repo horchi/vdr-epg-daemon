@@ -22,10 +22,10 @@
 // Class cEpgd
 //***************************************************************************
 
-int cEpgd::shutdown = no;
-int cEpgd::epgTrigger = no;
-int cEpgd::searchTimerTrigger = no;
-int cEpgd::recTableFixTrigger = no;
+bool cEpgd::shutdown {false};
+bool cEpgd::epgTrigger {false};
+bool cEpgd::searchTimerTrigger {false};
+bool cEpgd::recTableFixTrigger {false};
 
 //***************************************************************************
 // Signal Handler
@@ -49,72 +49,13 @@ void cEpgd::triggerF(int aSignal)
 
 cEpgd::cEpgd()
 {
-   const char* lang;
-
-   selectAllMap = 0;
-   selectMapByUpdFlg = 0;
-   selectMapByExt = 0;
-   selectByCompTitle = 0;
-   selectMaxUpdSp = 0;
-   selectDistCompname = 0;
-   selectByCompName = 0;
-   selectByCompNames = 0;
-   selectMaxMapOrd = 0;
-   selectMapOrdOf = 0;
-   updateEpisodeAtEvents = 0;
-   updateScrReference = 0;
-   selectNewRecordings = 0;
-   countNewRecordings = 0;
-   selectRecordingEvent = 0;
-   selectRecOtherClient = 0;
-   countDvbChanges = 0;
-   selectActiveVdrs = 0;
-   selectWebUsers = 0;
-   cleanupTimerActions = 0;
-   selectNotAssumedTimers = 0;
-
-   procMergeEpg = 0;
-   procUser = 0;
-
-   connection = 0;
-
-   vdrDb = 0;
-   eventsDb = 0;
-   useeventsDb = 0;
-   fileDb = 0;
-   imageRefDb = 0;
-   imageDb = 0;
-   episodeDb = 0;
-   mapDb = 0;
-   compDb = 0;
-   parameterDb = 0;
-   recordingListDb = 0;
-   timerDb = 0;
-   messageDb = 0;
-
-   // thread / update control
-
-   connection = 0;
-   fullupdate = no;
-   fullreload = no;
    nextUpdateAt = time(0) + 10;
-   lastUpdateAt = 0;
-   lastMergeAt = 0;
-
-   // search timer
-
    search = new cSearchTimer((cFrame*)this);
 
-   // ..
+   // setup xml lib
 
    xmlSubstituteEntitiesDefault(1);
    xmlLoadExtDtdDefaultValue = 1;
-   withutf8 = no;
-
-   // scraper stuff
-
-   tvdbManager = 0;
-   movieDbManager = 0;
 
    // create global cCurl instance
 
@@ -132,7 +73,7 @@ cEpgd::cEpgd()
    // #TODO - did we have to use LC_ALL at least for strftime ?!!
 
    setlocale(LC_CTYPE, "");
-   lang = setlocale(LC_CTYPE, 0);  // 0 for query the setting
+   const char* lang = setlocale(LC_CTYPE, 0);  // 0 for query the setting
 
    if (lang)
    {
@@ -180,8 +121,8 @@ cEpgd::~cEpgd()
 
 int cEpgd::init()
 {
-   char* dictPath = 0;
-   int status;
+   char* dictPath {};
+   int status {success};
 
    // register at systems 'init' service
 
@@ -298,7 +239,7 @@ int cEpgd::initUuid()
 
 int cEpgd::atConfigItem(const char* Name, const char* Value)
 {
-   char* par;
+   char* par {};
    char* plug = strdup(Name);
 
    // config for plugin ?
@@ -397,15 +338,15 @@ cDbFieldDef changeCountDef("CHG_COUNT", "count(1)", cDBS::ffUInt, 0, cDBS::ftDat
 
 int cEpgd::initDb()
 {
-   int status = success;
-   int count = 0;
+   int status {success};
+   int count {0};
 
    if (!connection)
       connection = new cDbConnection();
 
    // -------------------------
 
-   static int initial = yes;
+   static bool initial {true};
 
    if (initial)
    {
@@ -1012,7 +953,7 @@ int cEpgd::initDb()
    if (status == success && EpgdConfig.maintanance)
    {
       time_t start = time(0);
-      int count = 0;
+      int count {0};
 
       cDbStatement sel(eventsDb);
       sel.build("select ");
@@ -1140,10 +1081,12 @@ const char* endOf(const char* buf, const char* token)
 
 int cEpgd::migrateFromDbApi4()
 {
-   int status = success;
+   int status {success};
 
    recordingListDb = new cDbTable(connection, "recordinglist");
-   if ((status = recordingListDb->open()) != success) return status;
+
+   if ((status = recordingListDb->open()) != success)
+      return status;
 
    tell(0, "Migration of table '%s' from version <= 4 ...", recordingListDb->TableName());
 
@@ -1216,7 +1159,7 @@ int cEpgd::migrateFromDbApi4()
 
 int cEpgd::migrateFromDbApi5()
 {
-   int status = success;
+   int status {success};
 
    recordingListDb = new cDbTable(connection, "recordinglist");
    if ((status = recordingListDb->open()) != success) return status;
@@ -1260,7 +1203,7 @@ int cEpgd::migrateFromDbApi5()
 
 int cEpgd::migrateFromDbApi6()
 {
-   int status = success;
+   int status {success};
 
    imageRefDb = new cDbTable(connection, "imagerefs");
    if ((status = imageRefDb->open()) != success) return status;
@@ -1306,9 +1249,8 @@ int cEpgd::migrateFromDbApi6()
 
 const char* getLine(const char* buf, const char* startChar = 0, const char* endChar = 0)
 {
-   static char line[100+TB];
-
-   const char* p;
+   static char line[100+TB] {};
+   const char* p {};
    int len = strlen(buf);
 
    if (startChar && strchr(buf, *startChar))
@@ -1333,7 +1275,7 @@ const char* getLine(const char* buf, const char* startChar = 0, const char* endC
 
 int cEpgd::tryFillEmptyRecTableFields()
 {
-   int status = success;
+   int status {success};
 
    recTableFixTrigger = no;
 
@@ -1350,8 +1292,8 @@ int cEpgd::tryFillEmptyRecTableFields()
       for (int f = select->find(); f; f = select->fetch())
       {
          const char* description = recordingListDb->getStrValue("DESCRIPTION");
-         const char* p = description;
-         const char* s = 0;
+         const char* p {description};
+         const char* s {};
 
          while (true)
          {
@@ -1414,12 +1356,12 @@ int cEpgd::tryFillEmptyRecTableFields()
 
 int cEpgd::checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* fp)
 {
-   char* file = 0;
-   char* param = 0;
-   int status = success;
-   char md5[100+TB] = "";
-   md5Buf md5New = "";
-   cDbProcedure* p = 0;
+   char* file {};
+   char* param {};
+   int status {success};
+   char md5[100+TB] {};
+   md5Buf md5New {};
+   cDbProcedure* p {};
 
    asprintf(&file, "%s.sql", name);
 
@@ -1465,10 +1407,10 @@ int cEpgd::checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* f
 
 int cEpgd::checkView(const char* name, const char* file)
 {
-   int status = success;
-   char md5[100+TB] = "";
-   md5Buf md5New = "";
-   char* param = 0;
+   int status {success};
+   char md5[100+TB] {};
+   md5Buf md5New  {};
+   char* param {};
 
    // create/check view
 
@@ -1510,7 +1452,7 @@ int cEpgd::checkView(const char* name, const char* file)
 
 int cEpgd::registerMe()
 {
-   char* v = 0;
+   char* v {};
 
    if (!dbConnected())
       return fail;
@@ -1680,14 +1622,14 @@ void cEpgd::scheduleAutoUpdate(int wait)
 
 void cEpgd::loop()
 {
-   time_t lastCheckAt = 0;
-   time_t lastUpdCheckAt = 0;
-   time_t lastRecCheckAt = 0;
-   time_t lastTccCheckAt = 0;
+   time_t lastCheckAt {0};
+   time_t lastUpdCheckAt {0};
+   time_t lastRecCheckAt {0};
+   time_t lastTccCheckAt {0};
 
-   shutdown = no;
+   shutdown = false;
 
-   // first run 10 seconds after start (if configured)
+   // on checkInitial run 10 seconds after start
 
    scheduleAutoUpdate(EpgdConfig.checkInitial ? 10 : 0);
 
@@ -1702,7 +1644,6 @@ void cEpgd::loop()
       while (!epgTrigger && !doShutDown() && nextUpdateAt > time(0))
       {
          sleep(1);
-
          cSystemNotification::check();
 
          if (lastCheckAt < time(0) - 60)
@@ -1934,7 +1875,7 @@ void cEpgd::loop()
 
 int cEpgd::checkConnection()
 {
-   static int retry = 0;
+   static int retry {0};
 
    // check connection
 
@@ -1976,7 +1917,7 @@ int cEpgd::downloadFile(const char* url, int& size, MemoryStruct* data, int time
 
 int cEpgd::updateSearchTimers(int force, const char* reason)
 {
-   int hits = 0;
+   int hits {0};
 
    // check existing, pending timers against updated epg
 
@@ -2023,9 +1964,7 @@ int cEpgd::updateSearchTimers(int force, const char* reason)
 
 int cEpgd::update()
 {
-   Statistic stat;
-
-   memset(&stat, 0, sizeof(Statistic));
+   Statistic stat {};
 
    cSystemNotification::notify(evStatus, "STATUS=%s %s", "Busy, started", fullupdate ? "Full-Update" : fullreload ? "Reload" : "Update");
 
@@ -2065,8 +2004,8 @@ xmlDocPtr cEpgd::transformXml(const char* buffer, int size,
                               xsltStylesheetPtr stylesheet,
                               const char* fileRef)
 {
-   xmlDocPtr doc, transformedDoc = 0;
-   int readOptions = 0;
+   xmlDocPtr doc {}, transformedDoc {};
+   int readOptions {0};
 
 #if LIBXML_VERSION >= 20900
    readOptions |=  XML_PARSE_HUGE;
@@ -2093,11 +2032,11 @@ xmlDocPtr cEpgd::transformXml(const char* buffer, int size,
 
 int cEpgd::parseEvent(cDbRow* event, xmlNode* node)
 {
-   const char* name;
-   char* content;
-   char* images = 0;
-   char* imagetype = 0;
-   int imgCnt = 0;
+   const char* name {};
+   char* content {};
+   char* images {};
+   char* imagetype {};
+   int imgCnt  {0};
    string comp;
 
    cSystemNotification::check();
@@ -2184,11 +2123,11 @@ int cEpgd::parseEvent(cDbRow* event, xmlNode* node)
 int cEpgd::storeImageRefs(tEventId evtId, const char* source, const char* images,
                           const char* ext, const char* fileRef)
 {
-   char* next;
-   char* image;
-   int lfn = 0;
+   char* next {};
+   char* image {};
+   int lfn {0};
    char* imagesCsv = strdup(images);
-   int count = 0;
+   int count {0};
 
    // #TODO limit here to EpgdConfig.maximagesperevent
 
@@ -2248,12 +2187,12 @@ int cEpgd::storeImageRefs(tEventId evtId, const char* source, const char* images
 int cEpgd::getPictures()
 {
    time_t start = time(0);
-   int count = 0;
-   int notFound = 0;
-   int total = 0;
-   unsigned int bytes = 0;
+   int count {0};
+   int notFound {0};
+   int total {0};
+   unsigned int bytes {0};
    MemoryStruct data;
-   int rows = -1;
+   int rows {-1};
 
    if (!EpgdConfig.getepgimages)
       return done;
@@ -2461,8 +2400,8 @@ int cEpgd::cleanupPictures()
 
 int cEpgd::storeToFs(MemoryStruct* data, const char* filename, const char* subPath)
 {
-   char* path = 0;
-   char* outfile = 0;
+   char* path {};
+   char* outfile {};
 
    asprintf(&path, "%s/%s", EpgdConfig.cachePath, subPath);
    chkDir(path);
@@ -2482,8 +2421,8 @@ int cEpgd::storeToFs(MemoryStruct* data, const char* filename, const char* subPa
 
 int cEpgd::loadFromFs(MemoryStruct* data, const char* filename, const char* subPath)
 {
-   char* path = 0;
-   char* infile = 0;
+   char* path {};
+   char* infile {};
 
    cSystemNotification::check();
 
@@ -2674,7 +2613,7 @@ int cEpgd::scrapNewEvents()
    tvdbManager->ResetBytesDownloaded();
 
    int seriesTotal = seriesToScrap.size();
-   int seriesCur = 0;
+   int seriesCur {0};
 
    tell(0, "%d new series events to scrap in db", seriesTotal);
 
@@ -2720,7 +2659,7 @@ int cEpgd::scrapNewEvents()
       return fail;
 
    int moviesTotal = moviesToScrap.size();
-   int movieCur = 0;
+   int movieCur {0};
 
    tell(0, "%d new movies to scrap in db", moviesTotal);
 
@@ -2767,7 +2706,7 @@ int cEpgd::scrapNewEvents()
 
    if (dbConnected())
    {
-      time_t lastScrRefUpdate = 0;
+      time_t lastScrRefUpdate {0};
 
       getParameter("epgd", "lastScrRefUpdate", lastScrRefUpdate);
 
@@ -2814,7 +2753,7 @@ int cEpgd::cleanupSeriesAndMovies()
 
 void cEpgd::scrapNewRecordings(int count)
 {
-   int total = 0;
+   int total {0};
 
    if (!tvdbManager || !movieDbManager)
       return ;
@@ -2828,10 +2767,10 @@ void cEpgd::scrapNewRecordings(int count)
 
    for (int res = selectNewRecordings->find(); res; res = selectNewRecordings->fetch())
    {
-      int seriesId = 0;
-      int episodeId = 0;
-      int movieId = 0;
-      int found = no;
+      int seriesId {0};
+      int episodeId {0};
+      int movieId {0};
+      bool found {false};
 
       string recPath = recordingListDb->getStrValue("PATH");
       long starttime = recordingListDb->getIntValue("STARTTIME");
@@ -3087,7 +3026,7 @@ int cEpgd::triggerVdrs(const char* trg, const char* plug, const char* options)
 
       if (cl.open() == success)
       {
-         char* command = 0;
+         char* command {};
          cList<cLine> result;
 
          if (!isEmpty(plug))
@@ -3119,7 +3058,7 @@ int cEpgd::triggerVdrs(const char* trg, const char* plug, const char* options)
 
 int cEpgd::wakeupVdr(const char* uuid)
 {
-   int status = fail;
+   int status {fail};
 
    vdrDb->clear();
    vdrDb->setValue("UUID", uuid);
@@ -3158,7 +3097,7 @@ struct cTccTransponder
 
 int cEpgd::sendTccTestMail()
 {
-   int conflicts = 0;
+   int conflicts {0};
    std::string mailBody;
 
    for (int tt = 1; tt < 3; tt++)
@@ -3236,7 +3175,7 @@ int cEpgd::sendTccTestMail()
 
 int cEpgd::sendTccMail(string& mailBody)
 {
-   static time_t lastMailAt = 0;
+   static time_t lastMailAt {0};
 
    const char* htmlHead =
       "<head>"
@@ -3246,7 +3185,7 @@ int cEpgd::sendTccMail(string& mailBody)
 
    // string subject = "EPGD: Timer conflicts";
    // string receivers;
-   char* html = 0;
+   char* html {};
 
    // max one mail per hour
 

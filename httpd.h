@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef __EPG_HTTPD_H
-#define __EPG_HTTPD_H
+#pragma once
 
 #include <sys/types.h>
 #include <arpa/inet.h>
@@ -109,9 +108,9 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int loop();
       int atConfigItem(const char* Name, const char* Value);
 
-      int doShutDown()               { return shutdown; }
+      bool doShutDown()               { return shutdown; }
 
-      static void downF(int signal)  { tell(0, "Shutdown triggered with signal %d", signal); shutdown = yes; }
+      static void downF(int signal)  { tell(0, "Shutdown triggered with signal %d", signal); shutdown = true; }
 
    protected:
 
@@ -327,7 +326,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
 
       // static
 
-      static int shutdown;
+      static bool shutdown;
       static cEpgHttpd* singleton;
       static UserRight userrights[];
 
@@ -382,6 +381,3 @@ class cHttpService
       MHD_Daemon* daemon;
 };
 */
-
-//***************************************************************************
-#endif // __EPG_HTTPD_H

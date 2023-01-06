@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef __EPGD_H
-#define __EPGD_H
+#pragma once
 
 #include <libxslt/transform.h>
 #include <libxslt/xsltutils.h>
@@ -23,10 +22,8 @@
 #include "lib/searchtimer.h"
 
 #include "epgdconfig.h"
-
 #include "series.h"
 #include "levenshtein.h"
-
 #include "tvdbmanager.h"
 #include "moviedbmanager.h"
 
@@ -42,10 +39,10 @@ extern const char* confDir;
 
 struct Statistic
 {
-   int bytes;
-   int files;
-   int rejected;
-   int nonUpdates;
+   int bytes {0};
+   int files {0};
+   int rejected {0};
+   int nonUpdates {0};
 };
 
 class cEpgd;
@@ -58,7 +55,7 @@ class Plugin
 {
    public:
 
-      Plugin()          { obj = 0; utf8 = yes; }
+      Plugin()          {}
       virtual ~Plugin() {}
 
       virtual int init(cEpgd* aObject, int aUtf8)
@@ -75,7 +72,6 @@ class Plugin
       virtual int atConfigItem(const char* Name, const char* Value) = 0;
       virtual const char* getSource() = 0;
       virtual int hasSource(const char* source) { return strcmp(getSource(), source) == 0; }
-
       virtual int getPicture(const char* imagename, const char* fileRef, MemoryStruct* data) = 0;
 
       virtual char* fsNameOfPicture(const char* imagename)  // caller has to free the result!
@@ -86,16 +82,14 @@ class Plugin
       }
 
       virtual int processDay(int day, int fullupdate, Statistic* stat) = 0;
-
       virtual int cleanupBefore()  { return done; }
       virtual int cleanupAfter()   { return done; }
-
       virtual int ready() = 0;
 
    protected:
 
-      cEpgd* obj;
-      int utf8;
+      cEpgd* obj {};
+      bool utf8 {true};
 };
 
 //***************************************************************************
@@ -114,9 +108,9 @@ class PluginLoader
 
    private:
 
-      char* fileName;
-      void* handle;
-      Plugin* plugin;
+      char* fileName {};
+      void* handle {};
+      Plugin* plugin {};
 };
 
 //***************************************************************************
@@ -144,9 +138,9 @@ class cEpgd : public cFrame, public cSystemNotification
 
       // static stuff
 
-      static void downF(int signal)     { tell(0, "Shutdown triggered with signal %d", signal); shutdown = yes; }
+      static void downF(int signal)     { tell(0, "Shutdown triggered with signal %d", signal); shutdown = true; }
       static void triggerF(int aSignal);
-      static int doShutDown()           { return shutdown; }
+      static bool doShutDown()           { return shutdown; }
 
       int wakeupVdr(const char* uuid);
       int triggerVdrs(const char* trg, const char* plug = 0, const char* options = 0);
@@ -161,49 +155,49 @@ class cEpgd : public cFrame, public cSystemNotification
 
       // public for plugins access
 
-      cDbConnection* connection;
+      cDbConnection* connection {};
 
-      cDbTable* eventsDb;
-      cDbTable* useeventsDb;
-      cDbTable* compDb;
-      cDbTable* fileDb;
-      cDbTable* imageDb;
-      cDbTable* imageRefDb;
-      cDbTable* episodeDb;
-      cDbTable* mapDb;
-      cDbTable* vdrDb;
-      cDbTable* parameterDb;
-      cDbTable* recordingListDb;
-      cDbTable* timerDb;
-      cDbTable* messageDb;
+      cDbTable* eventsDb {};
+      cDbTable* useeventsDb {};
+      cDbTable* compDb {};
+      cDbTable* fileDb {};
+      cDbTable* imageDb {};
+      cDbTable* imageRefDb {};
+      cDbTable* episodeDb {};
+      cDbTable* mapDb {};
+      cDbTable* vdrDb {};
+      cDbTable* parameterDb {};
+      cDbTable* recordingListDb {};
+      cDbTable* timerDb {};
+      cDbTable* messageDb {};
 
-      cDbStatement* selectAllMap;
-      cDbStatement* selectMapByUpdFlg;
-      cDbStatement* selectMapByExt;
-      cDbStatement* selectByCompTitle;
-      cDbStatement* selectMaxUpdSp;
-      cDbStatement* selectDistCompname;
-      cDbStatement* selectByCompName;
-      cDbStatement* selectByCompNames;
-      cDbStatement* updateEpisodeAtEvents;
-      cDbStatement* updateScrReference;
-      cDbStatement* selectMaxMapOrd;
-      cDbStatement* selectMapOrdOf;
-      cDbStatement* countDvbChanges;
-      cDbStatement* selectNewRecordings;
-      cDbStatement* countNewRecordings;
-      cDbStatement* selectRecordingEvent;
-      cDbStatement* selectRecOtherClient;
-      cDbStatement* selectActiveVdrs;
-      cDbStatement* selectWebUsers;
-      cDbStatement* cleanupTimerActions;
-      cDbStatement* selectNotAssumedTimers;
+      cDbStatement* selectAllMap {};
+      cDbStatement* selectMapByUpdFlg {};
+      cDbStatement* selectMapByExt {};
+      cDbStatement* selectByCompTitle {};
+      cDbStatement* selectMaxUpdSp {};
+      cDbStatement* selectDistCompname {};
+      cDbStatement* selectByCompName {};
+      cDbStatement* selectByCompNames {};
+      cDbStatement* updateEpisodeAtEvents {};
+      cDbStatement* updateScrReference {};
+      cDbStatement* selectMaxMapOrd {};
+      cDbStatement* selectMapOrdOf {};
+      cDbStatement* countDvbChanges {};
+      cDbStatement* selectNewRecordings {};
+      cDbStatement* countNewRecordings {};
+      cDbStatement* selectRecordingEvent {};
+      cDbStatement* selectRecOtherClient {};
+      cDbStatement* selectActiveVdrs {};
+      cDbStatement* selectWebUsers {};
+      cDbStatement* cleanupTimerActions {};
+      cDbStatement* selectNotAssumedTimers {};
 
       cDbValue changeCount;
       cDbValue newRecCount;
 
-      cDbProcedure* procMergeEpg;
-      cDbProcedure* procUser;
+      cDbProcedure* procMergeEpg {};
+      cDbProcedure* procUser {};
 
    private:
 
@@ -267,26 +261,23 @@ class cEpgd : public cFrame, public cSystemNotification
 
       // data
 
-      int withutf8;
+      bool withutf8 {false};
 
-      time_t nextUpdateAt;
-      time_t lastUpdateAt;
-      time_t lastMergeAt;
+      time_t nextUpdateAt {0};
+      time_t lastUpdateAt {0};
+      time_t lastMergeAt {0};
 
-      int fullupdate;
-      int fullreload;
+      bool fullupdate {false};
+      bool fullreload {false};
 
-      static int shutdown;
-      static int epgTrigger;
-      static int searchTimerTrigger;
-      static int recTableFixTrigger;
+      static bool shutdown;
+      static bool epgTrigger;
+      static bool searchTimerTrigger;
+      static bool recTableFixTrigger;
 
       std::vector<PluginLoader*> plugins;
 
-      cTVDBManager* tvdbManager;
-      cMovieDBManager* movieDbManager;
-      cSearchTimer* search;
+      cTVDBManager* tvdbManager {};
+      cMovieDBManager* movieDbManager {};
+      cSearchTimer* search {};
 };
-
-//***************************************************************************
-#endif //__EPGD_H

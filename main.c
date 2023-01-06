@@ -11,8 +11,8 @@
 
 #include "epgd.h"
 
-const char* confDir = (char*)confDirDefault;
-const char* logPrefix = LOG_PREFIX;
+const char* confDir {confDirDefault};
+const char* logPrefix {LOG_PREFIX};
 
 void showUsage()
 {

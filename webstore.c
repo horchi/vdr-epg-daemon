@@ -114,11 +114,12 @@ int cEpgHttpd::deleteTimerJobs(json_t* jInData, json_t* response)
 
    for (int i = 0; i < length; ++i)
    {
-      json_t* obj = json_array_get(idArray, i);      long id = json_integer_value(obj);
+      json_t* obj = json_array_get(idArray, i);
+      long id = json_integer_value(obj);
 
       // delete olny if not assumed in meanwhile!
 
-      timerDb->deleteWhere("id = %ld and action != 'A'", id);  // taAssumed
+      timerDb->deleteWhere("id = %ld and (action != 'A' or state = 'E')", id);  // taAssumed
    }
 
    return buildResponse(response, MHD_HTTP_OK, "done");
@@ -132,8 +133,8 @@ int cEpgHttpd::deleteTimerJobs(json_t* jInData, json_t* response)
 
 int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
 {
-   int hasEvent = no;
-   long doneid = na;
+   bool hasEvent {false};
+   long doneid {na};
 
    json_t* idArray = json_object_get(jInData, "delete");
 
