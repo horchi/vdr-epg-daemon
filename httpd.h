@@ -33,24 +33,6 @@
 
 extern const char* confDir;
 
-/*
-enum mediaType
-{
-   mtBanner1,       // 0
-   mtBanner2,       // 1
-   mtBanner3,       // 2
-   mtPoster1,       // 3
-   mtPoster2,       // 4
-   mtPoster3,       // 5
-   mtSeasonPoster,  // 6
-   mtFanart1,       // 7
-   mtFanart2,       // 8
-   mtFanart3,       // 9
-   mtEpisodePic,    // 10
-   mtActorThumb     // 11
-};
-*/
-
 //***************************************************************************
 // Http Tools
 //***************************************************************************

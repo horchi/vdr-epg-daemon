@@ -25,6 +25,9 @@
 #include <regex.h>
 #include <limits.h>
 
+#include <algorithm>
+#include <regex>
+
 #ifdef USELIBARCHIVE
 #  include <archive.h>
 #  include <archive_entry.h>
@@ -61,8 +64,8 @@ void tell(int eloquence, const char* format, ...)
    }
 #endif
 
-   const int sizeBuffer = 100000;
-   char t[sizeBuffer+100]; *t = 0;
+   const int sizeBuffer {100000};
+   char t[sizeBuffer+100] {};
    va_list ap;
 
    va_start(ap, format);
@@ -83,10 +86,7 @@ void tell(int eloquence, const char* format, ...)
 
       tm* tm = localtime(&tp.tv_sec);
 
-      sprintf(buf,"%2.2d:%2.2d:%2.2d,%3.3ld ",
-              tm->tm_hour, tm->tm_min, tm->tm_sec,
-              tp.tv_usec / 1000);
-
+      sprintf(buf,"%2.2d:%2.2d:%2.2d,%3.3ld ", tm->tm_hour, tm->tm_min, tm->tm_sec, tp.tv_usec / 1000);
       printf("%s %s\n", buf, t);
    }
    else
@@ -453,6 +453,24 @@ char* allTrim(char* buf)
    return lTrim(rTrim(buf));
 }
 
+
+//*************************************************************************
+// All At Position
+//*************************************************************************
+
+void trimAt(std::string buffer, std::ptrdiff_t pos)
+{
+   if (buffer.size() < (ulong)std::abs(pos))
+      return ;
+
+   if (pos < 0 && ((long)buffer.size() + pos) >= 0)
+      buffer.erase(buffer.size() - pos);
+   else if (pos >= 0 && buffer.size() > (ulong)pos)
+      buffer.erase(pos);
+
+   return ;
+}
+
 std::string strReplace(const std::string& what, const std::string& with, const std::string& subject)
 {
    std::string str = subject;
@@ -514,6 +532,55 @@ std::string num2Str(int num)
 }
 
 //***************************************************************************
+// Split String to Vector
+//***************************************************************************
+
+std::vector<std::string> split(const std::string& str, char delim, std::vector<std::string>* strings)
+{
+   std::vector<std::string> _strings;
+
+   if (!strings)
+      strings = &_strings;
+
+   size_t start;
+   size_t end {0};
+
+   while ((start = str.find_first_not_of(delim, end)) != std::string::npos)
+   {
+      end = str.find(delim, start);
+      std::string s = std::regex_replace(str.substr(start, end - start), std::regex("^\\s+"), std::string(""));
+      strings->push_back(std::regex_replace(s, std::regex("\\s+$"), std::string("")));
+   }
+
+   return *strings;
+}
+
+//***************************************************************************
+// Get String Before
+//***************************************************************************
+
+std::string getStringBefore(std::string str, const char* begin)
+{
+   size_t pos = str.find(begin);
+   return str.substr(0, pos);
+}
+
+//***************************************************************************
+// Get String Between
+//***************************************************************************
+
+std::string getStringBetween(std::string str, const char* begin, const char* end)
+{
+   size_t first = str.find(begin);
+   size_t last = str.find(end, first);
+
+   if (first == str.npos || last == str.npos)
+      return "";
+
+   return str.substr(first+1, last-(first+1));
+}
+
+//***************************************************************************
 // Long to Pretty Time
 //***************************************************************************
 
@@ -535,6 +602,15 @@ std::string l2pDate(time_t t)
    strftime(txt, sizeof(txt), "%d.%m.%Y", tmp);
 
    return std::string(txt);
+}
+
+time_t str2LTime(const char* tString, const char* fmt)
+{
+   struct tm tm;
+   memset(&tm, 0, sizeof(tm));
+   strptime(tString, "%Y-%m-%d %H:%M:%S", &tm);
+
+   return mktime(&tm);
 }
 
 //***************************************************************************
@@ -1934,4 +2010,28 @@ int urlUnescape(char* dst, const char* src, int normalize)
    } while(ch);
 
    return (dst - org_dst) - 1;
+}
+
+//***************************************************************************
+// Get Backtrace
+//***************************************************************************
+
+#include <execinfo.h>
+
+std::string getBacktrace(size_t steps)
+{
+   std::string buffer;
+
+   void** array = new void*[steps];
+   size_t size = backtrace(array, steps);
+   char** strings = backtrace_symbols(array, size);
+
+   // buffer.appendf("System::backtrace() returned (%d) addresses, if symbols missing link with -rdynamic\n", (int)size);
+
+   for (size_t i = 0; i < size; i++)
+      buffer += std::string(strings[i]) + "\n";
+
+   free(strings);
+
+   return buffer;
 }

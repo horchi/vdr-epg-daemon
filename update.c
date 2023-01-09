@@ -2515,7 +2515,6 @@ int cEpgd::processDay(int day, int fullupdate, Statistic* stat)
       if (p->ready())
       {
          tell(1, "Updating '%s' day today+%d now", p->getSource(), day);
-
          p->processDay(day, fullupdate, stat);
       }
    }
@@ -2532,7 +2531,7 @@ int cEpgd::initScrapers()
    int status;
    tvdbManager = new cTVDBManager();
 
-   if (!tvdbManager->ConnectScraper())
+   if (tvdbManager->connectScraper() != success)
    {
       tell(0, "Error while connecting tvdb scraper");
       return fail;
@@ -2591,7 +2590,8 @@ int cEpgd::scrapNewEvents()
 
    tell(0, "Scraping new series and episodes");
 
-   tvdbManager->SetServerTime();
+   /*
+   // tvdbManager->SetServerTime();
    tvdbManager->ResetBytesDownloaded();
    tvdbManager->UpdateSeries();
 
@@ -2600,6 +2600,7 @@ int cEpgd::scrapNewEvents()
 
    tell(0, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
         time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
+   */
 
    // ------------------------------
    // scrap new series in EPG
@@ -2612,21 +2613,19 @@ int cEpgd::scrapNewEvents()
    start = time(0);
    tvdbManager->ResetBytesDownloaded();
 
-   int seriesTotal = seriesToScrap.size();
    int seriesCur {0};
 
-   tell(0, "%d new series events to scrap in db", seriesTotal);
+   tell(0, "%zu new series events to scrap in db", seriesToScrap.size());
 
    for (vector<sSeriesResult>::iterator it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
    {
       seriesCur++;
-
       cSystemNotification::check();
 
       if (seriesCur % 10 == 0)
-         tell(0, "series episode %d / %d scraped...continuing scraping", seriesCur, seriesTotal);
+         tell(0, "Series episode %d / %zu scraped...continuing scraping", seriesCur, seriesToScrap.size());
 
-      tvdbManager->ProcessSeries(*it);
+      tvdbManager->processSeries(*it);
 
       if (doShutDown())
          break;
@@ -2635,11 +2634,11 @@ int cEpgd::scrapNewEvents()
          return fail;
    }
 
-   bytes = tvdbManager->GetBytesDownloaded();
-   mb = (double)bytes / 1024.0 / 1024.0;
+   int bytes = tvdbManager->GetBytesDownloaded();
+   double mb = (double)bytes / 1024.0 / 1024.0;
 
-   tell(0, "%d of %d series episodes scraped in %ld s, downloaded %.3f %cB",
-        seriesCur, seriesTotal, time(0) - start,
+   tell(0, "%d of %zu series episodes scraped in %ld s, downloaded %.3f %cB",
+        seriesCur, seriesToScrap.size(), time(0) - start,
         mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
 
    // ------------------------------
@@ -2886,7 +2885,7 @@ void cEpgd::scrapNewRecordings(int count)
          if (!found)
          {
             tell(1, "SCRAP: Nothing found in db, searching '%s' as series online", recTitle.c_str());
-            found = tvdbManager->SearchRecordingOnline(recTitle, recSubtitle, seriesId, episodeId);
+            found = tvdbManager->searchRecordingOnline(recTitle.c_str(), recSubtitle, seriesId, episodeId);
 
             if (found)
                tell(1, "SCRAP: Found '%s'/'%s' as series online, seriesId %d, episodeId %d",

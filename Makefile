@@ -48,10 +48,8 @@ endif
 OBJS += main.o update.o plugin.o epgdconfig.o channelmap.o series.o svdrpclient.o levenshtein.o episode.o
 OBJS += tvdbmanager.o moviedbmanager.o
 
-OBJS += tools/fuzzy.o tools/stringhelpers.o scraper/thetvdbscraper/thetvdbscraper.o
-OBJS += scraper/thetvdbscraper/tvdbseries.o scraper/thetvdbscraper/tvdbmirrors.o
-OBJS += scraper/thetvdbscraper/tvdbmedia.o scraper/thetvdbscraper/tvdbactor.o
-OBJS += scraper/thetvdbscraper/tvdbepisode.o
+OBJS += tools/fuzzy.o tools/stringhelpers.o scraper/thetvdbscraper/thetvdbscraper.o scraper/thetvdbscraper/tvdbv4.o
+OBJS += scraper/thetvdbscraper/tvdbseries.o
 OBJS += scraper/themoviedbscraper/themoviedbscraper.o scraper/themoviedbscraper/moviedbmovie.o
 OBJS += scraper/themoviedbscraper/moviedbactor.o
 
@@ -61,8 +59,11 @@ HTTPOBJS += epgdconfig.o webstore.o webdo.o webauth.o webtools.o httpd.o svdrpcl
 
 all: hlib $(TARGET) $(HTTPTARGET) plugins lv
 
+tvdb: hlib tvdb.c
+	$(CC) $(CFLAGS) $(DEFINES) tvdb.c -L./lib -lhorchi $(DLIBS) -o $@
+
 eptest: eptest.c episode.c
-	$(CC) $(DEFINES) eptest.c episode.c svdrpclient.c  -L./lib -lhorchi $(DLIBS) -o eptst
+	$(CC) $(DEFINES) eptest.c episode.c svdrpclient.c -L./lib -lhorchi $(DLIBS) -o $@
 
 hlib:
 	(cd lib && $(MAKE) lib)
@@ -151,18 +152,14 @@ SCRHEADER = tools/stringhelpers.h lib/curl.h
 
 tvdbmanager.o                                 : $(SCRHEADER) tvdbmanager.h tvdbmanager.c lib/epgservice.h lib/epgservice.c lib/db.h lib/db.c
 moviedbmanager.o                              : $(SCRHEADER) moviedbmanager.h moviedbmanager.c lib/epgservice.h lib/epgservice.c lib/db.h lib/db.c
-scraper/thetvdbscraper/thetvdbscraper.o       : $(SCRHEADER) scraper/thetvdbscraper/thetvdbscraper.h scraper/thetvdbscraper/thetvdbscraper.c scraper/thetvdbscraper/tvdbseries.h scraper/thetvdbscraper/tvdbmirrors.h
-scraper/thetvdbscraper/tvdbseries.o           : $(SCRHEADER) scraper/thetvdbscraper/tvdbseries.h scraper/thetvdbscraper/tvdbseries.c scraper/thetvdbscraper/tvdbmirrors.h scraper/thetvdbscraper/tvdbmedia.h scraper/thetvdbscraper/tvdbactor.h scraper/thetvdbscraper/tvdbepisode.h
-scraper/thetvdbscraper/tvdbmirrors.o          : $(SCRHEADER) scraper/thetvdbscraper/tvdbmirrors.h scraper/thetvdbscraper/tvdbmirrors.c
-scraper/thetvdbscraper/tvdbmedia.o            : $(SCRHEADER) scraper/thetvdbscraper/tvdbmedia.h scraper/thetvdbscraper/tvdbmedia.c scraper/thetvdbscraper/tvdbmirrors.h
-scraper/thetvdbscraper/tvdbactor.o            : $(SCRHEADER) scraper/thetvdbscraper/tvdbactor.h scraper/thetvdbscraper/tvdbactor.c scraper/thetvdbscraper/tvdbmirrors.h
-scraper/thetvdbscraper/tvdbepisodes.o         : $(SCRHEADER) scraper/thetvdbscraper/tvdbepisode.h scraper/thetvdbscraper/tvdbepisode.c scraper/thetvdbscraper/tvdbmirrors.h
+scraper/thetvdbscraper/tvdbv4.o               : $(SCRHEADER) scraper/thetvdbscraper/tvdbv4.c scraper/thetvdbscraper/tvdbv4.h
+scraper/thetvdbscraper/thetvdbscraper.o       : $(SCRHEADER) scraper/thetvdbscraper/thetvdbscraper.h scraper/thetvdbscraper/thetvdbscraper.c scraper/thetvdbscraper/tvdbseries.h
+scraper/thetvdbscraper/tvdbseries.o           : $(SCRHEADER) scraper/thetvdbscraper/tvdbseries.h scraper/thetvdbscraper/tvdbseries.c
 scraper/themoviedbscraper/themoviedbscraper.o : $(SCRHEADER) scraper/themoviedbscraper/themoviedbscraper.h scraper/themoviedbscraper/themoviedbscraper.c scraper/themoviedbscraper/moviedbmovie.h scraper/themoviedbscraper/moviedbactor.h
 scraper/themoviedbscraper/moviedbmovie.o      : $(SCRHEADER) scraper/themoviedbscraper/moviedbmovie.h scraper/themoviedbscraper/moviedbmovie.c scraper/themoviedbscraper/moviedbactor.h tools/fuzzy.h
-scraper/themoviedbscraper/ moviedbactors.o    : $(SCRHEADER) scraper/themoviedbscraper/moviedbactor.h scraper/themoviedbscraper/moviedbactor.c
+scraper/themoviedbscraper/moviedbactors.o     : $(SCRHEADER) scraper/themoviedbscraper/moviedbactor.h scraper/themoviedbscraper/moviedbactor.c
 tools/fuzzy.o                                 : tools/fuzzy.h tools/fuzzy.c
 tools/stringhelpers.o                         : tools/stringhelpers.h tools/stringhelpers.c
-
 
 # ------------------------------------------------------
 # Plugins

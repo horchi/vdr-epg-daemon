@@ -1,39 +1,40 @@
-#ifndef __TVSCRAPER_TVDBSCRAPER_H
-#define __TVSCRAPER_TVDBSCRAPER_H
+
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <map>
 #include <set>
-#include <libxml/parser.h>
-#include <libxml/tree.h>
+
+#include "../../lib/curl.h"
+#include "../../lib/json.h"
+
 #include "tvdbseries.h"
-#include "tvdbmirrors.h"
 
 using namespace std;
 
 // --- cTVDBScraper -------------------------------------------------------------
 
-class cTVDBScraper {
-private:
-    string apiKey;
-    string baseURL;
-    string language;
-    cTVDBMirrors *mirrors;
-    xmlDoc *SetXMLDoc(string xml);
-    int ParseXML(string xml);
-    int ReadSeries(string seriesName);
-public:
-    cTVDBScraper(string language);
-    virtual ~cTVDBScraper(void);
-    bool Connect(void);
-    int GetServerTime(void);
-    cTVDBSeries *ScrapInitial(string seriesName);
-    bool GetUpdatedSeriesandEpisodes(set<int> *updatedSeries, set<int> *updatedEpisodes, int lastScrap);
-    cTVDBSeries *GetSeries(int seriesID);
-    cTVDBEpisode *GetEpisode(int episodeID); 
+class cTVDBScraper
+{
+   public:
+
+      cTVDBScraper(std::string language);
+      virtual ~cTVDBScraper();
+
+      int connect();
+      int disconnect();
+      int GetServerTime();
+      cTVDBSeries* scrapByName(const char* seriesName);
+      bool GetUpdatedSeriesandEpisodes(set<int>* updatedSeries, set<int>* updatedEpisodes, int lastScrap);
+      cTVDBSeries* getSeries(int seriesID);
+
+   private:
+
+      int readSeriesId(const char* seriesName);
+
+      std::string language;
+      static std::map<std::string,std::string> languages;
 };
-
-
-#endif //__TVSCRAPER_TVDBSCRAPER_H

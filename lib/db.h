@@ -1120,6 +1120,7 @@ class cDbTable : public cDbService
 
       void setValue(const char* n, const char* value, int size = 0)   { row->setValue(n, value, size); }
       void setValue(const char* n, int value)                         { row->setValue(n, value); }
+      void setValue(const char* n, uint value)                        { row->setValue(n, (int)value); }
       void setValue(const char* n, long value)                        { row->setValue(n, value); }
       void setValue(const char* n, double value)                      { row->setValue(n, value); }
       void setBigintValue(const char* n, int64_t value)               { row->setBigintValue(n, value); }

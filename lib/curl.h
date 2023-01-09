@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef __LIB_CURL__
-#define __LIB_CURL__
+#pragma once
 
 #include <curl/curl.h>
 #include <curl/easy.h>
@@ -36,42 +35,44 @@ class cCurl
       static int create();
       static int destroy();
 
-      int GetUrl(const char *url, std::string *sOutput, const std::string &sReferer="");
-      int GetUrlFile(const char *url, const char *filename, const std::string &sReferer="");
+      void addHeader(const char* format, ...);
+      void clearHeader() { if (headerList) curl_slist_free_all(headerList); headerList = nullptr; }
+
+      int get(const char* aUrl, MemoryStruct* data, std::map<std::string,std::string>* parameters = nullptr);
+      int post(const char* url, const char* jData, std::string& sOutput);
+
+      int GetUrl(const char *url, std::string *sOutput, const std::string &sReferer = "");
+      int GetUrlFile(const char *url, const char *filename, const std::string &sReferer = "");
       int SetCookieFile(char *filename);
       int PostUrl(const char *url, const std::string &sPost, std::string *sOutput, const std::string &sReferer = "");
       int PostRaw(const char *url, const std::string &sPost, std::string *sOutput, const std::string &sReferer = "");
       int DoPost(const char *url, std::string *sOutput, const std::string &sReferer,
                  struct curl_httppost *formpost, struct curl_slist *headerlist);
 
-      char* EscapeUrl(const char *url);
+      char* EscapeUrl(const char* url);
       void Free(char* str);
+      char* escapeUrl(const char* url);
+      void free(char* url);
 
       int downloadFile(const char* url, int& size, MemoryStruct* data, int timeout = 30,
-                       const char* userAgent = CURL_USERAGENT, struct curl_slist *headerlist = 0);
+                       const char* userAgent = CURL_USERAGENT, struct curl_slist* headerlist = 0);
 
       // static stuff
 
       static void setSystemNotification(cSystemNotification* s) { sysNotification = s; }
-      static std::string sBuf;   // dirty
 
    protected:
 
-      // data
-
-      CURL* handle;
-
-      static cSystemNotification* sysNotification;
+      CURL* handle {};
+      struct curl_slist* headerList {};
 
       // statics
 
       static size_t WriteMemoryCallback(void* ptr, size_t size, size_t nmemb, void* data);
       static size_t WriteHeaderCallback(char* ptr, size_t size, size_t nmemb, void* data);
 
-      static int curlInitialized;
+      static cSystemNotification* sysNotification;
+      static bool curlInitialized;
 };
 
 extern cCurl curl;
-
-//***************************************************************************
-#endif // __LIB_CURL__

@@ -16,6 +16,7 @@
 #include <zlib.h>
 #include <errno.h>
 #include <string>
+#include <vector>
 #include <map>
 
 #ifdef USESYSD
@@ -88,6 +89,34 @@ const char* toCase(Case cs, char* str);
 // Tell
 //***************************************************************************
 
+enum Eloquence
+{
+   eloAlways         = 0x00000,
+
+   eloInfo           = 0x00001,
+   eloDetail         = 0x00002,
+   eloDebug          = 0x00004,
+   eloDebug2         = 0x00008,
+   eloWebSock        = 0x00010,
+   eloDebugWebSock   = 0x00020,
+   eloMqtt           = 0x00040,
+   eloDb             = 0x00080,
+   eloDebugDb        = 0x00100,
+
+   eloTvDb           = 0x00200,
+   eloCurl           = 0x00400,
+   eloDebugCurl      = 0x00800
+};
+
+class Elo
+{
+   public:
+
+      static const char* eloquences[];
+      static Eloquence stringToEloquence(const std::string string);
+      static int toEloquence(const char* str);
+};
+
 extern const char* logPrefix;
 
 const char* getLogPrefix();
@@ -103,7 +132,7 @@ class Syslog
 
       struct Facilities
       {
-         const char* name;                                            // #83
+         const char* name;
          int code;
       };
 
@@ -138,7 +167,7 @@ class MemoryStruct
 {
    public:
 
-      MemoryStruct()   { expireAt = 0; memory = 0; zmemory = 0; clear(); }
+      MemoryStruct()   { clear(); }
       MemoryStruct(const MemoryStruct* o)
       {
          size = o->size;
@@ -205,11 +234,9 @@ class MemoryStruct
 
       void clear()
       {
-         free(memory);
-         memory = 0;
+         free(memory); memory = nullptr;
          size = 0;
-         free(zmemory);
-         zmemory = 0;
+         free(zmemory); zmemory = nullptr;
          zsize = 0;
          *tag = 0;
          *name = 0;
@@ -225,23 +252,22 @@ class MemoryStruct
 
       // data
 
-      char* memory;
-      long unsigned int size;
-
-      char* zmemory;
-      long unsigned int zsize;
+      char* memory {};
+      long unsigned int size {0};
+      char* zmemory {};
+      long unsigned int zsize {0};
 
       // tag attribute
 
-      char tag[100+TB];              // the tag to be compared
-      char name[100+TB];             // content name (filename)
-      char contentType[100+TB];      // e.g. text/html
-      char mimeType[100+TB];         //
-      char contentEncoding[100+TB];  //
-      int headerOnly;
-      long statusCode;
-      time_t modTime;
-      time_t expireAt;
+      char tag[100+TB] {};              // the tag to be compared
+      char name[100+TB] {};             // content name (filename)
+      char contentType[100+TB] {};      // e.g. text/html
+      char mimeType[100+TB] {};         //
+      char contentEncoding[100+TB] {};  //
+      int headerOnly {0};
+      long statusCode {0};
+      time_t modTime {0};
+      time_t expireAt {0};
       std::map<std::string, std::string> headers;
 };
 
@@ -282,6 +308,7 @@ int rangeTo(const char* s);
 char* rTrim(char* buf);
 char* lTrim(char* buf);
 char* allTrim(char* buf);
+void trimAt(std::string buffer, std::ptrdiff_t pos);
 
 int isMember(const char** list, const char* item);
 char* sstrcpy(char* dest, const char* src, int max);
@@ -296,6 +323,7 @@ std::string hhmm2pTime(int hhmm, const char* delim = ":");
 time_t midnightOf(time_t t);
 std::string l2pTime(time_t t, const char* format = "%d.%m.%Y %T");
 std::string l2pDate(time_t t);
+time_t str2LTime(const char* tString, const char* fmt);
 std::string l2HttpTime(time_t t);
 std::string ms2Dur(uint64_t t);
 const char* c2s(char c, char* buf);
@@ -304,6 +332,10 @@ int urlUnescape(char* dst, const char* src, int normalize = yes);
 
 int storeToFile(const char* filename, const char* data, int size);
 int loadFromFile(const char* infile, MemoryStruct* data);
+
+std::vector<std::string> split(const std::string& str, char delim, std::vector<std::string>* strings = nullptr);
+std::string getStringBetween(std::string str, const char* begin, const char* end);
+std::string getStringBefore(std::string str, const char* begin);
 
 int folderExists(const char* path);
 int fileExists(const char* path);
@@ -328,6 +360,8 @@ int chkDir(const char* path);
   int createMd5(const char* buf, md5* md5);
   int createMd5OfFile(const char* path, const char* name, md5* md5);
 #endif
+
+std::string getBacktrace(size_t steps);
 
 //***************************************************************************
 // Zip

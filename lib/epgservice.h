@@ -228,7 +228,7 @@ class cEventState
 
          usInactive    = 'I', // => inaktiv
          usTarget      = 'T', // => verknüftes Event zum Link, wird unter seiner ID mithilfe des Link im vdr geführt
-         usMergeSpare  = 'S'  // => ersatzevent welches für Multimerge ur Verfügung steht
+         usMergeSpare  = 'S'  // => ersatzevent welches für Multimerge zur Verfügung steht
       };
 
       // get lists for SQL 'in' statements

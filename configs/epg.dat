@@ -867,6 +867,7 @@ Table series_media
    EPISODEID            ""  episode_id           UInt         0 Primary,
    ACTORID              ""  actor_id             UInt         0 Primary,
    MEDIATYPE            ""  media_type           UInt         0 Primary,
+   LFN                  ""  lfn                  UInt         0 Primary,
 
    INSSP                ""  inssp                Int          0 Meta filter epgd|httpd|epg2vdr,
    UPDSP                ""  updsp                Int          0 Meta filter epgd|httpd|epg2vdr,
