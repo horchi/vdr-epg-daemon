@@ -61,7 +61,7 @@ epgd.eventDetail.prototype.doRepeat = function (checkAvail) {
             searchData.expression1 = this.data.shorttext;
         }
         epgd.pages.search.search.call(this, $('<div class="desc"></div>').appendTo(win.$con), searchData);
-    } else 
+    } else
         $repeatHdl.click();
 }
 epgd.eventDetail.prototype.doPlay = function (checkAvail) {
@@ -69,7 +69,7 @@ epgd.eventDetail.prototype.doPlay = function (checkAvail) {
     if (t > this.data.duration)
         return false;
     if (checkAvail) return !epgd.vdrs.current.uuid ? false : (t < 0 ? epgd.tr.pages.timerList.newTimer + ': ' : '') + epgd.tr.pages.eventDetail.ch_switch;
-    if (t < 0 ){ // Umschalttimer 
+    if (t < 0 ){ // Umschalttimer
         t= this.win.$rec;
         epgd.pages.timerList.save({
             type: 'V',
@@ -137,7 +137,7 @@ epgd.eventDetail.win.prototype._create = function () {
     this.movieImgPath = epgd.profile.movieMediaPath ? epgd.profile.movieMediaPath + '?actor_id=0&movie_id=' : false;
     this.movieActorImgPath = epgd.profile.movieMediaPath ? epgd.profile.movieMediaPath + '?maxW=60&maxH=90&media_type=4&actor_id=' : false;
     this.serieImgPath = epgd.profile.serieImgPath ? epgd.profile.serieImgPath + '?actor_id=0&series_id=' : false;
-    this.serieActorImgPath = epgd.profile.serieImgPath ? epgd.profile.serieImgPath + '?maxW=60&maxH=90&season_number=0&episode_id=0&media_type=11&actor_id=' : false;
+    this.serieActorImgPath = epgd.profile.serieImgPath ? epgd.profile.serieImgPath + '?maxW=60&maxH=90&season_number=0&episode_id=0&media_type=13&actor_id=' : false;
 
     this.$win = $('<div id="eventDetail" class="ui-front">'
         + '<div class="ui-front ui-widget ui-widget-content ui-corner-all" style="position:absolute;width:100%;height:100%">'
@@ -214,7 +214,7 @@ epgd.eventDetail.win.prototype.render = function (detail) {
                     actors += '<div>' + (this.movieActorImgPath ? '<img src="' + this.movieActorImgPath + i + '" />' : '')
                         + '<a href="' + epgd.profile.movieActorPath + i + '" target="_blank">' + actor.actorname + '</a>' + (actor.actorrole || '') + '</div>';
                 }
-            } 
+            }
             if (sc.overview)
                 desc = '<div title="overview">' + sc.overview + "</div><hr />" + desc;
 
@@ -237,9 +237,6 @@ epgd.eventDetail.win.prototype.render = function (detail) {
                 + (sc.media["0"] && this.movieImgPath ? '<img class="poster" src="' + this.movieImgPath + sc.movieid + '&media_type=0&maxW=390&maxh=999" />' : '');
         } else {
             sc.isSerie = true;
-            /*0=msBanner1, 1=msBanner2, 2=msBanner3, 3=msPoster1, 4=msPoster2, 5=msPoster3, 7=msFanart1,8=msFanart2, 9=msFanart3, 
-              6=msSeasonPoster, 10=msEpisodePic, 
-              11=msActorThumb, 12=msPosterThumb, 13=msSeasonPosterThumb, */
             if (sc.actors) {
                 actors = '';
                 for (i in sc.actors) {
@@ -259,16 +256,16 @@ epgd.eventDetail.win.prototype.render = function (detail) {
                 if (terms.episodegueststars)
                     actors += '</div><div class="colFull actors"><h5>' + tr.gueststars + '</h5><br />' + terms.episodegueststars.replace(/^\||\|$/g, '').replace(/\|/g, '<br />');
             }
-            if (!mainImg && sc.media["10"] && this.serieImgPath)
-                mainImg = this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=' + terms.episodeid + '&media_type=10&maxW=270&maxH=146';
-            if (sc.media["7"])
-                firstImg = this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=7&maxW=400&maxh=999';
+            if (!mainImg && sc.media["12"] && this.serieImgPath)
+                mainImg = this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=' + terms.episodeid + '&media_type=12&maxW=270&maxH=146';
+            if (sc.media["3"])
+                firstImg = this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=3&lfn=0&maxW=400&maxh=999';
             if (sc.seriesoverview)
                 desc += desc ? '<hr /><a href="#" onclick="return !$(this).next().toggle()">Serienbeschreibung</a><div style="display:none" title="seriesoverview">' + sc.seriesoverview + "</div>" : '<div>' + sc.seriesoverview + '</div>';
             extInfo = '<h3><span>' + tr.scrapperSerieInfo + '</span></h3><div>'
                 + '<table class="colFull">'
-                + (sc.media["1"] && this.serieImgPath ? '<tr><th colspan="2"><img src="' + this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=1&maxW=397&maxH=250" /></th></tr>' : '')
-                + (sc.media["10"] && this.serieImgPath ? '<tr><th colspan="2"><img src="' + this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=' + terms.episodeid + '&media_type=10&maxW=397&maxH=400" /></th></tr>' : '')
+                + (sc.media["1"] && this.serieImgPath ? '<tr><th colspan="2"><img src="' + this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=1&lfn=1&maxW=397&maxH=250" /></th></tr>' : '')
+                + (sc.media["12"] && this.serieImgPath ? '<tr><th colspan="2"><img src="' + this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=' + terms.episodeid + '&media_type=12&maxW=397&maxH=400" /></th></tr>' : '')
                 + (sc.seriesname ? '<tr><th>' + tr.title + '</th><td>' + sc.seriesname + '</td></tr>' : '')
                 + (sc.seriesnetwork ? '<tr><th>' + tr.network + '</th><td>' + sc.seriesnetwork + '</td></tr>' : '')
                 + (sc.seriesstatus ? '<tr><th>' + tr.seriesstatus + '</th><td>' + sc.seriesstatus + '</td></tr>' : '')
@@ -278,8 +275,8 @@ epgd.eventDetail.win.prototype.render = function (detail) {
                 + extInfo
                 + (epgd.profile.serieSeasonPath ? '<tr><td colspan="2"><a href="' + epgd.profile.serieSeasonPath + sc.seriesid + '" target="_blank">' + tr.homepage + '</a></td></tr>' : '')
                 + '</table>'
-                + (sc.media["6"] && this.serieImgPath ? '<img class="poster" src="' + this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=0&media_type=6&maxW=390&maxh=999" />' : '')
-                + (sc.media["3"] && this.serieImgPath ? '<img class="poster" src="' + this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=3&maxW=390&maxh=999" />' : '');
+                + (sc.media["7"] && this.serieImgPath ? '<img class="poster" src="' + this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=0&media_type=7&maxW=390&maxh=999" />' : '')
+                + (sc.media["2"] && this.serieImgPath ? '<img class="poster" src="' + this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=2&lfn=0&maxW=390&maxh=999" />' : '');
         }
     } else {
         sc = {};
@@ -426,7 +423,7 @@ epgd.eventDetail.win.prototype.render = function (detail) {
                     });
                     ui.newHeader.removeAttr('data-conti');
                 },true);
-            }               
+            }
         }
     });
     this.$rec.toggleClass("hasTimer", !!e.timerid).prop("title", this.detail.doRecord(true));

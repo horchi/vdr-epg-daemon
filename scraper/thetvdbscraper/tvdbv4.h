@@ -28,6 +28,7 @@ class cTVDBv4
 
       static const char* tvdbApiKey;
       static const char* tvdbV4Url;
+      static const char* tvdbArtworkUrl;
 
    private:
 

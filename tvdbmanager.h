@@ -35,19 +35,20 @@ class cTVDBManager
 {
    public:
 
-      cTVDBManager();
+      cTVDBManager(bool aWithutf8 = true);
       virtual ~cTVDBManager();
+
       int ConnectDatabase(cDbConnection *conn);
       int connectScraper();
       void SetServerTime();
       void ResetBytesDownloaded() { bytesDownloaded = 0; };
       int GetBytesDownloaded() { return bytesDownloaded; };
       void UpdateSeries();
-      bool GetSeriesWithEpisodesFromEPG(vector<sSeriesResult> *result);
+      bool GetSeriesWithEpisodesFromEPG(std::vector<sSeriesResult> *result);
       void processSeries(sSeriesResult ser);
       int CleanupSeries();
-      bool SearchRecordingDB(string name, string episode, int &seriesId, int &episodeId);
-      bool searchRecordingOnline(const char* name, string episode, int &seriesId, int &episodeId);
+      bool SearchRecordingDB(std::string name, std::string episode, int &seriesId, int &episodeId);
+      bool searchRecordingOnline(const char* name, std::string episode, int &seriesId, int &episodeId);
       bool CheckScrapInfoDB(int scrapSeriesId, int scrapEpisodeId);
       bool CheckScrapInfoOnline(int scrapSeriesId, int scrapEpisodeId);
 
@@ -55,9 +56,9 @@ class cTVDBManager
 
       int bytesDownloaded {0};
       int withutf8 {no};
-      string language;
+      std::string language {"en"};
       // int serverTime {0};
-      map<string,int> alreadyScraped;
+      std::map<std::string,int> alreadyScraped;
       cTVDBScraper* tvdbScraper {};
       cDbConnection* connection {};
       cDbTable* tSeries {};
@@ -70,11 +71,11 @@ class cTVDBManager
 
       int GetLastScrap();
       void UpdateScrapTimestamp();
-      bool GetAllIDs(set<int>* IDs, cDbTable* table, const char* fname);
+      bool GetAllIDs(std::set<int>* IDs, cDbTable* table, const char* fname);
       cTVDBSeries* scrapSeries(const char* search);
       cTVDBSeries* scrapSeries(int seriesID);
       void saveSeries(cTVDBSeries* series);
-      void SaveSeriesBasics(cTVDBSeries* series);
+      void saveSeriesBasics(cTVDBSeries* series);
       void saveSeriesMedia(cTVDBSeries* series);
       int updateStoreArtwork(const cTVDBSeries::Artwork& artwork, uint lfn, int seriesID);
       void saveSeriesEpisodes(cTVDBSeries* series);
@@ -83,11 +84,11 @@ class cTVDBManager
       bool loadMedia(int seriesId, int seasonNumber, int episodeId, int actorId, int mediaType, uint lfn);
       bool imageUrlChanged(std::string url);
       int GetPicture(const char* url, MemoryStruct* data);
-      int LoadSeriesFromDd(string name);
-      void GetSeasonEpisodeFromEpisodename(int seriesID, int &season, int &part, string episodeName);
-      void LoadSeasonPoster(int seriesID, int season);
-      int LoadEpisodePicture(int seriesID, int season, int part);
+      int LoadSeriesFromDd(std::string name);
+      void GetSeasonEpisodeFromEpisodename(int seriesID, int &season, int &part, std::string episodeName);
+      void loadSeasonPoster(int seriesID, int season);
+      int loadEpisodePicture(int seriesID, int season, int part);
       void UpdateEvent(tEventId eventID, int seriesID, int episodeID);
       void DeleteSeries(int seriesId);
-      int LoadEpisode(string name, int seriesId);
+      int LoadEpisode(std::string name, int seriesId);
 };

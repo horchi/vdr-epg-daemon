@@ -5,36 +5,29 @@
  *
  */
 
-#include "tvdbmanager.h"
-
-#include "epgd.h"
 #include "lib/curl.h"
+
+#include "tvdbmanager.h"
+#include "epgd.h"
 
 extern const char* confDir;
 
-using namespace std;
-
-cTVDBManager::cTVDBManager(void)
+cTVDBManager::cTVDBManager(bool aWithutf8)
 {
+   withutf8 = aWithutf8;
+
    exsltRegisterAll();
    setlocale(LC_CTYPE, "");
 
-   char* lang = setlocale(LC_CTYPE, 0);
-
-   if (lang && (strcasestr(lang, "UTF-8") != 0 || strcasestr(lang, "UTF8") != 0))
-      withutf8 = yes;
-
-   string loc = lang;
+   string loc = setlocale(LC_CTYPE, 0);
    size_t index = loc.find_first_of("_");
-   string langISO = "";
+   string langISO {""};
 
    if (index > 0)
       langISO = loc.substr(0, index);
 
    if (langISO.size() == 2)
       language = langISO.c_str();
-   else
-      language = "en";
 
    tell(0, "Using scraping language %s", language.c_str());
 }
@@ -262,13 +255,13 @@ void cTVDBManager::saveSeries(cTVDBSeries* series)
    if (!series)
       return;
 
-   SaveSeriesBasics(series);
+   saveSeriesBasics(series);
    saveSeriesMedia(series);
    saveSeriesEpisodes(series);
    saveSeriesActors(series);
 }
 
-void cTVDBManager::SaveSeriesBasics(cTVDBSeries* series)
+void cTVDBManager::saveSeriesBasics(cTVDBSeries* series)
 {
    tSeries->clear();
    tSeries->setValue("SeriesId", series->seriesID);
@@ -286,17 +279,30 @@ void cTVDBManager::SaveSeriesBasics(cTVDBSeries* series)
 
 void cTVDBManager::saveSeriesMedia(cTVDBSeries* series)
 {
-   uint lfn {0};
+   uint count {0};
+   uint total {0};
+   std::map<uint,uint> lfns;
+
+   tell(eloAlways, "Scraping new and changed artwork for series '%d' ..", series->seriesID);
 
    for (const auto& artwork : *series->getArtwork())
    {
-      bool exists = loadMedia(series->seriesID, 0, 0, 0, artwork.type, lfn);
+      int lfn = lfns[artwork.type];
+      bool exists = loadMedia(series->seriesID, artwork.seasonId, 0, 0, artwork.type, lfn);
 
       if (!exists || imageUrlChanged(artwork.url))
-         updateStoreArtwork(artwork, lfn, series->seriesID);
+      {
+         if (updateStoreArtwork(artwork, lfn, series->seriesID) == success)
+            count++;
+      }
 
-      lfn++;
+      total++;
+
+      if (artwork.type != cTVDBSeries::atSeasonPoster)  // we have one per season
+         lfns[artwork.type]++;
    }
+
+   tell(eloAlways, "Updated %d of %d artwork objects for series '%d'", count, total, series->seriesID);
 }
 
 int cTVDBManager::updateStoreArtwork(const cTVDBSeries::Artwork& artwork, uint lfn, int seriesID)
@@ -315,9 +321,17 @@ int cTVDBManager::updateStoreArtwork(const cTVDBSeries::Artwork& artwork, uint l
    tSeriesMedia->setValue("MediaHeight", artwork.height);
    tSeriesMedia->setValue("MediaRating", artwork.rating);
 
-   if (GetPicture(artwork.url.c_str(), &data) == success)
+   int status = GetPicture(artwork.url.c_str(), &data);
+
+   if (status == success)
    {
       tSeriesMedia->setValue("MediaContent", data.memory, data.size);
+      tSeriesMedia->store();
+      return success;
+   }
+
+   if (status == -2)   // image to big for table!
+   {
       tSeriesMedia->store();
       return success;
    }
@@ -331,25 +345,35 @@ void cTVDBManager::saveSeriesEpisodes(cTVDBSeries* series)
    {
       saveSeriesEpisode(&episode, series->seriesID);
 
-      if (episode.imageUrl.size() > 10)
-      {
-         bool mediaExists = loadMedia(series->seriesID, episode.seasonNumber, episode.id, 0, cTVDBSeries::atEpisode, 0);
+      bool exists = loadMedia(series->seriesID, episode.seasonNumber, episode.id, 0, cTVDBSeries::atEpisode, 0);
+      bool reloadImage = exists ? imageUrlChanged(episode.imageUrl.c_str()) : true;
 
-         if (!mediaExists)
+      if (reloadImage)
+      {
+         tSeriesMedia->clear();
+         tSeriesMedia->setValue("SeriesId", series->seriesID);
+         tSeriesMedia->setValue("SeasonNumber", episode.seasonNumber);
+         tSeriesMedia->setValue("EpisodeId", episode.id);
+         tSeriesMedia->setValue("ActorId", 0);
+         tSeriesMedia->setValue("MediaType", cTVDBSeries::atEpisode);
+         tSeriesMedia->setValue("LFN", 0);  // #TODO ??
+         tSeriesMedia->setValue("MediaUrl", episode.imageUrl.c_str());
+         tSeriesMedia->setValue("MediaWidth", episode.width);
+         tSeriesMedia->setValue("MediaHeight", episode.height);
+         tSeriesMedia->setValue("MediaRating", 0.0);
+
+         MemoryStruct data;
+         int status {success};
+
+         if (episode.imageUrl.empty())
+            tSeriesMedia->store();
+         else if ((status = GetPicture(episode.imageUrl.c_str(), &data)) == success)
          {
-            tSeriesMedia->clear();
-            tSeriesMedia->setValue("SeriesId", series->seriesID);
-            tSeriesMedia->setValue("SeasonNumber", episode.seasonNumber);
-            tSeriesMedia->setValue("EpisodeId", episode.id);
-            tSeriesMedia->setValue("ActorId", 0);
-            tSeriesMedia->setValue("MediaType", cTVDBSeries::atEpisode);
-            tSeriesMedia->setValue("LFN", 0);  // #TODO ??
-            tSeriesMedia->setValue("MediaUrl", episode.imageUrl.c_str());
-            tSeriesMedia->setValue("MediaWidth", episode.width);
-            tSeriesMedia->setValue("MediaHeight", episode.height);
-            tSeriesMedia->setValue("MediaRating", 0.0);
+            tSeriesMedia->setValue("MediaContent", data.memory, data.size);
             tSeriesMedia->store();
          }
+         else
+            tell(3, "Downloading image '%s' failed with %d", episode.imageUrl.c_str(), status);
       }
    }
 }
@@ -387,7 +411,7 @@ void cTVDBManager::saveSeriesActors(cTVDBSeries* series)
       bool exists = loadMedia(series->seriesID, 0, 0, actor.id, cTVDBSeries::atActor, 0);
       bool reloadImage = exists ? imageUrlChanged(actor.thumbUrl) : true;
 
-      if (reloadImage && actor.thumbUrl.size() > 10)
+      if (reloadImage)
       {
          tSeriesMedia->clear();
          tSeriesMedia->setValue("SeriesId", series->seriesID);
@@ -477,26 +501,29 @@ bool cTVDBManager::GetSeriesWithEpisodesFromEPG(vector<sSeriesResult>* result)
 
 int cTVDBManager::GetPicture(const char* url, MemoryStruct* data)
 {
-   // tell(0,"Download image %s", url);
+   // tell(0, "Debug: Download image '%s'", url);
 
    int maxSize = tSeriesMedia->getField("MediaContent")->getSize();
-   data->clear();
    int fileSize {0};
+   data->clear();
 
-   if (curl.downloadFile(url, fileSize, data) == success)
+   if (curl.downloadFile(url, fileSize, data) != success)
+      return fail;
+
+   bytesDownloaded += fileSize;
+
+   if (fileSize >= maxSize)
    {
-      bytesDownloaded += fileSize;
-
-      if (fileSize < maxSize)
-         return success;
+      tell(3, "Debug: Skipping download of '%s' due to size > (%d)", url, maxSize);
+      return -2;
    }
 
-   return fail;
+   return success;
 }
 
 bool cTVDBManager::imageUrlChanged(std::string url)
 {
-   if (url.compare(tSeriesMedia->getStrValue("MediaUrl")))
+   if (url.compare(tSeriesMedia->getStrValue("MediaUrl")) != 0)
       return true;
 
    return false;
@@ -575,18 +602,19 @@ void cTVDBManager::processSeries(sSeriesResult ser)
       // tell(0, "downloading episode info");
       // loading season poster and episode picture
 
-      if (ser.season > 0)
-         LoadSeasonPoster(seriesID, ser.season);
-      if ((ser.season > 0) && (ser.part > 0))
-         episodeID = LoadEpisodePicture(seriesID, ser.season, ser.part);
+      if (ser.season)
+         loadSeasonPoster(seriesID, ser.season);
+
+      if (ser.season && ser.part)
+         episodeID = loadEpisodePicture(seriesID, ser.season, ser.part);
    }
 
-   //updating event with series data
+   // updating event with series data
 
    UpdateEvent(ser.eventId, seriesID, episodeID);
 }
 
-int cTVDBManager::LoadSeriesFromDd(string name)
+int cTVDBManager::LoadSeriesFromDd(std::string name)
 {
    int status {success};
    int seriesID {0};
@@ -616,7 +644,7 @@ int cTVDBManager::LoadSeriesFromDd(string name)
    return seriesID;
 }
 
-void cTVDBManager::GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, string episodeName)
+void cTVDBManager::GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, std::string episodeName)
 {
    int status {success};
    tSeriesEpsiode->clear();
@@ -648,7 +676,7 @@ void cTVDBManager::GetSeasonEpisodeFromEpisodename(int seriesID, int& season, in
    delete select;
 }
 
-void cTVDBManager::LoadSeasonPoster(int seriesID, int season)
+void cTVDBManager::loadSeasonPoster(int seriesID, int season)
 {
    tSeriesMedia->clear();
    tSeriesMedia->setValue("SeriesId", seriesID);
@@ -661,10 +689,7 @@ void cTVDBManager::LoadSeasonPoster(int seriesID, int season)
    if (!tSeriesMedia->find())
       return;
 
-   string url = tSeriesMedia->getStrValue("MediaUrl");
-
-   if (url.size() < 10)
-      return;
+   std::string url = tSeriesMedia->getStrValue("MediaUrl");
 
    if (tSeriesMedia->isNull("MediaContent"))
    {
@@ -678,17 +703,15 @@ void cTVDBManager::LoadSeasonPoster(int seriesID, int season)
    }
 }
 
-int cTVDBManager::LoadEpisodePicture(int seriesID, int season, int part)
+int cTVDBManager::loadEpisodePicture(int seriesID, int season, int part)
 {
-   int status {success};
-   int episodeID {0};
-
    tSeriesEpsiode->clear();
    tSeriesEpsiode->setValue("EpisodeNumber", part);
    tSeriesEpsiode->setValue("SeasonNumber", season);
    tSeriesEpsiode->setValue("SeriesId", seriesID);
 
    cDbStatement* select = new cDbStatement(tSeriesEpsiode);
+
    select->build("select ");
    select->bind("EpisodeId", cDBS::bndOut);
    select->build(" from %s where ", tSeriesEpsiode->TableName());
@@ -696,50 +719,19 @@ int cTVDBManager::LoadEpisodePicture(int seriesID, int season, int part)
    select->bind("SeasonNumber", cDBS::bndIn | cDBS::bndSet, " and ");
    select->bind("SeriesId", cDBS::bndIn | cDBS::bndSet, " and ");
 
-   status += select->prepare();
-
-   if (status != success)
+   if (select->prepare() != success)
    {
       delete select;
       return 0;
    }
+
+   int episodeID {0};
 
    if (select->find())
       episodeID = tSeriesEpsiode->getIntValue("EpisodeId");
 
    select->freeResult();
    delete select;
-
-   if (!episodeID)
-      return episodeID;
-
-   // downloading episode picture
-
-   tSeriesMedia->clear();
-   tSeriesMedia->setValue("SeriesId", seriesID);
-   tSeriesMedia->setValue("SeasonNumber", season);
-   tSeriesMedia->setValue("EpisodeId", episodeID);
-   tSeriesMedia->setValue("ActorId", 0);
-   tSeriesMedia->setValue("MediaType", cTVDBSeries::atEpisode);
-   tSeriesMedia->setValue("LFN", 0);  // #TODO ??
-
-   if (!tSeriesMedia->find())
-      return episodeID;
-
-   string url = tSeriesMedia->getStrValue("MediaUrl");
-
-   if (url.size() < 10)
-      return episodeID;
-
-   if (tSeriesMedia->isNull("MediaContent"))
-   {
-      MemoryStruct data;
-      if (GetPicture(url.c_str(), &data) == success)
-      {
-         tSeriesMedia->setValue("MediaContent", data.memory, data.size);
-         tSeriesMedia->store();
-      }
-   }
 
    return episodeID;
 }
@@ -759,9 +751,8 @@ void cTVDBManager::UpdateEvent(tEventId eventID, int seriesID, int episodeID)
 
 int cTVDBManager::CleanupSeries()
 {
-   int numDelete = 0;
+   int numDelete {0};
    set<int> activeSeriesIds;
-   int status = success;
    //fetching seriesIds from current events
    cDbStatement *selectSeriesIds = new cDbStatement(tEvents);
    selectSeriesIds->build("select distinct ");
@@ -770,18 +761,16 @@ int cTVDBManager::CleanupSeries()
    selectSeriesIds->build(" %s is not null ", tEvents->getField("ScrSeriesId")->getDbName());
    selectSeriesIds->build(" and %s > 0 ", tEvents->getField("ScrSeriesId")->getDbName());
 
-   status += selectSeriesIds->prepare();
-
-   if (status != success)
+   if (selectSeriesIds->prepare() != success)
    {
       delete selectSeriesIds;
       return 0;
    }
+
    tEvents->clear();
 
-   for (int res = selectSeriesIds->find(); res; res = selectSeriesIds->fetch()) {
+   for (int res = selectSeriesIds->find(); res; res = selectSeriesIds->fetch())
       activeSeriesIds.insert(tEvents->getIntValue("ScrSeriesId"));
-   }
 
    selectSeriesIds->freeResult();
    delete selectSeriesIds;
@@ -794,19 +783,23 @@ int cTVDBManager::CleanupSeries()
    selectSeriesIdsRec->build(" from %s where ", tRecordingList->TableName());
    selectSeriesIdsRec->build(" %s is not null ", tRecordingList->getField("SCRSERIESID")->getDbName());
    selectSeriesIdsRec->build(" and %s > 0 ", tRecordingList->getField("SCRSERIESID")->getDbName());
-   status += selectSeriesIdsRec->prepare();
-   if (status != success) {
+
+   if (selectSeriesIdsRec->prepare() != success)
+   {
       delete selectSeriesIdsRec;
       return numDelete;
    }
+
    tRecordingList->clear();
-   for (int res = selectSeriesIdsRec->find(); res; res = selectSeriesIdsRec->fetch()) {
+
+   for (int res = selectSeriesIdsRec->find(); res; res = selectSeriesIdsRec->fetch())
       activeSeriesIds.insert(tRecordingList->getIntValue("SCRSERIESID"));
-   }
+
    selectSeriesIdsRec->freeResult();
    delete selectSeriesIdsRec;
 
-   //fetching all seriesIds from series table
+   // fetching all seriesIds from database
+
    vector<int> storedSeriesIds;
    cDbStatement *selectStoredSeriesIds = new cDbStatement(tSeries);
    selectStoredSeriesIds->build("select ");
@@ -814,28 +807,34 @@ int cTVDBManager::CleanupSeries()
    selectStoredSeriesIds->build(" from %s where ", tSeries->TableName());
    selectStoredSeriesIds->build(" %s is not null ", tSeries->getField("SeriesId")->getDbName());
    selectStoredSeriesIds->build(" and %s > 0 ", tSeries->getField("SeriesId")->getDbName());
-   status += selectStoredSeriesIds->prepare();
-   if (status != success) {
+
+   if (selectStoredSeriesIds->prepare() != success)
+   {
       delete selectStoredSeriesIds;
       return numDelete;
    }
+
    tSeries->clear();
 
-   for (int res = selectStoredSeriesIds->find(); res; res = selectStoredSeriesIds->fetch()) {
+   for (int res = selectStoredSeriesIds->find(); res; res = selectStoredSeriesIds->fetch())
       storedSeriesIds.push_back(tSeries->getIntValue("SeriesId"));
-   }
+
    selectStoredSeriesIds->freeResult();
    delete selectStoredSeriesIds;
 
    numDelete = storedSeriesIds.size() - activeSeriesIds.size();
+
    if (numDelete < 1)
       return numDelete;
-   for (vector<int>::iterator sId = storedSeriesIds.begin(); sId != storedSeriesIds.end(); sId++) {
+
+   for (vector<int>::iterator sId = storedSeriesIds.begin(); sId != storedSeriesIds.end(); sId++)
+   {
       set<int>::iterator hit = activeSeriesIds.find(*sId);
-      if (hit == activeSeriesIds.end()) {
+
+      if (hit == activeSeriesIds.end())
          DeleteSeries(*sId);
-      }
    }
+
    return numDelete;
 }
 
@@ -884,7 +883,7 @@ void cTVDBManager::DeleteSeries(int seriesId) {
    delSer.execute();
 }
 
-bool cTVDBManager::SearchRecordingDB(string name, string episode, int &seriesId, int &episodeId)
+bool cTVDBManager::SearchRecordingDB(std::string name, std::string episode, int &seriesId, int &episodeId)
 {
    int status = success;
    cDbStatement *select = new cDbStatement(tSeries);
@@ -917,7 +916,7 @@ bool cTVDBManager::SearchRecordingDB(string name, string episode, int &seriesId,
    return found;
 }
 
-bool cTVDBManager::searchRecordingOnline(const char* name, string episode, int& seriesId, int& episodeId)
+bool cTVDBManager::searchRecordingOnline(const char* name, std::string episode, int& seriesId, int& episodeId)
 {
    cTVDBSeries* recSeries = scrapSeries(name);
 
@@ -933,7 +932,8 @@ bool cTVDBManager::searchRecordingOnline(const char* name, string episode, int& 
    return false;
 }
 
-int cTVDBManager::LoadEpisode(string name, int seriesId) {
+int cTVDBManager::LoadEpisode(std::string name, int seriesId)
+{
    int status = success;
    int episodeId = 0;
    cDbStatement *select = new cDbStatement(tSeriesEpsiode);
@@ -961,26 +961,34 @@ int cTVDBManager::LoadEpisode(string name, int seriesId) {
 
 bool cTVDBManager::CheckScrapInfoDB(int scrapSeriesId, int scrapEpisodeId)
 {
-   //check if series is in db
+   // check if series is in db
 
    tSeries->clear();
    tSeries->setValue("SeriesId", scrapSeriesId);
    int found = tSeries->find();
+
    if (!found)
       return false;
-   if (scrapEpisodeId > 0) {
+
+   if (scrapEpisodeId > 0)
+   {
       tSeriesEpsiode->clear();
       tSeriesEpsiode->setValue("EpisodeId", scrapEpisodeId);
       found = tSeriesEpsiode->find();
-      if (found) {
+
+      if (found)
+      {
          int season = tSeriesEpsiode->getIntValue("SeasonNumber");
          int part = tSeriesEpsiode->getIntValue("EpisodeNumber");
+
          if (season)
-            LoadSeasonPoster(scrapSeriesId, season);
+            loadSeasonPoster(scrapSeriesId, season);
+
          if (season && part)
-            LoadEpisodePicture(scrapSeriesId, season, part);
+            loadEpisodePicture(scrapSeriesId, season, part);
       }
    }
+
    return true;
 }
 
@@ -995,15 +1003,16 @@ bool cTVDBManager::CheckScrapInfoOnline(int scrapSeriesId, int scrapEpisodeId)
 
    if (scrapEpisodeId > 0)
    {
-      int part = 0;
-      int season = 0;
+      int part {0};
+      int season {0};
 
       if (seriesRec->getPartAndSeason(scrapEpisodeId, season, part))
       {
          if (season)
-            LoadSeasonPoster(scrapSeriesId, season);
+            loadSeasonPoster(scrapSeriesId, season);
+
          if (season && part)
-            LoadEpisodePicture(scrapSeriesId, season, part);
+            loadEpisodePicture(scrapSeriesId, season, part);
       }
    }
 

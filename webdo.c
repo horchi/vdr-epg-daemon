@@ -769,23 +769,17 @@ int cEpgHttpd::doSeriesMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
    int seasonNumber = getIntParameter(tcp, "season_number", na);
    int episodeId = getIntParameter(tcp, "episode_id", na);
    int actorId = getIntParameter(tcp, "actor_id", 0);
+   int lfn = getIntParameter(tcp, "lfn", 0);
    int mediaType = getIntParameter(tcp, "media_type", na);
    int maxW = getIntParameter(tcp, "maxW");
    int maxH = getIntParameter(tcp, "maxH");
 
    data->clear();
 
-   if (actorId)
-   {
-      mediaType = 11;
-      seasonNumber = 0;
-      episodeId = 0;
-   }
-
    if (seriesId == na || seasonNumber == na || episodeId == na || mediaType == na)
       return buildResponse(obj, MHD_HTTP_BAD_REQUEST, "Missing madatory request parameter");
 
-   tell(3, "lookup series media for (%d/%d/%d/%d/%d)", seriesId, seasonNumber, episodeId, actorId, mediaType);
+   tell(3, "lookup series media for (%d/%d/%d/%d/%d/%d)", seriesId, seasonNumber, episodeId, actorId, mediaType, lfn);
 
    seriesMediaDb->clear();
    seriesMediaDb->setValue("SERIESID", seriesId);
@@ -793,6 +787,7 @@ int cEpgHttpd::doSeriesMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
    seriesMediaDb->setValue("EPISODEID", episodeId);
    seriesMediaDb->setValue("ACTORID", actorId);
    seriesMediaDb->setValue("MEDIATYPE", mediaType);
+   seriesMediaDb->setValue("LFN", lfn);
 
    if (seriesMediaDb->find() && !seriesmediaMediaContent->isNull())
    {
@@ -1774,6 +1769,8 @@ int cEpgHttpd::doSearchtimers(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
 {
+   // {"expression":"Sturm und Drang","category":"","genre":"","tipp":"","noepgmatch":0,"searchmode":1,"searchfields":2,"casesensitiv":0,"repeatfields":0,"active":1,"channelids":"","chformat":"","chexclude":0,"chnummin":0,"chnummax":0,"vps":0,"directory":"","namingmode":1,"template":"","type":"S","name":"","max":500}
+
    int id = getIntFromJson(jInData, "autotimerid", na);
    const char* name = getStringFromJson(jInData, "autotimername", 0);
 
@@ -1807,7 +1804,7 @@ int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
 
    for (int i = 0; i < def->fieldCount(); i++)
    {
-      const char* jName = 0;
+      const char* jName {};
 
       if (def->getField(i)->hasType(cDBS::ftMeta) || def->getField(i)->hasType(cDBS::ftPrimary))
          continue;

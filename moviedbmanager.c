@@ -4,7 +4,38 @@
 
 extern const char* confDir;
 
-using namespace std;
+std::string str_replace(const std::string& search, const std::string& replace, const std::string& subject)
+{
+   std::string str = subject;
+   size_t pos {0};
+
+   while((pos = str.find(search, pos)) != std::string::npos)
+   {
+      str.replace(pos, search.length(), replace);
+      pos += replace.length();
+   }
+
+   return str;
+}
+
+// cut string after first "search"
+
+std::string str_cut(const std::string& search, const std::string& subject)
+{
+   std::string str = subject;
+   std::string strCutted {""};
+   size_t found = str.find_first_of(search);
+
+   if (found != std::string::npos)
+   {
+      strCutted = str.substr(0, found);
+      size_t foundSpace = strCutted.find_last_of(" ");
+
+      if ((foundSpace != std::string::npos) && (foundSpace == (strCutted.size()-1)))
+         strCutted = strCutted.substr(0, strCutted.size()-1);
+   }
+   return strCutted;
+}
 
 cMovieDBManager::cMovieDBManager(void) {
     connection = NULL;

@@ -464,7 +464,7 @@ void trimAt(std::string buffer, std::ptrdiff_t pos)
       return ;
 
    if (pos < 0 && ((long)buffer.size() + pos) >= 0)
-      buffer.erase(buffer.size() - pos);
+      buffer.erase(buffer.size() + pos);
    else if (pos >= 0 && buffer.size() > (ulong)pos)
       buffer.erase(pos);
 

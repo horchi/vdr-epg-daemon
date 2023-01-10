@@ -1633,7 +1633,8 @@ void cEpgd::loop()
 
    scheduleAutoUpdate(EpgdConfig.checkInitial ? 10 : 0);
 
-   // scrapNewEvents();   // # to debug scarper at Start
+   scrapNewEvents();   // # to debug scarper at Start
+   return ;
 
    while (!doShutDown())
    {
@@ -2528,8 +2529,9 @@ int cEpgd::processDay(int day, int fullupdate, Statistic* stat)
 
 int cEpgd::initScrapers()
 {
-   int status;
-   tvdbManager = new cTVDBManager();
+   int status {success};
+
+   tvdbManager = new cTVDBManager(withutf8);
 
    if (tvdbManager->connectScraper() != success)
    {
@@ -2570,8 +2572,8 @@ int cEpgd::initScrapers()
 
 void cEpgd::exitScrapers()
 {
-   delete tvdbManager;     tvdbManager = 0;
-   delete movieDbManager;  movieDbManager = 0;
+   delete tvdbManager;     tvdbManager = nullptr;
+   delete movieDbManager;  movieDbManager = nullptr;
 }
 
 //***************************************************************************
@@ -2588,6 +2590,7 @@ int cEpgd::scrapNewEvents()
 
    time_t start = time(0);
 
+   tell(0, "---------------------");
    tell(0, "Scraping new series and episodes");
 
    /*
@@ -2640,6 +2643,8 @@ int cEpgd::scrapNewEvents()
    tell(0, "%d of %zu series episodes scraped in %ld s, downloaded %.3f %cB",
         seriesCur, seriesToScrap.size(), time(0) - start,
         mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
+
+   tell(0, "---------------------");
 
    // ------------------------------
    // scrap movies
@@ -2731,16 +2736,14 @@ int cEpgd::cleanupSeriesAndMovies()
    {
       cSystemNotification::check();
       tell(0, "cleaning up series...");
-      int numDeleted = tvdbManager->CleanupSeries();
-      tell(0, "%d outdated series deleted", numDeleted);
+      tell(0, "%d outdated series deleted", tvdbManager->CleanupSeries());
    }
 
    if (movieDbManager)
    {
       cSystemNotification::check();
       tell(0, "cleaning up movies...");
-      int numDeleted = movieDbManager->CleanupMovies();
-      tell(0, "%d outdated movies deleted", numDeleted);
+      tell(0, "%d outdated movies deleted", movieDbManager->CleanupMovies());
    }
 
    return success;
@@ -2769,7 +2772,6 @@ void cEpgd::scrapNewRecordings(int count)
       int seriesId {0};
       int episodeId {0};
       int movieId {0};
-      bool found {false};
 
       string recPath = recordingListDb->getStrValue("PATH");
       long starttime = recordingListDb->getIntValue("STARTTIME");
@@ -2794,6 +2796,8 @@ void cEpgd::scrapNewRecordings(int count)
       // --------------------------------------------
       // first -  scrap by scrapInfo if available
       //  -> info is set by user therefore prefer it
+
+      bool found {false};
 
       if (isSeries && scrapInfoSeriesId > 0)
       {
@@ -2847,11 +2851,10 @@ void cEpgd::scrapNewRecordings(int count)
          }
       }
 
-/*
       // --------------
       // maybe another client got the recording earlier ..
 
-      found = checkRecOtherClients(uuid, recPath, recStart);
+      /* found = checkRecOtherClients(uuid, recPath, recStart);
 
       if (found)
       {
@@ -2861,8 +2864,7 @@ void cEpgd::scrapNewRecordings(int count)
          recordingListDb->update();
 
          continue;
-      }
-*/
+      } */
 
       // ------------------------------------
       // third - try scrap by title and subtitle
@@ -3182,8 +3184,6 @@ int cEpgd::sendTccMail(string& mailBody)
       "<meta http-equiv=\"Content-Type\" content=\"text/html; charset=utf-8\" />"
       "</head>";
 
-   // string subject = "EPGD: Timer conflicts";
-   // string receivers;
    char* html {};
 
    // max one mail per hour

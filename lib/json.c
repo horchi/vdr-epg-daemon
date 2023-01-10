@@ -114,11 +114,14 @@ int addFieldToJson(json_t* obj, cDbTable* table, const char* fname,
 int getFieldFromJson(json_t* obj, cDbRow* row, const char* fname, const char* extName)
 {
    cDbValue* value = row->getValue(fname);
-   char* jname;
 
    if (!value)
+   {
+      tell(2, "Info: Lookup of db value for '%s' failed", fname);
       return fail;
+   }
 
+   char* jname {};
    jname = strdup(!isEmpty(extName) ? extName : value->getField()->getName());
    toCase(cLower, jname);   // use always lower case names in json
 
@@ -137,16 +140,15 @@ int getFieldFromJson(json_t* obj, cDbRow* row, const char* fname, const char* ex
       case cDBS::ffInt:
       case cDBS::ffUInt:
       {
-         int v = getIntFromJson(obj, jname, 0);
-         const char* s = getStringFromJson(obj, jname, "_not_set_");
+         // tell(0, "try setting '%s' to (%d) [%s]", value->getName(), v, s);
+         // const char* s = getStringFromJson(obj, jname, "_not_set_");
+         // if (s && strcmp(s, "_not_set_") == 0)
+         //    break;
 
-         if (s && strcmp(s, "_not_set_") == 0)
-            break;
-
-         if (s && strcmp(s, "null") == 0)
+         if (!json_is_null(obj))
             value->setNull();
-         else
-            value->setValue(v);
+         if (!json_is_integer(obj))
+            value->setValue(getIntFromJson(obj, jname, 0));
 
          break;
       }
@@ -185,7 +187,9 @@ const char* getStringFromJson(json_t* obj, const char* name, const char* def)
    if (!o)
       return def;
 
-   return json_string_value(o);
+   const char* value = json_string_value(o);
+
+   return value ? value : def;
 }
 
 int getBoolFromJson(json_t* obj, const char* name, bool def)
@@ -313,7 +317,9 @@ const char* getStringByPath(json_t* jData, const char* aPath, const char* def)
    if (!jObj)
       return def;
 
-   return json_string_value(jObj);
+   const char* value = json_string_value(jObj);
+
+   return value ? value : def;
 }
 
 int jStringValid(const char* s)

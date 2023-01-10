@@ -8,8 +8,9 @@
 #include <jansson.h>
 
 #include "../../lib/curl.h"
-#include "../../tools/stringhelpers.h"
+#include "../../lib/json.h"
 #include "../../epgdconfig.h"
+
 #include "themoviedbscraper.h"
 
 using namespace std;
@@ -24,10 +25,12 @@ cMovieDBScraper::cMovieDBScraper(string language)
    actorthumbSize = "h632";
 }
 
-cMovieDBScraper::~cMovieDBScraper() {
+cMovieDBScraper::~cMovieDBScraper()
+{
 }
 
-cMovieDbMovie *cMovieDBScraper::Scrap(string movieName, string year) {
+cMovieDbMovie *cMovieDBScraper::Scrap(string movieName, string year)
+{
     int movieID = SearchMovie(movieName, year);
     if (movieID < 1) {
         return NULL;
@@ -38,36 +41,41 @@ cMovieDbMovie *cMovieDBScraper::Scrap(string movieName, string year) {
     return movie;
 }
 
-bool cMovieDBScraper::Connect(void) {
-    stringstream url;
-    url << baseURL << "/configuration?api_key=" << apiKey;
-    string configJSON;
-    if (curl.GetUrl(url.str().c_str(), &configJSON)) {
-        return parseJSON(configJSON);
-    }
-    return false;
+bool cMovieDBScraper::Connect(void)
+{
+   stringstream url;
+   url << baseURL << "/configuration?api_key=" << apiKey;
+   string configJSON;
+
+   if (curl.GetUrl(url.str().c_str(), &configJSON))
+      return parseJSON(configJSON);
+
+   return false;
 }
 
-bool cMovieDBScraper::parseJSON(string jsonString) {
-    cJsonLoader root(jsonString.c_str());
-    if (!root.isObject()) {
-        return false;
-    }
-    json_t *images = root.objectByName("images");
-    if(!json_is_object(images)) {
-        return false;
-    }
+bool cMovieDBScraper::parseJSON(string jsonString)
+{
+   json_t* jObj = jsonLoad(jsonString.c_str());
 
-    json_t *imgUrl;
-    imgUrl = json_object_get(images, "base_url");
-    if(!json_is_string(imgUrl)) {
-        return false;
-    }
-    imageUrl = json_string_value(imgUrl);
-    return true;
+   if (!json_is_object(jObj))
+      return false;
+
+   json_t* images = getObjectFromJson(jObj, "images");
+
+   if (!json_is_object(images))
+      return false;
+
+   json_t* imgUrl = json_object_get(images, "base_url");
+
+   if(!json_is_string(imgUrl))
+      return false;
+
+   imageUrl = json_string_value(imgUrl);
+   return true;
 }
 
-int cMovieDBScraper::SearchMovie(string movieName, string year) {
+int cMovieDBScraper::SearchMovie(string movieName, string year)
+{
     stringstream url;
     string movieJSON;
     int movieID = -1;
@@ -86,7 +94,8 @@ int cMovieDBScraper::SearchMovie(string movieName, string year) {
     return movieID;
 }
 
-cMovieDbMovie *cMovieDBScraper::ReadMovie(int movieID) {
+cMovieDbMovie *cMovieDBScraper::ReadMovie(int movieID)
+{
     stringstream url;
     url << baseURL << "/movie/" << movieID << "?api_key=" << apiKey << "&language=" << language.c_str();
     string movieJSON;

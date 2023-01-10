@@ -280,7 +280,7 @@ int cCurl::GetUrl(const char* url, std::string* sOutput, const std::string& sRef
 
    if ((res = curl_easy_perform(handle)) != CURLE_OK)
    {
-      long httpCode = 0;
+      long httpCode {0};
 
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
       tell(1, "Error: Getting URL failed; %s (%d); http code was (%ld) [%s]",
@@ -566,7 +566,7 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
    curl_easy_setopt(handle, CURLOPT_TIMEOUT, timeout);                        // Set timeout
    curl_easy_setopt(handle, CURLOPT_NOBODY, data->headerOnly ? 1 : 0);        //
    curl_easy_setopt(handle, CURLOPT_USERAGENT, userAgent);                    // Some servers don't like requests without a user-agent field
-//    curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "gzip");                 //
+   //  curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "gzip");             //
    curl_easy_setopt(handle, CURLOPT_ACCEPT_ENCODING, "");
 
    if (headerlist)
@@ -592,10 +592,10 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
 
    long code;
    curl_easy_getinfo(handle, CURLINFO_HTTP_CODE, &code);
-   tell(3, "got http code (%ld)", code);
 
    if (code == 400 || code == 404 || code == 500)
    {
+      tell(eloAlways, "Curl: Got http code (%ld)", code);
       data->clear();
       data->statusCode = code;
       exit();

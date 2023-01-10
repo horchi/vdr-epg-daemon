@@ -7,8 +7,9 @@
 #include <jansson.h>
 
 #include "../../lib/curl.h"
-#include "../../tools/fuzzy.h"
-#include "../../tools/stringhelpers.h"
+#include "../../lib/fuzzy.h"
+#include "../../lib/json.h"
+
 #include "moviedbmovie.h"
 
 using namespace std;
@@ -42,73 +43,77 @@ cMovieDbMovie::cMovieDbMovie(string json) {
     posterHeight = 750;
 }
 
-cMovieDbMovie::~cMovieDbMovie() {
-    for(std::vector<cMovieDBActor*>::const_iterator it = actors.begin(); it != actors.end(); it++) {
-        delete *it;
-    }
-    actors.clear();
+cMovieDbMovie::~cMovieDbMovie()
+{
+   for (std::vector<cMovieDBActor*>::const_iterator it = actors.begin(); it != actors.end(); it++)
+      delete *it;
+
+   actors.clear();
 }
 
-void cMovieDbMovie::ParseJSON(void) {
-    cJsonLoader jMovie(json.c_str());
-    if (!jMovie.isObject()) {
-        return;
-    }
-    json_t *jTitle = jMovie.objectByName("title");
-    if(json_is_string(jTitle)) {
-        title = json_string_value(jTitle);;
-    }
-    json_t *jOriginalTitle = jMovie.objectByName("original_title");
-    if(json_is_string(jOriginalTitle)) {
+void cMovieDbMovie::ParseJSON(void)
+{
+   cJson jMovie;
+
+   if (jMovie.set(json.c_str()) != success || !jMovie.isObject())
+      return;
+
+   json_t *jTitle = jMovie.getObject("title");
+
+    if (json_is_string(jTitle))
+        title = json_string_value(jTitle);
+
+    json_t *jOriginalTitle = jMovie.getObject("original_title");
+    if (json_is_string(jOriginalTitle))
         originalTitle = json_string_value(jOriginalTitle);
-    }
-    json_t *jOverview = jMovie.objectByName("overview");
-    if(json_is_string(jOverview)) {
+
+    json_t *jOverview = jMovie.getObject("overview");
+    if (json_is_string(jOverview))
         overview = json_string_value(jOverview);
-    }
-    json_t *jBackdrop = jMovie.objectByName("backdrop_path");
-    if(json_is_string(jBackdrop)) {
+
+    json_t *jBackdrop = jMovie.getObject("backdrop_path");
+    if (json_is_string(jBackdrop))
         backdropPath = backdropBaseUrl + json_string_value(jBackdrop);
-    }
-    json_t *jPoster = jMovie.objectByName("poster_path");
-    if(json_is_string(jPoster)) {
+
+    json_t *jPoster = jMovie.getObject("poster_path");
+    if (json_is_string(jPoster))
         posterPath = posterBaseUrl + json_string_value(jPoster);
-    }
-    json_t *jAdult = jMovie.objectByName("adult");
-    if(json_is_true(jAdult)) {
+
+    json_t *jAdult = jMovie.getObject("adult");
+    if (json_is_true(jAdult))
         adult = true;
-    }
-    json_t *collection = jMovie.objectByName("belongs_to_collection");
-    if(json_is_object(collection)) {
+
+    json_t *collection = jMovie.getObject("belongs_to_collection");
+    if (json_is_object(collection)) {
         json_t *colID = json_object_get(collection, "id");
-        if (json_is_integer(colID)) {
+        if (json_is_integer(colID))
             collectionID = (int)json_integer_value(colID);
-        }
+
         json_t *colName = json_object_get(collection, "name");
-        if(json_is_string(jPoster)) {
+        if (json_is_string(jPoster))
             collectionName = json_string_value(colName);
-        }
+
         json_t *colPoster = json_object_get(collection, "poster_path");
-        if(json_is_string(colPoster)) {
+        if (json_is_string(colPoster))
             collectionPosterPath = posterBaseUrl + json_string_value(colPoster);
-        }
+
         json_t *colBackdrop = json_object_get(collection, "backdrop_path");
-        if(json_is_string(colBackdrop)) {
+        if (json_is_string(colBackdrop))
             collectionBackdropPath = backdropBaseUrl + json_string_value(colBackdrop);
-        }
     }
-    json_t *jBudget = jMovie.objectByName("budget");
-    if (json_is_integer(jBudget)) {
+
+    json_t *jBudget = jMovie.getObject("budget");
+    if (json_is_integer(jBudget))
         budget = (int)json_integer_value(jBudget);
-    }
-    json_t *aGenres = jMovie.objectByName("genres");
-    if(json_is_array(aGenres)) {
+
+    json_t *aGenres = jMovie.getObject("genres");
+    if (json_is_array(aGenres)) {
         size_t numGenres = json_array_size(aGenres);
         for (size_t res = 0; res < numGenres; res++) {
             json_t *result = json_array_get(aGenres, res);
             if (json_is_object(result)) {
                 json_t *jGenre = json_object_get(result, "name");
-                if(json_is_string(jGenre)) {
+                if (json_is_string(jGenre)) {
                     genres += json_string_value(jGenre);
                     if ((res+1) < numGenres)
                         genres += " | ";
@@ -116,61 +121,66 @@ void cMovieDbMovie::ParseJSON(void) {
             }
         }
     }
-    json_t *jHomepage = jMovie.objectByName("homepage");
-    if(json_is_string(jHomepage)) {
+    json_t *jHomepage = jMovie.getObject("homepage");
+    if (json_is_string(jHomepage)) {
         homepage = json_string_value(jHomepage);
     }
-    json_t *jIMDB = jMovie.objectByName("imdb_id");
-    if(json_is_string(jIMDB)) {
+    json_t *jIMDB = jMovie.getObject("imdb_id");
+    if (json_is_string(jIMDB)) {
         imdbid = json_string_value(jIMDB);
     }
-    json_t *jPopularity = jMovie.objectByName("popularity");
-    if(json_is_real(jPopularity)) {
+    json_t *jPopularity = jMovie.getObject("popularity");
+    if (json_is_real(jPopularity)) {
         popularity = json_real_value(jPopularity);
     }
-    json_t *jReleaseDate = jMovie.objectByName("release_date");
-    if(json_is_string(jReleaseDate)) {
+    json_t *jReleaseDate = jMovie.getObject("release_date");
+    if (json_is_string(jReleaseDate)) {
         releaseDate = json_string_value(jReleaseDate);
     }
-    json_t *jRevenue = jMovie.objectByName("revenue");
+    json_t *jRevenue = jMovie.getObject("revenue");
     if (json_is_integer(jRevenue)) {
         revenue = (int)json_integer_value(jRevenue);
     }
-    json_t *jRuntime = jMovie.objectByName("runtime");
+    json_t *jRuntime = jMovie.getObject("runtime");
     if (json_is_integer(jRuntime)) {
         runtime = (int)json_integer_value(jRuntime);
     }
-    json_t *jVote = jMovie.objectByName("vote_average");
-    if(json_is_real(jVote)) {
+    json_t *jVote = jMovie.getObject("vote_average");
+    if (json_is_real(jVote)) {
         voteAverage = json_real_value(jVote);
     }
-    json_t *jTagline = jMovie.objectByName("tagline");
-    if(json_is_string(jTagline)) {
+    json_t *jTagline = jMovie.getObject("tagline");
+    if (json_is_string(jTagline)) {
         tagline = json_string_value(jTagline);
     }
 }
 
-int cMovieDbMovie::ParseJSONForMovieId(string movieSearchString) {
-    //convert searchstring to lower case
-    transform(movieSearchString.begin(), movieSearchString.end(), movieSearchString.begin(), ::tolower);
-    cJsonLoader root(json.c_str());
-    if (!root.isObject()) {
+int cMovieDbMovie::ParseJSONForMovieId(string movieSearchString)
+{
+   cJson root;
+
+   // convert searchstring to lower case
+
+   transform(movieSearchString.begin(), movieSearchString.end(), movieSearchString.begin(), ::tolower);
+
+   if (root.set(json.c_str()) != success || !root.isObject())
+      return -1;
+
+   json_t *results = root.getObject("results");
+   if (!json_is_array(results))
         return -1;
-    }
-    json_t *results = root.objectByName("results");
-    if(!json_is_array(results)) {
-        return -1;
-    }
+
     size_t numResults = json_array_size(results);
-    for (size_t res = 0; res < numResults; res++) {
+    for (size_t res = 0; res < numResults; res++)
+    {
         json_t *result = json_array_get(results, res);
-        if (!json_is_object(result)) {
+        if (!json_is_object(result))
             return -1;
-        }
+
         json_t *title = json_object_get(result, "title");
-        if (!json_is_string(title)) {
+        if (!json_is_string(title))
             return -1;
-        }
+
         string resultTitle = json_string_value(title);
         //convert result to lower case
         transform(resultTitle.begin(), resultTitle.end(), resultTitle.begin(), ::tolower);

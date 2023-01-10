@@ -8,8 +8,6 @@
 
 #include "../../lib/json.h"
 
-using namespace std;
-
 //***************************************************************************
 // cTVDBSeries
 //***************************************************************************
@@ -46,11 +44,11 @@ class cTVDBSeries
 
       struct Actor
       {
-         string thumbUrl;
+         std::string thumbUrl;
          int thumbUrlWidth {300};
          int thumbUrlHeight {450};
-         string name;
-         string role;
+         std::string name;
+         std::string role;
          int id {0};
          int sortOrder {0};
       };
@@ -61,12 +59,12 @@ class cTVDBSeries
          int seriesID {0};
          int number {0};
          int seasonNumber {0};
-         string name;
-         string firstAired;
-         string guestStars;
-         string overview;
+         std::string name;
+         std::string firstAired;
+         std::string guestStars;
+         std::string overview;
          float rating {0};
-         string imageUrl;
+         std::string imageUrl;
          int width {400};
          int height {225};
          int lastUpdated {0};

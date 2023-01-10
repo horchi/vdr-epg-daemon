@@ -48,7 +48,7 @@ endif
 OBJS += main.o update.o plugin.o epgdconfig.o channelmap.o series.o svdrpclient.o levenshtein.o episode.o
 OBJS += tvdbmanager.o moviedbmanager.o
 
-OBJS += tools/fuzzy.o tools/stringhelpers.o scraper/thetvdbscraper/thetvdbscraper.o scraper/thetvdbscraper/tvdbv4.o
+OBJS += lib/fuzzy.o scraper/thetvdbscraper/thetvdbscraper.o scraper/thetvdbscraper/tvdbv4.o
 OBJS += scraper/thetvdbscraper/tvdbseries.o
 OBJS += scraper/themoviedbscraper/themoviedbscraper.o scraper/themoviedbscraper/moviedbmovie.o
 OBJS += scraper/themoviedbscraper/moviedbactor.o
@@ -148,7 +148,7 @@ webdo.o         :  webdo.c       	 $(HEADER) httpd.h
 webauth.o       :  webauth.c       	 $(HEADER) httpd.h
 webtools.o      :  webtools.c    	 $(HEADER) httpd.h
 
-SCRHEADER = tools/stringhelpers.h lib/curl.h
+SCRHEADER = lib/curl.h
 
 tvdbmanager.o                                 : $(SCRHEADER) tvdbmanager.h tvdbmanager.c lib/epgservice.h lib/epgservice.c lib/db.h lib/db.c
 moviedbmanager.o                              : $(SCRHEADER) moviedbmanager.h moviedbmanager.c lib/epgservice.h lib/epgservice.c lib/db.h lib/db.c
@@ -156,10 +156,9 @@ scraper/thetvdbscraper/tvdbv4.o               : $(SCRHEADER) scraper/thetvdbscra
 scraper/thetvdbscraper/thetvdbscraper.o       : $(SCRHEADER) scraper/thetvdbscraper/thetvdbscraper.h scraper/thetvdbscraper/thetvdbscraper.c scraper/thetvdbscraper/tvdbseries.h
 scraper/thetvdbscraper/tvdbseries.o           : $(SCRHEADER) scraper/thetvdbscraper/tvdbseries.h scraper/thetvdbscraper/tvdbseries.c
 scraper/themoviedbscraper/themoviedbscraper.o : $(SCRHEADER) scraper/themoviedbscraper/themoviedbscraper.h scraper/themoviedbscraper/themoviedbscraper.c scraper/themoviedbscraper/moviedbmovie.h scraper/themoviedbscraper/moviedbactor.h
-scraper/themoviedbscraper/moviedbmovie.o      : $(SCRHEADER) scraper/themoviedbscraper/moviedbmovie.h scraper/themoviedbscraper/moviedbmovie.c scraper/themoviedbscraper/moviedbactor.h tools/fuzzy.h
+scraper/themoviedbscraper/moviedbmovie.o      : $(SCRHEADER) scraper/themoviedbscraper/moviedbmovie.h scraper/themoviedbscraper/moviedbmovie.c scraper/themoviedbscraper/moviedbactor.h lib/fuzzy.h
 scraper/themoviedbscraper/moviedbactors.o     : $(SCRHEADER) scraper/themoviedbscraper/moviedbactor.h scraper/themoviedbscraper/moviedbactor.c
-tools/fuzzy.o                                 : tools/fuzzy.h tools/fuzzy.c
-tools/stringhelpers.o                         : tools/stringhelpers.h tools/stringhelpers.c
+lib/fuzzy.o                                   : lib/fuzzy.h lib/fuzzy.c
 
 # ------------------------------------------------------
 # Plugins

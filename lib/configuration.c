@@ -88,8 +88,8 @@ void cSystemNotification::action()
 int cSystemNotification::notify(int event, const char* format, ...)
 {
 #ifdef USESYSD
-   char* message;
-   char* tmp;
+   char* message {};
+   char* tmp {};
    va_list ap;
 
    if (isEmpty(format))

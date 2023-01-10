@@ -4,8 +4,6 @@
 #include "tvdbseries.h"
 #include "tvdbv4.h"
 
-using namespace std;
-
 std::map<uint,std::string> cTVDBSeries::artworkTypes =
 {
    { atBanner,       "Banner"},
@@ -20,7 +18,7 @@ std::map<uint,std::string> cTVDBSeries::artworkTypes =
    { atClearLogo,    "ClearLogo"},
 };
 
-cTVDBSeries::cTVDBSeries(int id, string aLang)
+cTVDBSeries::cTVDBSeries(int id, std::string aLang)
 {
    lang = aLang;
    seriesID = id;
@@ -47,7 +45,12 @@ int cTVDBSeries::readSeries()
    if (tvdbV4.get(method.c_str(), jResult, &parameters) != success)
       return fail;
 
-   return parseSeries(jResult);
+   int status = parseSeries(jResult);
+   json_decref(jResult);
+
+   readEpisodes();
+
+   return status;
 }
 
 int cTVDBSeries::readEpisodes()
@@ -65,7 +68,19 @@ int cTVDBSeries::readEpisodes()
    if (tvdbV4.get(method.c_str(), jResult, &parameters) != success)
       return fail;
 
-   return parseEpisodes(jResult);
+   int status = parseEpisodes(jResult);
+   json_decref(jResult);
+
+   const char* next = getStringByPath(jResult, "links/next");
+
+   if (next && strstr(next, "page="))
+   {
+      const char* p = strstr(next, "page=");
+      p += 5;
+      tell(eloAlways, "---- TODO, get next page %d", atoi(p));
+   }
+
+   return status;
 }
 
 int cTVDBSeries::parseSeries(json_t* jResult)
@@ -129,6 +144,34 @@ int cTVDBSeries::parseSeries(json_t* jResult)
 
    lastUpdated = str2LTime(getStringFromJson(jData, "lastUpdated", ""), "%Y-%m-%d %H:%M:%S");
 
+   // seasons
+
+   struct Season
+   {
+      uint id {0};
+      uint number {0};
+      uint imageType {0};
+      std::string image;
+   };
+
+   std::map<uint,Season> seasons;
+
+   j = getObjectFromJson(jData, "seasons");
+
+   json_array_foreach(j, item, jItem)
+   {
+      if (getIntByPath(jItem, "type/id") != 1)
+         continue;
+
+      uint id = getIntFromJson(jItem, "id", 0);
+      seasons[id].id = id;
+      seasons[id].number = getIntFromJson(jItem, "number", 0);
+      seasons[id].imageType = getIntFromJson(jItem, "imageType", 0);
+      seasons[id].image = getStringFromJson(jItem, "image", 0);
+   }
+
+   j = getObjectFromJson(jData, "artworks");
+
    // artwork
 
    j = getObjectFromJson(jData, "artworks");
@@ -148,9 +191,23 @@ int cTVDBSeries::parseSeries(json_t* jResult)
          artwork.width = getIntFromJson(jItem, "width");
          artwork.height = getIntFromJson(jItem, "height");
 
-         if (type == atSeasonPoster)
-            artwork.seasonId = getIntFromJson(jItem, "seasonId", 0);
+         if (!artwork.url.empty() && artwork.url[0] == '/')
+            artwork.url = cTVDBv4::tvdbArtworkUrl + artwork.url;
 
+         if (!artwork.urlThump.empty() && artwork.urlThump[0] == '/')
+            artwork.urlThump = cTVDBv4::tvdbArtworkUrl + artwork.urlThump;
+
+         if (type == atSeasonPoster)
+         {
+            uint sessionId = getIntFromJson(jItem, "seasonId", 0);
+
+            if (seasons.find(sessionId) == seasons.end() || artwork.url != seasons[sessionId].image)
+               continue;
+
+            artwork.seasonId = seasons[sessionId].number;
+         }
+
+         // tell(eloAlways, "Debug: Series (%d) got artwork '%s'", seriesID, artwork.url.c_str());
          artworks.push_back(std::move(artwork));
       }
    }
@@ -200,6 +257,9 @@ int cTVDBSeries::parseEpisodes(json_t* jResult)
       episode.imageUrl = getStringFromJson(jItem, "image", "");
       // episode.guestStars = "";
       // episode.rating = 0;
+
+      if (!episode.imageUrl.empty() && episode.imageUrl[0] == '/')
+         episode.imageUrl = cTVDBv4::tvdbArtworkUrl + episode.imageUrl;
 
       // lastUpdated - like "2023-01-08 02:21:27",
 

@@ -2,9 +2,7 @@
 #include "tvdbv4.h"
 #include "thetvdbscraper.h"
 
-using namespace std;
-
-map<std::string,std::string> cTVDBScraper::languages =
+std::map<std::string,std::string> cTVDBScraper::languages =
 {
    { "de", "deu"},
    { "en", "eng"}
@@ -100,6 +98,8 @@ bool cTVDBScraper::GetUpdatedSeriesandEpisodes(set<int>* updatedSeries, set<int>
 
 int cTVDBScraper::readSeriesId(const char* seriesName)
 {
+   // https://api4.thetvdb.com/v4/search?language=deu&query=Bones%20-%20Die%20Knochenj%C3%A4gerin&type=series
+
    MemoryStruct data;
    std::map<std::string,std::string> parameters;
 

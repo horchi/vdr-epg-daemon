@@ -664,9 +664,6 @@ int main(int argc, char** argv)
    createMd5("rec->FileName() dummy", md5path);
    printf(":: '%s'\n", md5path);
 
-   _createMd5OfFile("./", "common.c", md5path);
-   printf("common.c:: '%s'\n", md5path);
-
    createMd5OfFile("./", "common.c", md5path);
    printf("common.c:: '%s'\n", md5path);
 

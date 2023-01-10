@@ -9,6 +9,7 @@
 
 const char* cTVDBv4::tvdbV4Url {"https://api4.thetvdb.com/v4/"};
 const char* cTVDBv4::tvdbApiKey {"5476e702-85aa-45fd-a8da-e74df3840baf"};
+const char* cTVDBv4::tvdbArtworkUrl {"https://artworks.thetvdb.com"};
 
 //***************************************************************************
 // Singelton
@@ -58,11 +59,12 @@ int cTVDBv4::login(const char* aLang)
 
    json_t* jData = getObjectFromJson(jResult, "data");
    const char* tvdbToken = getStringFromJson(jData, "token", "");
-   json_decref(jResult);
 
    tell(eloAlways, "TvDb: Login succeeded");
    tell(eloDebug2, "TvDb: Got token '%s'", tvdbToken);
    curl.addHeader("Authorization: Bearer %s", tvdbToken);
+
+   json_decref(jResult);
 
    return success;
 }

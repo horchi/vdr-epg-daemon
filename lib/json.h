@@ -50,4 +50,24 @@ int addToJson(json_t* obj, const char* name, long value);
 int addToJson(json_t* obj, const char* name, double value);
 int addToJson(json_t* obj, const char* name, json_t* o);
 
+//***************************************************************************
+// cJson
+//***************************************************************************
+
+class cJson
+{
+   public:
+
+      cJson() {}
+      virtual ~cJson() { if (jObj) json_decref(jObj); }
+
+      int set(const char* sJson)          { jObj = jsonLoad(sJson); return jObj ? success : fail; }
+      bool isObject()                     { return jObj && json_is_object(jObj); }
+      json_t* getObject(const char* name) { return getObjectFromJson(jObj, name); }
+
+   protected:
+
+      json_t* jObj {};
+};
+
 #endif // USEJSON

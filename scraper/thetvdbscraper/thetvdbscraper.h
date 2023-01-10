@@ -13,8 +13,6 @@
 
 #include "tvdbseries.h"
 
-using namespace std;
-
 // --- cTVDBScraper -------------------------------------------------------------
 
 class cTVDBScraper
@@ -28,7 +26,7 @@ class cTVDBScraper
       int disconnect();
       int GetServerTime();
       cTVDBSeries* scrapByName(const char* seriesName);
-      bool GetUpdatedSeriesandEpisodes(set<int>* updatedSeries, set<int>* updatedEpisodes, int lastScrap);
+      bool GetUpdatedSeriesandEpisodes(std::set<int>* updatedSeries, std::set<int>* updatedEpisodes, int lastScrap);
       cTVDBSeries* getSeries(int seriesID);
 
    private:
