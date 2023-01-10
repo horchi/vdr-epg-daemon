@@ -455,7 +455,7 @@ void statementrecording()
 #ifdef USEMD5
    md5Buf md5path;
    createMd5("rec->FileName() dummy", md5path);
-   recordingListDb->setValue("MD5PATH", md5path);
+   recordingListDb->setValue("MD5PATH", (char*)md5path);
 #else
    recordingListDb->setValue("MD5PATH", "dummy");
 #endif
@@ -659,6 +659,16 @@ int main(int argc, char** argv)
 {
    cEpgConfig::logstdout = yes;
    cEpgConfig::loglevel = 2;
+
+   md5Buf md5path;
+   createMd5("rec->FileName() dummy", md5path);
+   printf(":: '%s'\n", md5path);
+
+   _createMd5OfFile("./", "common.c", md5path);
+   printf("common.c:: '%s'\n", md5path);
+
+   createMd5OfFile("./", "common.c", md5path);
+   printf("common.c:: '%s'\n", md5path);
 
    if (argc > 1)
    {

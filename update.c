@@ -1184,7 +1184,7 @@ int cEpgd::migrateFromDbApi5()
             + std::string(recordingListDb->getStrValue("SHORTTEXT"));
          createMd5(text.c_str(), md5Id);
 
-         recordingListDb->setValue("IMGID", md5Id);
+         recordingListDb->setValue("IMGID", (const char*)md5Id);
          recordingListDb->update();
       }
    }
@@ -1382,14 +1382,14 @@ int cEpgd::checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* f
    {
       getParameter("epgd", param, md5);
 
-      if (strcmp(md5, md5New) != 0)          // drop if changed
+      if (strcmp(md5, (const char*)md5New) != 0)          // drop if changed
          p->drop();
    }
 
    if (!p->created())
    {
       status = p->create(confDir);
-      setParameter("epgd", param, md5New);
+      setParameter("epgd", param, (const char*)md5New);
    }
 
    free(file);
@@ -1430,14 +1430,14 @@ int cEpgd::checkView(const char* name, const char* file)
       {
          getParameter("epgd", param, md5);
 
-         if (strcmp(md5, md5New) != 0)          // drop if changed
+         if (strcmp(md5, (const char*)md5New) != 0)          // drop if changed
             view.drop();
       }
 
       if (!view.exist())
       {
          status += view.create(confDir, file);
-         setParameter("epgd", param, md5New);
+         setParameter("epgd", param, (const char*)md5New);
       }
    }
 
