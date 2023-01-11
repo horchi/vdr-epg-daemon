@@ -129,7 +129,7 @@ int cTVDBScraper::readSeriesId(const char* seriesName)
 
       if (strcasestr(name, seriesName))
       {
-         seriesID = atoi(getStringFromJson(jSeries, "tvdb_id"));
+         seriesID = atoi(getStringFromJson(jSeries, "tvdb_id", ""));
          // tell(eloAlways, "Found series '%s', id is %d", name, seriesID);
          break;
       }
@@ -147,7 +147,7 @@ int cTVDBScraper::readSeriesId(const char* seriesName)
 
             if (alias && strcasestr(alias, seriesName))
             {
-               seriesID = atoi(getStringFromJson(jSeries, "tvdb_id"));
+               seriesID = atoi(getStringFromJson(jSeries, "tvdb_id", ""));
                // printf("Found series '%s' by alias '%s', id is %d\n", name, alias, seriesID);
                break;
             }

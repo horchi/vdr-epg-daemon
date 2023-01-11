@@ -1633,8 +1633,8 @@ void cEpgd::loop()
 
    scheduleAutoUpdate(EpgdConfig.checkInitial ? 10 : 0);
 
-   scrapNewEvents();   // # to debug scarper at Start
-   return ;
+   // scrapNewEvents();   // # to debug scarper at Start
+   // return ;
 
    while (!doShutDown())
    {

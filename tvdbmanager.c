@@ -288,6 +288,10 @@ void cTVDBManager::saveSeriesMedia(cTVDBSeries* series)
    for (const auto& artwork : *series->getArtwork())
    {
       int lfn = lfns[artwork.type];
+
+      if (lfn > 3)    // max 4 images / media-type
+         continue;
+
       bool exists = loadMedia(series->seriesID, artwork.seasonId, 0, 0, artwork.type, lfn);
 
       if (!exists || imageUrlChanged(artwork.url))
@@ -307,7 +311,8 @@ void cTVDBManager::saveSeriesMedia(cTVDBSeries* series)
 
 int cTVDBManager::updateStoreArtwork(const cTVDBSeries::Artwork& artwork, uint lfn, int seriesID)
 {
-   MemoryStruct data;
+   if (artwork.url.empty())
+      return done;
 
    tSeriesMedia->clear();
    tSeriesMedia->setValue("SeriesId", seriesID);
@@ -321,6 +326,7 @@ int cTVDBManager::updateStoreArtwork(const cTVDBSeries::Artwork& artwork, uint l
    tSeriesMedia->setValue("MediaHeight", artwork.height);
    tSeriesMedia->setValue("MediaRating", artwork.rating);
 
+   MemoryStruct data;
    int status = GetPicture(artwork.url.c_str(), &data);
 
    if (status == success)
@@ -506,6 +512,9 @@ int cTVDBManager::GetPicture(const char* url, MemoryStruct* data)
    int maxSize = tSeriesMedia->getField("MediaContent")->getSize();
    int fileSize {0};
    data->clear();
+
+   if (isEmpty(url))
+      return fail;
 
    if (curl.downloadFile(url, fileSize, data) != success)
       return fail;

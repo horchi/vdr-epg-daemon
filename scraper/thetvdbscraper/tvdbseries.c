@@ -94,7 +94,7 @@ int cTVDBSeries::parseSeries(json_t* jResult)
 
    // firstAired
 
-   firstAired = getStringFromJson(jData, "firstAired");
+   firstAired = getStringFromJson(jData, "firstAired", "");
 
    // genres
 
@@ -167,7 +167,7 @@ int cTVDBSeries::parseSeries(json_t* jResult)
       seasons[id].id = id;
       seasons[id].number = getIntFromJson(jItem, "number", 0);
       seasons[id].imageType = getIntFromJson(jItem, "imageType", 0);
-      seasons[id].image = getStringFromJson(jItem, "image", 0);
+      seasons[id].image = getStringFromJson(jItem, "image", "");
    }
 
    j = getObjectFromJson(jData, "artworks");
