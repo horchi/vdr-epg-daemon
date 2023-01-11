@@ -1824,7 +1824,7 @@ const char* getUniqueId()
 
 #include <openssl/evp.h>
 
-#ifndef OPENSSL_NO_DEPRECATED_3_0
+#if OPENSSL_VERSION_MAJOR >= 3
 
 int createMd5(const char* buf, md5* md5)
 {
