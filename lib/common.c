@@ -1824,6 +1824,8 @@ const char* getUniqueId()
 
 #include <openssl/evp.h>
 
+#ifndef OPENSSL_NO_DEPRECATED_3_0
+
 int createMd5(const char* buf, md5* md5)
 {
    EVP_MD_CTX* mdctx;
@@ -1889,9 +1891,25 @@ int createMd5OfFile(const char* path, const char* name, md5* md5)
 
    return success;
 }
+#else
+int createMd5(const char* buf, md5* md5)
+{
+   MD5_CTX c;
+   unsigned char out[MD5_DIGEST_LENGTH];
 
-/*
-int _createMd5OfFile(const char* path, const char* name, md5* md5)
+   MD5_Init(&c);
+   MD5_Update(&c, buf, strlen(buf));
+   MD5_Final(out, &c);
+
+   for (int n = 0; n < MD5_DIGEST_LENGTH; n++)
+      sprintf(md5+2*n, "%02x", out[n]);
+
+   md5[sizeMd5] = 0;
+
+   return done;
+}
+
+int createMd5OfFile(const char* path, const char* name, md5* md5)
 {
    FILE* f;
    char buffer[1000];
@@ -1921,13 +1939,14 @@ int _createMd5OfFile(const char* path, const char* name, md5* md5)
    MD5_Final(out, &c);
 
    for (int n = 0; n < MD5_DIGEST_LENGTH; n++)
-      sprintf((char*)md5+2*n, "%02x", out[n]);
+      sprintf(md5+2*n, "%02x", out[n]);
 
    md5[sizeMd5] = 0;
 
    return success;
 }
-*/
+#endif // OPENSSL_NO_DEPRECATED_3_0
+
 #endif // USEMD5
 
 //***************************************************************************
