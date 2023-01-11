@@ -1891,7 +1891,9 @@ int createMd5OfFile(const char* path, const char* name, md5* md5)
 
    return success;
 }
+
 #else
+
 int createMd5(const char* buf, md5* md5)
 {
    MD5_CTX c;
