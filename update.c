@@ -2618,7 +2618,7 @@ int cEpgd::scrapNewEvents()
 
    int seriesCur {0};
 
-   tell(0, "%zu new series events to scrap in db", seriesToScrap.size());
+   tell(0, "Series for %zu new events to scrap", seriesToScrap.size());
 
    for (vector<sSeriesResult>::iterator it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
    {
@@ -2626,7 +2626,7 @@ int cEpgd::scrapNewEvents()
       cSystemNotification::check();
 
       if (seriesCur % 10 == 0)
-         tell(0, "Series episode %d / %zu scraped...continuing scraping", seriesCur, seriesToScrap.size());
+         tell(0, "Series episode %d / %zu scraped, continuing ...", seriesCur, seriesToScrap.size());
 
       tvdbManager->processSeries(*it);
 
@@ -2674,7 +2674,7 @@ int cEpgd::scrapNewEvents()
       movieCur++;
 
       if (movieCur % 10 == 0)
-         tell(0, "movie %d / %d scraped...continuing scraping", movieCur, moviesTotal);
+         tell(0, "movie %d / %d scraped, continuing ...", movieCur, moviesTotal);
 
       if (movieCur % 40 == 0)
       {

@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.2.5"
-#define VERSION_DATE "06.01.2023"
+#define _VERSION     "1.3.0"
+#define VERSION_DATE "11.01.2023"
 #define DB_API       7
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2023-01-01: version 1.3.0 (horchi)
+   - added: Support of TVDB V4
 
 2023-01-06: version 1.2.5 (horchi)
    - bugfix: Fixed delete button of page 'Timer' -> 'kürzliche Aufträge'

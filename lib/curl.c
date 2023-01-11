@@ -188,6 +188,8 @@ int cCurl::get(const char* aUrl, MemoryStruct* data, std::map<std::string,std::s
       url.erase(url.size() - 1);
    }
 
+   // tell(0, "CURL: Requesting '%s'", url.c_str());
+
    // CURL options
 
    curl_easy_setopt(handle, CURLOPT_URL, url.c_str());

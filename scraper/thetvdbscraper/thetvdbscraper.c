@@ -1,4 +1,7 @@
 
+// test page:
+//    https://thetvdb.github.io/v4-api/
+
 #include "tvdbv4.h"
 #include "thetvdbscraper.h"
 
@@ -99,6 +102,7 @@ bool cTVDBScraper::GetUpdatedSeriesandEpisodes(set<int>* updatedSeries, set<int>
 int cTVDBScraper::readSeriesId(const char* seriesName)
 {
    // https://api4.thetvdb.com/v4/search?language=deu&query=Bones%20-%20Die%20Knochenj%C3%A4gerin&type=series
+   // https://api4.thetvdb.com/v4/search?language=deu&query=Diagnose%3A%20Mord&type=series
 
    MemoryStruct data;
    std::map<std::string,std::string> parameters;
@@ -115,7 +119,10 @@ int cTVDBScraper::readSeriesId(const char* seriesName)
    json_t* jData = getObjectFromJson(jResult, "data");
 
    if (!jData)
+   {
+      tell(0, "Missing 'data' in result of of call for '%s'", seriesName);
       return 0;
+   }
 
    int seriesID {0};
    size_t index {0};
@@ -153,6 +160,15 @@ int cTVDBScraper::readSeriesId(const char* seriesName)
             }
          }
       }
+   }
+
+   // nichts gefunden, ersten treffer verwenden ...
+
+   if (!seriesID)
+   {
+      jSeries = json_array_get(jData, 0);
+      seriesID = atoi(getStringFromJson(jSeries, "tvdb_id", ""));
+      tell(0, "Series '%s' not found by aliases, using first of (%ld) search results -> (%d)", seriesName, json_array_size(jData), seriesID);
    }
 
    json_decref(jResult);
