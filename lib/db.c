@@ -1401,11 +1401,14 @@ int cDbConnection::errorSql(cDbConnection* connection, const char* prefix,
 #endif
        error == CR_COMMANDS_OUT_OF_SYNC ||
        error == CR_SERVER_LOST_EXTENDED ||
+#ifdef CR_STMT_CLOSED
        error == CR_STMT_CLOSED ||
+#endif
 // for compatibility with newer versions of MariaBD library
 #ifdef CR_CONN_UNKNOW_PROTOCOL
        error == CR_CONN_UNKNOW_PROTOCOL ||
-#else
+#endif
+#ifdef CR_CONN_UNKNOWN_PROTOCOL
        error == CR_CONN_UNKNOWN_PROTOCOL ||
 #endif
        error == CR_UNSUPPORTED_PARAM_TYPE ||
