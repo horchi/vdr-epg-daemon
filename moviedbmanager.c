@@ -37,7 +37,8 @@ std::string str_cut(const std::string& search, const std::string& subject)
    return strCutted;
 }
 
-cMovieDBManager::cMovieDBManager(void) {
+cMovieDBManager::cMovieDBManager()
+{
     connection = NULL;
     tMovies = NULL;
     tMoviesActor = NULL;
@@ -118,7 +119,7 @@ int cMovieDBManager::ConnectDatabase(cDbConnection *conn) {
     return success;
 }
 
-bool cMovieDBManager::ConnectScraper(void) {
+bool cMovieDBManager::ConnectScraper() {
     movieDbScraper = new cMovieDBScraper(language);
     bool ok = movieDbScraper->Connect();
     return ok;
@@ -363,7 +364,8 @@ int cMovieDBManager::GetPicture(const char* url, MemoryStruct* data) {
     return fail;
 }
 
-int cMovieDBManager::CleanupMovies(void) {
+int cMovieDBManager::CleanupMovies()
+{
     int numDelete = 0;
     set<int> activeMovieIds;
     int status = success;

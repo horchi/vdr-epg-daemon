@@ -18,6 +18,10 @@
 #include "scraper/thetvdbscraper/thetvdbscraper.h"
 #include "scraper/thetvdbscraper/tvdbseries.h"
 
+//***************************************************************************
+// sSeriesResult
+//***************************************************************************
+
 struct sSeriesResult
 {
    tEventId eventId {0};
@@ -29,7 +33,9 @@ struct sSeriesResult
    std::string episodeName;
 };
 
-// --- cTVDBManager -------------------------------------------------------------
+//***************************************************************************
+// cTVDBManager
+//***************************************************************************
 
 class cTVDBManager
 {
@@ -38,17 +44,16 @@ class cTVDBManager
       cTVDBManager(bool aWithutf8 = true);
       virtual ~cTVDBManager();
 
-      int ConnectDatabase(cDbConnection *conn);
+      int connectDatabase(cDbConnection* c);
       int connectScraper();
-      void SetServerTime();
       void ResetBytesDownloaded() { bytesDownloaded = 0; };
       int GetBytesDownloaded() { return bytesDownloaded; };
       void UpdateSeries();
-      bool GetSeriesWithEpisodesFromEPG(std::vector<sSeriesResult> *result);
+      bool GetSeriesWithEpisodesFromEPG(std::vector<sSeriesResult>* result);
       void processSeries(sSeriesResult ser);
       int CleanupSeries();
-      bool SearchRecordingDB(std::string name, std::string episode, int &seriesId, int &episodeId);
-      bool searchRecordingOnline(const char* name, std::string episode, int &seriesId, int &episodeId);
+      bool SearchRecordingDB(std::string name, std::string episode, int& seriesId, int& episodeId);
+      bool searchRecordingOnline(const char* name, std::string episode, int& seriesId, int& episodeId);
       bool CheckScrapInfoDB(int scrapSeriesId, int scrapEpisodeId);
       bool CheckScrapInfoOnline(int scrapSeriesId, int scrapEpisodeId);
 
@@ -57,7 +62,6 @@ class cTVDBManager
       int bytesDownloaded {0};
       int withutf8 {no};
       std::string language {"en"};
-      // int serverTime {0};
       std::map<std::string,int> alreadyScraped;
       cTVDBScraper* tvdbScraper {};
       cDbConnection* connection {};
@@ -85,10 +89,11 @@ class cTVDBManager
       bool imageUrlChanged(std::string url);
       int GetPicture(const char* url, MemoryStruct* data);
       int LoadSeriesFromDd(std::string name);
-      void GetSeasonEpisodeFromEpisodename(int seriesID, int &season, int &part, std::string episodeName);
+      void GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, std::string episodeName);
       void loadSeasonPoster(int seriesID, int season);
+      int LoadEpisode(std::string name, int seriesId);
       int loadEpisodePicture(int seriesID, int season, int part);
+
       void UpdateEvent(tEventId eventID, int seriesID, int episodeID);
       void DeleteSeries(int seriesId);
-      int LoadEpisode(std::string name, int seriesId);
 };

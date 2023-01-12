@@ -1,6 +1,5 @@
 
-#ifndef __TVSCRAPER_MOVIEDBMANAGER_H
-#define __TVSCRAPER_MOVIEDBMANAGER_H
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -42,7 +41,6 @@ private:
     cDbTable *tMoviesActors;
     cDbTable *tMovieMedia;
     cDbTable *tEvents;
-//    cDbTable *tRecordings;
     cDbTable *tRecordingList;
     enum mediaType {
          mtPoster,
@@ -62,20 +60,17 @@ private:
     void DeleteMovie(int movieId);
     cMovieDbMovie *SearchRecordingSophisticated(string name);
 public:
-    cMovieDBManager(void);
-    virtual ~cMovieDBManager(void);
+    cMovieDBManager();
+    virtual ~cMovieDBManager();
     int ConnectDatabase(cDbConnection *conn);
-    bool ConnectScraper(void);
-    void ResetBytesDownloaded(void) { bytesDownloaded = 0; };
-    int GetBytesDownloaded(void) { return bytesDownloaded; };
+    bool ConnectScraper();
+    void ResetBytesDownloaded() { bytesDownloaded = 0; };
+    int GetBytesDownloaded() { return bytesDownloaded; };
     bool GetMoviesFromEPG(vector<sMovieResult> *result);
     void ProcessMovie(sMovieResult mov);
     bool SearchRecordingDB(string name, int &movieId);
     bool SearchRecordingOnline(string name, int &movieId);
     bool CheckScrapInfoDB(int scrapMovieId);
     bool CheckScrapInfoOnline(int scrapMovieId);
-    int CleanupMovies(void);
+    int CleanupMovies();
 };
-
-
-#endif //__TVSCRAPER_MOVIEDBMANAGER_H

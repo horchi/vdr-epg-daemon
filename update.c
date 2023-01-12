@@ -2539,7 +2539,7 @@ int cEpgd::initScrapers()
       return fail;
    }
 
-   if ((status = tvdbManager->ConnectDatabase(connection)) != success)
+   if ((status = tvdbManager->connectDatabase(connection)) != success)
    {
       tell(0, "Error while connecting to series database");
       return status;
@@ -2594,7 +2594,9 @@ int cEpgd::scrapNewEvents()
    tell(0, "Scraping new series and episodes");
 
    /*
-   // tvdbManager->SetServerTime();
+
+   // TODO - to be implemented with API V4
+
    tvdbManager->ResetBytesDownloaded();
    tvdbManager->UpdateSeries();
 
@@ -2603,6 +2605,7 @@ int cEpgd::scrapNewEvents()
 
    tell(0, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
         time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
+
    */
 
    // ------------------------------
@@ -2662,10 +2665,10 @@ int cEpgd::scrapNewEvents()
    if (!movieDbManager->GetMoviesFromEPG(&moviesToScrap))
       return fail;
 
-   int moviesTotal = moviesToScrap.size();
-   int movieCur {0};
+   size_t moviesTotal = moviesToScrap.size();
+   size_t movieCur {0};
 
-   tell(0, "%d new movies to scrap in db", moviesTotal);
+   tell(0, "Movies for %zu new events to scrap", moviesTotal);
 
    time_t sectionStartAt = time(0);  // split download in parts of 40
 
@@ -2674,7 +2677,7 @@ int cEpgd::scrapNewEvents()
       movieCur++;
 
       if (movieCur % 10 == 0)
-         tell(0, "movie %d / %d scraped, continuing ...", movieCur, moviesTotal);
+         tell(0, "movie %zu / %zu scraped, continuing ...", movieCur, moviesTotal);
 
       if (movieCur % 40 == 0)
       {
@@ -2702,7 +2705,7 @@ int cEpgd::scrapNewEvents()
    bytes = movieDbManager->GetBytesDownloaded();
    mb = (double)bytes / 1024.0 / 1024.0;
 
-   tell(0, "%d of %d movies scraped in %ld s, downloaded %.3f %cB",
+   tell(0, "%zu of %zu movies scraped in %ld s, downloaded %.3f %cB",
         movieCur, moviesTotal, time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
 
    // ------------------------------
@@ -2713,13 +2716,10 @@ int cEpgd::scrapNewEvents()
       time_t lastScrRefUpdate {0};
 
       getParameter("epgd", "lastScrRefUpdate", lastScrRefUpdate);
-
       eventsDb->clear();
       useeventsDb->clear();
       eventsDb->setValue("SCRSP", lastScrRefUpdate-5);
-
       updateScrReference->execute();
-
       setParameter("epgd", "lastScrRefUpdate", lastScrRefUpdate);
    }
 

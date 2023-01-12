@@ -8,7 +8,7 @@
 #include "tvdbv4.h"
 
 const char* cTVDBv4::tvdbV4Url {"https://api4.thetvdb.com/v4/"};
-const char* cTVDBv4::tvdbApiKey {"5476e702-85aa-45fd-a8da-e74df3840baf"};
+const char* cTVDBv4::tvdbApiKey {"66b48091-4ebc-4a84-865b-07f73ba1123e"};
 const char* cTVDBv4::tvdbArtworkUrl {"https://artworks.thetvdb.com"};
 
 //***************************************************************************
