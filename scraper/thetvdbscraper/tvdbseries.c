@@ -69,7 +69,6 @@ int cTVDBSeries::readEpisodes()
       return fail;
 
    int status = parseEpisodes(jResult);
-   json_decref(jResult);
 
    const char* next = getStringByPath(jResult, "links/next", "");
 
@@ -79,6 +78,8 @@ int cTVDBSeries::readEpisodes()
       p += 5;
       tell(eloAlways, "---- TODO, get next page %d", atoi(p));
    }
+
+   json_decref(jResult);
 
    return status;
 }
