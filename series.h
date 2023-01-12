@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef __SERIES_H_
-#define __SERIES_H_
+#pragma once
 
 #include <string>
 
@@ -16,7 +15,7 @@
 #define episodeFileExtension ".episodes"
 
 //***************************************************************************
-// 
+//
 //***************************************************************************
 
 enum SvdrRetrunCodes
@@ -57,7 +56,7 @@ enum SvdrRetrunCodes
     // constable specific
 
     # 602 Blocked
-*/
+   */
 };
 
 //***************************************************************************
@@ -68,7 +67,7 @@ class cEpisodeFile : public cListObject
 {
    public:
 
-      cEpisodeFile(std::string aName, std::string aLink, cList<cLine>* aLines = 0) 
+      cEpisodeFile(std::string aName, std::string aLink, cList<cLine>* aLines = 0)
       { name = aName; link = aLink; lines = aLines; }
 
       ~cEpisodeFile() { if (lines) delete lines; }
@@ -97,7 +96,7 @@ class cEpisodeFile : public cListObject
             unlink(ln.c_str());
 
             if (symlink(file.c_str(), ln.c_str()) != 0)
-               tell(0, "SERIES: Failed to create symlink '%s', error was '%s'", 
+               tell(0, "SERIES: Failed to create symlink '%s', error was '%s'",
                     ln.c_str(), strerror(errno));
          }
          else
@@ -106,19 +105,19 @@ class cEpisodeFile : public cListObject
             FILE* fp;
 
             // open file for writing
-            
+
             if (!(fp = fopen(file.c_str(), "w+")))
             {
                tell(0, "SERIES: Store '%s' failed, '%s'", file.c_str(), strerror(errno));
                return -1;
             }
-            
+
             for (cLine* l = lines->First(); l; l = lines->Next(l))
             {
                fwrite(l->Text(), l->Length(), 1, fp);
                fwrite("\n", 1, 1, fp);
             }
-            
+
             fclose(fp);
          }
 
@@ -146,7 +145,7 @@ class cEpisodeFiles : public cList<cEpisodeFile>
 
       cEpisodeFile* findByLink(const char* aName)
       {
-         for (cEpisodeFile* f = First(); f; f = Next(f)) 
+         for (cEpisodeFile* f = First(); f; f = Next(f))
          {
             if (!f->isLink() && strcmp(f->getName(), aName) == 0)
                return f;
@@ -155,24 +154,24 @@ class cEpisodeFiles : public cList<cEpisodeFile>
          return 0;
       }
 
-      int storeToFile(const char* aPath) 
-      { 
-         for (cEpisodeFile* f = First(); f; f = Next(f)) 
-            f->storeToFile(aPath); 
+      int storeToFile(const char* aPath)
+      {
+         for (cEpisodeFile* f = First(); f; f = Next(f))
+            f->storeToFile(aPath);
 
-         return 0; 
+         return 0;
       }
 
-      int storeToTable(cDbTable* episodeDb) 
-      { 
-         for (cEpisodeFile* f = First(); f; f = Next(f)) 
+      int storeToTable(cDbTable* episodeDb)
+      {
+         for (cEpisodeFile* f = First(); f; f = Next(f))
          {
             if (f->isLink())
             {
                if (cEpisodeFile* l = findByLink(f->getName()))
                   f->storeToTable(episodeDb, l->getLines());
                else
-                  tell(0, "Warning: Ignoring invalid link '%s' destination '%s' not found", 
+                  tell(0, "Warning: Ignoring invalid link '%s' destination '%s' not found",
                           f->getLink(), f->getName());
             }
             else
@@ -181,10 +180,7 @@ class cEpisodeFiles : public cList<cEpisodeFile>
             }
          }
 
-         return 0; 
+         return 0;
       }
 
 };
-//***************************************************************************
-
-#endif //  __SERIES_H_

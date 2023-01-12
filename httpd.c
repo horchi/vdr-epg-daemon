@@ -852,8 +852,8 @@ int cEpgHttpd::initDb()
    selectSeriesMedia->clrBindPrefix();
    selectSeriesMedia->build(" from %s m left outer join %s a on (m.%s = a.%s) where ",
                            seriesMediaDb->TableName(), seriesActorsDb->TableName(),
-                           movieActorsDb->getField("ActorId")->getDbName(),
-                           movieMediaDb->getField("ActorId")->getDbName());
+                           seriesMediaDb->getField("ActorId")->getDbName(),
+                           seriesActorsDb->getField("ActorId")->getDbName());
    selectSeriesMedia->setBindPrefix("m.");
    selectSeriesMedia->bind("SeriesId", cDBS::bndIn | cDBS::bndSet);
    selectSeriesMedia->build(" and (m.episode_id = 0 or ");

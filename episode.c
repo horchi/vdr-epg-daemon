@@ -40,18 +40,18 @@ int getSpecial(const char* line, const char* item, char* content, int max, int* 
 
 int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLines)
 {
-   const int maxSeasons = 100;
+   const int maxSeasons {100};
 
-   string::size_type pos;
-   string compName;
-   string lang = "de";
-   string ename = name;
+   std::string::size_type pos {0};
+   std::string compName;
+   std::string lang {"de"};
+   std::string ename {name};
 
-   char shortName[100] = "";
-   char col1Name[100] = "";
-   char col2Name[100] = "";
-   char col3Name[100] = "";
-   int exColCount = 0;
+   char shortName[100] {};
+   char col1Name[100] {};
+   char col2Name[100] {};
+   char col3Name[100] {};
+   int exColCount {0};
 
    const cList<cLine>* theLines = linkLines ? linkLines : lines;
 
@@ -63,7 +63,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
 
    // detect language special
 
-   if ((pos = ename.rfind('.')) != string::npos)
+   if ((pos = ename.rfind('.')) != std::string::npos)
    {
       lang = ename.substr(pos+1);
 
@@ -87,10 +87,10 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
 
    // parse ...
 
-   unsigned short seasons[maxSeasons+1];
-   int seasonNr = na;
-   int insideSeasonList = no;
-   char* line = 0;
+   unsigned short seasons[maxSeasons+1] {};
+   int seasonNr {na};
+   bool insideSeasonList {false};
+   char* line {};
 
    memset(seasons, 0, sizeof(seasons));
 
@@ -119,9 +119,9 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
          if (strstr(line, "SEASONLIST"))
          {
             if (strstr(line, "/SEASONLIST"))
-               insideSeasonList = no;
+               insideSeasonList = false;
             else
-               insideSeasonList = yes;
+               insideSeasonList = true;
 
             continue;
          }
@@ -169,7 +169,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
 
       // found episode line ...
 
-      string partNameComp;
+      std::string partNameComp;
       char partName[200] = "";
       char comment[200] = "";
       char ex1[250] = "";
@@ -258,7 +258,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
 
       if (!isEmpty(shortName))
       {
-         string comp;
+         std::string comp;
          comp = shortName;
          prepareCompressed(comp);
 
@@ -287,9 +287,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
          episodeDb->setValue("EXTRACOL3", ex);
       }
 
-      if (episodeDb->store() != success)
-         tell(0, "Error: (%s) Can't store part '%s'/%d of "
-              "serie '%s' in database", name.c_str(), partName, ep, ename.c_str());
+      episodeDb->store();
    }
 
    free(line);

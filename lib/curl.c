@@ -278,7 +278,7 @@ int cCurl::GetUrl(const char* url, std::string* sOutput, const std::string& sRef
    curl_easy_setopt(handle, CURLOPT_FAILONERROR, yes);
    curl_easy_setopt(handle, CURLOPT_WRITEDATA, sOutput);       // Set option to write to string
 
-   tell(0, "Debug: CURL request url '%s' [%s]", url, getBacktrace(3).c_str());
+   tell(5, "Debug: CURL request url '%s' [%s]", url, getBacktrace(3).c_str());
 
    if ((res = curl_easy_perform(handle)) != CURLE_OK)
    {

@@ -163,6 +163,38 @@ int cEpgHttpd::collectScraperData(json_t* oScraperData, int movieId, int seriesI
             json_object_set_new(oSeriesData, "media", oSeriesMedias);
             json_object_set_new(oSeriesData, "episode", oSeriesEpisodeData);
          }
+         else
+         {
+            json_t* oSeriesMedias = json_object();
+            json_t* oSeriesActors = json_object();
+
+            seriesMediaDb->clear();
+            seriesMediaDb->setValue("SeriesId", seriesId);
+            seriesMediaDb->setValue("SeasonNumber", 0);
+            seriesMediaDb->setValue("EpisodeId", 0);
+
+            for (int f = selectSeriesMedia->find(); f; f = selectSeriesMedia->fetch())
+            {
+               json_object_set_new(oSeriesMedias, num2Str(seriesmediaMediaType->getIntValue()).c_str(), json_integer(1));
+
+               if (seriesmediaActorId->getIntValue())
+               {
+                  json_t* oSeriesActorData = json_object();
+
+                  addFieldToJson(oSeriesActorData, seriesActorsDb, "ActorName");
+                  addFieldToJson(oSeriesActorData, seriesActorsDb, "ActorRole");
+                  addFieldToJson(oSeriesActorData, seriesActorsDb, "SortOrder");
+
+                  json_object_set_new(oSeriesActors, num2Str(seriesmediaActorId->getIntValue()).c_str(), oSeriesActorData);
+               }
+            }
+
+            json_object_set_new(oSeriesData, "actors", oSeriesActors);
+            json_object_set_new(oSeriesData, "media", oSeriesMedias);
+            // json_object_set_new(oSeriesData, "episode", oSeriesEpisodeData);
+
+            selectSeriesMedia->freeResult();
+         }
 
          selectSerie->freeResult();
 
