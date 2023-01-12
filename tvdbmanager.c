@@ -533,10 +533,9 @@ bool cTVDBManager::imageUrlChanged(std::string url)
 
 void cTVDBManager::processSeries(sSeriesResult ser)
 {
-   // tell(0, "Checking eventID: %d, Title: %s, S%dE%dN%d", ser.eventId, ser.title.c_str(), ser.season, ser.part, ser.number);
+   tell(0, "Checking eventID: %lld, Title: %s, season:%d part:%d number:%d", ser.eventId, ser.title.c_str(), ser.season, ser.part, ser.number);
 
    int seriesID {0};
-   int episodeID {0};
 
    const auto hit = alreadyScraped.find(ser.title);
 
@@ -547,7 +546,7 @@ void cTVDBManager::processSeries(sSeriesResult ser)
       if (!seriesID)
       {
          //tell(0, "series %s already scraped and nothing found in tvdb", ser.title.c_str());
-         UpdateEvent(ser.eventId, seriesID, episodeID);
+         UpdateEvent(ser.eventId, 0, 0);
          return;
       }
       else
@@ -589,13 +588,18 @@ void cTVDBManager::processSeries(sSeriesResult ser)
 
    alreadyScraped.insert(pair<string,int>(ser.title, seriesID));
 
+   int episodeID {0};
+
    if (seriesID)
    {
+      // tell(0, "lookup %d/%d/%d '%s'", seriesID, ser.season, ser.part, ser.episodeName.c_str());
+
       if (!ser.season && !ser.part && ser.episodeName.size() > 0)
       {
          // try to get part and season from episode name
 
          GetSeasonEpisodeFromEpisodename(seriesID, ser.season, ser.part, ser.episodeName);
+         // tell(0, "Got %d/%d ", ser.season, ser.part);
       }
 
       // loading season poster and episode picture
@@ -605,6 +609,8 @@ void cTVDBManager::processSeries(sSeriesResult ser)
 
       if (ser.season && ser.part)
          episodeID = loadEpisodePicture(seriesID, ser.season, ser.part);
+
+      // tell(0, "episodeID %d ", episodeID);
    }
 
    // updating event with series data

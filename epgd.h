@@ -262,7 +262,7 @@ class cEpgd : public cFrame, public cSystemNotification
       // data
 
       bool withutf8 {false};
-
+      bool scrapAndExit {false};
       time_t nextUpdateAt {0};
       time_t lastUpdateAt {0};
       time_t lastMergeAt {0};

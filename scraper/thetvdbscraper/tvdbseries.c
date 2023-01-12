@@ -71,7 +71,7 @@ int cTVDBSeries::readEpisodes()
    int status = parseEpisodes(jResult);
    json_decref(jResult);
 
-   const char* next = getStringByPath(jResult, "links/next");
+   const char* next = getStringByPath(jResult, "links/next", "");
 
    if (next && strstr(next, "page="))
    {
