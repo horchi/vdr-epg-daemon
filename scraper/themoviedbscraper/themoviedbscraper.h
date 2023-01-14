@@ -1,5 +1,5 @@
-#ifndef __TVSCRAPER_MOVIEDBSCRAPER_H
-#define __TVSCRAPER_MOVIEDBSCRAPER_H
+
+#pragma once
 
 #include "moviedbmovie.h"
 #include "moviedbactor.h"
@@ -8,7 +8,8 @@ using namespace std;
 
 // --- cMovieDBScraper -------------------------------------------------------------
 
-class cMovieDBScraper {
+class cMovieDBScraper
+{
 private:
     string apiKey;
     string language;
@@ -20,12 +21,9 @@ private:
     bool parseJSON(string jsonString);
     int SearchMovie(string movieName, string year);
 public:
-    cMovieDBScraper(string language);
+    explicit cMovieDBScraper(string language);
     virtual ~cMovieDBScraper(void);
     bool Connect(void);
     cMovieDbMovie *Scrap(string movieName, string year="");
     cMovieDbMovie *ReadMovie(int movieID);
 };
-
-
-#endif //__TVSCRAPER_MOVIEDBSCRAPER_H

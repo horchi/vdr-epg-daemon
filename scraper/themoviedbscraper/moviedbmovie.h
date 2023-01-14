@@ -25,12 +25,12 @@ private:
     int currentActor;
     int FindBestResult(void);
 public:
-    cMovieDbMovie(string json);
+    explicit cMovieDbMovie(string json);
     virtual ~cMovieDbMovie(void);
     int id;
     string title;
     string originalTitle;
-    string tagline;    
+    string tagline;
     string overview;
     string backdropPath;
     int backdropWidth;
@@ -54,11 +54,11 @@ public:
     float voteAverage;
     int ParseJSONForMovieId(string movieSearchString);
     void ParseJSON(void);
-    void SetApiKey(string apiKey) { this->apiKey = apiKey; };
-    void SetBaseUrl(string baseUrl) { this->baseUrl = baseUrl; };
-    void SetPosterBaseUrl(string url) { posterBaseUrl = url; };
-    void SetBackdropBaseUrl(string url) { backdropBaseUrl = url; };
-    void SetActorBaseUrl(string url) { actorBaseUrl = url; };
+    void SetApiKey(const std::string& apiKey) { this->apiKey = apiKey; };
+    void SetBaseUrl(const std::string& baseUrl) { this->baseUrl = baseUrl; };
+    void SetPosterBaseUrl(const std::string& url) { posterBaseUrl = url; };
+    void SetBackdropBaseUrl(const std::string& url) { backdropBaseUrl = url; };
+    void SetActorBaseUrl(const std::string& url) { actorBaseUrl = url; };
     void ReadActors(void);
     cMovieDBActor *GetActor(void);
     void Dump();

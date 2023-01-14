@@ -250,7 +250,7 @@ int cEpgd::atConfigItem(const char* Name, const char* Value)
 
       *par++ = 0;
 
-      for (it = plugins.begin(); it < plugins.end(); it++)
+      for (it = plugins.begin(); it < plugins.end(); ++it)
       {
          Plugin* p = (*it)->getPlugin();
 
@@ -366,7 +366,7 @@ int cEpgd::initDb()
 
       tell(0, "Checking table structure and indices ...");
 
-      for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); t++)
+      for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); ++t)
       {
          cDbTable* table = new cDbTable(connection, t->first.c_str());
 
@@ -457,10 +457,10 @@ int cEpgd::initDb()
    if ((status = episodeDb->open()) != success) return status;
 
    eventsDb = new cDbTable(connection, "events");
-   if ((status = eventsDb->open() != success)) return status;
+   if ((status = eventsDb->open()) != success) return status;
 
    useeventsDb = new cDbTable(connection, "useevents");
-   if ((status = useeventsDb->open() != success)) return status;
+   if ((status = useeventsDb->open()) != success) return status;
 
    compDb = new cDbTable(connection, "components");
    if ((status = compDb->open()) != success) return status;
@@ -472,7 +472,7 @@ int cEpgd::initDb()
    if ((status = recordingListDb->open()) != success) return status;
 
    timerDb = new cDbTable(connection, "timers");
-   if ((status = timerDb->open() != success)) return status;
+   if ((status = timerDb->open()) != success) return status;
 
    messageDb = new cDbTable(connection, "messages");
    if (messageDb->open() != success) return fail;
@@ -873,31 +873,28 @@ int cEpgd::initDb()
    // --------------------------
    // procedures / views
 
-   if (!status)
+   procMergeEpg = new cDbProcedure(connection, "mergeepg");
+   status += checkProcedure("mergeepg", cDbProcedure::ptProcedure, procMergeEpg);
+
+   status += checkProcedure("reverseepg", cDbProcedure::ptProcedure);
+   status += checkProcedure("getupdflg", cDbProcedure::ptFunction);
+   status += checkProcedure("getcrosslvr", cDbProcedure::ptFunction);
+   status += checkProcedure("getlvrmin", cDbProcedure::ptFunction);
+
+   // optional create user procedure ...
+
+   if (cDbProcedure::existOnFs(confDir, "userexit"))
    {
-      procMergeEpg = new cDbProcedure(connection, "mergeepg");
-      status += checkProcedure("mergeepg", cDbProcedure::ptProcedure, procMergeEpg);
-
-      status += checkProcedure("reverseepg", cDbProcedure::ptProcedure);
-      status += checkProcedure("getupdflg", cDbProcedure::ptFunction);
-      status += checkProcedure("getcrosslvr", cDbProcedure::ptFunction);
-      status += checkProcedure("getlvrmin", cDbProcedure::ptFunction);
-
-      // optional create user procedure ...
-
-      if (cDbProcedure::existOnFs(confDir, "userexit"))
-      {
-         procUser = new cDbProcedure(connection, "userexit");
-         status += checkProcedure("userexit", cDbProcedure::ptProcedure, procUser);
-      }
-
-      // ------------------
-      // views ...
-
-      status += checkView("eventsview", EpgdConfig.epgView);
-      status += checkView("eventsviewplain", EpgdConfig.epgViewWeb);
-      status += checkView("thetvdbview", EpgdConfig.theTvDBView);
+      procUser = new cDbProcedure(connection, "userexit");
+      status += checkProcedure("userexit", cDbProcedure::ptProcedure, procUser);
    }
+
+   // ------------------
+   // views ...
+
+   status += checkView("eventsview", EpgdConfig.epgView);
+   status += checkView("eventsviewplain", EpgdConfig.epgViewWeb);
+   status += checkView("thetvdbview", EpgdConfig.theTvDBView);
 
    // search timer stuff
 
@@ -954,7 +951,7 @@ int cEpgd::initDb()
    if (status == success && EpgdConfig.maintanance)
    {
       time_t start = time(0);
-      int count {0};
+      int mCount {0};
 
       cDbStatement sel(eventsDb);
       sel.build("select ");
@@ -997,12 +994,12 @@ int cEpgd::initDb()
          }
 
          upd.execute();
-         count++;
+         mCount++;
       }
 
       connection->commit();
 
-      tell(0, "Info: Updated %d events in %ld seconds", count, time(0) - start);
+      tell(0, "Info: Updated %d events in %ld seconds", mCount, time(0) - start);
       upd.freeResult();
       sel.freeResult();
       exitDb();
@@ -1294,10 +1291,11 @@ int cEpgd::tryFillEmptyRecTableFields()
       {
          const char* description = recordingListDb->getStrValue("DESCRIPTION");
          const char* p {description};
-         const char* s {};
 
          while (true)
          {
+            const char* s {};
+
             if ((s = endOf(p, "Actor: ")) && recordingListDb->getValue("ACTOR")->isEmpty())
                recordingListDb->setValue("ACTOR", getLine(s));
             else if ((s = endOf(p, "Audio: ")) && recordingListDb->getValue("AUDIO")->isEmpty())
@@ -1360,7 +1358,6 @@ int cEpgd::checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* f
    char* file {};
    char* param {};
    int status {success};
-   char md5[100+TB] {};
    md5Buf md5New {};
    cDbProcedure* p {};
 
@@ -1381,6 +1378,7 @@ int cEpgd::checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* f
 
    if (p->created())
    {
+      char md5[100+TB] {};
       getParameter("epgd", param, md5);
 
       if (strcmp(md5, (const char*)md5New) != 0)          // drop if changed
@@ -1409,7 +1407,6 @@ int cEpgd::checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* f
 int cEpgd::checkView(const char* name, const char* file)
 {
    int status {success};
-   char md5[100+TB] {};
    md5Buf md5New  {};
    char* param {};
 
@@ -1429,6 +1426,7 @@ int cEpgd::checkView(const char* name, const char* file)
    {
       if (view.exist())
       {
+         char md5[100+TB] {};
          getParameter("epgd", param, md5);
 
          if (strcmp(md5, (const char*)md5New) != 0)          // drop if changed
@@ -1569,7 +1567,7 @@ int cEpgd::initPlugins()
 {
    vector<PluginLoader*>::iterator it;
 
-   for (it = plugins.begin(); it < plugins.end(); it++)
+   for (it = plugins.begin(); it < plugins.end(); ++it)
       (*it)->getPlugin()->init(this, withutf8);
 
    return done;
@@ -1579,7 +1577,7 @@ int cEpgd::initPluginDb()
 {
    vector<PluginLoader*>::iterator it;
 
-   for (it = plugins.begin(); it < plugins.end(); it++)
+   for (it = plugins.begin(); it < plugins.end(); ++it)
       (*it)->getPlugin()->initDb();
 
    return done;
@@ -1589,7 +1587,7 @@ int cEpgd::exitPluginDb()
 {
    vector<PluginLoader*>::iterator it;
 
-   for (it = plugins.begin(); it < plugins.end(); it++)
+   for (it = plugins.begin(); it < plugins.end(); ++it)
       (*it)->getPlugin()->exitDb();
 
    return done;
@@ -1880,12 +1878,12 @@ void cEpgd::loop()
 
 int cEpgd::checkConnection()
 {
-   static int retry {0};
-
    // check connection
 
    if (!dbConnected())
    {
+      static int retry {0};
+
       // try to connect
 
       tell(0, "Trying to re-connect to database!");
@@ -2156,13 +2154,13 @@ int cEpgd::storeImageRefs(tEventId evtId, const char* source, const char* images
 
       for (auto it = plugins.begin(); it < plugins.end(); it++)
       {
-         Plugin* p = (*it)->getPlugin();
+         Plugin* plg = (*it)->getPlugin();
 
          cSystemNotification::check();
 
-         if (p->ready() && p->hasSource(source))
+         if (plg->ready() && plg->hasSource(source))
          {
-            char* fsName = p->fsNameOfPicture(image);
+            char* fsName = plg->fsNameOfPicture(image);
             imageRefDb->setValue("IMGNAMEFS", fsName);
             free(fsName);
             break;
@@ -2260,19 +2258,19 @@ int cEpgd::getPictures()
 
       if (!found || imageDb->isNull("IMAGE"))
       {
-         int fileSize = getPicture(imageRefDb->getStrValue("SOURCE"), imagename,
-                                   imageRefDb->getStrValue("FILEREF"), &data);
+         int imgFileSize = getPicture(imageRefDb->getStrValue("SOURCE"), imagename,
+                                      imageRefDb->getStrValue("FILEREF"), &data);
 
-         if (fileSize > 0)
+         if (imgFileSize > 0)
          {
             int maxSize = imageDb->getField("IMAGE")->getSize();
 
-            bytes += fileSize;
+            bytes += imgFileSize;
             count++;
 
-            tell(2, "Downloaded image '%s' with (%d) bytes", imagename, fileSize);
+            tell(2, "Downloaded image '%s' with (%d) bytes", imagename, imgFileSize);
 
-            if (fileSize < maxSize)
+            if (imgFileSize < maxSize)
             {
                imageDb->setValue("Image", data.memory, data.size);
                imageDb->store();
@@ -2280,7 +2278,7 @@ int cEpgd::getPictures()
             else
             {
                tell(0, "Warning, skipping storage of image due to size "
-                    "limit of %d byte, got image with %d bytes", maxSize, fileSize);
+                    "limit of %d byte, got image with %d bytes", maxSize, imgFileSize);
             }
 
             data.clear();
@@ -2613,7 +2611,7 @@ int cEpgd::scrapNewEvents()
    // ------------------------------
    // scrap new series in EPG
 
-   vector<sSeriesResult> seriesToScrap;
+   std::vector<cTVDBManager::sSeriesResult> seriesToScrap;
 
    if (!tvdbManager->GetSeriesWithEpisodesFromEPG(&seriesToScrap))
       return fail;
@@ -2625,7 +2623,7 @@ int cEpgd::scrapNewEvents()
 
    tell(0, "Series for %zu new events to scrap", seriesToScrap.size());
 
-   for (vector<sSeriesResult>::iterator it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
+   for (std::vector<cTVDBManager::sSeriesResult>::iterator it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
    {
       seriesCur++;
       cSystemNotification::check();
@@ -2853,21 +2851,6 @@ void cEpgd::scrapNewRecordings(int count)
          }
       }
 
-      // --------------
-      // maybe another client got the recording earlier ..
-
-      /* found = checkRecOtherClients(uuid, recPath, recStart);
-
-      if (found)
-      {
-         tell(1, "SCRAP: Found same recording from other client for recording '%s'", recTitle.c_str());
-         recordingListDb->setValue("SCRNEW", no);
-         recordingListDb->setValue("SCRSP", time(0));
-         recordingListDb->update();
-
-         continue;
-      } */
-
       // ------------------------------------
       // third - try scrap by title and subtitle
 
@@ -2955,48 +2938,6 @@ bool cEpgd::checkEventsForRecording(int eventId, string channelId, int& seriesId
       return true;
 
    return false;
-}
-
-//***************************************************************************
-// Check Recording at Other Clients
-//***************************************************************************
-
-bool cEpgd::checkRecOtherClients(string uuid, string recPath, int recStart)
-{
-   int res = true;
-
-//    // take only last two directorys from path for comparison
-
-//    size_t firstSlash = recPath.find_last_of('/');
-
-//    if (firstSlash == string::npos)
-//       return false;
-
-//    size_t secondSlash = recPath.find_last_of('/', firstSlash-1);
-
-//    if (secondSlash == string::npos)
-//       return false;
-
-//    string compPath = recPath.substr(secondSlash);
-//    compPath = '%' + compPath;
-//    recordingListDb->setValue("PATH", compPath.c_str());
-//    recordingListDb->setValue("VDRUUID", uuid.c_str());
-//    recordingListDb->setValue("STARTTIME", recStart);
-
-//    if (selectRecOtherClient->find())
-//    {
-//       if (recordingListDb->getIntValue("SERIESID") > 0
-//           || recordingListDb->getIntValue("MOVIEID") > 0)
-//          res = false;
-//    }
-
-//    // primary key was changed through function call
-
-//    recordingListDb->setValue("VDRUUID", uuid.c_str());
-//    recordingListDb->setValue("PATH", recPath.c_str());
-//    recordingListDb->setValue("STARTTIME", recStart);
-
-   return res;
 }
 
 //***************************************************************************
@@ -3121,7 +3062,7 @@ int cEpgd::sendTccTestMail()
       for (int f = 0; f < 3; f++)
       {
          std::string transponder = "TRA01";
-         std::string tspTxt;
+         // std::string tspTxt;
 
          transponders[transponder].count++;
 
@@ -3133,7 +3074,7 @@ int cEpgd::sendTccTestMail()
          transponders[transponder].timers.push_back(timer);
       }
 
-      for (it = transponders.begin(); it != transponders.end(); it++)
+      for (it = transponders.begin(); it != transponders.end(); ++it)
       {
          char buf[1024+TB];
          std::list<cTccTimerData>::iterator li;

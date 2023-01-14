@@ -96,7 +96,7 @@ class cDbValue : public cDbService
          changed = 0;
       }
 
-      virtual void setField(cDbFieldDef* f)
+      void setField(cDbFieldDef* f)
       {
          free();
          field = f;
@@ -440,8 +440,8 @@ class cDbStatement : public cDbService
 {
    public:
 
-      cDbStatement(cDbTable* aTable);
-      cDbStatement(cDbConnection* aConnection, const char* sText = "");
+      explicit cDbStatement(cDbTable* aTable);
+      explicit cDbStatement(cDbConnection* aConnection, const char* sText = "");
       virtual ~cDbStatement();
 
       int execute(int noResult = no);
@@ -516,7 +516,7 @@ class cDbStatements
 {
    public:
 
-      cDbStatements()  { statisticPeriod = time(0); }
+      cDbStatements() : statisticPeriod(time(0)) {}
       ~cDbStatements() {};
 
       void append(cDbStatement* s)  { statements.push_back(s); }
@@ -565,12 +565,12 @@ class cDbRow : public cDbService
 {
    public:
 
-      cDbRow(cDbTableDef* t)
+      explicit cDbRow(cDbTableDef* t)
       {
          set(t);
       }
 
-      cDbRow(const char* name)
+      explicit cDbRow(const char* name)
       {
          cDbTableDef* t = dbDict.getTable(name);
 
@@ -589,7 +589,7 @@ class cDbRow : public cDbService
          tableDef = t;
          dbValues = new cDbValue[tableDef->fieldCount()];
 
-         for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
+         for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); ++f)
             dbValues[f->second->getIndex()].setField(f->second);
       }
 
@@ -720,8 +720,6 @@ class cDbConnection
 
       int attachConnection()
       {
-         static int first = yes;
-
          if (!mysql)
          {
             connectDropped = yes;
@@ -745,6 +743,8 @@ class cDbConnection
 
             if (encoding && *encoding)
             {
+               static int first {yes};
+
                if (mysql_set_character_set(mysql, encoding))
                   errorSql(this, "init(character_set)");
 
@@ -889,11 +889,11 @@ class cDbConnection
 
       virtual int executeSqlFile(const char* file)
       {
-         FILE* f;
+         FILE* f {};
          int res;
-         char* buffer;
-         int size = 1000;
-         int nread = 0;
+         char* buffer {};
+         int size {1000};
+         int nread {0};
 
          if (!getMySql())
             return fail;

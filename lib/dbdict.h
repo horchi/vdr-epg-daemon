@@ -236,7 +236,7 @@ class cDbFieldDef : public cDbService
       char* dbdescription;
       FieldFormat format;
       int size;
-      int index;
+      int index {0};
       int type;
       int filter;     // bitmask (defaults to 0xFFFF)
       char* def;
@@ -294,7 +294,7 @@ class cDbTableDef : public cDbService
       friend class cDbTable;
       friend class cDbStatement;
 
-      cDbTableDef(const char* n)       { name = strdup(n); }
+      explicit cDbTableDef(const char* n)       { name = strdup(n); }
 
       ~cDbTableDef()
       {
@@ -330,7 +330,7 @@ class cDbTableDef : public cDbService
       {
          std::map<std::string, cDbFieldDef*, _casecmp_>::iterator it;
 
-         for (it = dfields.begin(); it != dfields.end(); it++)
+         for (it = dfields.begin(); it != dfields.end(); ++it)
          {
             if (it->second->hasDbName(dbname))
                return it->second;

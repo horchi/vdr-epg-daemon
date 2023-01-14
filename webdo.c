@@ -1460,12 +1460,13 @@ int cEpgHttpd::doParameters(MHD_Connection* tcp, json_t* obj)
       const char* value;
       Parameter* definition = &cParameters::parameters[i];
       std::string user = std::string("@") + (currentSession ? currentSession->user : std::string(""));
-      std::string owner = definition->owner;
 
       // skip invisible
 
       if (!definition || !definition->visible)
          continue;
+
+      std::string owner = definition->owner;
 
       // if login required (needLogin is set) and no session active (currentSession)
       // only reply the "needLogin" parameter
@@ -1804,7 +1805,7 @@ int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
    const char* name = getStringFromJson(jInData, "autotimername", 0);
 
    int start = getIntFromJson(jInData, "start", 0);
-   int max = getIntFromJson(jInData, "max", na);  // na -> alle, 0 - nur zählen, > 0 - limit
+   int dMax = getIntFromJson(jInData, "max", na);  // na -> alle, 0 - nur zählen, > 0 - limit
 
    // with id, use searchtimer ...
 
@@ -1814,7 +1815,7 @@ int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
       searchTimer->clear();
       searchTimer->setValue("ID", id);
       searchTimer->setValue("NAME", name);
-      search->getSearchMatches(searchTimer, response, start, max);
+      search->getSearchMatches(searchTimer, response, start, dMax);
       delete searchTimer;
       return MHD_HTTP_OK;
    }
@@ -1841,7 +1842,7 @@ int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
       getFieldFromJson(jInData, searchTimer, def->getField(i)->getName(), jName);
    }
 
-   search->getSearchMatches(searchTimer, response, start, max);
+   search->getSearchMatches(searchTimer, response, start, dMax);
 
    delete searchTimer;
 

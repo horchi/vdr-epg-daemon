@@ -20,7 +20,6 @@ int cEpgd::loadChannelmap()
 {
    ifstream cmfile;
    string s;
-   size_t p;
    int line = 0;
    int count = 0;
    int status = success;
@@ -75,7 +74,7 @@ int cEpgd::loadChannelmap()
 
       // remove comments
 
-      p = s.find_first_of("//");
+      size_t p = s.find_first_of("//");
 
       if (p != string::npos)
          s.erase(p);
@@ -284,7 +283,7 @@ int cEpgd::applyChannelmapChanges()
 
          std::map<std::string, cDbTableDef*>::iterator t;
 
-         for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); t++)
+         for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); ++t)
          {
             cDbTableDef* td = t->second;
 

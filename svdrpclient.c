@@ -400,7 +400,6 @@ int cSvdrpClient::connect()
       return fail;
    }
 
-   struct hostent* hostInfo;
    struct sockaddr_in server_addr;
    server_addr.sin_family = AF_INET;
    server_addr.sin_port = htons(port);
@@ -408,6 +407,8 @@ int cSvdrpClient::connect()
 
    if (!isdigit(ip[1]))
    {
+      struct hostent* hostInfo {};
+
       // map hostname to ip
 
       if ((hostInfo = ::gethostbyname(ip)))

@@ -59,10 +59,10 @@ int exit()
 
 int main(int argc, char** argv)
 {
-   const int max = 1000;
+   const int iMax = 1000;
 
    FILE* fp;
-   char line[max];
+   char line[iMax];
    char* filename = argv[1];
 
    cEpgConfig::logstdout = yes;
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
 
    cList<cLine>* result = new cList<cLine>;
 
-   while (fgets(line, max, fp))
+   while (fgets(line, iMax, fp))
    {
       // fputs(line, stdout);
       line[strlen(line)-1] = 0;

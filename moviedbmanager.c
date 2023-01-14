@@ -332,10 +332,10 @@ bool cMovieDBManager::LoadMedia(int movieId, int actorId, int mediaType) {
 int cMovieDBManager::GetPicture(const char* url, MemoryStruct* data) {
    int maxSize = tMovieMedia->getField("MediaContent")->getSize();
     data->clear();
-    int fileSize = 0;
-    if (curl.downloadFile(url, fileSize, data) == success) {
-        bytesDownloaded += fileSize;
-        if (fileSize < maxSize)
+    int _fileSize = 0;
+    if (curl.downloadFile(url, _fileSize, data) == success) {
+        bytesDownloaded += _fileSize;
+        if (_fileSize < maxSize)
             return success;
     }
     return fail;
@@ -410,7 +410,8 @@ int cMovieDBManager::CleanupMovies()
     numDelete = storedMovieIds.size() - activeMovieIds.size();
     if (numDelete < 1)
         return numDelete;
-    for (vector<int>::iterator mId = storedMovieIds.begin(); mId != storedMovieIds.end(); mId++) {
+    for (vector<int>::iterator mId = storedMovieIds.begin(); mId != storedMovieIds.end(); ++mId)
+    {
         set<int>::iterator hit = activeMovieIds.find(*mId);
         if (hit == activeMovieIds.end()) {
             DeleteMovie(*mId);

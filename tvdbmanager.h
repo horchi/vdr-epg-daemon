@@ -19,27 +19,23 @@
 #include "scraper/thetvdbscraper/tvdbseries.h"
 
 //***************************************************************************
-// sSeriesResult
-//***************************************************************************
-
-struct sSeriesResult
-{
-   tEventId eventId {0};
-   std::string title;
-   int lastScraped {0};
-   int season {0};
-   int part {0};
-   int number {0};
-   std::string episodeName;
-};
-
-//***************************************************************************
 // cTVDBManager
 //***************************************************************************
 
 class cTVDBManager
 {
    public:
+
+      struct sSeriesResult
+      {
+         tEventId eventId {0};
+         std::string title;
+         int lastScraped {0};
+         int season {0};
+         int part {0};
+         int number {0};
+         std::string episodeName;
+      };
 
       cTVDBManager(bool aWithutf8 = true);
       virtual ~cTVDBManager();
@@ -52,8 +48,8 @@ class cTVDBManager
       bool GetSeriesWithEpisodesFromEPG(std::vector<sSeriesResult>* result);
       void processSeries(sSeriesResult ser);
       int CleanupSeries();
-      bool SearchRecordingDB(std::string name, std::string episode, int& seriesId, int& episodeId);
-      bool searchRecordingOnline(const char* name, std::string episode, int& seriesId, int& episodeId);
+      bool SearchRecordingDB(std::string& name, const std::string& episode, int& seriesId, int& episodeId);
+      bool searchRecordingOnline(const char* name, const std::string& episode, int& seriesId, int& episodeId);
       bool CheckScrapInfoDB(int scrapSeriesId, int scrapEpisodeId);
       bool CheckScrapInfoOnline(int scrapSeriesId, int scrapEpisodeId);
 

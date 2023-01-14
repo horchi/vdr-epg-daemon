@@ -51,7 +51,7 @@ int validateAlterDatabase()
 
    tell(0, "Checking table structure and indices ...");
 
-   for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); t++)
+   for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); ++t)
    {
       cDbTable* table = new cDbTable(connection, t->first.c_str());
 
@@ -87,7 +87,6 @@ int main(int argc, char** argv)
    cEpgd* job;
    int doValidateAlterDatabase = no;
    int nofork = no;
-   int pid;
    int logstdout = na;
    int loglevel = na;
    int logfacility = Syslog::toCode("user");
@@ -158,9 +157,14 @@ int main(int argc, char** argv)
       }
    }
 
-   if (logstdout != na)   EpgdConfig.logstdout = logstdout;
-   if (loglevel != na)    EpgdConfig.loglevel = loglevel;
-   if (loglevel != na)    EpgdConfig.argLoglevel = loglevel;
+   if (logstdout != na)
+      EpgdConfig.logstdout = logstdout;
+
+   if (loglevel != na)
+   {
+      EpgdConfig.loglevel = loglevel;
+      EpgdConfig.argLoglevel = loglevel;
+   }
 
    EpgdConfig.logFacility = logfacility;
    EpgdConfig.logName = "epgd";
@@ -189,6 +193,8 @@ int main(int argc, char** argv)
 
    if (!nofork)
    {
+      int pid {0};
+
       if ((pid = fork()) < 0)
       {
          printf("Can't fork daemon, %s\n", strerror(errno));

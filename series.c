@@ -28,7 +28,7 @@ int cEpgd::evaluateEpisodes()
 
    // loop over all episodes ..
 
-   for (int f = selectDistCompname->find(); f && !doShutDown(); f = selectDistCompname->fetch())
+   for (int l = selectDistCompname->find(); l && !doShutDown(); l = selectDistCompname->fetch())
    {
       // const int maxTitleDist = (((double)strlen(episodeCompName)) / 100.0 * 20.0);
       char* episodeCompName = strdup(episodeDb->getStrValue("COMPNAME"));
@@ -39,7 +39,7 @@ int cEpgd::evaluateEpisodes()
 
       // loop over all events matching this episode by COMPTITLE
 
-      for (int f = selectByCompTitle->find(); f; f = selectByCompTitle->fetch())
+      for (int n = selectByCompTitle->find(); n; n = selectByCompTitle->fetch())
       {
          cSystemNotification::check();
 
@@ -273,7 +273,7 @@ int cEpgd::downloadEpisodes()
 
    while (!abort && (code = cl.receive(result)) != codeCommunicationEnd)
    {
-      bool isLink {false};
+      bool _isLink {false};
       cSystemNotification::check();
 
       switch (code)
@@ -289,9 +289,9 @@ int cEpgd::downloadEpisodes()
             {
                linkName = "";
                fileName = result->Next(result->First())->Text();
-               isLink = fileName != "not a link";
+               _isLink = fileName != "not a link";
 
-               if (!isLink)
+               if (!_isLink)
                   fileName = result->First()->Text();
                else
                   linkName = result->First()->Text();
@@ -301,7 +301,7 @@ int cEpgd::downloadEpisodes()
          }
          case codeFileContent:
          {
-            if (isLink)
+            if (_isLink)
             {
                files.Add(new cEpisodeFile(fileName, linkName));
             }

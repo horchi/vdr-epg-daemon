@@ -25,7 +25,7 @@ class cTVDBScraper
       //    int episodeId {0};
       // };
 
-      cTVDBScraper(std::string language);
+      explicit cTVDBScraper(std::string language);
       virtual ~cTVDBScraper();
 
       int connect();

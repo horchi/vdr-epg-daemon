@@ -64,9 +64,9 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       {
          std::string id;    // session id
          std::string user;
-         int rights;
-         time_t start;
-         time_t last;  // last activity
+         int rights {0};
+         time_t start {0};
+         time_t last {9};   // last activity
       };
 
       struct UserRight
@@ -88,7 +88,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int needLogin();
 
       int loop();
-      int atConfigItem(const char* Name, const char* Value);
+      int atConfigItem(const char* Name, const char* Value) override;
 
       bool doShutDown()               { return shutdown; }
 
@@ -170,7 +170,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       // helper ..
 
       int __attribute__ ((format(printf, 4, 5)))  buildResponse(json_t* obj, int state, const char* format, ...);
-      int __attribute__ ((format(printf, 5, 6)))  message(int level, char type, const char* title, const char* format, ...);
+      int __attribute__ ((format(printf, 5, 6)))  message(int level, char type, const char* title, const char* format, ...) override;
 
       const char* methodOf(const char* url);
       int ipOfVdr(const char* uuid, const char*& ip, int& port);
@@ -194,78 +194,78 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
 
       // data
 
-      MHD_Daemon* daemon;
+      MHD_Daemon* daemon {};
       MemoryStruct keyPem;
       MemoryStruct certPem;
 
       std::map<std::string,Session> sessions;
-      Session* currentSession;
-      int loginWithSession;
-      time_t lastSdWatchdogAt;
+      Session* currentSession {0};
+      int loginWithSession {no};
+      time_t lastSdWatchdogAt {0};
 
-      int withutf8;
-      cSearchTimer* search;
-      Python* ptyRecName;
+      int withutf8 {no};
+      cSearchTimer* search {};
+      Python* ptyRecName {};
 
       // database stuff
 
-      cDbConnection* connection;
-      cDbTable* useeventsDb;
-      cDbTable* mapDb;
-      cDbTable* imageDb;
-      cDbTable* imageRefDb;
-      cDbTable* vdrDb;
-      cDbTable* timerDb;
-      cDbTable* timersDoneDb;
-      cDbTable* searchtimerDb;
-      cDbTable* movieDb;
-      cDbTable* movieActorsDb;
-      cDbTable* movieActorDb;
-      cDbTable* movieMediaDb;
-      cDbTable* seriesDb;
-      cDbTable* seriesEpisodeDb;
-      cDbTable* seriesMediaDb;
-      cDbTable* seriesActorsDb;
-      cDbTable* recordingDirDb;
-      cDbTable* recordingListDb;
-      cDbTable* userDb;
-      cDbTable* messageDb;
+      cDbConnection* connection {};
+      cDbTable* useeventsDb {};
+      cDbTable* mapDb {};
+      cDbTable* imageDb {};
+      cDbTable* imageRefDb {};
+      cDbTable* vdrDb {};
+      cDbTable* timerDb {};
+      cDbTable* timersDoneDb {};
+      cDbTable* searchtimerDb {};
+      cDbTable* movieDb {};
+      cDbTable* movieActorsDb {};
+      cDbTable* movieActorDb {};
+      cDbTable* movieMediaDb {};
+      cDbTable* seriesDb {};
+      cDbTable* seriesEpisodeDb {};
+      cDbTable* seriesMediaDb {};
+      cDbTable* seriesActorsDb {};
+      cDbTable* recordingDirDb {};
+      cDbTable* recordingListDb {};
+      cDbTable* userDb {};
+      cDbTable* messageDb {};
 
-      cDbStatement* updateMap;
-      cDbStatement* updateTimerAName;
-      cDbStatement* updateDoneAName;
-      cDbStatement* selectEventsAt;
-      cDbStatement* selectEventsNext;
-      cDbStatement* selectEventsStartInRange;
-      cDbStatement* selectGenres;
-      cDbStatement* selectCategories;
-      cDbStatement* selectEvent;
-      cDbStatement* selectEventByTime;
-      cDbStatement* selectAllMap;
-      cDbStatement* selectMapById;
-      cDbStatement* selectVdrs;
-      cDbStatement* selectUsers;
-      cDbStatement* selectAllTimer;
-      cDbStatement* selectTimerById;
-      cDbStatement* selectTimerByEventId;
-      cDbStatement* selectAllSearchTimer;
-      cDbStatement* selectPendingTimerActions;
-      cDbStatement* selectDoneTimers;
-      cDbStatement* selectMovie;
-      cDbStatement* selectMovieActors;
-      cDbStatement* selectMovieMedia;
-      cDbStatement* selectSerie;
-      cDbStatement* selectSeriesEpisode;
-      cDbStatement* selectSeriesMedia;
-      cDbStatement* selectActiveVdrs;
-      cDbStatement* selectRecordingDirs;
-      cDbStatement* selectRecordingByPath;
-      cDbStatement* selectChannelFromMap;
-      cDbStatement* selectUserByMd5;
-      cDbStatement* selectAllRecordings;
-      cDbStatement* selectRecordingForEventByLv;
-      cDbStatement* selectPendingMessages;
-      cDbStatement* selectWebUsers;
+      cDbStatement* updateMap {};
+      cDbStatement* updateTimerAName {};
+      cDbStatement* updateDoneAName {};
+      cDbStatement* selectEventsAt {};
+      cDbStatement* selectEventsNext {};
+      cDbStatement* selectEventsStartInRange {};
+      cDbStatement* selectGenres {};
+      cDbStatement* selectCategories {};
+      cDbStatement* selectEvent {};
+      cDbStatement* selectEventByTime {};
+      cDbStatement* selectAllMap {};
+      cDbStatement* selectMapById {};
+      cDbStatement* selectVdrs {};
+      cDbStatement* selectUsers {};
+      cDbStatement* selectAllTimer {};
+      cDbStatement* selectTimerById {};
+      cDbStatement* selectTimerByEventId {};
+      cDbStatement* selectAllSearchTimer {};
+      cDbStatement* selectPendingTimerActions {};
+      cDbStatement* selectDoneTimers {};
+      cDbStatement* selectMovie {};
+      cDbStatement* selectMovieActors {};
+      cDbStatement* selectMovieMedia {};
+      cDbStatement* selectSerie {};
+      cDbStatement* selectSeriesEpisode {};
+      cDbStatement* selectSeriesMedia {};
+      cDbStatement* selectActiveVdrs {};
+      cDbStatement* selectRecordingDirs {};
+      cDbStatement* selectRecordingByPath {};
+      cDbStatement* selectChannelFromMap {};
+      cDbStatement* selectUserByMd5 {};
+      cDbStatement* selectAllRecordings {};
+      cDbStatement* selectRecordingForEventByLv {};
+      cDbStatement* selectPendingMessages {};
+      cDbStatement* selectWebUsers {};
 
       // special values for statements
 
@@ -279,32 +279,32 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
 
       // just pointer to the values of cDbTable instances. Don't free them ;)
 
-      cDbValue* vdrState;
-      cDbValue* vdrIp;
-      cDbValue* vdrSvdrp;
-      cDbValue* vdrUuid;
+      cDbValue* vdrState {};
+      cDbValue* vdrIp {};
+      cDbValue* vdrSvdrp {};
+      cDbValue* vdrUuid {};
 
-      cDbValue* eventsUpdSp;
-      cDbValue* eventsGenre;
-      cDbValue* eventsCategory;
+      cDbValue* eventsUpdSp {};
+      cDbValue* eventsGenre {};
+      cDbValue* eventsCategory {};
 
-      cDbValue* mapChannelName;
-      cDbValue* mapChannelId;
-      cDbValue* mapSource;
+      cDbValue* mapChannelName {};
+      cDbValue* mapChannelId {};
+      cDbValue* mapSource {};
 
-      cDbValue* imagerefImgName;
-      cDbValue* imageUpdSp;
-      cDbValue* imageImage;
+      cDbValue* imagerefImgName {};
+      cDbValue* imageUpdSp {};
+      cDbValue* imageImage {};
 
-      cDbValue* moviemediaMediaContent;
-      cDbValue* moviemediaMediaType;
-      cDbValue* movieactorActorId;
-      cDbValue* seriesepisodeSeasonNumber;
-      cDbValue* seriesepisodeEpisodeId;
+      cDbValue* moviemediaMediaContent {};
+      cDbValue* moviemediaMediaType {};
+      cDbValue* movieactorActorId {};
+      cDbValue* seriesepisodeSeasonNumber {};
+      cDbValue* seriesepisodeEpisodeId {};
 
-      cDbValue* seriesmediaMediaType;
-      cDbValue* seriesmediaActorId;
-      cDbValue* seriesmediaMediaContent;
+      cDbValue* seriesmediaMediaType {};
+      cDbValue* seriesmediaActorId {};
+      cDbValue* seriesmediaMediaContent {};
 
       // static
 

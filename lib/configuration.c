@@ -50,7 +50,7 @@ int cSystemNotification::startNotifyThread(int timeout)
 int cSystemNotification::stopNotifyThread()
 {
    stop = yes;
-   waitCondition.Broadcast();
+   sysWaitCondition.Broadcast();
    Cancel(3);
    return success;
 }
@@ -71,7 +71,7 @@ void cSystemNotification::action()
    {
       // tell(0, "loop ...");
 
-      waitCondition.TimedWait(mutex, interval*1000);
+      sysWaitCondition.TimedWait(mutex, interval*1000);
 
       if (!stop)
          check();

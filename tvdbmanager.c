@@ -127,116 +127,7 @@ int cTVDBManager::updateSeries(time_t since)
    }
 
    return success;
-
-
-/*
-   set<int> updatedSeries;
-   set<int> updatedEpisodes;
-   set<int> storedSeries;
-   set<int> storedEpisodes;
-   int lastScrap = GetLastScrap();
-
-   if (lastScrap < 1)
-      return;
-
-   if (!tvdbScraper->GetUpdatedSeriesandEpisodes(&updatedSeries, &updatedEpisodes, lastScrap))
-      return;
-
-   if (!GetAllIDs(&storedSeries, tSeries, "SeriesId"))
-      return;
-
-   if (!GetAllIDs(&storedEpisodes, tSeriesEpsiode, "EpisodeId"))
-      return;
-
-   set<int> scrapSeriesIDs;
-   set<int> scrapEpisodeIDs;
-
-   std::set_intersection(updatedSeries.begin(), updatedSeries.end(),
-                         storedSeries.begin(), storedSeries.end(),
-                         std::inserter(scrapSeriesIDs, scrapSeriesIDs.begin()));
-
-   std::set_intersection(updatedEpisodes.begin(), updatedEpisodes.end(),
-                         storedEpisodes.begin(), storedEpisodes.end(),
-                         std::inserter(scrapEpisodeIDs, scrapEpisodeIDs.begin()));
-
-   tell(0, "%d updated Series, %d updatedEpisodes", (int)updatedSeries.size(), (int)updatedEpisodes.size());
-   tell(0, "%d series to update in db, %d episodes to update in db", (int)scrapSeriesIDs.size(), (int)scrapEpisodeIDs.size());
-
-   int seriesCur {1};
-
-   for (set<int>::iterator it = scrapSeriesIDs.begin(); !cEpgd::doShutDown() && it != scrapSeriesIDs.end(); it++)
-   {
-      if (seriesCur % 10 == 0)
-         tell(0, "ReScraped %d series...continuing rescraping", seriesCur);
-
-      cTVDBSeries* series = scrapSeries(*it);
-
-      if (series)
-         saveSeries(series);
-
-      delete series;
-      seriesCur++;
-   }
-
-   if (seriesCur > 1)
-      tell(0, "ReScraped %d series", seriesCur-1);
-
-   int episodeCur {1};
-
-   // for (set<int>::iterator it = scrapEpisodeIDs.begin(); !cEpgd::doShutDown() && it != scrapEpisodeIDs.end(); it++)
-   for (const auto& episode : *thetvbSeries->getEpisodes())
-   {
-      if (episodeCur % 10 == 0)
-         tell(0, "ReScraped %d Episodes...continuing rescraping", episodeCur);
-
-      cTVDBEpisode* episode = tvdbScraper->GetEpisode(*it);
-      episode->ReadEpisode();
-      saveSeriesEpisode(episode);
-      delete episode;
-      episodeCur++;
-   }
-
-   if (episodeCur > 1)
-      tell(0, "ReScraped %d Episodes", episodeCur-1);
-
-   UpdateScrapTimestamp();
-*/
 }
-
-// int cTVDBManager::GetLastScrap()
-// {
-//    int lastScraped {0};
-
-//    cDbStatement* selectTime = new cDbStatement(tSeries);
-//    selectTime->build("select ");
-//    selectTime->bind("SeriesLastScraped", cDBS::bndOut);
-//    selectTime->build(" from %s", tSeries->TableName());
-
-//    if (selectTime->prepare() != success)
-//    {
-//       delete selectTime;
-//       return 0;
-//    }
-
-//    for (int res = selectTime->find(); res; res = selectTime->fetch())
-//    {
-//       lastScraped = tSeries->getIntValue("SeriesLastScraped");
-//       break;
-//    }
-
-//    selectTime->freeResult();
-//    delete selectTime;
-//    return lastScraped;
-// }
-
-// void cTVDBManager::UpdateScrapTimestamp()
-// {
-//    stringstream upd;
-//    upd << "update " << tSeries->TableName() << " set series_last_scraped=" << time(0) << " where series_id > 0";
-//    cDbStatement updStmt(connection, upd.str().c_str());
-//    updStmt.prepare();
-//    updStmt.execute();
-// }
 
 int cTVDBManager::getAllIDs(std::set<int>& IDs, cDbTable* table, const char* field)
 {
@@ -388,7 +279,7 @@ void cTVDBManager::saveSeriesEpisodes(cTVDBSeries* series)
       saveSeriesEpisode(&episode, series->seriesID);
 
       bool exists = loadMedia(series->seriesID, episode.seasonNumber, episode.id, 0, cTVDBSeries::atEpisode, 0);
-      bool reloadImage = exists ? imageUrlChanged(episode.imageUrl.c_str()) : true;
+      bool reloadImage = exists ? imageUrlChanged(episode.imageUrl) : true;
 
       if (reloadImage)
       {
@@ -543,18 +434,18 @@ int cTVDBManager::GetPicture(const char* url, MemoryStruct* data)
    // tell(0, "Debug: Download image '%s'", url);
 
    int maxSize = tSeriesMedia->getField("MediaContent")->getSize();
-   int fileSize {0};
+   int imgFileSize {0};
    data->clear();
 
    if (isEmpty(url))
       return fail;
 
-   if (curl.downloadFile(url, fileSize, data) != success)
+   if (curl.downloadFile(url, imgFileSize, data) != success)
       return fail;
 
-   bytesDownloaded += fileSize;
+   bytesDownloaded += imgFileSize;
 
-   if (fileSize >= maxSize)
+   if (imgFileSize >= maxSize)
    {
       tell(eloDetail, "Debug: Skipping download of '%s' due to size > (%d)", url, maxSize);
       return -2;
@@ -872,7 +763,7 @@ int cTVDBManager::CleanupSeries()
    if (numDelete < 1)
       return numDelete;
 
-   for (vector<int>::iterator sId = storedSeriesIds.begin(); sId != storedSeriesIds.end(); sId++)
+   for (vector<int>::iterator sId = storedSeriesIds.begin(); sId != storedSeriesIds.end(); ++sId)
    {
       set<int>::iterator hit = activeSeriesIds.find(*sId);
 
@@ -930,7 +821,7 @@ void cTVDBManager::DeleteSeries(int seriesId)
    delSer.execute();
 }
 
-bool cTVDBManager::SearchRecordingDB(std::string name, std::string episode, int &seriesId, int &episodeId)
+bool cTVDBManager::SearchRecordingDB(std::string& name, const std::string& episode, int &seriesId, int &episodeId)
 {
    cDbStatement* select = new cDbStatement(tSeries);
 
@@ -961,7 +852,7 @@ bool cTVDBManager::SearchRecordingDB(std::string name, std::string episode, int 
    return found;
 }
 
-bool cTVDBManager::searchRecordingOnline(const char* name, std::string episode, int& seriesId, int& episodeId)
+bool cTVDBManager::searchRecordingOnline(const char* name, const std::string& episode, int& seriesId, int& episodeId)
 {
    cTVDBSeries* recSeries = scrapSeries(name);
 

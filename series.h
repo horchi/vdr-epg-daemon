@@ -74,7 +74,7 @@ class cEpisodeFile : public cListObject
          esUnchanged = '-'
       };
 
-      cEpisodeFile(std::string aName, std::string aLink, cList<cLine>* aLines = 0)
+      cEpisodeFile(const std::string& aName, const std::string& aLink, cList<cLine>* aLines = nullptr)
       { name = aName; link = aLink; lines = aLines; }
 
       ~cEpisodeFile() { if (lines) delete lines; }

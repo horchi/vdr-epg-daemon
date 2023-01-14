@@ -123,10 +123,11 @@ install-systemd:
 		systemctl daemon-reload
    endif
 
-cppchk:
-	cppcheck --language=c++ --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h \
-      scraper/thetvdbscraper/*.c scraper/thetvdbscraper/*.h scraper/themoviedbscraper/*.c scraper/themoviedbscraper/*.h \
-      tools/*.c tools/*.h
+CPPCHECK_SUPPRESS=--suppress=ConfigurationNotChecked --suppress=noOperatorEq --suppress=noCopyConstructor --suppress=useInitializationList --suppress=unmatchedSuppression --suppress=cstyleCast --suppress=missingInclude
+
+cppc:
+	cppcheck --enable=all --language=c++ $(CPPCHECK_SUPPRESS) --template="{file}:{line}:1 {severity}:{id}:{message}" --quiet --force --std=c++20 \
+	*.[hc] libs/*[hc]
 
 #--------------------------------------------------------
 # dependencies

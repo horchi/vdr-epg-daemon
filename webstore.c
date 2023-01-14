@@ -29,11 +29,11 @@ int cEpgHttpd::storeChannels(json_t* jInData, json_t* response)
       const char* name = 0;
       const char* channelid = json_object_iter_key(iter);
 
-      for (void* iter = json_object_iter(json_object_get(channels, channelid)); iter;
-           iter = json_object_iter_next(json_object_get(channels, channelid), iter))
+      for (void* iiter = json_object_iter(json_object_get(channels, channelid)); iiter;
+           iiter = json_object_iter_next(json_object_get(channels, channelid), iiter))
       {
-         const char* key = json_object_iter_key(iter);
-         json_t* _val = json_object_iter_value(iter);
+         const char* key = json_object_iter_key(iiter);
+         json_t* _val = json_object_iter_value(iiter);
 
          if (strcmp(key, "sources") == 0)
             tell(3, "  'store ext sources and id' ... to be implemented ...");  // store ext sources and id -> TO BE IMPLEMENTED
@@ -133,9 +133,6 @@ int cEpgHttpd::deleteTimerJobs(json_t* jInData, json_t* response)
 
 int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
 {
-   bool hasEvent {false};
-   long doneid {na};
-
    json_t* idArray = json_object_get(jInData, "delete");
 
    // ---------------------------
@@ -175,7 +172,10 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
 
    else
    {
-      long int eventStartTime = 0;
+      bool hasEvent {false};
+      long doneid {na};
+
+      long int eventStartTime {0};
       long int eventEndTime = 0;
       cDbRow timerRow("timers");
 
@@ -707,7 +707,6 @@ int cEpgHttpd::storeUsers(json_t* jInData, json_t* response)
 
    for (int i = 0; i < length; ++i)
    {
-      int insert;
       json_t* obj = json_array_get(users, i);
       const char* user = getStringFromJson(obj, "user");
       const char* state = getStringFromJson(obj, "state");
@@ -725,7 +724,7 @@ int cEpgHttpd::storeUsers(json_t* jInData, json_t* response)
 
          // search user to collect data .. if exist
 
-         insert = !userDb->find();
+         bool insert = !userDb->find();
 
          if (!insert && state[0] == 'C')
          {

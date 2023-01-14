@@ -24,7 +24,7 @@ class cSearchTimer
 {
    public:
 
-      cSearchTimer(cFrame* aParent);
+      explicit cSearchTimer(cFrame* aParent);
       ~cSearchTimer();
 
       int init(const char* confDir);

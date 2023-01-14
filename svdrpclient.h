@@ -20,7 +20,7 @@
 #else
 
 //***************************************************************************
-// 
+//
 //***************************************************************************
 
 class cListObject {
@@ -93,11 +93,11 @@ public:
 // Line
 //***************************************************************************
 
-class cLine : public cListObject 
+class cLine : public cListObject
 {
    public:
 
-      cLine(const char *s) { line = s ? strdup(s) : 0; };
+      explicit cLine(const char *s) { line = s ? strdup(s) : 0; };
       virtual ~cLine()     { if (line) free(line); };
 
       const char* Text()   { return line; }
@@ -112,7 +112,7 @@ class cLine : public cListObject
 // SVDRP Client
 //***************************************************************************
 
-class cSvdrpClient 
+class cSvdrpClient
 {
    private:
 

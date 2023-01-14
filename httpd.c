@@ -115,70 +115,7 @@ UserMask cEpgHttpd::toRightMask(const char* url)
 
 cEpgHttpd::cEpgHttpd()
 {
-   daemon = 0;
-   connection = 0;
-   useeventsDb = 0;
-   mapDb = 0;
-   imageDb = 0;
-   imageRefDb = 0;
-   vdrDb = 0;
-   timerDb = 0;
-   timersDoneDb = 0;
-   searchtimerDb = 0;
-   movieDb = 0;
-   movieActorDb = 0;
-   movieActorsDb = 0;
-   movieMediaDb = 0;
-   seriesDb = 0;
-   seriesEpisodeDb = 0;
-   seriesActorsDb = 0;
-   seriesMediaDb = 0;
-   recordingDirDb = 0;
-   recordingListDb = 0;
-   userDb = 0;
-   messageDb = 0;
-
-   currentSession = 0;
-   loginWithSession = no;
    lastSdWatchdogAt = time(0);
-
-   selectEventsAt = 0;
-   selectEventsNext = 0;
-   selectEventsStartInRange = 0;
-   selectGenres = 0;
-   selectCategories = 0;
-   selectEvent = 0;
-   selectEventByTime = 0;
-   selectAllMap = 0;
-   selectPendingTimerActions = 0;
-   selectDoneTimers = 0;
-   selectMapById = 0;
-   selectVdrs = 0;
-   selectUsers = 0;
-   updateMap = 0;
-   updateTimerAName = 0;
-   updateDoneAName = 0;
-   selectAllTimer = 0;
-   selectTimerById = 0;
-   selectTimerByEventId = 0;
-   selectAllSearchTimer = 0;
-   selectMovie = 0;
-   selectMovieActors = 0;
-   selectMovieMedia = 0;
-   selectSerie = 0;
-   selectSeriesEpisode = 0;
-   selectSeriesMedia = 0;
-   selectActiveVdrs = 0;
-   selectRecordingDirs = 0;
-   selectRecordingByPath = 0;
-   selectChannelFromMap = 0;
-   selectUserByMd5 = 0;
-   selectAllRecordings = 0;
-   selectRecordingForEventByLv = 0;
-   selectPendingMessages = 0;
-   selectWebUsers = 0;
-
-   withutf8 = no;
 
    search = new cSearchTimer(this);
    ptyRecName = new Python("recording", "name");
@@ -1309,13 +1246,11 @@ int cEpgHttpd::loop()
 
 int cEpgHttpd::checkConnection()
 {
-   static int retry = 0;
-
    // check connection
 
    if (!dbConnected(yes))
    {
-      // try to connect
+      static int retry {0};
 
       tell(0, "Trying to re-connect to database!");
       retry++;
@@ -1881,7 +1816,7 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
 
    // header
 
-   char* server;
+   char* server {0};
    asprintf(&server, "epghttpd/%s from %s\n", VERSION, VERSION_DATE);
    addHeaderItem(response, "Server", "server");
 
@@ -2197,7 +2132,6 @@ int main(int argc, char** argv)
 {
    cEpgHttpd* job;
    int nofork = no;
-   int pid;
    int logstdout = na;
    int loglevel = na;
 
@@ -2238,9 +2172,14 @@ int main(int argc, char** argv)
       }
    }
 
-   if (logstdout != na) EpgdConfig.logstdout = logstdout;
-   if (loglevel != na)  EpgdConfig.loglevel = loglevel;
-   if (loglevel != na)  EpgdConfig.argLoglevel = loglevel;
+   if (logstdout != na)
+      EpgdConfig.logstdout = logstdout;
+
+   if (loglevel != na)
+   {
+      EpgdConfig.loglevel = loglevel;
+      EpgdConfig.argLoglevel = loglevel;
+   }
 
    EpgdConfig.logName = "epghttpd";
    EpgdConfig.logFacility = Syslog::toCode("user");
@@ -2249,6 +2188,8 @@ int main(int argc, char** argv)
 
    if (!nofork)
    {
+      int pid {0};
+
       if ((pid = fork()) < 0)
       {
          printf("Can't fork daemon, %s\n", strerror(errno));

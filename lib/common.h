@@ -112,9 +112,9 @@ class Elo
 {
    public:
 
-      static const char* eloquences[];
-      static Eloquence stringToEloquence(const std::string string);
-      static int toEloquence(const char* str);
+      // static const char* eloquences[];
+      // static Eloquence stringToEloquence(const std::string& string);
+      // static int toEloquence(const char* str);
 };
 
 extern const char* logPrefix;
@@ -168,7 +168,7 @@ class MemoryStruct
    public:
 
       MemoryStruct()   { clear(); }
-      MemoryStruct(const MemoryStruct* o)
+      explicit MemoryStruct(const MemoryStruct* o)
       {
          size = o->size;
          memory = (char*)malloc(size);
@@ -438,7 +438,7 @@ class LogDuration
 {
    public:
 
-      LogDuration(const char* aMessage, int aLogLevel = 2);
+      explicit LogDuration(const char* aMessage, int aLogLevel = 2);
       ~LogDuration();
 
       void show(const char* label = "");
@@ -460,10 +460,10 @@ class Sem
 {
    public:
 
-      Sem(key_t aKey)
+      explicit  Sem(key_t aKey)
+         : key(aKey)
       {
          locked = no;
-         key = aKey;
 
          if ((id = semget(key, 1, 0666 | IPC_CREAT)) == -1)
             tell(0, "Error: Can't get semaphore, errno (%d) '%s'",

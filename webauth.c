@@ -16,7 +16,6 @@
 char* string2base64(const char* message)
 {
    const char *lookup = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-   unsigned long l;
    uint i;
    char* tmp;
    size_t length = strlen(message);
@@ -30,7 +29,7 @@ char* string2base64(const char* message)
 
    for (i = 0; i < length; i += 3)
    {
-      l = (((unsigned long) message[i]) << 16)
+      unsigned long l = (((unsigned long) message[i]) << 16)
          | (((i + 1) < length) ? (((unsigned long) message[i + 1]) << 8) : 0)
          | (((i + 2) < length) ? ((unsigned long) message[i + 2]) : 0);
 

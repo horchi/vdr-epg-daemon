@@ -265,7 +265,7 @@ class cUserTimes
 
       struct UserTime
       {
-         UserTime(const char* strTime, const char* strTitle = 0)
+         explicit UserTime(const char* strTime, const char* strTitle = 0)
          {
             highlighted = yes;
             mode = mUnknown;
@@ -402,7 +402,7 @@ class cUserTimes
          if (it == times.end())
             it = times.begin();
          else
-            it++;
+            ++it;
 
          if (it == times.end())
             it = times.begin();
@@ -426,7 +426,7 @@ class cUserTimes
          if (i == times.end())
             i = times.begin();
          else
-            i++;
+            ++i;
 
          if (i == times.end())
             i = times.begin();

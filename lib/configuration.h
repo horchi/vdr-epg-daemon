@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef __CONFIGURATION_H
-#define __CONFIGURATION_H
+#pragma once
 
 #include "thread.h"
 #include "common.h"
@@ -134,11 +133,11 @@ class cSystemNotification : public cThread
 
    protected:
 
-      virtual void action();
+      virtual void action() override;
 
       int interval;
       int threadTimeout;
-      cCondVar waitCondition;
+      cCondVar sysWaitCondition;
       int stop;
 
       static time_t lastWatchdogAt;
@@ -158,7 +157,3 @@ class cFrame : public cConfiguration, public cParameters
       virtual int __attribute__ ((format(printf, 5, 6)))  message(int level, char type, const char* title, const char* format, ...) = 0;
 
 };
-
-//***************************************************************************
-
-#endif // __CONFIGURATION_H
