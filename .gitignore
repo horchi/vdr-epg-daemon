@@ -2,6 +2,7 @@
 *.a
 *~
 PLUGINS/
+box/
 lib/demo
 lib/tst
 epglv/mysqlepglv.so
@@ -21,3 +22,4 @@ eptst
 http/epgd.full.js
 lib/pytst
 /Make.config
+tvdb
