@@ -51,7 +51,7 @@ struct cEpgdConfig : public cEpgConfig
       char proxy[256+TB] {};
       char proxyuser[100+TB] {};
       char proxypwd[100+TB] {};
-      char scrapMovieDbApiKey[100+TB] {"abb01b5a277b9c2c60ec0302d83c5ee9"};
+      char scrapMovieDbApiKey[100+TB] {};
       int scrapEpg {yes};
       int scrapRecordings {yes};
 };

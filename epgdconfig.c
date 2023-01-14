@@ -25,4 +25,5 @@ cEpgdConfig::cEpgdConfig()
    strcpy(epgView, "eventsview.sql");
    strcpy(epgViewWeb, "eventsviewplain.sql");
    strcpy(theTvDBView, "thetvdbview.sql");
+   strcpy(scrapMovieDbApiKey, "abb01b5a277b9c2c60ec0302d83c5ee9");
 }
