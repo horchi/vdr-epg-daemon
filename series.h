@@ -67,6 +67,13 @@ class cEpisodeFile : public cListObject
 {
    public:
 
+      enum EpisodeState
+      {
+         esDelete    = 'D',
+         esChanged   = 'C',
+         esUnchanged = '-'
+      };
+
       cEpisodeFile(std::string aName, std::string aLink, cList<cLine>* aLines = 0)
       { name = aName; link = aLink; lines = aLines; }
 
@@ -74,7 +81,7 @@ class cEpisodeFile : public cListObject
 
       int isLink()    { return link.length() > 0; }
 
-      int storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLines = 0);
+      int storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cList<cLine>* linkLines = 0);
 
       int storeToFile(const char* aPath)
       {
@@ -162,21 +169,20 @@ class cEpisodeFiles : public cList<cEpisodeFile>
          return 0;
       }
 
-      int storeToTable(cDbTable* episodeDb)
+      int storeToTable(cDbTable* episodeDb, cDbTable* eventsDb)
       {
          for (cEpisodeFile* f = First(); f; f = Next(f))
          {
             if (f->isLink())
             {
                if (cEpisodeFile* l = findByLink(f->getName()))
-                  f->storeToTable(episodeDb, l->getLines());
+                  f->storeToTable(episodeDb, eventsDb, l->getLines());
                else
-                  tell(0, "Warning: Ignoring invalid link '%s' destination '%s' not found",
-                          f->getLink(), f->getName());
+                  tell(0, "Warning: Ignoring invalid link '%s' destination '%s' not found", f->getLink(), f->getName());
             }
             else
             {
-               f->storeToTable(episodeDb);
+               f->storeToTable(episodeDb, eventsDb);
             }
          }
 

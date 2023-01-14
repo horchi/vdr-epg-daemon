@@ -702,6 +702,7 @@ int cEpgd::initDb()
    selectByCompNames->bind("EPISODENAME", cDBS::bndOut);
    selectByCompNames->bind("PARTNAME", cDBS::bndOut, ", ");
    selectByCompNames->bind("LANG", cDBS::bndOut, ", ");
+   selectByCompNames->bind("STATE", cDBS::bndOut, ", ");
    selectByCompNames->build(" from %s where ", episodeDb->TableName());
    selectByCompNames->bind("COMPNAME", cDBS::bndIn | cDBS::bndSet);
    selectByCompNames->bind("COMPPARTNAME", cDBS::bndIn | cDBS::bndSet, " and ");
@@ -2594,22 +2595,20 @@ int cEpgd::scrapNewEvents()
    time_t start = time(0);
 
    tell(0, "---------------------");
-   tell(0, "Scraping new series and episodes");
-
-   /*
-
-   // TODO - to be implemented with API V4
 
    tvdbManager->ResetBytesDownloaded();
-   tvdbManager->UpdateSeries();
+
+   time_t lastTvDvScrap {0};
+   getParameter("epgd", "lastTvDvScrap", lastTvDvScrap);
+
+   if (tvdbManager->updateSeries(lastTvDvScrap) == success)
+      setParameter("epgd", "lastTvDvScrap", time(0));
 
    int bytes = tvdbManager->GetBytesDownloaded();
    double mb = (double)bytes / 1024.0 / 1024.0;
 
    tell(0, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
         time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
-
-   */
 
    // ------------------------------
    // scrap new series in EPG
@@ -2643,8 +2642,8 @@ int cEpgd::scrapNewEvents()
          return fail;
    }
 
-   int bytes = tvdbManager->GetBytesDownloaded();
-   double mb = (double)bytes / 1024.0 / 1024.0;
+   bytes = tvdbManager->GetBytesDownloaded();
+   mb = (double)bytes / 1024.0 / 1024.0;
 
    tell(0, "%d of %zu series episodes scraped in %ld s, downloaded %.3f %cB",
         seriesCur, seriesToScrap.size(), time(0) - start,

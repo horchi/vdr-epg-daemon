@@ -181,7 +181,7 @@ int cDbStatement::getResultCount()
 int cDbStatement::find()
 {
    if (execute() != success)
-      return fail;
+      return no;
 
    return getAffected() > 0 ? yes : no;
 }
@@ -761,7 +761,7 @@ int cDbTable::init(int allowAlter)
    for (f = tableDef->dfields.begin(); f != tableDef->dfields.end(); f++)
       stmtSelect->bind(f->second, bndOut, n++ ? ", " : "");
 
-   stmtSelect->build(" from %s where ", TableName());
+   stmtSelect->build(" from %s ", TableName());
 
    n = 0;
 
@@ -769,6 +769,9 @@ int cDbTable::init(int allowAlter)
    {
       if (!(f->second->getType() & ftPrimary))
          continue;
+
+      if (!n)
+         stmtSelect->build("where ");
 
       stmtSelect->bind(f->second, bndIn | bndSet, n++ ? " and " : "");
    }

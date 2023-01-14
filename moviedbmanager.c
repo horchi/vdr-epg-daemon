@@ -39,58 +39,35 @@ std::string str_cut(const std::string& search, const std::string& subject)
 
 cMovieDBManager::cMovieDBManager()
 {
-    connection = NULL;
-    tMovies = NULL;
-    tMoviesActor = NULL;
-    tMoviesActors = NULL;
-    tMovieMedia = NULL;
-    tEvents = NULL;
-    tRecordingList = NULL;
-    movieDbScraper = NULL;
+   exsltRegisterAll();
+   setlocale(LC_CTYPE, "");
 
-    withutf8 = no;
-    bytesDownloaded = 0;
-    exsltRegisterAll();
-    setlocale(LC_CTYPE, "");
-    char* lang;
-    lang = setlocale(LC_CTYPE, 0);
-    if (lang) {
-        //tell(0, "Set locale to '%s'", lang);
-        if ((strcasestr(lang, "UTF-8") != 0) || (strcasestr(lang, "UTF8") != 0)){
-            //tell(0, "detected UTF-8");
-            withutf8 = yes;
-        }
-    } else {
-        //tell(0, "Reseting locale for LC_CTYPE failed.");
-    }
-    string loc = lang;
-    size_t index = loc.find_first_of("_");
-    string langISO = "";
-    if (index > 0) {
-        langISO = loc.substr(0, index);
-    }
-    if (langISO.size() == 2) {
-        language = langISO.c_str();
-    } else {
-        language = "en";
-    }
+   char* lang = setlocale(LC_CTYPE, 0);
+
+   if (lang)
+      if ((strcasestr(lang, "UTF-8") != 0) || (strcasestr(lang, "UTF8") != 0))
+         withutf8 = yes;
+
+   std::string loc {lang};
+   size_t index = loc.find_first_of("_");
+   std::string langISO {""};
+
+   if (index > 0)
+      langISO = loc.substr(0, index);
+
+   if (langISO.size() == 2)
+      language = langISO.c_str();
 }
 
-cMovieDBManager::~cMovieDBManager() {
-    if (movieDbScraper)
-        delete movieDbScraper;
-    if (tMovies)
-        delete tMovies;
-    if (tMoviesActor)
-        delete tMoviesActor;
-    if (tMoviesActors)
-        delete tMoviesActors;
-    if (tMovieMedia)
-        delete tMovieMedia;
-    if (tEvents)
-        delete tEvents;
-    if (tRecordingList)
-        delete tRecordingList;
+cMovieDBManager::~cMovieDBManager()
+{
+   delete movieDbScraper;
+   delete tMovies;
+   delete tMoviesActor;
+   delete tMoviesActors;
+   delete tMovieMedia;
+   delete tEvents;
+   delete tRecordingList;
 }
 
 int cMovieDBManager::ConnectDatabase(cDbConnection *conn) {

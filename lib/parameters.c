@@ -36,6 +36,7 @@ cParameters::Parameter cParameters::parameters[] =
    { "epgd",     "lastScrRefUpdate",               ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   no  },
    { "epgd",     "lastEpisodeRun",                 ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   no  },
    { "epgd",     "lastEpisodeFullRun",             ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   no  },
+   { "epgd",     "lastTvDvScrap",                  ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   no  },
 
    { "epgd",     "maxEventTime",                   ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   yes },
    { "epgd",     "minEventTime",                   ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   yes },

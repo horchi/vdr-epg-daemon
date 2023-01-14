@@ -20,6 +20,50 @@ cTVDBScraper::~cTVDBScraper()
 {
 }
 
+int cTVDBScraper::getUpdates(time_t since, std::set<int>& seriesIds)
+{
+   // https://api4.thetvdb.com/v4/updates?since=1673602620&type=episodes&action=update
+
+   std::map<std::string,std::string> parameters;
+   uint page {0};
+   bool ready {false};
+
+   parameters["since"] = std::to_string(since);
+   parameters["type"] = "episodes";
+   parameters["action"] = "update";
+
+   while (!ready)
+   {
+      parameters["page"] = std::to_string(page++);
+
+      json_t* jResult {};
+
+      if (tvdbV4.get("updates", jResult, &parameters) != success)
+         return 0;
+
+      json_t* jData = getObjectFromJson(jResult, "data");
+      size_t item {0}; json_t* jItem {};
+
+      if (!jData)
+      {
+         tell(0, "TvDb: Query updates page %d failed", page);
+         continue;
+      }
+
+      json_array_foreach(jData, item, jItem)
+         seriesIds.insert(getIntFromJson(jItem, "seriesId", 0));
+
+      const char* next = getStringByPath(jResult, "links/next", "");
+
+      if (isEmpty(next) || !strstr(next, "page="))
+         ready = true;
+
+      json_decref(jResult);
+   }
+
+   return success;
+}
+
 cTVDBSeries* cTVDBScraper::scrapByName(const char* seriesName)
 {
    int seriesID = readSeriesId(seriesName);
@@ -47,64 +91,11 @@ int cTVDBScraper::disconnect()
    return success;
 }
 
-/*
-bool cTVDBScraper::GetUpdatedSeriesandEpisodes(set<int>* updatedSeries, set<int>* updatedEpisodes, int lastScrap)
-{
-   tell(eloAlways, "GetUpdatedSeriesandEpisodes -> to be implemeted");
-   return true;
-
-    stringstream url;
-    url << "http://thetvdb.com/api/Updates.php?type=all&time=" << lastScrap;
-    string updatedXML;
-
-    if (!curl.GetUrl(url.str().c_str(), &updatedXML))
-        return false;
-
-    xmlDoc* doc = SetXMLDoc(updatedXML);
-
-    if (doc == NULL)
-       return false;
-
-    // Root Element has to be <Items>
-
-    xmlNode *node = NULL;
-    node = xmlDocGetRootElement(doc);
-
-    if (!(node && !xmlStrcmp(node->name, (const xmlChar *)"Items")))
-    {
-        xmlFreeDoc(doc);
-        return false;
-    }
-
-    xmlNode *cur_node = node->children;
-    for (; cur_node; cur_node = cur_node->next)
-    {
-       if ((cur_node->type == XML_ELEMENT_NODE) && !xmlStrcmp(cur_node->name, (const xmlChar *)"Series"))
-       {
-          xmlChar *node_content = xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
-          int seriesId = atoi((const char *)node_content);
-          xmlFree(node_content);
-          updatedSeries->insert(seriesId);
-       }
-       else if ((cur_node->type == XML_ELEMENT_NODE) && !xmlStrcmp(cur_node->name, (const xmlChar *)"Episode"))
-       {
-          xmlChar *node_content = xmlNodeListGetString(doc, cur_node->xmlChildrenNode, 1);
-          int episodeId = atoi((const char *)node_content);
-          xmlFree(node_content);
-          updatedEpisodes->insert(episodeId);
-       }
-    }
-
-    xmlFreeDoc(doc);
-    return true;
-} */
-
 int cTVDBScraper::readSeriesId(const char* seriesName)
 {
    // https://api4.thetvdb.com/v4/search?language=deu&query=Bones%20-%20Die%20Knochenj%C3%A4gerin&type=series
    // https://api4.thetvdb.com/v4/search?language=deu&query=Diagnose%3A%20Mord&type=series
 
-   MemoryStruct data;
    std::map<std::string,std::string> parameters;
 
    parameters["query"] = seriesName;

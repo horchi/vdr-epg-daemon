@@ -19,36 +19,42 @@
 
 #include "epgdconfig.h"
 
-struct sMovieResult {
-    tEventId eventId;
-    string title;
-    string year;
-    int lastScraped;
+struct sMovieResult
+{
+    tEventId eventId {0};
+    std::string title;
+    std::string year;
+    int lastScraped {0};
 };
 
 // --- cMovieDBManager -------------------------------------------------------------
 
-class cMovieDBManager {
+class cMovieDBManager
+{
 private:
-    int bytesDownloaded;
-    int withutf8;
-    string language;
+
+    int bytesDownloaded {0};
+    int withutf8 {no};
+    std::string language {"en"};
     map<string, int> alreadyScraped;
-    cMovieDBScraper *movieDbScraper;
-    cDbConnection *connection;
-    cDbTable *tMovies;
-    cDbTable *tMoviesActor;
-    cDbTable *tMoviesActors;
-    cDbTable *tMovieMedia;
-    cDbTable *tEvents;
-    cDbTable *tRecordingList;
-    enum mediaType {
-         mtPoster,
-         mtFanart,
-         mtCollectionPoster,
-         mtCollectionFanart,
-         mtActorThumb
+    cMovieDBScraper *movieDbScraper {};
+    cDbConnection *connection {};
+    cDbTable *tMovies {};
+    cDbTable *tMoviesActor {};
+    cDbTable *tMoviesActors {};
+    cDbTable *tMovieMedia {};
+    cDbTable *tEvents {};
+    cDbTable *tRecordingList {};
+
+    enum mediaType
+    {
+       mtPoster,
+       mtFanart,
+       mtCollectionPoster,
+       mtCollectionFanart,
+       mtActorThumb
     };
+
     int LoadMovieFromDB(string title);
     void UpdateEvent(tEventId eventID, int movieID);
     void SaveMovie(cMovieDbMovie *movie);
@@ -59,9 +65,12 @@ private:
     int GetPicture(const char* url, MemoryStruct* data);
     void DeleteMovie(int movieId);
     cMovieDbMovie *SearchRecordingSophisticated(string name);
+
 public:
+
     cMovieDBManager();
     virtual ~cMovieDBManager();
+
     int ConnectDatabase(cDbConnection *conn);
     bool ConnectScraper();
     void ResetBytesDownloaded() { bytesDownloaded = 0; };

@@ -48,7 +48,7 @@ class cTVDBManager
       int connectScraper();
       void ResetBytesDownloaded() { bytesDownloaded = 0; };
       int GetBytesDownloaded() { return bytesDownloaded; };
-      void UpdateSeries();
+      int updateSeries(time_t since);
       bool GetSeriesWithEpisodesFromEPG(std::vector<sSeriesResult>* result);
       void processSeries(sSeriesResult ser);
       int CleanupSeries();
@@ -73,9 +73,9 @@ class cTVDBManager
       cDbTable* tEpisodes {};
       cDbTable* tRecordingList {};
 
-      int GetLastScrap();
-      void UpdateScrapTimestamp();
-      bool GetAllIDs(std::set<int>* IDs, cDbTable* table, const char* fname);
+      // int GetLastScrap();
+      // void UpdateScrapTimestamp();
+      int getAllIDs(std::set<int>& IDs, cDbTable* table, const char* field);
       cTVDBSeries* scrapSeries(const char* search);
       cTVDBSeries* scrapSeries(int seriesID);
       void saveSeries(cTVDBSeries* series);

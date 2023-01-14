@@ -83,8 +83,52 @@ int cTVDBManager::connectScraper()
    return tvdbScraper->connect();
 }
 
-void cTVDBManager::UpdateSeries()
+int cTVDBManager::updateSeries(time_t since)
 {
+   std::set<int> updatedSeriesIds;
+   std::set<int> storedSeriesIds;
+   std::set<int> scrapSeriesIds;
+
+   if (since < time(0) - 10 * tmeSecondsPerDay)
+      since = time(0) - 10 * tmeSecondsPerDay;
+
+   // scrap updates
+
+   tell(0, "Scraping series and episodes updates since '%s'", l2pTime(since).c_str());
+   tvdbScraper->getUpdates(since, updatedSeriesIds);
+
+   // query all used series ids from database
+
+   if (getAllIDs(storedSeriesIds, tSeries, "SeriesId") != success)
+      return fail;
+
+   // alignment of the series with update and the applied
+
+   std::set_intersection(updatedSeriesIds.begin(), updatedSeriesIds.end(),
+                         storedSeriesIds.begin(), storedSeriesIds.end(),
+                         std::inserter(scrapSeriesIds, scrapSeriesIds.begin()));
+
+   tell(0, "Found (%zu) updated series by tvdb, %zu series has to updated in database",
+        updatedSeriesIds.size(), scrapSeriesIds.size());
+
+   int count {0};
+
+   for (const auto& scrapSeriesId : scrapSeriesIds)
+   {
+      if (count++ % 10 == 0)
+         tell(0, "TvDb: Scraped %d series, continuing rescraping", count);
+
+      cTVDBSeries* series = scrapSeries(scrapSeriesId);
+
+      if (series)
+         saveSeries(series);
+
+      delete series;
+   }
+
+   return success;
+
+
 /*
    set<int> updatedSeries;
    set<int> updatedEpisodes;
@@ -159,62 +203,62 @@ void cTVDBManager::UpdateSeries()
 */
 }
 
-int cTVDBManager::GetLastScrap()
-{
-   int lastScraped {0};
+// int cTVDBManager::GetLastScrap()
+// {
+//    int lastScraped {0};
 
-   cDbStatement* selectTime = new cDbStatement(tSeries);
-   selectTime->build("select ");
-   selectTime->bind("SeriesLastScraped", cDBS::bndOut);
-   selectTime->build(" from %s", tSeries->TableName());
+//    cDbStatement* selectTime = new cDbStatement(tSeries);
+//    selectTime->build("select ");
+//    selectTime->bind("SeriesLastScraped", cDBS::bndOut);
+//    selectTime->build(" from %s", tSeries->TableName());
 
-   if (selectTime->prepare() != success)
-   {
-      delete selectTime;
-      return 0;
-   }
+//    if (selectTime->prepare() != success)
+//    {
+//       delete selectTime;
+//       return 0;
+//    }
 
-   for (int res = selectTime->find(); res; res = selectTime->fetch())
-   {
-      lastScraped = tSeries->getIntValue("SeriesLastScraped");
-      break;
-   }
+//    for (int res = selectTime->find(); res; res = selectTime->fetch())
+//    {
+//       lastScraped = tSeries->getIntValue("SeriesLastScraped");
+//       break;
+//    }
 
-   selectTime->freeResult();
-   delete selectTime;
-   return lastScraped;
-}
+//    selectTime->freeResult();
+//    delete selectTime;
+//    return lastScraped;
+// }
 
-void cTVDBManager::UpdateScrapTimestamp()
-{
-   stringstream upd;
-   upd << "update " << tSeries->TableName() << " set series_last_scraped=" << time(0) << " where series_id > 0";
-   cDbStatement updStmt(connection, upd.str().c_str());
-   updStmt.prepare();
-   updStmt.execute();
-}
+// void cTVDBManager::UpdateScrapTimestamp()
+// {
+//    stringstream upd;
+//    upd << "update " << tSeries->TableName() << " set series_last_scraped=" << time(0) << " where series_id > 0";
+//    cDbStatement updStmt(connection, upd.str().c_str());
+//    updStmt.prepare();
+//    updStmt.execute();
+// }
 
-bool cTVDBManager::GetAllIDs(set<int>* IDs, cDbTable* table, const char* fname)
+int cTVDBManager::getAllIDs(std::set<int>& IDs, cDbTable* table, const char* field)
 {
    cDbStatement* selectIDs = new cDbStatement(table);
 
    selectIDs->build("select ");
-   selectIDs->bind(fname, cDBS::bndOut);
+   selectIDs->bind(field, cDBS::bndOut);
    selectIDs->build(" from %s", table->TableName());
 
    if (selectIDs->prepare() != success)
    {
       delete selectIDs;
-      return false;
+      return fail;
    }
 
    for (int res = selectIDs->find(); res; res = selectIDs->fetch())
-      IDs->insert(table->getIntValue(fname));
+      IDs.insert(table->getIntValue(field));
 
    selectIDs->freeResult();
 
    delete selectIDs;
-   return true;
+   return success;
 }
 
 cTVDBSeries* cTVDBManager::scrapSeries(const char* search)

@@ -17,7 +17,7 @@
 
 int getSpecial(const char* line, const char* item, char* content, int max, int* count = 0)
 {
-   const char* p;
+   const char* p {};
 
    unsigned int off = strlen(item) + 1;
 
@@ -38,7 +38,7 @@ int getSpecial(const char* line, const char* item, char* content, int max, int* 
 // Store To Table
 //***************************************************************************
 
-int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLines)
+int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cList<cLine>* linkLines)
 {
    const int maxSeasons {100};
 
@@ -81,9 +81,17 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
    if (!compName.length())
       return done;
 
-   // delete old entry of this episode
+   // delete all entry of this episode
 
-   episodeDb->deleteWhere("compname = '%s' and lang = '%s'", compName.c_str(), lang.c_str());
+   // episodeDb->deleteWhere("compname = '%s' and lang = '%s'", compName.c_str(), lang.c_str());
+
+   episodeDb->getConnection()->query("update %s set %s = '%c' where %s = '%s' and %s = '%s'",
+                                     episodeDb->TableName(),
+                                     episodeDb->getField("STATE")->getDbName(), esDelete,
+                                     episodeDb->getField("COMPNAME")->getDbName(), compName.c_str(),
+                                     episodeDb->getField("LANG")->getDbName(), lang.c_str());
+
+   episodeDb->getConnection()->queryReset();
 
    // parse ...
 
@@ -134,8 +142,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
 
             if (!isdigit(line[2]))
             {
-               tell(0, "Warning: (%s) Ignoring unexpected season line [%s]"
-                    " missing number at position 3", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Ignoring unexpected season line [%s]  missing number at position 3", name.c_str(), line);
                continue;
             }
 
@@ -145,14 +152,10 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
                   seasonNr = s;
 
                if (s != seasonNr)
-                  tell(0, "Info: (%s) Season line [%s] not in sequence, "
-                       "expected season %d", name.c_str(), line, seasonNr);
+                  tell(0, "CONSTABEL: Info: (%s) Season line [%s] not in sequence, expected season %d", name.c_str(), line, seasonNr);
 
                if (seasonNr > maxSeasons)
-               {
-                  tell(0, "Warning: (%s) Ignoring unexpected season line "
-                       "[%s] only %d seasons expected", name.c_str(), line, maxSeasons);
-               }
+                  tell(0, "CONSTABEL: Warning: (%s) Ignoring unexpected season line [%s] only %d seasons expected", name.c_str(), line, maxSeasons);
 
                // store part count of the season
 
@@ -188,50 +191,38 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
       {
          case 0:
          {
-            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]",
-                       &se, &ep, &no, partName, comment) < 4)
+            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]", &se, &ep, &no, partName, comment) < 4)
             {
-               tell(0, "Warning: (%s) Got invalid episode line [%s], "
-                    "at lease 4 columns expected", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 4 columns expected", name.c_str(), line);
                continue;
             }
-
             break;
          }
          case 1:
          {
-            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]",
-                       &se, &ep, &no, partName, ex1, comment) < 5)
+            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]", &se, &ep, &no, partName, ex1, comment) < 5)
             {
-               tell(0, "Warning: (%s) Got invalid episode line [%s], "
-                    "at lease 5 columns expected", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 5 columns expected", name.c_str(), line);
                continue;
             }
-
             break;
          }
          case 2:
          {
-            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]",
-                       &se, &ep, &no, partName, ex1, ex2, comment) < 6)
+            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]", &se, &ep, &no, partName, ex1, ex2, comment) < 6)
             {
-               tell(0, "Warning: (%s) Got invalid episode line [%s], "
-                    "at lease 6 columns expected", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 6 columns expected", name.c_str(), line);
                continue;
             }
-
             break;
          }
          case 3:
          {
-            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]",
-                       &se, &ep, &no, partName, ex1, ex2, ex3, comment) < 7)
+            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]", &se, &ep, &no, partName, ex1, ex2, ex3, comment) < 7)
             {
-               tell(0, "Warning: (%s) Got invalid episode line [%s], "
-                    "at lease 7 columns expected", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 7 columns expected", name.c_str(), line);
                continue;
             }
-
             break;
          }
       }
@@ -247,6 +238,10 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
       episodeDb->setValue("COMPNAME", compName.c_str());
       episodeDb->setValue("COMPPARTNAME", partNameComp.c_str());
       episodeDb->setValue("LANG", lang.c_str());
+
+      bool found = episodeDb->find();
+
+      episodeDb->clearChanged();
 
       episodeDb->setValue("EPISODENAME", ename.c_str());
       episodeDb->setValue("LINK", isLink());
@@ -287,10 +282,20 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, const cList<cLine>* linkLine
          episodeDb->setValue("EXTRACOL3", ex);
       }
 
+      if (!found || episodeDb->getChanges())
+         episodeDb->setCharValue("STATE", esChanged);
+      else
+         episodeDb->setCharValue("STATE", esUnchanged);
+
       episodeDb->store();
    }
 
    free(line);
+
+   episodeDb->deleteWhere("%s = '%s' and %s = '%s' and %s = '%c'",
+                          episodeDb->getField("COMPNAME")->getDbName(), compName.c_str(),
+                          episodeDb->getField("LANG")->getDbName(), lang.c_str(),
+                          episodeDb->getField("STATE")->getDbName(), esDelete);
 
    return 0;
 }

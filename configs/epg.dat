@@ -189,6 +189,7 @@ Table episodes
    INSSP                ""  inssp                Int          0 Meta,
    UPDSP                ""  updsp                Int          0 Meta,
 
+   STATE                ""  state                Ascii        1 Data,
    LINK                 ""  link                 Int          0 Data,
    SHORTNAME            ""  shortname            Ascii      100 Data,
    COMPSHORTNAME        ""  compshortname        Ascii      100 Data,

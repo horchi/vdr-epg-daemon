@@ -181,7 +181,7 @@ class cDbValue : public cDbService
                tell(0, "Warning, size of %d for '%s' exeeded (needed %ld) [%s]",
                     field->getSize(), field->getName(), (long)strlen(value), value);
 
-            if (strncmp(strValue, value, strlen(value)) != 0 || isNull())
+            if (strcmp(strValue, value) != 0 || isNull())
                modified = yes;
 
             clear();
@@ -679,7 +679,8 @@ class cDbRow : public cDbService
       float getFloatValue(cDbFieldDef* f)             const { return dbValues[f->getIndex()].getFloatValue(); }
       int isNull(cDbFieldDef* f)                      const { return dbValues[f->getIndex()].isNull(); }
 
-      time_t getTimeValue(const char* n)              const { GET_FIELD_RES(n, 0);   return dbValues[f->getIndex()].getTimeValue(); }
+      time_t getTimeValue(const char* n)              const { GET_FIELD_RES(n, 0);    return dbValues[f->getIndex()].getTimeValue(); }
+      char getCharValue(const char* n)                const { GET_FIELD_RES(n, ' ');  return dbValues[f->getIndex()].getCharValue(); }
       const char* getStrValue(const char* n)          const { GET_FIELD_RES(n, "");  return dbValues[f->getIndex()].getStrValue(); }
       long getIntValue(const char* n)                 const { GET_FIELD_RES(n, 0);   return dbValues[f->getIndex()].getIntValue(); }
       int64_t getBigintValue(const char* n)           const { GET_FIELD_RES(n, 0);   return dbValues[f->getIndex()].getBigintValue(); }
@@ -1145,6 +1146,7 @@ class cDbTable : public cDbService
       time_t getTimeValue(cDbFieldDef* f)           const             { return row->getTimeValue(f); }
       int isNull(cDbFieldDef* f)                    const             { return row->isNull(f); }
 
+      char getCharValue(const char* n)              const             { return row->getCharValue(n); }
       const char* getStrValue(const char* n)        const             { return row->getStrValue(n); }
       long getIntValue(const char* n)               const             { return row->getIntValue(n); }
       int64_t getBigintValue(const char* n)         const             { return row->getBigintValue(n); }

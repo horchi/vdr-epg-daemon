@@ -13,9 +13,9 @@
 
 int cEpgd::evaluateEpisodes()
 {
-   int ec = 0, pp = 0, plv = 0;  // statistics
+   int ec {}, pp {}, plv {};  // statistics
+   int updated {0};
    long lStart = time(0);
-   int updated = 0;
 
    if (!EpgdConfig.seriesEnabled)
       return done;
@@ -63,10 +63,14 @@ int cEpgd::evaluateEpisodes()
          {
             pp++;
 
+            // check if changed
+
             if (!eventsDb->hasValue("EPISODECOMPPARTNAME", evtCompShortText)
-                || !eventsDb->hasValue("EPISODELANG", episodeDb->getStrValue("LANG")))
+                || !eventsDb->hasValue("EPISODELANG", episodeDb->getStrValue("LANG"))
+                || episodeDb->getCharValue("STATE") == cEpisodeFile::esChanged)
             {
-               // store reference
+               // changed -> store reference
+               // updateEpisodeAtEvents resets also scrsp, scrseriesepisode and scrseriesid
 
                eventsDb->setValue("UPDSP", time(0));
                eventsDb->setValue("EPISODECOMPPARTNAME", evtCompShortText);
@@ -74,17 +78,21 @@ int cEpgd::evaluateEpisodes()
 
                updateEpisodeAtEvents->execute();
                updated++;
+
+               if (episodeDb->getCharValue("STATE") == cEpisodeFile::esChanged)
+                  tell(2, "Series update detected, reset series reference for all event of to '%s/%s'",
+                       episodeCompName, evtCompShortText);
             }
          }
 
-         else  // if not found try via lv
+         else  // if not found try match by LV
          {
             const int maxDist = (((double)strlen(evtCompShortText)) / 100.0 * 20.0);
-            int d;
-            int dMin = maxDist+1;
-            int tmp;
-            char* bestCompPart = 0;
-            char* bestCompPartLang = 0;
+            int d {0};
+            int dMin {maxDist+1};
+            int tmp {0};
+            char* bestCompPart {};
+            char* bestCompPartLang {};
 
             for (int f = selectByCompName->find(); f; f = selectByCompName->fetch())
             {
@@ -109,7 +117,8 @@ int cEpgd::evaluateEpisodes()
                plv++;
 
                if (!eventsDb->hasValue("EPISODECOMPPARTNAME", bestCompPart)
-                   || !eventsDb->hasValue("EPISODELANG", bestCompPartLang))
+                   || !eventsDb->hasValue("EPISODELANG", bestCompPartLang)
+                   || episodeDb->getCharValue("STATE") == cEpisodeFile::esChanged)
                {
                   // store reference
 
@@ -119,6 +128,10 @@ int cEpgd::evaluateEpisodes()
 
                   updateEpisodeAtEvents->execute();
                   updated++;
+
+                  if (episodeDb->getCharValue("STATE") == cEpisodeFile::esChanged)
+                     tell(2, "Series update detected, reset series reference for all event of to '%s/%s'",
+                          episodeCompName, bestCompPart);
                }
             }
 
@@ -132,15 +145,16 @@ int cEpgd::evaluateEpisodes()
       }
 
       selectByCompTitle->freeResult();
-
       free(episodeCompName);
    }
+
+   // episodeDb->getConnection()->query("update %s set %s = '%c'", episodeDb->TableName(),
+   //                                   episodeDb->getField("STATE")->getDbName(), cEpisodeFile::esUnchanged);
 
    selectDistCompname->freeResult();
    connection->commit();
 
-   tell(1, "Lookup done for "
-        "%d series, matched %d parts by compare and %d parts by lv in %ld seconds; Updated %d",
+   tell(1, "Lookup done for %d series, matched %d parts by compare and %d parts by lv in %ld seconds; Updated %d",
         ec, pp, plv, time(0)-lStart, updated);
 
    return success;
@@ -152,28 +166,21 @@ int cEpgd::evaluateEpisodes()
 
 int cEpgd::downloadEpisodes()
 {
-   long int lastFullRun = 0;
-   int full = fullupdate;
-
    if (!EpgdConfig.seriesEnabled)
       return done;
 
    cSvdrpClient cl(EpgdConfig.seriesUrl, EpgdConfig.seriesPort);
-   string fileName;
-   string linkName;
-   int isLink = 0;
-   cEpisodeFiles files;
-   int code;
-   int abort = 0;
-   char command[200];
-   int minutes = na;
+   std::string fileName;
+   std::string linkName;
+   char command[200] {};
+   int minutes {na};
 
    if (selectMaxUpdSp->find() && episodeDb->getIntValue("UpdSp") > 0)
       minutes = (time(0) - episodeDb->getIntValue("UpdSp")) / 60;
 
    selectMaxUpdSp->freeResult();
 
-   full = full || minutes == na;
+   int full = fullupdate || minutes == na;
 
    tell(1, "Starting '%s' episode download ...", full ? "fullupdate" : "update");
 
@@ -183,6 +190,7 @@ int cEpgd::downloadEpisodes()
       return done;
    }
 
+   long int lastFullRun {0};
    getParameter("epgd", "lastEpisodeFullRun", lastFullRun);
 
    if (full && lastFullRun > time(0) - 6 * tmeSecondsPerHour)
@@ -239,10 +247,7 @@ int cEpgd::downloadEpisodes()
    {
       tell(1, "Requesting all episodes due to '%s'", minutes != na ? "fullupdate" : "empty table");
       sprintf(command, "GET all");
-
-      // truncate table!
-
-      episodeDb->truncate();
+      episodeDb->truncate();        // truncate table!
    }
 
    else if (minutes > 0)
@@ -261,10 +266,14 @@ int cEpgd::downloadEpisodes()
       return fail;
    }
 
+   cEpisodeFiles files;
    cList<cLine>* result = new cList<cLine>;
+   int code {0};
+   bool abort {false};
 
    while (!abort && (code = cl.receive(result)) != codeCommunicationEnd)
    {
+      bool isLink {false};
       cSystemNotification::check();
 
       switch (code)
@@ -274,8 +283,7 @@ int cEpgd::downloadEpisodes()
             if (result->Count() < 2)
             {
                tell(1, "Protocol violation, aborting!");
-
-               abort = 1;
+               abort = true;
             }
             else
             {
@@ -327,7 +335,7 @@ int cEpgd::downloadEpisodes()
 
          case codeTransferEnd:
          {
-            abort = 1;
+            abort = true;
             break;
          }
       }
@@ -347,20 +355,18 @@ int cEpgd::downloadEpisodes()
    // insert / update series into database ...
 
    episodeDb->getConnection()->startTransaction();
-   files.storeToTable(episodeDb);
+   files.storeToTable(episodeDb, eventsDb);
    episodeDb->getConnection()->commit();
 
    // optional store to filesystem ...
 
    if (EpgdConfig.storeSeriesToFs)
    {
-      char* path = 0;
+      char* path {};
 
       asprintf(&path, "%s/eplist", EpgdConfig.cachePath);
-
       chkDir(path);
       files.storeToFile(path);
-
       free(path);
    }
 

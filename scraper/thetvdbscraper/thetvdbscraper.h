@@ -19,6 +19,12 @@ class cTVDBScraper
 {
    public:
 
+      // struct EpisodeId
+      // {
+      //    int seriesId {0};
+      //    int episodeId {0};
+      // };
+
       cTVDBScraper(std::string language);
       virtual ~cTVDBScraper();
 
@@ -28,6 +34,7 @@ class cTVDBScraper
       cTVDBSeries* scrapByName(const char* seriesName);
       bool GetUpdatedSeriesandEpisodes(std::set<int>* updatedSeries, std::set<int>* updatedEpisodes, int lastScrap);
       cTVDBSeries* getSeries(int seriesID);
+      int getUpdates(time_t since, std::set<int>& seriesIds);
 
    private:
 

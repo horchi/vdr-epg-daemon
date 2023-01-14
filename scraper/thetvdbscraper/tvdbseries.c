@@ -57,31 +57,32 @@ int cTVDBSeries::readEpisodes()
 {
    // https://api4.thetvdb.com/v4/series/75682/episodes/default/deu?page=0
 
-   MemoryStruct data;
-   std::map<std::string,std::string> parameters;
-   json_t* jResult {};
-
-   parameters["page"] = "0";
-
+   uint page {0};
+   bool ready {false};
    std::string method = "series/" + std::to_string(seriesID) + "/episodes/default/" + lang;
 
-   if (tvdbV4.get(method.c_str(), jResult, &parameters) != success)
-      return fail;
-
-   int status = parseEpisodes(jResult);
-
-   const char* next = getStringByPath(jResult, "links/next", "");
-
-   if (next && strstr(next, "page="))
+   while (!ready)
    {
-      const char* p = strstr(next, "page=");
-      p += 5;
-      tell(eloAlways, "---- TODO, get next page %d", atoi(p));
+      std::map<std::string,std::string> parameters;
+
+      parameters["page"] = std::to_string(page++);
+
+      json_t* jResult {};
+
+      if (tvdbV4.get(method.c_str(), jResult, &parameters) != success)
+         return fail;
+
+      parseEpisodes(jResult);
+
+      const char* next = getStringByPath(jResult, "links/next", "");
+
+      if (isEmpty(next) || !strstr(next, "page="))
+         ready = true;
+
+      json_decref(jResult);
    }
 
-   json_decref(jResult);
-
-   return status;
+   return success;
 }
 
 int cTVDBSeries::parseSeries(json_t* jResult)

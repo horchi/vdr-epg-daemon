@@ -357,7 +357,7 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
    }
    else if (haveOneForThisDay && obj->fileDb->hasValue("FileRef", fileRef))
    {
-      tell(2, "Skipping download of day (%d) due to non-update", day);
+      tell(3, "Skipping download of day (%d) due to non-update", day);
       statistic->nonUpdates++;
       status = success;
       load = no;
@@ -655,7 +655,7 @@ int Epgdata::getPicture(const char* imagename, const char* fileRef, MemoryStruct
 
    if (!imagename)
    {
-      tell(0, "Error: No image url given, skipping image");
+      tell(2, "Error: No image url given, skipping image");
       return 0;
    }
 
