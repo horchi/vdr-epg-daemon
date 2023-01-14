@@ -36,7 +36,7 @@ struct cEpgdConfig : public cEpgConfig
 
       char cachePath[256+TB] {};
       char httpPath[256+TB] {};
-      char pluginPath[256+TB] {PLGDIR};
+      char pluginPath[256+TB] {};
       char epgView[100+TB] {};
       char epgViewWeb[100+TB] {};
       char theTvDBView[100+TB] {};
