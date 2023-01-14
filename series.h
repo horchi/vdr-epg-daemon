@@ -81,7 +81,7 @@ class cEpisodeFile : public cListObject
 
       int isLink()    { return link.length() > 0; }
 
-      int storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cList<cLine>* linkLines = 0);
+      int storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cList<cLine>* linkLines = nullptr);
 
       int storeToFile(const char* aPath)
       {

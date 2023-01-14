@@ -355,6 +355,12 @@ int cEpgd::downloadEpisodes()
    // insert / update series into database ...
 
    episodeDb->getConnection()->startTransaction();
+
+   episodeDb->getConnection()->query("update %s set %s = '%c'",
+                                     episodeDb->TableName(),
+                                     episodeDb->getField("STATE")->getDbName(), cEpisodeFile::esUnchanged);
+   episodeDb->getConnection()->queryReset();
+
    files.storeToTable(episodeDb, eventsDb);
    episodeDb->getConnection()->commit();
 

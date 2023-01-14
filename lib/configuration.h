@@ -54,14 +54,25 @@ class cConfiguration
          {
             char* p = strchr(line, '#');
 
-            if (p && (!*(p-1) || *(p-1) != '\\'))
-               *p = 0;
-            else if (p && *(p-1) && *(p-1) == '\\')
+            if (p)
             {
-               std::string s = strReplace("\\#", "#", line);
-               free(line);
-               line = strdup(s.c_str());
-               size = strlen(line+TB);
+               // comment sign found
+
+               if (p > line && *(p-1) == '\\')
+               {
+                  // comment masked
+
+                  std::string s = strReplace("\\#", "#", line);
+                  free(line);
+                  line = strdup(s.c_str());
+                  size = strlen(line+TB);
+               }
+               else
+               {
+                  // comment sign not masked, cut line at comment
+
+                  *p = 0;
+               }
             }
 
             allTrim(line);
