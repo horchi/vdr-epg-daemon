@@ -10,3 +10,19 @@
 #include "epgdconfig.h"
 
 cEpgdConfig EpgdConfig;
+
+//***************************************************************************
+// cEpgdConfig
+//***************************************************************************
+
+cEpgdConfig::cEpgdConfig()
+   : cEpgConfig()
+{
+   strcpy(seriesUrl, "www.eplists.de");
+   strcpy(cachePath, "/var/cache/epgd");
+   strcpy(httpPath, "/var/epgd/www");
+   strcpy(pluginPath, PLGDIR);
+   strcpy(epgView, "eventsview.sql");
+   strcpy(epgViewWeb, "eventsviewplain.sql");
+   strcpy(theTvDBView, "thetvdbview.sql");
+}

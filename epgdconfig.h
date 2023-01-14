@@ -17,7 +17,7 @@ struct cEpgdConfig : public cEpgConfig
 {
    public:
 
-      cEpgdConfig() : cEpgConfig() {};
+      cEpgdConfig();
 
       int checkInitial {yes};
       int updatetime {6};
@@ -29,17 +29,17 @@ struct cEpgdConfig : public cEpgConfig
       int epgImageSize {2};
 
       int seriesEnabled {yes};
-      char seriesUrl[500+TB] {"www.eplists.de"};
+      char seriesUrl[500+TB] {};
       char seriesMail[500+TB] {};
       int seriesPort {2006};
       int storeSeriesToFs {no};
 
-      char cachePath[256+TB] {"/var/cache/epgd"};
-      char httpPath[256+TB] {"/var/epgd/www"};
+      char cachePath[256+TB] {};
+      char httpPath[256+TB] {};
       char pluginPath[256+TB] {PLGDIR};
-      char epgView[100+TB] {"eventsview.sql"};
-      char epgViewWeb[100+TB] {"eventsviewplain.sql"};
-      char theTvDBView[100+TB] {"thetvdbview.sql"};
+      char epgView[100+TB] {};
+      char epgViewWeb[100+TB] {};
+      char theTvDBView[100+TB] {};
 
       int updateThreshold {200};
       int maintanance {no};

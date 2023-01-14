@@ -142,10 +142,6 @@ int cTVDBSeries::parseSeries(json_t* jResult)
 
    status = getStringByPath(jData, "status/name", "");
 
-   // lastUpdated - like "2023-01-08 02:21:27",
-
-   lastUpdated = str2LTime(getStringFromJson(jData, "lastUpdated", ""), "%Y-%m-%d %H:%M:%S");
-
    // seasons
 
    struct Season
@@ -171,8 +167,6 @@ int cTVDBSeries::parseSeries(json_t* jResult)
       seasons[id].imageType = getIntFromJson(jItem, "imageType", 0);
       seasons[id].image = getStringFromJson(jItem, "image", "");
    }
-
-   j = getObjectFromJson(jData, "artworks");
 
    // artwork
 
