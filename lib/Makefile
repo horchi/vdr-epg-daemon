@@ -12,7 +12,7 @@ HLIB      = -L. -lhorchi
 DEMO = demo
 TEST = tst
 
-LIBOBJS = common.o configuration.o parameters.o thread.o config.o db.o epgservice.o dbdict.o json.o
+LIBOBJS = common.o levenshtein.o configuration.o parameters.o thread.o config.o db.o epgservice.o dbdict.o json.o
 
 ifdef USEWOL
    LIBOBJS += wol.o
@@ -95,6 +95,7 @@ cppchk:
 HEADER = db.h common.h config.h dbdict.h
 
 common.o          :  common.c           $(HEADER) common.h
+levenshtein.o     :  levenshtein.c      $(HEADER) common.h
 configuration.o   :  configuration.c    $(HEADER) configuration.h
 parameters.o      :  parameters.c       $(HEADER) parameters.h
 thread.o     		:  thread.c      		 $(HEADER) thread.h

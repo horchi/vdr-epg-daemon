@@ -267,19 +267,17 @@ int cTVDBSeries::parseEpisodes(json_t* jResult)
    return success;
 }
 
-bool cTVDBSeries::getPartAndSeason(int episodeId, int &season, int &part)
+int cTVDBSeries::getPartAndSeason(int episodeId, int& season, int& part)
 {
-   // for (vector<cTVDBEpisode*>::iterator ep = episodes.begin(); ep != episodes.end(); ep++)
-   // {
-   //    cTVDBEpisode* episode = *ep;
+   for (const auto& episode : episodes)
+   {
+      if (episode.id == episodeId)
+      {
+         season = episode.seasonNumber;
+         part = episode.number;
+         return success;
+      }
+   }
 
-   //    if(episode->id == episodeId)
-   //    {
-   //       season = episode->season;
-   //       part = episode->number;
-   //       return true;
-   //    }
-   // }
-
-   return false;
+   return fail;
 }

@@ -69,8 +69,6 @@ class cTVDBManager
       cDbTable* tEpisodes {};
       cDbTable* tRecordingList {};
 
-      // int GetLastScrap();
-      // void UpdateScrapTimestamp();
       int getAllIDs(std::set<int>& IDs, cDbTable* table, const char* field);
       cTVDBSeries* scrapSeries(const char* search);
       cTVDBSeries* scrapSeries(int seriesID);
@@ -86,9 +84,9 @@ class cTVDBManager
       int GetPicture(const char* url, MemoryStruct* data);
       int LoadSeriesFromDd(std::string name);
       void GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, std::string episodeName);
-      void loadSeasonPoster(int seriesID, int season);
+      void checkLoadSeasonPoster(int seriesID, int season);
       int LoadEpisode(std::string name, int seriesId);
-      int loadEpisodePicture(int seriesID, int season, int part);
+      int lookupEpisodeId(int seriesID, int season, int part);
 
       void UpdateEvent(tEventId eventID, int seriesID, int episodeID);
       void DeleteSeries(int seriesId);

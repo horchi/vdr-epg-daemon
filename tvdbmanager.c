@@ -216,7 +216,7 @@ void cTVDBManager::saveSeriesMedia(cTVDBSeries* series)
    {
       int lfn = lfns[artwork.type];
 
-      if (lfn > 3)    // max 4 images / media-type
+      if (lfn > 3)    // max 4 images for each media-type
          continue;
 
       bool exists = loadMedia(series->seriesID, artwork.seasonId, 0, 0, artwork.type, lfn);
@@ -540,10 +540,10 @@ void cTVDBManager::processSeries(sSeriesResult ser)
       // loading season poster and episode picture
 
       if (ser.season)
-         loadSeasonPoster(seriesID, ser.season);
+         checkLoadSeasonPoster(seriesID, ser.season);
 
       if (ser.season && ser.part)
-         episodeID = loadEpisodePicture(seriesID, ser.season, ser.part);
+         episodeID = lookupEpisodeId(seriesID, ser.season, ser.part);
 
       // tell(0, "episodeID %d ", episodeID);
    }
@@ -610,7 +610,7 @@ void cTVDBManager::GetSeasonEpisodeFromEpisodename(int seriesID, int& season, in
    delete select;
 }
 
-void cTVDBManager::loadSeasonPoster(int seriesID, int season)
+void cTVDBManager::checkLoadSeasonPoster(int seriesID, int season)
 {
    tSeriesMedia->clear();
    tSeriesMedia->setValue("SeriesId", seriesID);
@@ -618,7 +618,7 @@ void cTVDBManager::loadSeasonPoster(int seriesID, int season)
    tSeriesMedia->setValue("EpisodeId", 0);
    tSeriesMedia->setValue("ActorId", 0);
    tSeriesMedia->setValue("MediaType", cTVDBSeries::atSeasonPoster);
-   tSeriesMedia->setValue("LFN", 0);  // #TODO ??
+   tSeriesMedia->setValue("LFN", 0);
 
    if (!tSeriesMedia->find())
       return;
@@ -637,13 +637,8 @@ void cTVDBManager::loadSeasonPoster(int seriesID, int season)
    }
 }
 
-int cTVDBManager::loadEpisodePicture(int seriesID, int season, int part)
+int cTVDBManager::lookupEpisodeId(int seriesID, int season, int part)
 {
-   tSeriesEpsiode->clear();
-   tSeriesEpsiode->setValue("EpisodeNumber", part);
-   tSeriesEpsiode->setValue("SeasonNumber", season);
-   tSeriesEpsiode->setValue("SeriesId", seriesID);
-
    cDbStatement* select = new cDbStatement(tSeriesEpsiode);
 
    select->build("select ");
@@ -660,6 +655,11 @@ int cTVDBManager::loadEpisodePicture(int seriesID, int season, int part)
    }
 
    int episodeID {0};
+
+   tSeriesEpsiode->clear();
+   tSeriesEpsiode->setValue("EpisodeNumber", part);
+   tSeriesEpsiode->setValue("SeasonNumber", season);
+   tSeriesEpsiode->setValue("SeriesId", seriesID);
 
    if (select->find())
       episodeID = tSeriesEpsiode->getIntValue("EpisodeId");
@@ -899,31 +899,23 @@ int cTVDBManager::LoadEpisode(std::string name, int seriesId)
 
 bool cTVDBManager::CheckScrapInfoDB(int scrapSeriesId, int scrapEpisodeId)
 {
-   // check if series is in db
-
    tSeries->clear();
    tSeries->setValue("SeriesId", scrapSeriesId);
-   int found = tSeries->find();
 
-   if (!found)
+   if (!tSeries->find())
       return false;
 
-   if (scrapEpisodeId > 0)
+   if (scrapEpisodeId)
    {
       tSeriesEpsiode->clear();
       tSeriesEpsiode->setValue("EpisodeId", scrapEpisodeId);
-      found = tSeriesEpsiode->find();
 
-      if (found)
+      if (tSeriesEpsiode->find())
       {
          int season = tSeriesEpsiode->getIntValue("SeasonNumber");
-         int part = tSeriesEpsiode->getIntValue("EpisodeNumber");
 
          if (season)
-            loadSeasonPoster(scrapSeriesId, season);
-
-         if (season && part)
-            loadEpisodePicture(scrapSeriesId, season, part);
+            checkLoadSeasonPoster(scrapSeriesId, season);
       }
    }
 
@@ -932,28 +924,25 @@ bool cTVDBManager::CheckScrapInfoDB(int scrapSeriesId, int scrapEpisodeId)
 
 bool cTVDBManager::CheckScrapInfoOnline(int scrapSeriesId, int scrapEpisodeId)
 {
-   cTVDBSeries* seriesRec = scrapSeries(scrapSeriesId);
+   cTVDBSeries* series = scrapSeries(scrapSeriesId);
 
-   if (!seriesRec)
+   if (!series)
       return false;
 
-   saveSeries(seriesRec);
+   saveSeries(series);
 
    if (scrapEpisodeId > 0)
    {
       int part {0};
       int season {0};
 
-      if (seriesRec->getPartAndSeason(scrapEpisodeId, season, part))
+      if (series->getPartAndSeason(scrapEpisodeId, season, part) == success)
       {
          if (season)
-            loadSeasonPoster(scrapSeriesId, season);
-
-         if (season && part)
-            loadEpisodePicture(scrapSeriesId, season, part);
+            checkLoadSeasonPoster(scrapSeriesId, season);
       }
    }
 
-   delete seriesRec;
+   delete series;
    return true;
 }

@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef __COMMON_H
-#define __COMMON_H
+#pragma once
 
 #include <pthread.h>
 #include <stdint.h>      // uint_64_t
@@ -363,6 +362,8 @@ int chkDir(const char* path);
 
 std::string getBacktrace(size_t steps);
 
+int lvDistance(const std::string& source, const std::string& target, int maxPer, int& maxDist);
+
 //***************************************************************************
 // Zip
 //***************************************************************************
@@ -591,6 +592,3 @@ class Sem
       int id;
       int locked;
 };
-
-//***************************************************************************
-#endif //___COMMON_H

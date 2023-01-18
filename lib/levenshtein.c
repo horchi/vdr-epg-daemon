@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "levenshtein.h"
+#include "common.h"
 
 //***************************************************************************
 // lvDistance
@@ -22,8 +22,11 @@ int lvDistance(const std::string& source, const std::string& target, int maxPer,
    const int n = source.length();
    const int m = target.length();
 
-   if (!n) return m;
-   if (!m) return n;
+   if (!n)
+      return m;
+
+   if (!m)
+      return n;
 
    if (maxPer != na)
    {
@@ -33,10 +36,7 @@ int lvDistance(const std::string& source, const std::string& target, int maxPer,
          return maxDist+1;
    }
 
-   // Good form to declare a TYPEDEF
-
-   typedef std::vector< std::vector<int> > Tmatrix;
-
+   typedef std::vector<std::vector<int>> Tmatrix;
    Tmatrix matrix(n+1);
 
    // Size the vectors in the 2.nd dimension. Unfortunately C++ doesn't
@@ -87,13 +87,12 @@ int lvDistance(const std::string& source, const std::string& target, int maxPer,
          // Enhanced Dynamic Programming ASM Algorithm"
          // (http://www.acm.org/~hlb/publications/asm/asm.html)
 
-         if (i>2 && j>2)
+         if (i > 2 && j > 2)
          {
             int trans = matrix[i-2][j-2]+1;
 
             if (source[i-2] != t_j) trans++;
             if (s_i != target[j-2]) trans++;
-
             if (cell > trans) cell = trans;
          }
 

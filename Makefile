@@ -45,7 +45,7 @@ endif
 
 # object files
 
-OBJS += main.o update.o plugin.o epgdconfig.o channelmap.o series.o svdrpclient.o levenshtein.o episode.o
+OBJS += main.o update.o plugin.o epgdconfig.o channelmap.o series.o svdrpclient.o episode.o
 OBJS += tvdbmanager.o moviedbmanager.o
 
 OBJS += lib/fuzzy.o scraper/thetvdbscraper/thetvdbscraper.o scraper/thetvdbscraper/tvdbv4.o
@@ -126,6 +126,10 @@ install-systemd:
 CPPCHECK_SUPPRESS=--suppress=ConfigurationNotChecked --suppress=noOperatorEq --suppress=noCopyConstructor --suppress=useInitializationList --suppress=unmatchedSuppression --suppress=cstyleCast --suppress=missingInclude
 
 cppc:
+	cppcheck --enable=all --language=c++ --suppress=unusedStructMember $(CPPCHECK_SUPPRESS) --template="{file}:{line}:1 {severity}:{id}:{message}" --quiet --force --std=c++20 \
+	*.[hc] libs/*[hc]
+
+cppcd:
 	cppcheck --enable=all --language=c++ $(CPPCHECK_SUPPRESS) --template="{file}:{line}:1 {severity}:{id}:{message}" --quiet --force --std=c++20 \
 	*.[hc] libs/*[hc]
 
@@ -136,11 +140,10 @@ cppc:
 HEADER = lib/db.h lib/common.h lib/config.h epgd.h series.h svdrpclient.h lib/curl.h
 
 channelmap.o	 :  channelmap.c  	 $(HEADER)
-episode.o		 :  episode.c     	 $(HEADER) levenshtein.h
+episode.o		 :  episode.c     	 $(HEADER)
 
-levenshtein.o   :  levenshtein.c 	 $(HEADER) levenshtein.h
 main.o			 :  main.c        	 $(HEADER)
-series.o		    :  series.c      	 $(HEADER) series.h levenshtein.h
+series.o		    :  series.c      	 $(HEADER) series.h
 svdrpclient.o   :  svdrpclient.c 	 $(HEADER) svdrpclient.h
 update.o        :  update.c      	 $(HEADER)
 plugin.o        :  plugin.c      	 $(HEADER)

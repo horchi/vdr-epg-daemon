@@ -173,16 +173,16 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
       // found episode line ...
 
       std::string partNameComp;
-      char partName[200] = "";
-      char comment[200] = "";
-      char ex1[250] = "";
-      char ex2[250] = "";
-      char ex3[250] = "";
-      char ex[250] = "";
+      char partName[200] {};
+      char comment[200] {};
+      char ex1[250] {};
+      char ex2[250] {};
+      char ex3[250] {};
+      char ex[250] {};
 
-      int se;
-      int ep;
-      int no;
+      int se {0};
+      int ep {0};
+      int no {0};
 
       // get lines like:
       //    "01<tab>1<tab>1<tab>Schatten der Vergangenheit<tab>[extcol1<tab>[extcol2<tab>[extcol3]]][<tab>#comment]<tab>"
@@ -191,7 +191,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
       {
          case 0:
          {
-            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]", &se, &ep, &no, partName, comment) < 4)
+            if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, comment) < 4)
             {
                tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 4 columns expected", name.c_str(), line);
                continue;
@@ -200,7 +200,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
          }
          case 1:
          {
-            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]", &se, &ep, &no, partName, ex1, comment) < 5)
+            if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%250[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, ex1, comment) < 5)
             {
                tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 5 columns expected", name.c_str(), line);
                continue;
@@ -209,7 +209,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
          }
          case 2:
          {
-            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]", &se, &ep, &no, partName, ex1, ex2, comment) < 6)
+            if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%250[^\t\n]\t%250[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, ex1, ex2, comment) < 6)
             {
                tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 6 columns expected", name.c_str(), line);
                continue;
@@ -218,7 +218,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
          }
          case 3:
          {
-            if (sscanf(line, "%d\t%d\t%d\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]\t%[^\t\n]", &se, &ep, &no, partName, ex1, ex2, ex3, comment) < 7)
+            if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%250[^\t\n]\t%250[^\t\n]\t%250[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, ex1, ex2, ex3, comment) < 7)
             {
                tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 7 columns expected", name.c_str(), line);
                continue;

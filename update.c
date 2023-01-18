@@ -34,13 +34,13 @@ bool cEpgd::recTableFixTrigger {false};
 void cEpgd::triggerF(int aSignal)
 {
    if (aSignal == SIGHUP)
-      epgTrigger = yes;
+      epgTrigger = true;
 
    else if (aSignal == SIGUSR1)
-      searchTimerTrigger = yes;
+      searchTimerTrigger = true;
 
    else if (aSignal == SIGUSR2)
-      recTableFixTrigger = yes;
+      recTableFixTrigger = true;
 }
 
 //***************************************************************************
@@ -339,7 +339,6 @@ cDbFieldDef changeCountDef("CHG_COUNT", "count(1)", cDBS::ffUInt, 0, cDBS::ftDat
 int cEpgd::initDb()
 {
    int status {success};
-   int count {0};
 
    if (!connection)
       connection = new cDbConnection();
@@ -416,20 +415,6 @@ int cEpgd::initDb()
       int lastApi = vdrDb->getIntValue("DBAPI");
 
       // migration some specials
-
-      if (lastApi <= 4)
-      {
-         // we have to migrate the recording description
-
-         if (migrateFromDbApi4() != success)
-            return fail;
-      }
-
-      if (lastApi <= 5)
-      {
-         if (migrateFromDbApi5() != success)
-            return fail;
-      }
 
       if (lastApi <= 6)
       {
@@ -755,28 +740,6 @@ int cEpgd::initDb()
 
    status += selectRecordingEvent->prepare();
 
-//    // --------------------
-//    // select series_id, episode_id, movie_id
-//    //   from recordings
-//    //   where vdruuid != ?
-//    //     and rec_path like ?
-//    //     and rec_start = ?
-//    //     and (series_id > 0 or movie_id > 0);
-
-//    selectRecOtherClient = new cDbStatement(recordingsDb);
-//    selectRecOtherClient->build("select ");
-//    selectRecOtherClient->bind("SeriesId", cDBS::bndOut);
-//    selectRecOtherClient->bind("EpisodeId", cDBS::bndOut, ", ");
-//    selectRecOtherClient->bind("MovieId", cDBS::bndOut, ", ");
-//    selectRecOtherClient->build(" from %s where ", recordingsDb->TableName());
-//    selectRecOtherClient->bindCmp(0, "VDRUUID", 0, "!=");
-//    selectRecOtherClient->bindCmp(0, "RecPath", 0, " like ", " and ");
-//    selectRecOtherClient->bind("RecStart", cDBS::bndIn | cDBS::bndSet, " and ");
-//    selectRecOtherClient->build(" and (%s > 0 or %s > 0)", recordingsDb->getField("SeriesId")->getDbName(),
-//                                recordingsDb->getField("MovieId")->getDbName());
-
-//    status += selectRecOtherClient->prepare();
-
    // --------------------
    // select scrseriesid, scrseriesepisode, scrmovieid
    //   from recordinglist
@@ -920,6 +883,8 @@ int cEpgd::initDb()
 
    // force initial check on start with empty tables
 
+   int count {0};
+
    eventsDb->countWhere("source != 'vdr'", count);
 
    if (!count)
@@ -1062,140 +1027,6 @@ int cEpgd::exitDb()
 }
 
 //***************************************************************************
-// migrateFromDbApi4
-//***************************************************************************
-
-int startWith(const char* buf, const char* token)
-{
-   return strncmp(buf, token, strlen(token)) == 0;
-}
-
-const char* endOf(const char* buf, const char* token)
-{
-   if (strncmp(buf, token, strlen(token)) == 0)
-      return buf + strlen(token);
-   return 0;
-}
-
-int cEpgd::migrateFromDbApi4()
-{
-   int status {success};
-
-   recordingListDb = new cDbTable(connection, "recordinglist");
-
-   if ((status = recordingListDb->open()) != success)
-      return status;
-
-   tell(0, "Migration of table '%s' from version <= 4 ...", recordingListDb->TableName());
-
-   // we have to port the longdescription ito description
-   //  and create a longdescription by best guess of it :o
-
-   cDbStatement* select = new cDbStatement(recordingListDb);
-   select->build("select ");
-   select->bindAllOut();
-   select->build(" from %s where %s is null", recordingListDb->TableName(),
-                 recordingListDb->getField("DESCRIPTION")->getDbName());
-
-   status += select->prepare();
-
-   if (status == success)
-   {
-      for (int f = select->find(); f; f = select->fetch())
-      {
-         const char* longDesc = recordingListDb->getStrValue("LONGDESCRIPTION");
-         recordingListDb->setValue("DESCRIPTION", longDesc);
-
-         // try patching the 'description' created by the view to likely the real original event description
-
-         const char* p = longDesc;
-
-         while (true)
-         {
-            int toSkip = startWith(p, "Kategorie: ") ||
-               startWith(p, "Genre: ") ||
-               startWith(p, "Land: ") ||
-               startWith(p, "Jahr: ") ||
-               startWith(p, "Bewertung: ") ||
-               startWith(p, "Thema: ") ||
-               startWith(p, "Serie: ") ||
-               startWith(p, "Quelle: ") ||
-               startWith(p, "Audio: ") ||
-               startWith(p, "Flags: ") ||
-               startWith(p, "Originaltitel: ") ||
-               startWith(p, "TagesTipp") ||
-               startWith(p, "Tagestipp") ||
-               startWith(p, "TopTipp") ||
-               startWith(p, "Toptipp") ||
-               startWith(p, "Tipp") ||
-               startWith(p, "[") ||
-               *p == '\n';
-
-            if (!toSkip)
-               break;
-
-            if (!(p = strchr(p, '\n')) || !*(p++))
-                break;
-         }
-
-         recordingListDb->setValue("LONGDESCRIPTION", p);
-         recordingListDb->update();
-      }
-   }
-
-   tell(0, "... done");
-
-   delete select;
-   delete recordingListDb; recordingListDb = 0;
-
-   return status;
-}
-
-//***************************************************************************
-// Migrate From DB API 5
-//***************************************************************************
-
-int cEpgd::migrateFromDbApi5()
-{
-   int status {success};
-
-   recordingListDb = new cDbTable(connection, "recordinglist");
-   if ((status = recordingListDb->open()) != success) return status;
-
-   tell(0, "Migration of table '%s' from version <= 5 ...", recordingListDb->TableName());
-
-   cDbStatement* select = new cDbStatement(recordingListDb);
-   select->build("select ");
-   select->bindAllOut();
-   select->build(" from %s where %s is null", recordingListDb->TableName(),
-                 recordingListDb->getField("IMGID")->getDbName());
-
-   status += select->prepare();
-
-   if (status == success)
-   {
-      md5Buf md5Id;
-
-      for (int f = select->find(); f; f = select->fetch())
-      {
-         std::string text = std::string(recordingListDb->getStrValue("TITLE"))
-            + std::string(recordingListDb->getStrValue("SHORTTEXT"));
-         createMd5(text.c_str(), md5Id);
-
-         recordingListDb->setValue("IMGID", (const char*)md5Id);
-         recordingListDb->update();
-      }
-   }
-
-   tell(0, "... done");
-
-   delete select;
-   delete recordingListDb; recordingListDb = 0;
-
-   return status;
-}
-
-//***************************************************************************
 // Migrate From DB API 6
 //***************************************************************************
 
@@ -1218,21 +1049,6 @@ int cEpgd::migrateFromDbApi6()
    if (status == success)
       select->execute();
 
-   // select->bindAllOut();
-   // select->build(" from %s where %s is null", imageRefDb->TableName(),
-   //               imageRefDb->getField("IMGNAMEFS")->getDbName());
-
-   // status += select->prepare();
-
-   // if (status == success)
-   // {
-   //    for (int f = select->find(); f; f = select->fetch())
-   //    {
-   //       imageRefDb->setValue("IMGNAMEFS", imageRefDb->getStrValue("IMGNAME"));
-   //       imageRefDb->update();
-   //    }
-   // }
-
    tell(0, "... done");
 
    delete select;
@@ -1242,8 +1058,20 @@ int cEpgd::migrateFromDbApi6()
 }
 
 //***************************************************************************
-// Try Fill Empty Rec Table Fields
+// Helper
 //***************************************************************************
+
+int startWith(const char* buf, const char* token)
+{
+   return strncmp(buf, token, strlen(token)) == 0;
+}
+
+const char* endOf(const char* buf, const char* token)
+{
+   if (strncmp(buf, token, strlen(token)) == 0)
+      return buf + strlen(token);
+   return 0;
+}
 
 const char* getLine(const char* buf, const char* startChar = 0, const char* endChar = 0)
 {
@@ -1271,11 +1099,15 @@ const char* getLine(const char* buf, const char* startChar = 0, const char* endC
    return line;
 }
 
+//***************************************************************************
+// Try Fill Empty Rec Table Fields
+//***************************************************************************
+
 int cEpgd::tryFillEmptyRecTableFields()
 {
    int status {success};
 
-   recTableFixTrigger = no;
+   recTableFixTrigger = false;
 
    tell(0, "tryFillEmptyRecTableFields ...");
 
@@ -1308,12 +1140,11 @@ int cEpgd::tryFillEmptyRecTableFields()
                recordingListDb->setValue("COUNTRY", getLine(s));
             else if ((s = endOf(p, "Jahr: ")) && recordingListDb->getValue("YEAR")->isEmpty())
             {
-               recordingListDb->setValue("YEAR", getLine(s, 0, "["));
-
                // #TODO don't work
                //  Examples:  select flags, year, title, genre, category, description from recordinglist  where description like '%Jahr: 2014[%';
-               if ((strchr(getLine(s, 0, "["), '[')) && recordingListDb->getValue("FLAGS")->isEmpty())
-                  recordingListDb->setValue("FLAGS", getLine(s, "["));
+               // recordingListDb->setValue("YEAR", getLine(s, 0, "["));
+               // if ((strchr(getLine(s, 0, "["), '[')) && recordingListDb->getValue("FLAGS")->isEmpty())
+               //    recordingListDb->setValue("FLAGS", getLine(s, "["));
             }
             else if ((s = endOf(p, "Flags: ")) && recordingListDb->getValue("FLAGS")->isEmpty())
                recordingListDb->setValue("FLAGS", getLine(s));
@@ -1780,7 +1611,7 @@ void cEpgd::loop()
             connection->showStat("merge/rec-scrap");
       }
 
-      epgTrigger = no;                          // reset SIGHUB trigger
+      epgTrigger = false;                      // reset SIGHUB trigger
 
       if (doShutDown())
          break;
@@ -1810,13 +1641,10 @@ void cEpgd::loop()
             continue;
 
       if (!doShutDown())
-         downloadEpisodes();                    // download and store optionally on local fs
+         updateEpisodes();                      // update constabel episodes
 
       if (!doShutDown() && procUser)            // call user procedure if defined
          procUser->call();
-
-      if (!doShutDown())
-         evaluateEpisodes();                    // try series match
 
       if (!doShutDown())
       {
@@ -1929,7 +1757,7 @@ int cEpgd::updateSearchTimers(int force, const char* reason)
    // update searchtimers
 
    hits += search->updateSearchTimers(force, reason);
-   searchTimerTrigger = no;
+   searchTimerTrigger = false;
 
    if (hits)
       triggerVdrs("TIMERJOB", "epg2vdr");
@@ -2862,12 +2690,12 @@ void cEpgd::scrapNewRecordings(int count)
       {
          // series ...
 
-         tell(1, "SCRAP: Searching '%s' as series in database", recTitle.c_str());
+         tell(1, "SCRAP: Searching series for recording '%s' in database", recTitle.c_str());
 
          found = tvdbManager->SearchRecordingDB(recTitle, recSubtitle, seriesId, episodeId);
 
          if (found)
-            tell(1, "SCRAP: Found '%s'/'%s' in database", recTitle.c_str(), recSubtitle.c_str());
+            tell(1, "SCRAP: Found series for recording '%s'/'%s' in database", recTitle.c_str(), recSubtitle.c_str());
 
          if (!found)
          {
@@ -2875,7 +2703,7 @@ void cEpgd::scrapNewRecordings(int count)
             found = tvdbManager->searchRecordingOnline(recTitle.c_str(), recSubtitle, seriesId, episodeId);
 
             if (found)
-               tell(1, "SCRAP: Found '%s'/'%s' as series online, seriesId %d, episodeId %d",
+               tell(1, "SCRAP: Found series for recording '%s'/'%s' online, seriesId %d, episodeId %d",
                     recTitle.c_str(), recSubtitle.c_str(), seriesId, episodeId);
          }
       }
@@ -3200,6 +3028,8 @@ int cEpgd::sendTccMail(string& mailBody)
 
 //***************************************************************************
 // Message
+//  - put message into message table to be displayed at WEBIF
+//  - send message via Mail (regarding)
 //***************************************************************************
 
 int cEpgd::message(int level, char type, const char* title, const char* format, ...)

@@ -76,7 +76,7 @@ class cTVDBSeries
       int readSeries();
       int readEpisodes();
 
-      bool getPartAndSeason(int episodeId, int &season, int &part);
+      int getPartAndSeason(int episodeId, int &season, int &part);
 
       const std::vector<Artwork>* getArtwork() const { return &artworks; }
       const std::vector<Actor>* getActors() const { return &actors; }

@@ -165,6 +165,5 @@ class cFrame : public cConfiguration, public cParameters
    public:
 
       int sendMail(const char* mimeType, const char* receivers, const char* subject, const char* body);
-      virtual int __attribute__ ((format(printf, 5, 6)))  message(int level, char type, const char* title, const char* format, ...) = 0;
-
+      virtual int __attribute__ ((format(printf, 5, 6))) message(int level, char type, const char* title, const char* format, ...) = 0;
 };

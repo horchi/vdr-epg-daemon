@@ -31,13 +31,13 @@ void initConnection()
    connection = new cDbConnection();
 }
 
-void exitConnection()
-{
-   cDbConnection::exit();
+// void exitConnection()
+// {
+//    cDbConnection::exit();
 
-   if (connection)
-      delete connection;
-}
+//    if (connection)
+//       delete connection;
+// }
 
 int init()
 {

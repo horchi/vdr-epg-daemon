@@ -209,10 +209,35 @@ int readSeriesId(const char* seriesName)
 //***************************************************************************
 // Main
 //***************************************************************************
-#include<bits/stdc++.h>
 
 int main(int argc, char** argv)
 {
+   if (argc > 1 && strcmp(argv[1], "-c") == 0)
+   {
+      char partName[200] {};
+      char comment[200] {};
+      int se {0};
+      int ep {0};
+      int no {0};
+
+      printf("------------------------------\n");
+      printf("constable episode line sscanf test\n");
+      printf("------------------------------\n");
+
+      const char* line = {"22\t11\t1\tfooo bar\tcomment ja ja nein oder?"};
+      printf("got '%s'\n", line);
+
+      // get lines like:
+      //    "01<tab>1<tab>1<tab>Schatten der Vergangenheit<tab>[extcol1<tab>[extcol2<tab>[extcol3]]][<tab>#comment]<tab>"
+
+      if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, comment) < 4)
+         printf("CONSTABEL: Warning: Got invalid episode line [%s], at lease 4 columns expected\n", line);
+      else
+         printf("%d/%d/%d '%s' - %s\n", se, ep, no, partName, comment);
+
+      return 0;
+   }
+
    if (argc == 3 && strcmp(argv[1], "-s") == 0)
    {
       int hours = atoi(argv[2]);

@@ -1,5 +1,5 @@
 
-// test page:
+// API test page:
 //    https://thetvdb.github.io/v4-api/
 
 #include "tvdbv4.h"

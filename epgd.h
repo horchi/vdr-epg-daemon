@@ -23,7 +23,6 @@
 
 #include "epgdconfig.h"
 #include "series.h"
-#include "levenshtein.h"
 #include "tvdbmanager.h"
 #include "moviedbmanager.h"
 
@@ -124,8 +123,6 @@ class cEpgd : public cFrame, public cSystemNotification
       cEpgd();
       virtual ~cEpgd();
 
-      // interface
-
       int init();
       int initUuid();
       void loop();
@@ -144,7 +141,7 @@ class cEpgd : public cFrame, public cSystemNotification
 
       int wakeupVdr(const char* uuid);
       int triggerVdrs(const char* trg, const char* plug = 0, const char* options = 0);
-      int __attribute__ ((format(printf, 5, 6)))  message(int level, char type, const char* title, const char* format, ...) override;
+      int __attribute__ ((format(printf, 5, 6))) message(int level, char type, const char* title, const char* format, ...) override;
       int sendTccMail(string& mailBody);
       int sendTccTestMail();
 
@@ -205,8 +202,6 @@ class cEpgd : public cFrame, public cSystemNotification
 
       int initDb();
       int exitDb();
-      int migrateFromDbApi4();
-      int migrateFromDbApi5();
       int migrateFromDbApi6();
       int tryFillEmptyRecTableFields();
       int checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* fp = 0);
@@ -250,7 +245,7 @@ class cEpgd : public cFrame, public cSystemNotification
       // series
 
       int evaluateEpisodes();
-      int downloadEpisodes();
+      int updateEpisodes();
 
       // scraper stuff
 
@@ -269,14 +264,14 @@ class cEpgd : public cFrame, public cSystemNotification
       bool fullupdate {false};
       bool fullreload {false};
 
-      static bool shutdown;
-      static bool epgTrigger;
-      static bool searchTimerTrigger;
-      static bool recTableFixTrigger;
-
       std::vector<PluginLoader*> plugins;
 
       cTVDBManager* tvdbManager {};
       cMovieDBManager* movieDbManager {};
       cSearchTimer* search {};
+
+      static bool shutdown;
+      static bool epgTrigger;
+      static bool searchTimerTrigger;
+      static bool recTableFixTrigger;
 };

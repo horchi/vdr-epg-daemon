@@ -164,7 +164,7 @@ int cEpgd::evaluateEpisodes()
 // Download Episodes and store to table (and filesystem if configured)
 //***************************************************************************
 
-int cEpgd::downloadEpisodes()
+int cEpgd::updateEpisodes()
 {
    if (!EpgdConfig.seriesEnabled)
       return done;
@@ -343,40 +343,50 @@ int cEpgd::downloadEpisodes()
       result->Clear();
    }
 
+   delete result;
    cl.close();
 
-   setParameter("epgd", "lastEpisodeRun", time(0));
+   setParameter("epgd", "lastEpisodeRun", time(0));   // unused !
 
    if (full)
       setParameter("epgd", "lastEpisodeFullRun", time(0));
 
    tell(1, "Received %d episode files", files.Count());
 
-   // insert / update series into database ...
-
-   episodeDb->getConnection()->startTransaction();
-
-   episodeDb->getConnection()->query("update %s set %s = '%c'",
-                                     episodeDb->TableName(),
-                                     episodeDb->getField("STATE")->getDbName(), cEpisodeFile::esUnchanged);
-   episodeDb->getConnection()->queryReset();
-
-   files.storeToTable(episodeDb, eventsDb);
-   episodeDb->getConnection()->commit();
-
-   // optional store to filesystem ...
-
-   if (EpgdConfig.storeSeriesToFs)
+   if (files.Count() > 0)
    {
-      char* path {};
+      tell(1, "Storing episode data");
 
-      asprintf(&path, "%s/eplist", EpgdConfig.cachePath);
-      chkDir(path);
-      files.storeToFile(path);
-      free(path);
+      // insert / update series into database ...
+
+      episodeDb->getConnection()->startTransaction();
+
+      episodeDb->getConnection()->query("update %s set %s = '%c'",
+                                        episodeDb->TableName(),
+                                        episodeDb->getField("STATE")->getDbName(), cEpisodeFile::esUnchanged);
+      episodeDb->getConnection()->queryReset();
+
+      files.storeToTable(episodeDb, eventsDb);
+
+      episodeDb->getConnection()->commit();
+
+      // optional store to filesystem ...
+
+      if (EpgdConfig.storeSeriesToFs)
+      {
+         char* path {};
+
+         asprintf(&path, "%s/eplist", EpgdConfig.cachePath);
+         chkDir(path);
+         files.storeToFile(path);
+         free(path);
+      }
+
+      // start series match
+
+      if (!doShutDown())
+         evaluateEpisodes();
    }
-
-   delete result;
 
    return 0;
 }
