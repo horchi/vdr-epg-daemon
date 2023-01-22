@@ -29,7 +29,7 @@ cTVDBManager::cTVDBManager(bool aWithutf8)
    if (langISO.size() == 2)
       language = langISO.c_str();
 
-   tell(0, "Using scraping language %s", language.c_str());
+   tell(0, "Set scraping language to '%s'", language.c_str());
 }
 
 cTVDBManager::~cTVDBManager()
@@ -274,6 +274,9 @@ int cTVDBManager::updateStoreArtwork(const cTVDBSeries::Artwork& artwork, uint l
 
 void cTVDBManager::saveSeriesEpisodes(cTVDBSeries* series)
 {
+   tell(0, "Storing %zu episodes of series '%d' to database and loading their artwork ..",
+        series->getEpisodes()->size(), series->seriesID);
+
    for (const auto& episode : *series->getEpisodes())
    {
       saveSeriesEpisode(&episode, series->seriesID);
