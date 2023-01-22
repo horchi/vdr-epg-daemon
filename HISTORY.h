@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.1"
+#define _VERSION     "1.3.2"
 #define VERSION_DATE "22.01.2023"
 #define DB_API       8
 
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+
+2023-01-22: version 1.3.2 (horchi)
+   - change: More dynamic detection of python version (Thx to kfb77)
 
 2023-01-22: version 1.3.1 (horchi)
    - change: Increased DVAPI version to 8
