@@ -23,7 +23,7 @@ const char* cEpgConfig::logName = "unknown";
 // Common EPG Service Configuration
 //***************************************************************************
 
-cEpgConfig::cEpgConfig() 
+cEpgConfig::cEpgConfig()
 {
    // database connection
 
@@ -38,7 +38,7 @@ cEpgConfig::cEpgConfig()
    uuid[0] = 0;
 
    getepgimages = yes;
-} 
+}
 
 //***************************************************************************
 // Has DB Login Changed
@@ -46,14 +46,14 @@ cEpgConfig::cEpgConfig()
 
 int cEpgConfig::hasDbLoginChanged(cEpgConfig* old)
 {
-   if (old->dbPort != dbPort || 
-       strcmp(old->dbHost, dbHost) != 0 || 
-       strcmp(old->dbName, dbName) != 0 || 
-       strcmp(old->dbUser, dbUser) != 0 || 
+   if (old->dbPort != dbPort ||
+       strcmp(old->dbHost, dbHost) != 0 ||
+       strcmp(old->dbName, dbName) != 0 ||
+       strcmp(old->dbUser, dbUser) != 0 ||
        strcmp(old->dbPass, dbPass) != 0)
    {
       return yes;
-   }    
-   
+   }
+
    return no;
 }

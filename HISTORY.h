@@ -4,9 +4,9 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.0"
-#define VERSION_DATE "11.01.2023"
-#define DB_API       7
+#define _VERSION     "1.3.1"
+#define VERSION_DATE "22.01.2023"
+#define DB_API       8
 
 #ifdef GIT_REV
 #  define VERSION _VERSION "-GIT" GIT_REV
@@ -17,6 +17,10 @@
 /*
  * ------------------------------------
  *
+
+2023-01-22: version 1.3.1 (horchi)
+   - change: Increased DVAPI version to 8
+   - added:  Auto mirgrate database to new DBAPI and tvdb API V4
 
 2023-01-01: version 1.3.0 (horchi)
    - added: Support of TVDB V4

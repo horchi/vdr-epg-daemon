@@ -330,6 +330,59 @@ int cEpgd::atConfigItem(const char* Name, const char* Value)
    return success;
 }
 
+int cEpgd::checkDbDdl()
+{
+   int status {success};
+
+   // ------------------------------------------
+   // initially create/alter tables and indices
+   // ------------------------------------------
+
+   tell(0, "Checking database connection ...");
+
+   if (connection->attachConnection() != success)
+   {
+      tell(0, "Fatal: Initial database connect failed, aborting");
+      return abrt;
+   }
+
+   std::map<std::string, cDbTableDef*>::iterator t;
+
+   tell(0, "Checking table structure and indices ...");
+
+   for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); ++t)
+   {
+      cDbTable* table = new cDbTable(connection, t->first.c_str());
+
+      tell(1, "Checking table '%s'", t->first.c_str());
+
+      if (!table->exist())
+      {
+         if ((status += table->createTable()) != success)
+            continue;
+      }
+      else
+      {
+         cSystemNotification::startNotifyThread(20*tmeSecondsPerMinute);
+         status += table->validateStructure();
+         cSystemNotification::stopNotifyThread();
+      }
+
+      status += table->createIndices();
+
+      delete table;
+   }
+
+   connection->detachConnection();
+
+   if (status != success)
+      return abrt;
+
+   tell(0, "Checking table structure and indices succeeded");
+
+   return status;
+}
+
 //***************************************************************************
 // Init/Exit Database Connections
 //***************************************************************************
@@ -338,6 +391,7 @@ cDbFieldDef changeCountDef("CHG_COUNT", "count(1)", cDBS::ffUInt, 0, cDBS::ftDat
 
 int cEpgd::initDb()
 {
+   static bool initial {true};
    int status {success};
 
    if (!connection)
@@ -345,86 +399,52 @@ int cEpgd::initDb()
 
    // -------------------------
 
-   static bool initial {true};
-
    if (initial)
    {
-      // ------------------------------------------
-      // initially create/alter tables and indices
-      // ------------------------------------------
+      vdrDb = new cDbTable(connection, "vdrs");
+      if ((status = vdrDb->open()) != success) return status;
 
-      tell(0, "Checking database connection ...");
-
-      if (connection->attachConnection() != success)
-      {
-         tell(0, "Fatal: Initial database connect failed, aborting");
-         return abrt;
-      }
-
-      std::map<std::string, cDbTableDef*>::iterator t;
-
-      tell(0, "Checking table structure and indices ...");
-
-      for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); ++t)
-      {
-         cDbTable* table = new cDbTable(connection, t->first.c_str());
-
-         tell(1, "Checking table '%s'", t->first.c_str());
-
-         if (!table->exist())
-         {
-            if ((status += table->createTable()) != success)
-               continue;
-         }
-         else
-         {
-            cSystemNotification::startNotifyThread(20*tmeSecondsPerMinute);
-            status += table->validateStructure();
-            cSystemNotification::stopNotifyThread();
-         }
-
-         status += table->createIndices();
-
-         delete table;
-      }
-
-      connection->detachConnection();
-
-      if (status != success)
-         return abrt;
-
-      tell(0, "Checking table structure and indices succeeded");
-   }
-
-   // ------------------------
-   // create/open other tables
-   // ------------------------
-
-   vdrDb = new cDbTable(connection, "vdrs");
-   if ((status = vdrDb->open()) != success) return status;
-
-   if (initial)
-   {
       if (!dbConnected())
          return fail;
 
       vdrDb->clear();
       vdrDb->setValue("UUID", "epgd");
       vdrDb->find();
-
       int lastApi = vdrDb->getIntValue("DBAPI");
+      vdrDb->close();
+      delete vdrDb;
+      vdrDb = nullptr;
 
-      // migration some specials
+      // database migration
 
-      if (lastApi <= 6)
+      if (lastApi < 8)
+      {
+         if (migrateFromDbApi7() != success)
+            return fail;
+      }
+
+      if ((status = checkDbDdl()) == abrt)
+         return abrt;
+
+      // database migration
+
+      if (lastApi < 7)
       {
          if (migrateFromDbApi6() != success)
             return fail;
       }
-
-      registerMe();   // and update DB_API info at vdrs table
-      initial = no;
    }
+
+   initial = false;
+
+   // ---------------------
+   // create/open tables
+   // ---------------------
+
+   vdrDb = new cDbTable(connection, "vdrs");
+   if ((status = vdrDb->open()) != success) return status;
+
+   registerMe();   // and update DB_API info at vdrs table
 
    mapDb = new cDbTable(connection, "channelmap");
    if ((status = mapDb->open()) != success) return status;
@@ -1055,6 +1075,46 @@ int cEpgd::migrateFromDbApi6()
    delete imageRefDb; imageRefDb = 0;
 
    return status;
+}
+
+//***************************************************************************
+// Migrate From DB API 7
+//***************************************************************************
+
+int cEpgd::migrateFromDbApi7()
+{
+   tell(0, "Migration of series tables from version < 8 ...");
+
+   if (connection->attachConnection() != success)
+   {
+      tell(0, "Fatal: Initial database connect failed, aborting");
+      return abrt;
+   }
+
+   connection->query("truncate table series");
+   connection->queryReset();
+
+   connection->query("truncate table series_episode");
+   connection->queryReset();
+
+   connection->query("truncate table series_actor");
+   connection->queryReset();
+
+   connection->query("drop table series_media");
+   connection->queryReset();
+
+   connection->query("update events set scrseriesid = null, scrseriesepisode = null, scrsp = null where scrseriesid is not null");
+   connection->queryReset();
+
+   if (cParameters::initDb(connection) == success)
+   {
+      setParameter("epgd", "lastTvDvScrap", (long)0);
+      cParameters::exitDb();
+   }
+
+   connection->detachConnection();
+
+   return success;
 }
 
 //***************************************************************************
@@ -2427,14 +2487,21 @@ int cEpgd::scrapNewEvents()
    time_t lastTvDvScrap {0};
    getParameter("epgd", "lastTvDvScrap", lastTvDvScrap);
 
-   if (tvdbManager->updateSeries(lastTvDvScrap) == success)
+   if (lastTvDvScrap > 0)
+   {
+      if (tvdbManager->updateSeries(lastTvDvScrap) == success)
+      {
+         setParameter("epgd", "lastTvDvScrap", time(0));
+
+         int bytes = tvdbManager->GetBytesDownloaded();
+         double mb = (double)bytes / 1024.0 / 1024.0;
+
+         tell(0, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
+              time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
+      }
+   }
+   else
       setParameter("epgd", "lastTvDvScrap", time(0));
-
-   int bytes = tvdbManager->GetBytesDownloaded();
-   double mb = (double)bytes / 1024.0 / 1024.0;
-
-   tell(0, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
-        time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
 
    // ------------------------------
    // scrap new series in EPG
@@ -2468,8 +2535,8 @@ int cEpgd::scrapNewEvents()
          return fail;
    }
 
-   bytes = tvdbManager->GetBytesDownloaded();
-   mb = (double)bytes / 1024.0 / 1024.0;
+   int bytes = tvdbManager->GetBytesDownloaded();
+   double mb = (double)bytes / 1024.0 / 1024.0;
 
    tell(0, "%d of %zu series episodes scraped in %ld s, downloaded %.3f %cB",
         seriesCur, seriesToScrap.size(), time(0) - start,
