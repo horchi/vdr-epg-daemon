@@ -77,7 +77,7 @@ class cEpisodeFile : public cListObject
       cEpisodeFile(const std::string& aName, const std::string& aLink, cList<cLine>* aLines = nullptr)
       { name = aName; link = aLink; lines = aLines; }
 
-      ~cEpisodeFile() { if (lines) delete lines; }
+      ~cEpisodeFile() { delete lines; }
 
       int isLink()    { return link.length() > 0; }
 

@@ -270,10 +270,10 @@ int cEpgd::updateEpisodes()
    cList<cLine>* result = new cList<cLine>;
    int code {0};
    bool abort {false};
+   bool _isLink {false};
 
    while (!abort && (code = cl.receive(result)) != codeCommunicationEnd)
    {
-      bool _isLink {false};
       cSystemNotification::check();
 
       switch (code)
