@@ -404,35 +404,33 @@ int cEpgd::initDb()
       vdrDb = new cDbTable(connection, "vdrs");
       if ((status = vdrDb->open()) != success) return status;
 
-      if (!dbConnected())
-         return fail;
-
-      vdrDb->clear();
-      vdrDb->setValue("UUID", "epgd");
-      vdrDb->find();
-      int lastApi = vdrDb->getIntValue("DBAPI");
-      vdrDb->close();
-      delete vdrDb;
-      vdrDb = nullptr;
-
-      // database migration
-
-      if (lastApi < 8)
+      if (dbConnected())
       {
-         if (migrateFromDbApi7() != success)
-            return fail;
+         vdrDb->clear();
+         vdrDb->setValue("UUID", "epgd");
+         vdrDb->find();
+         int lastApi = vdrDb->getIntValue("DBAPI");
+         vdrDb->close();
+         delete vdrDb;
+         vdrDb = nullptr;
+
+         // database migration
+
+         if (lastApi < 7)
+         {
+            if (migrateFromDbApi6() != success)
+               return fail;
+         }
+
+         if (lastApi < 8)
+         {
+            if (migrateFromDbApi7() != success)
+               return fail;
+         }
       }
 
       if ((status = checkDbDdl()) == abrt)
          return abrt;
-
-      // database migration
-
-      if (lastApi < 7)
-      {
-         if (migrateFromDbApi6() != success)
-            return fail;
-      }
    }
 
    initial = false;
@@ -2656,7 +2654,7 @@ void cEpgd::scrapNewRecordings(int count)
       return ;
 
    recordingListDb->clear();
-   recordingListDb->setValue("SCRNEW", yes);
+   recordingListDb->setValue("SCRNEW", 1);
 
    tell(0, "SCRAP: Scraping new recordings, %d pending", count);
 
@@ -2712,11 +2710,11 @@ void cEpgd::scrapNewRecordings(int count)
       if (found)
       {
          tell(1, "SCRAP: Scrap for recording '%s' successfully done by user defined scrapinfo", recTitle.c_str());
-         recordingListDb->setValue("SCRNEW", no);
+         recordingListDb->setValue("SCRNEW", 0);
+         recordingListDb->setValue("SCRSP", time(0));
          recordingListDb->setValue("SCRSERIESID", scrapInfoSeriesId);
          recordingListDb->setValue("SCRSERIESEPISODE", scrapInfoEpisodeId);
          recordingListDb->setValue("SCRMOVIEID", scrapInfoMovieId);
-         recordingListDb->setValue("SCRSP", time(0));
          recordingListDb->update();
 
          continue;
@@ -2735,11 +2733,11 @@ void cEpgd::scrapNewRecordings(int count)
          {
             tell(1, "SCRAP: Found active event for recording '%s'", recTitle.c_str());
 
+            recordingListDb->setValue("SCRNEW", 0);
+            recordingListDb->setValue("SCRSP", time(0));
             recordingListDb->setValue("SCRSERIESID", seriesId);
             recordingListDb->setValue("SCRSERIESEPISODE", episodeId);
             recordingListDb->setValue("SCRMOVIEID", movieId);
-            recordingListDb->setValue("SCRNEW", no);
-            recordingListDb->setValue("SCRSP", time(0));
             recordingListDb->update();
 
             continue;
@@ -2797,11 +2795,11 @@ void cEpgd::scrapNewRecordings(int count)
 
       tell(1, "SCRAP: Recording %s scraped '%s'", found ? "successfully" : "NOT successfully", recTitle.c_str());
 
-      recordingListDb->setValue("SCRNEW", no);
+      recordingListDb->setValue("SCRNEW", 0);
+      recordingListDb->setValue("SCRSP", time(0));
       recordingListDb->setValue("SCRSERIESID", seriesId);
       recordingListDb->setValue("SCRSERIESEPISODE", episodeId);
       recordingListDb->setValue("SCRMOVIEID", movieId);
-      recordingListDb->setValue("SCRSP", time(0));
       recordingListDb->update();
    }
 
@@ -2863,27 +2861,26 @@ int cEpgd::triggerVdrs(const char* trg, const char* plug, const char* options)
 
       // open tcp connection
 
-      if (cl.open() == success)
-      {
-         char* command {};
-         cList<cLine> result;
+      if (cl.open() != success)
+         continue;
 
-         if (!isEmpty(plug))
-            asprintf(&command, "PLUG %s %s %s", plug, trg, !isEmpty(options) ? options : "");
-         else
-            asprintf(&command, "%s %s", trg, !isEmpty(options) ? options : "");
+      char* command {};
+      cList<cLine> result;
 
-         tell(1, "Send '%s' to '%s:%d'", command,ip, port);
+      if (!isEmpty(plug))
+         asprintf(&command, "PLUG %s %s %s", plug, trg, !isEmpty(options) ? options : "");
+      else
+         asprintf(&command, "%s %s", trg, !isEmpty(options) ? options : "");
 
-         if (!cl.send(command))
-            tell(0, "Error: Send '%s' to '%s:%d' failed!", command, ip, port);
-         else
-            cl.receive(&result, 2);
+      tell(1, "Send '%s' to '%s:%d'", command,ip, port);
 
-         free(command);
-      }
+      if (!cl.send(command))
+         tell(0, "Error: Send '%s' to '%s:%d' failed!", command, ip, port);
+      else
+         cl.receive(&result);
 
-      cl.close(no);
+      free(command);
+      cl.close();
    }
 
    selectActiveVdrs->freeResult();

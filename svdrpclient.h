@@ -4,8 +4,7 @@
  * See the README file for copyright information and how to reach the author.
  */
 
-#ifndef __SVDRP_CLIENT_H_
-#define __SVDRP_CLIENT_H_
+#pragma once
 
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -131,12 +130,9 @@ class cSvdrpClient
       virtual ~cSvdrpClient();
 
       int open();
-      void close(int sendQuit = yes);
+      void close(bool sendQuit = true);
       void abort();
 
       int send(const char* cmd, int reconnect = true);
       int receive(cList<cLine>* list = 0, int timeoutMs = 20 * 1000);
 };
-
-//***************************************************************************
-#endif // __SVDRP_CLIENT_H_

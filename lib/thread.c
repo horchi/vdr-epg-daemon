@@ -89,31 +89,33 @@ void cThread::SetDescription(const char *Description, ...)
 
 void *cThread::StartThread(cThread *Thread)
 {
-  Thread->childThreadId = ThreadId();
-  if (Thread->description)
-  {
-     tell(Thread->silent ? 2 : 0, "'%s' thread started (pid=%d, tid=%d, prio=%s)", Thread->description, getpid(), Thread->childThreadId, Thread->lowPriority ? "low" : "high");
+   Thread->childThreadId = ThreadId();
+
+   if (Thread->description)
+   {
+      tell(Thread->silent ? 3 : 0, "'%s' thread started (pid=%d, tid=%d, prio=%s)", Thread->description, getpid(),
+           Thread->childThreadId, Thread->lowPriority ? "low" : "high");
 #ifdef PR_SET_NAME
-     if (prctl(PR_SET_NAME, Thread->description, 0, 0, 0) < 0)
-        tell(0, "%s thread naming failed (pid=%d, tid=%d)", Thread->description, getpid(), Thread->childThreadId);
+      if (prctl(PR_SET_NAME, Thread->description, 0, 0, 0) < 0)
+         tell(0, "%s thread naming failed (pid=%d, tid=%d)", Thread->description, getpid(), Thread->childThreadId);
 #endif
-  }
+   }
 
-  if (Thread->lowPriority)
-  {
-     Thread->SetPriority(19);
-     Thread->SetIOPriority(7);
-  }
+   if (Thread->lowPriority)
+   {
+      Thread->SetPriority(19);
+      Thread->SetIOPriority(7);
+   }
 
-  Thread->action();
+   Thread->action();
 
-  if (Thread->description)
-     tell(Thread->silent ? 2 : 0, "'%s' thread ended (pid=%d, tid=%d)", Thread->description, getpid(), Thread->childThreadId);
+   if (Thread->description)
+      tell(Thread->silent ? 3 : 0, "'%s' thread ended (pid=%d, tid=%d)", Thread->description, getpid(), Thread->childThreadId);
 
-  Thread->running = false;
-  Thread->active = false;
+   Thread->running = false;
+   Thread->active = false;
 
-  return NULL;
+   return NULL;
 }
 
 //***************************************************************************
@@ -122,14 +124,14 @@ void *cThread::StartThread(cThread *Thread)
 
 void cThread::SetPriority(int priority)
 {
-  if (setpriority(PRIO_PROCESS, 0, priority) < 0)
-     tell(0, "Error: Setting priority failed");
+   if (setpriority(PRIO_PROCESS, 0, priority) < 0)
+      tell(0, "Error: Setting priority failed");
 }
 
 void cThread::SetIOPriority(int priority)
 {
-  if (syscall(SYS_ioprio_set, 1, 0, (priority & 0xff) | (3 << 13)) < 0) // idle class
-     tell(0, "Error: Setting io priority failed");
+   if (syscall(SYS_ioprio_set, 1, 0, (priority & 0xff) | (3 << 13)) < 0) // idle class
+      tell(0, "Error: Setting io priority failed");
 }
 
 //***************************************************************************

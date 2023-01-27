@@ -539,7 +539,7 @@ int cSvdrpClient::open()
    return success;
 }
 
-void cSvdrpClient::close(int sendQuit)
+void cSvdrpClient::close(bool sendQuit)
 {
    if (!file.IsOpen())
       return;
