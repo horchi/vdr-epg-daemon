@@ -3,9 +3,12 @@
 MYSQL_PWD=${MYSQL_PWD:-epg}
 export MYSQL_PWD
 
-echo "------------------------"
-echo "-- Drop normal tables --"
-echo "------------------------"
+EPGDB=${EPGDB:-epg2vdr}
+EPGDB_USER=${EPGDB_USER:-epg2vdr}
+
+echo "-----------------------------------------------------"
+echo "-- Drop tables of logon ${EPGDB_USER}@${EPGDB} --"
+echo "-----------------------------------------------------"
 echo "This tables contain data which is restored automatically "
 echo " by downloading from internet and via the dvb stream and from your vdrs"
 echo -n "Are you sure? [y/N] "
@@ -15,21 +18,21 @@ echo ""
 
 if [ "${c}" = "y" ]; then
 
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists events;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists useevents;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists fileref;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists imagerefs;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists channelmap;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists episodes;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop view  if exists eventsview;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop view  if exists eventsviewplain;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists components;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists recordingdirs;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists recordinglist;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists vdrs;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists events;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists useevents;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists fileref;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists imagerefs;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists channelmap;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists episodes;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop view  if exists eventsview;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop view  if exists eventsviewplain;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists components;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists recordingdirs;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists recordinglist;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists vdrs;'
 
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists analyse;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists snapshot;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists analyse;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists snapshot;'
 
    echo "Now you have two choices for timers and timersdone (only the pending ones):"
    echo " 1. Automatic (without dropping the timers table):"
@@ -44,12 +47,12 @@ if [ "${c}" = "y" ]; then
    echo ""
 
    if [ "${c}" = "y" ]; then
-       mysql -u epg2vdr -Depg2vdr -e "update timers set action = 'D' where state in ('P', 'R');"
+       mysql -u ${EPGDB_USER} -D ${EPGDB} -e "update timers set action = 'D' where state in ('P', 'R');"
    else
-       mysql -u epg2vdr -Depg2vdr -e 'drop table if exists timers;'
+       mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists timers;'
    fi
 
-   mysql -u epg2vdr -Depg2vdr -e "delete from timersdone where state in ('C', 'Q');"
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e "delete from timersdone where state in ('C', 'Q');"
 
    echo ""
    echo "Tables dropped!"
@@ -64,12 +67,12 @@ read -n 1 c
 echo ""
 
 if [ "${c}" = "y" ]; then
-   mysql -u epg2vdr -Depg2vdr -e 'drop procedure if exists reverseepg;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop procedure if exists mergeepg;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop procedure if exists reverseepg;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop procedure if exists mergeepg;'
 
-   mysql -u epg2vdr -Depg2vdr -e 'drop function if exists getupdflg;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop function if exists getcrosslvr;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop function if exists getlvrmin;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop function if exists getupdflg;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop function if exists getcrosslvr;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop function if exists getlvrmin;'
 
    echo ""
    echo "Procedures and Functions dropped!"
@@ -85,7 +88,7 @@ read -n 1 i
 echo ""
 
 if [ "${i}" = "y" ]; then
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists images;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists images;'
 
    echo ""
    echo "Table images dropped!"
@@ -101,20 +104,20 @@ read -n 1 i
 echo ""
 
 if [ "${i}" = "y" ]; then
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists series;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists series_episode;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists series_media;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists series_actor;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists movie;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists movie_actor;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists movie_actors;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists movie_media;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop view  if exists thetvdbview;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists series;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists series_episode;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists series_media;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists series_actor;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists movie;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists movie_actor;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists movie_actors;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists movie_media;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop view  if exists thetvdbview;'
 
-   mysql -u epg2vdr -Depg2vdr -e 'update events set scrseriesid = null, scrseriesepisode = null, scrmovieid = null, scrsp = null;'
-   mysql -u epg2vdr -Depg2vdr -e 'update recordinglist set scrseriesid = null, scrseriesepisode = null, scrmovieid = null, scrnew = null, scrsp = null;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'update events set scrseriesid = null, scrseriesepisode = null, scrmovieid = null, scrsp = null;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'update recordinglist set scrseriesid = null, scrseriesepisode = null, scrmovieid = null, scrnew = null, scrsp = null;'
 
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists usevents;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists usevents;'
 
    echo ""
    echo "Scraper tables dropped!"
@@ -138,23 +141,23 @@ if [ "${i}" = "y" ]; then
    echo ""
 
    if [ "${i}" = "y" ]; then
-       mysqldump --opt -u epg2vdr epg2vdr parameters | gzip > ./parameters-dump.sql.gz
+       mysqldump --opt -u ${EPGDB_USER} ${EPGDB} parameters | gzip > ./parameters-dump.sql.gz
        echo "Table parameters dumped to ./parameters-dump.sql.gz"
 
-       mysqldump --opt -u epg2vdr epg2vdr users | gzip > ./users-dump.sql.gz
+       mysqldump --opt -u ${EPGDB_USER} ${EPGDB} users | gzip > ./users-dump.sql.gz
        echo "Table users dumped to ./users-dump.sql.gz"
 
-       mysqldump --opt -u epg2vdr epg2vdr timersdone | gzip > ./timersdone-dump.sql.gz
+       mysqldump --opt -u ${EPGDB_USER} ${EPGDB} timersdone | gzip > ./timersdone-dump.sql.gz
        echo "Table timersdone dumped to ./timersdone-dump.sql.gz"
 
-       mysqldump --opt -u epg2vdr epg2vdr searchtimers | gzip > ./searchtimers-dump.sql.gz
+       mysqldump --opt -u ${EPGDB_USER} ${EPGDB} searchtimers | gzip > ./searchtimers-dump.sql.gz
        echo "Table searchtimers dumped to ./searchtimers-dump.sql.gz"
    fi
 
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists parameters;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists searchtimers;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists timersdone;'
-   mysql -u epg2vdr -Depg2vdr -e 'drop table if exists users;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists parameters;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists searchtimers;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists timersdone;'
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e 'drop table if exists users;'
 
    echo ""
    echo "User Data tables dropped!"

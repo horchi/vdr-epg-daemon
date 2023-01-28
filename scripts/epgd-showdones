@@ -3,5 +3,8 @@
 MYSQL_PWD=${MYSQL_PWD:-epg}
 export MYSQL_PWD
 
-mysql -u epg2vdr -Depg2vdr -e " \
+EPGDB=${EPGDB:-epg2vdr}
+EPGDB_USER=${EPGDB_USER:-epg2vdr}
+
+mysql -u ${EPGDB_USER} -D ${EPGDB} -e " \
   select from_unixtime(updsp, '%d.%m %H:%m') as upd, id, state as s, substr(title,1,35), shorttext, episodecompname, episodecomppartname, expression from timersdone where state != 'D';"

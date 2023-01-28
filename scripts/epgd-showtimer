@@ -3,13 +3,16 @@
 MYSQL_PWD=${MYSQL_PWD:-epg}
 export MYSQL_PWD
 
+EPGDB=${EPGDB:-epg2vdr}
+EPGDB_USER=${EPGDB_USER:-epg2vdr}
+
 if [ -z $1 ]; then
   STATE="(t.state != 'D' or t.state is null)"
 else
   STATE="t.state like '$1'"
 fi
 
-mysql -u epg2vdr -Depg2vdr -e " \
+mysql -u ${EPGDB_USER} -D ${EPGDB} -e " \
 select from_unixtime(t.inssp, '%d.%m %H:%i') as ins, v.name, substr(t.source, 25) as source, t.id, t.autotimerid as aid, t.state as S, t.info, t.action as A, \
     t.eventid, concat(from_unixtime(day, '%d.%m '), concat_ws(':', right(concat("00", t.starttime DIV 100), 2), right(concat("00", t.starttime%100), 2))) as start, \
     concat_ws(':', right(concat("00", t.endtime DIV 100), 2), right(concat("00", t.endtime%100), 2)) as end, \

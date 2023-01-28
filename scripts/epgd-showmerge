@@ -3,6 +3,9 @@
 MYSQL_PWD=${MYSQL_PWD:-epg}
 export MYSQL_PWD
 
+EPGDB=${EPGDB:-epg2vdr}
+EPGDB_USER=${EPGDB_USER:-epg2vdr}
+
 if [ "$1" == "-h" ]; then
 
   echo "  Usage: $0 [<channelid>] [<to-date>]"
@@ -13,13 +16,13 @@ if [ "$1" == "-h" ]; then
   exit 0
 fi
 
-mysql -u epg2vdr -Depg2vdr -e "select from_unixtime(lastmerge) as 'last merge was at' from vdrs where uuid = 'epgd';"
-mysql -u epg2vdr -Depg2vdr -e "select count(1) as 'events pending for merge' from events where source = 'vdr' and updsp > (select lastmerge from vdrs where uuid = 'epgd');"
-mysql -u epg2vdr -Depg2vdr -e "select count(source),source from events group by source;"
+mysql -u ${EPGDB_USER} -D ${EPGDB} -e "select from_unixtime(lastmerge) as 'last merge was at' from vdrs where uuid = 'epgd';"
+mysql -u ${EPGDB_USER} -D ${EPGDB} -e "select count(1) as 'events pending for merge' from events where source = 'vdr' and updsp > (select lastmerge from vdrs where uuid = 'epgd');"
+mysql -u ${EPGDB_USER} -D ${EPGDB} -e "select count(source),source from events group by source;"
 
 if [ -z "$1" ]; then
 
-  mysql -u epg2vdr -Depg2vdr -e "select count(*),source,updflg from events where starttime+duration >= unix_timestamp() group by source,updflg;"
+  mysql -u ${EPGDB_USER} -D ${EPGDB} -e "select count(*),source,updflg from events where starttime+duration >= unix_timestamp() group by source,updflg;"
 
 else
 
@@ -30,6 +33,6 @@ else
   fi
 
    echo "channel $1"
-   mysql -u epg2vdr -Depg2vdr -e "select source,masterid,useid,updflg,delflg,from_unixtime(starttime) starttime,round(duration/60,0) duration,substr(title,1,45) title,from_unixtime(updsp) updsp  from events where channelid = '$1' and starttime+duration >= unix_timestamp() order by starttime,source desc limit 50;"
+   mysql -u ${EPGDB_USER} -D ${EPGDB} -e "select source,masterid,useid,updflg,delflg,from_unixtime(starttime) starttime,round(duration/60,0) duration,substr(title,1,45) title,from_unixtime(updsp) updsp  from events where channelid = '$1' and starttime+duration >= unix_timestamp() order by starttime,source desc limit 50;"
 
 fi

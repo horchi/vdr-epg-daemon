@@ -3,13 +3,16 @@
 MYSQL_PWD=${MYSQL_PWD:-epg}
 export MYSQL_PWD
 
+EPGDB=${EPGDB:-epg2vdr}
+EPGDB_USER=${EPGDB_USER:-epg2vdr}
+
 if [ -z $1 ]; then
    exit
 fi
 
 ID=$1
 
-mysql -u epg2vdr -Depg2vdr -e " \
+mysql -u ${EPGDB_USER} -D ${EPGDB} -e " \
 select t.id, SUBSTRING_INDEX(t.channelid, '-', 3) as transponder, v.name as vdr, t.source, t.state, \
     t.eventid, from_unixtime(t.day, '%d.%m.%Y') as day, \
     concat_ws(':', right(concat("00", t.starttime DIV 100), 2), right(concat("00", t.starttime%100), 2)) as start, \
