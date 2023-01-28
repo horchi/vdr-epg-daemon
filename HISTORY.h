@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.4"
+#define _VERSION     "1.3.5"
 #define VERSION_DATE "27.01.2023"
 #define DB_API       8
 
@@ -17,6 +17,8 @@
 /*
  * ------------------------------------
  *
+2023-01-28: version 1.3.5 (horchi)
+   - bugfix: Fixed initial start without tables (again)
 
 2023-01-27: version 1.3.4 (horchi)
    - bugfix: Fixed handling of file links for constable series

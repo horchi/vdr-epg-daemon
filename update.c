@@ -402,9 +402,9 @@ int cEpgd::initDb()
    if (initial)
    {
       vdrDb = new cDbTable(connection, "vdrs");
-      if ((status = vdrDb->open()) != success) return status;
+      status = vdrDb->open();
 
-      if (dbConnected())
+      if (status == success && dbConnected())
       {
          vdrDb->clear();
          vdrDb->setValue("UUID", "epgd");
