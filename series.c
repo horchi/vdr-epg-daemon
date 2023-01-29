@@ -172,7 +172,6 @@ int cEpgd::updateEpisodes()
    cSvdrpClient cl(EpgdConfig.seriesUrl, EpgdConfig.seriesPort);
    std::string fileName;
    std::string linkName;
-   char command[200] {};
    int minutes {na};
 
    if (selectMaxUpdSp->find() && episodeDb->getIntValue("UpdSp") > 0)
@@ -209,11 +208,10 @@ int cEpgd::updateEpisodes()
 
    // select characterset
 
-   if (!cl.send(withutf8 ? "CHARSET utf-8": "CHARSET iso-8859-1"))
+   if (!cl.send(withutf8 ? "CHARSET utf-8" : "CHARSET iso-8859-1"))
    {
-      tell(0, "Error: Send '%s' failed, aborting transfer!", command);
+      tell(0, "Error: Send 'CHARSET ...' failed, aborting transfer!");
       cl.close();
-
       return fail;
    }
 
@@ -225,7 +223,6 @@ int cEpgd::updateEpisodes()
    {
       tell(0, "Error: SVDRPCL: did not receive charset confirmation. Closing...");
       cl.abort();
-
       return fail;
    }
 
@@ -234,14 +231,14 @@ int cEpgd::updateEpisodes()
 
    // identify myself
 
+   char command[200] {};
+
    sprintf(command, "HELLO %s v%s (%s), ID=%s MAIL=%s", TARGET, VERSION, VERSION_DATE,
            EpgdConfig.uuid, notNull(EpgdConfig.seriesMail));
    cl.send(command);
    cl.receive();
 
-   // build GET command for the files
-
-   *command = 0;
+   // build GET command
 
    if (full)
    {
@@ -250,7 +247,7 @@ int cEpgd::updateEpisodes()
       episodeDb->truncate();        // truncate table!
    }
 
-   else if (minutes > 0)
+   else // if (minutes > 0)
    {
       minutes += 5;      // request 5 minutes more to compensate time diffs to constabel.net
       minutes += 90;     // request 90 minutes more to compensate TZ etc. :o
@@ -289,6 +286,10 @@ int cEpgd::updateEpisodes()
             {
                linkName = "";
                fileName = result->Next(result->First())->Text();
+
+               // for files (not links) constable send the additional header line:
+               // "not a link"
+
                _isLink = fileName != "not a link";
 
                if (!_isLink)

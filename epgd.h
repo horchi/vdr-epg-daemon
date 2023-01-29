@@ -142,7 +142,7 @@ class cEpgd : public cFrame, public cSystemNotification
       int wakeupVdr(const char* uuid);
       int triggerVdrs(const char* trg, const char* plug = 0, const char* options = 0);
       int __attribute__ ((format(printf, 5, 6))) message(int level, char type, const char* title, const char* format, ...) override;
-      int sendTccMail(string& mailBody);
+      int sendTccMail(std::string& mailBody);
       int sendTccTestMail();
 
       xmlDocPtr transformXml(const char* buffer, int size, xsltStylesheetPtr stylesheet, const char* fileRef);
@@ -254,7 +254,7 @@ class cEpgd : public cFrame, public cSystemNotification
 
       int initScrapers();
       void exitScrapers();
-      bool checkEventsForRecording(int eventId, string channelId, int &seriesId, int &episodeId, int &movieId);
+      bool checkEventsForRecording(int eventId, const std::string& channelId, int& seriesId, int& episodeId, int& movieId);
 
       // data
 

@@ -249,14 +249,14 @@ int cEpgHttpd::doWakeupVdr(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doRenameRecording(MHD_Connection* tcp, json_t* obj)
 {
-   int status;
-   int alive = no;
-   const char* ip = 0;
-   int port = 0;
-   const char* vdrUuid = 0;
-   const char* videoBasePath = "";
-   char* opt;
-   char result[512+TB] = "";
+   int status {success};
+   int alive {no};
+   const char* ip {};
+   int port {0};
+   const char* vUuid {};
+   const char* videoBasePath {""};
+   char* opt {};
+   char result[512+TB] {};
 
    const char* md5path = getStrParameter(tcp, "md5path");
    time_t starttime = getIntParameter(tcp, "starttime");
@@ -274,7 +274,7 @@ int cEpgHttpd::doRenameRecording(MHD_Connection* tcp, json_t* obj)
    if (!recordingListDb->find())
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Recording '%s' not found", md5path);
 
-   vdrUuid = recordingListDb->getStrValue("VDRUUID");
+   vUuid = recordingListDb->getStrValue("VDRUUID");
    alive = ipOfVdr(recordingListDb->getStrValue("VDRUUID"), ip, port);
 
    recordingListDb->reset();
@@ -283,7 +283,7 @@ int cEpgHttpd::doRenameRecording(MHD_Connection* tcp, json_t* obj)
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Can't rename recording, VDR is not alive");
 
    vdrDb->clear();
-   vdrDb->setValue("UUID", vdrUuid);
+   vdrDb->setValue("UUID", vUuid);
 
    if (vdrDb->find())
       videoBasePath = vdrDb->getStrValue("VIDEODIR");
@@ -306,14 +306,14 @@ int cEpgHttpd::doRenameRecording(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doDeleteRecording(MHD_Connection* tcp, json_t* obj)
 {
-   int status;
-   int alive = no;
-   const char* ip = 0;
-   int port = 0;
-   char* name = 0;
-   char result[512+TB] = "";
-   const char* vdrUuid = 0;
-   const char* videoBasePath = "";
+   int status {success};
+   int alive {no};
+   const char* ip {};
+   int port {0};
+   char* name {};
+   char result[512+TB] {};
+   const char* vUuid {};
+   const char* videoBasePath {""};
 
    const char* md5path = getStrParameter(tcp, "md5path");
    time_t starttime = getIntParameter(tcp, "starttime");
@@ -330,8 +330,8 @@ int cEpgHttpd::doDeleteRecording(MHD_Connection* tcp, json_t* obj)
    if (!recordingListDb->find())
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Recording '%s' not found", md5path);
 
-   vdrUuid = recordingListDb->getStrValue("VDRUUID");
-   alive = ipOfVdr(vdrUuid, ip, port);
+   vUuid = recordingListDb->getStrValue("VDRUUID");
+   alive = ipOfVdr(vUuid, ip, port);
 
    recordingListDb->reset();
 
@@ -339,7 +339,7 @@ int cEpgHttpd::doDeleteRecording(MHD_Connection* tcp, json_t* obj)
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Can't delete recording, VDR is not alive");
 
    vdrDb->clear();
-   vdrDb->setValue("Uuid", vdrUuid);
+   vdrDb->setValue("Uuid", vUuid);
    vdrDb->reset();
 
    if (vdrDb->find())
@@ -375,10 +375,10 @@ int cEpgHttpd::doReplayRecording(MHD_Connection* tcp, json_t* obj)
    const char* md5path = getStrParameter(tcp, "md5path");
    const char* owner = getStrParameter(tcp, "owner", "");
    time_t starttime = getIntParameter(tcp, "starttime");
-   const char* vdruuid = getStrParameter(tcp, "vdruuid");
+   const char* vUuid = getStrParameter(tcp, "vdruuid");
    const char* position = getStrParameter(tcp, "position", "");
 
-   if (isEmpty(md5path) || isEmpty(vdruuid) || !starttime)
+   if (isEmpty(md5path) || isEmpty(vUuid) || !starttime)
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Missing recording or vdr reference in request");
 
    if (strcasecmp(owner, "undefined") == 0)
@@ -392,13 +392,13 @@ int cEpgHttpd::doReplayRecording(MHD_Connection* tcp, json_t* obj)
    if (!recordingListDb->find())
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Recording '%s/%s/%ld' not found", md5path, owner, starttime);
 
-   alive = ipOfVdr(vdruuid, ip, port);
+   alive = ipOfVdr(vUuid, ip, port);
    name = recordingListDb->getStrValue("PATH");
 
    recordingListDb->reset();
 
    vdrDb->clear();
-   vdrDb->setValue("Uuid", vdruuid);
+   vdrDb->setValue("Uuid", vUuid);
    vdrDb->reset();
 
    if (vdrDb->find())
@@ -430,13 +430,13 @@ int cEpgHttpd::doHitKey(MHD_Connection* tcp, json_t* obj)
    int port = 0;
    char result[512+TB] = "";
 
-   const char* vdruuid = getStrParameter(tcp, "vdruuid");
+   const char* vUuid = getStrParameter(tcp, "vdruuid");
    const char* key = getStrParameter(tcp, "key");
 
-   if (isEmpty(vdruuid) || isEmpty(key))
+   if (isEmpty(vUuid) || isEmpty(key))
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Missing at least the vdr reference or the key code");
 
-   alive = ipOfVdr(vdruuid, ip, port);
+   alive = ipOfVdr(vUuid, ip, port);
 
    if (!alive || isEmpty(ip) || !port)
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Can't send key code, VDR is not alive");
@@ -493,7 +493,7 @@ int cEpgHttpd::doChannelSwitch(MHD_Connection* tcp, json_t* obj)
    const char* channelPar = getStrParameter(tcp, "channel", "");
    const char* uuidPar = getStrParameter(tcp, "uuid");
    int statusCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
-   char* message = 0;
+   char* messageTxt {};
 
    tell(0, "Switching vdr '%s' to channel '%s'", uuidPar, channelPar);
 
@@ -523,16 +523,16 @@ int cEpgHttpd::doChannelSwitch(MHD_Connection* tcp, json_t* obj)
 
             if (!cl.send(command))
             {
-               asprintf(&message, "Error: Send '%s' failed!", command);
+               asprintf(&messageTxt, "Error: Send '%s' failed!", command);
             }
             else
             {
                int status = cl.receive(&result);
 
                if (result.First() && result.First()->Text())
-                  asprintf(&message, "Send '%s' succeeded; Got %d '%s'", command, status, result.First()->Text());
+                  asprintf(&messageTxt, "Send '%s' succeeded; Got %d '%s'", command, status, result.First()->Text());
                else
-                  asprintf(&message, "Send '%s' succeeded but missing response from vdr", command);
+                  asprintf(&messageTxt, "Send '%s' succeeded but missing response from vdr", command);
 
                statusCode = MHD_HTTP_OK;
             }
@@ -542,25 +542,25 @@ int cEpgHttpd::doChannelSwitch(MHD_Connection* tcp, json_t* obj)
          }
          else
          {
-            asprintf(&message, "Error: Can't switch channel, vdr '%s' svdrp connect failed!", uuidPar);
+            asprintf(&messageTxt, "Error: Can't switch channel, vdr '%s' svdrp connect failed!", uuidPar);
          }
       }
       else
       {
-         asprintf(&message, "Info: Can't switch channel, vdr '%s' not running!", uuidPar);
+         asprintf(&messageTxt, "Info: Can't switch channel, vdr '%s' not running!", uuidPar);
       }
    }
    else
    {
-      asprintf(&message, "Info: Can't switch channel, vdr '%s' not known!", uuidPar);
+      asprintf(&messageTxt, "Info: Can't switch channel, vdr '%s' not known!", uuidPar);
    }
 
-   tell(0, "%s", message);
+   tell(0, "%s", messageTxt);
 
    vdrDb->reset();
 
-   buildResponse(obj, statusCode, "%s", message);
-   free(message);
+   buildResponse(obj, statusCode, "%s", messageTxt);
+   free(messageTxt);
 
    return statusCode;
 }
@@ -1459,7 +1459,7 @@ int cEpgHttpd::doParameters(MHD_Connection* tcp, json_t* obj)
       json_t* oData = json_object();
       const char* value;
       Parameter* definition = &cParameters::parameters[i];
-      std::string user = std::string("@") + (currentSession ? currentSession->user : std::string(""));
+      // std::string user = std::string("@") + (currentSession ? currentSession->user : std::string(""));
 
       // skip invisible
 

@@ -5,7 +5,6 @@
  *
  */
 
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/select.h>
@@ -258,17 +257,17 @@ void cListBase::Sort(void)
 
 // --- cFile -----------------------------------------------------------------
 
-bool cFile::files[FD_SETSIZE] = { false };
-int cFile::maxFiles = 0;
+bool cFile::files[FD_SETSIZE] {false};
+int cFile::maxFiles {0};
 
 cFile::cFile(void)
 {
-  f = -1;
+   f = -1;
 }
 
 cFile::~cFile()
 {
-  Close();
+   Close();
 }
 
 bool cFile::Open(const char *FileName, int Flags, mode_t Mode)
@@ -281,27 +280,30 @@ bool cFile::Open(const char *FileName, int Flags, mode_t Mode)
 
 bool cFile::Open(int FileDes)
 {
-  if (FileDes >= 0) {
-     if (!IsOpen()) {
-        f = FileDes;
-        if (f >= 0) {
-           if (f < FD_SETSIZE) {
-              if (f >= maxFiles)
-                 maxFiles = f + 1;
-              if (!files[f])
-                 files[f] = true;
-              else
-                 tell(0, "Error: file descriptor %d already in files[]", f);
-              return true;
-              }
-           else
-              tell(0, "Error: file descriptor %d is larger than FD_SETSIZE (%d)", f, FD_SETSIZE);
-           }
-        }
-     else
-        tell(0, "Error: attempt to re-open file descriptor %d", FileDes);
-     }
-  return false;
+   if (FileDes >= 0)
+   {
+      if (!IsOpen())
+      {
+         f = FileDes;
+
+         if (f < FD_SETSIZE)
+         {
+            if (f >= maxFiles)
+               maxFiles = f + 1;
+            if (!files[f])
+               files[f] = true;
+            else
+               tell(0, "Error: file descriptor %d already in files[]", f);
+            return true;
+         }
+         else
+            tell(0, "Error: file descriptor %d is larger than FD_SETSIZE (%d)", f, FD_SETSIZE);
+      }
+      else
+         tell(0, "Error: attempt to re-open file descriptor %d", FileDes);
+   }
+
+   return false;
 }
 
 void cFile::Close(void)

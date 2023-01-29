@@ -1375,22 +1375,22 @@ int cEpgHttpd::buildResponse(json_t* obj, int state, const char* format, ...)
 {
    va_list ap;
    json_t* oResult = json_object();
-   char* message;
+   char* messageTxt {};
 
    // {"result": {"state": 200, "message": "success"}}
 
    va_start(ap, format);
-   vasprintf(&message, format, ap);
+   vasprintf(&messageTxt, format, ap);
    va_end(ap);
 
    if (state != MHD_HTTP_OK)
-      tell(0, "Error: %s", message);
+      tell(0, "Error: %s", messageTxt);
 
    json_object_set_new(oResult, "state", json_integer(state));
-   json_object_set_new(oResult, "message", json_string(message));
+   json_object_set_new(oResult, "message", json_string(messageTxt));
    json_object_set_new(obj, "result", oResult);
 
-   free(message);
+   free(messageTxt);
 
    return state;
 }

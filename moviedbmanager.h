@@ -36,15 +36,15 @@ private:
     int bytesDownloaded {0};
     int withutf8 {no};
     std::string language {"en"};
-    map<string, int> alreadyScraped;
-    cMovieDBScraper *movieDbScraper {};
-    cDbConnection *connection {};
-    cDbTable *tMovies {};
-    cDbTable *tMoviesActor {};
-    cDbTable *tMoviesActors {};
-    cDbTable *tMovieMedia {};
-    cDbTable *tEvents {};
-    cDbTable *tRecordingList {};
+    map<std::string,int> alreadyScraped;
+    cMovieDBScraper* movieDbScraper {};
+    cDbConnection* connection {};
+    cDbTable* tMovies {};
+    cDbTable* tMoviesActor {};
+    cDbTable* tMoviesActors {};
+    cDbTable* tMovieMedia {};
+    cDbTable* tEvents {};
+    cDbTable* tRecordingList {};
 
     enum mediaType
     {
@@ -55,7 +55,7 @@ private:
        mtActorThumb
     };
 
-    int LoadMovieFromDB(string title);
+    int LoadMovieFromDB(const std::string& title);
     void UpdateEvent(tEventId eventID, int movieID);
     void SaveMovie(cMovieDbMovie *movie);
     void SaveMovieBasics(cMovieDbMovie *movie);
@@ -64,7 +64,7 @@ private:
     bool LoadMedia(int movieId, int actorId, int mediaType);
     int GetPicture(const char* url, MemoryStruct* data);
     void DeleteMovie(int movieId);
-    cMovieDbMovie *SearchRecordingSophisticated(string name);
+    cMovieDbMovie *SearchRecordingSophisticated(const std::string& name);
 
 public:
 
@@ -77,8 +77,8 @@ public:
     int GetBytesDownloaded() { return bytesDownloaded; };
     bool GetMoviesFromEPG(vector<sMovieResult> *result);
     void ProcessMovie(sMovieResult mov);
-    bool SearchRecordingDB(string name, int &movieId);
-    bool SearchRecordingOnline(string name, int &movieId);
+    bool SearchRecordingDB(const std::string& name, int &movieId);
+    bool SearchRecordingOnline(const std::string& name, int &movieId);
     bool CheckScrapInfoDB(int scrapMovieId);
     bool CheckScrapInfoOnline(int scrapMovieId);
     int CleanupMovies();

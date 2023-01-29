@@ -958,7 +958,7 @@ int cEpgd::initDb()
 
       for (int f = sel.find(); f; f = sel.fetch())
       {
-         string comp;
+         std::string comp;
 
          tell(0, "Update comp of %" PRId64 "in 'Maintanance Mode'", eventsDb->getBigintValue("EVENTID"));
 
@@ -1196,7 +1196,7 @@ int cEpgd::tryFillEmptyRecTableFields()
                recordingListDb->setValue("GENRE", getLine(s));
             else if ((s = endOf(p, "Land: ")) && recordingListDb->getValue("COUNTRY")->isEmpty())
                recordingListDb->setValue("COUNTRY", getLine(s));
-            else if ((s = endOf(p, "Jahr: ")) && recordingListDb->getValue("YEAR")->isEmpty())
+            else if (endOf(p, "Jahr: ") && recordingListDb->getValue("YEAR")->isEmpty())
             {
                // #TODO don't work
                //  Examples:  select flags, year, title, genre, category, description from recordinglist  where description like '%Jahr: 2014[%';
@@ -1210,15 +1210,15 @@ int cEpgd::tryFillEmptyRecTableFields()
                recordingListDb->setValue("CAMERA", getLine(s));
             else if ((s = endOf(p, "Musik: ")) && recordingListDb->getValue("MUSIC")->isEmpty())
                recordingListDb->setValue("MUSIC", getLine(s));
-            else if ((s = endOf(p, "TagesTipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+            else if (endOf(p, "TagesTipp") && recordingListDb->getValue("TIPP")->isEmpty())
                recordingListDb->setValue("TIPP", "TagesTipp");
-            else if ((s = endOf(p, "Tagestipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+            else if (endOf(p, "Tagestipp") && recordingListDb->getValue("TIPP")->isEmpty())
                recordingListDb->setValue("TIPP", "TagesTipp");
-            else if ((s = endOf(p, "TopTipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+            else if (endOf(p, "TopTipp") && recordingListDb->getValue("TIPP")->isEmpty())
                recordingListDb->setValue("TIPP", "TopTipp");
-            else if ((s = endOf(p, "Toptipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+            else if (endOf(p, "Toptipp") && recordingListDb->getValue("TIPP")->isEmpty())
                recordingListDb->setValue("TIPP", "TopTipp");
-            else if ((s = endOf(p, "Tipp")) && recordingListDb->getValue("TIPP")->isEmpty())
+            else if (endOf(p, "Tipp") && recordingListDb->getValue("TIPP")->isEmpty())
                recordingListDb->setValue("TIPP", "Tipp");
             else if ((s = endOf(p, "Bewertung: ")) && recordingListDb->getValue("RATING")->isEmpty())
                recordingListDb->setValue("RATING", getLine(s));
@@ -1569,7 +1569,7 @@ void cEpgd::loop()
 
          if (!doShutDown() && lastTccCheckAt < time(0) - 15*tmeSecondsPerMinute)
          {
-            string mailBody;
+            std::string mailBody;
 
             lastTccCheckAt = time(0);
 
@@ -1926,7 +1926,7 @@ int cEpgd::parseEvent(cDbRow* event, xmlNode* node)
    char* images {};
    char* imagetype {};
    int imgCnt  {0};
-   string comp;
+   std::string comp;
 
    cSystemNotification::check();
 
@@ -2666,13 +2666,13 @@ void cEpgd::scrapNewRecordings(int count)
       int episodeId {0};
       int movieId {0};
 
-      string recPath = recordingListDb->getStrValue("PATH");
+      // std::string recPath = recordingListDb->getStrValue("PATH");
       long starttime = recordingListDb->getIntValue("STARTTIME");
-      string recTitle = recordingListDb->getStrValue("TITLE");
-      string recSubtitle = recordingListDb->getStrValue("SHORTTEXT");
-      string category = recordingListDb->getStrValue("CATEGORY");
+      std::string recTitle = recordingListDb->getStrValue("TITLE");
+      std::string recSubtitle = recordingListDb->getStrValue("SHORTTEXT");
+      std::string category = recordingListDb->getStrValue("CATEGORY");
       int eventId = recordingListDb->getIntValue("EVENTID");
-      string channelId = recordingListDb->getStrValue("CHANNELID");
+      std::string channelId = recordingListDb->getStrValue("CHANNELID");
       int scrapInfoMovieId = recordingListDb->getIntValue("SCRINFOMOVIEID");
       int scrapInfoSeriesId = recordingListDb->getIntValue("SCRINFOSERIESID");
       int scrapInfoEpisodeId = recordingListDb->getIntValue("SCRINFOEPISODEID");
@@ -2813,7 +2813,7 @@ void cEpgd::scrapNewRecordings(int count)
 // Check Events For Recording
 //***************************************************************************
 
-bool cEpgd::checkEventsForRecording(int eventId, string channelId, int& seriesId,
+bool cEpgd::checkEventsForRecording(int eventId, const std::string& channelId, int& seriesId,
                                     int& episodeId, int& movieId)
 {
    eventsDb->clear();
@@ -3009,7 +3009,7 @@ int cEpgd::sendTccTestMail()
 // Send TCC Mail
 //***************************************************************************
 
-int cEpgd::sendTccMail(string& mailBody)
+int cEpgd::sendTccMail(std::string& mailBody)
 {
    static time_t lastMailAt {0};
 
@@ -3100,7 +3100,7 @@ int cEpgd::message(int level, char type, const char* title, const char* format, 
 {
    va_list ap;
    char* message;
-   string receivers;
+   std::string receivers;
    const char* mimeType = "text/plain";
 
    va_start(ap, format);
@@ -3135,7 +3135,7 @@ int cEpgd::message(int level, char type, const char* title, const char* format, 
       if (isEmpty(receiver))
          tell(2, "Info: No mail receiver for user '%s', can't send mail", owner+1);
       else
-         receivers += receiver + string(",");
+         receivers += receiver + std::string(",");
    }
 
    if (strstr(message, "DOCTYPE html PUBLIC"))

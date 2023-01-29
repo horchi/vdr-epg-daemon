@@ -19,9 +19,9 @@ cTVDBManager::cTVDBManager(bool aWithutf8)
    exsltRegisterAll();
    setlocale(LC_CTYPE, "");
 
-   string loc = setlocale(LC_CTYPE, 0);
+   std::string loc = setlocale(LC_CTYPE, 0);
    size_t index = loc.find_first_of("_");
-   string langISO {""};
+   std::string langISO {""};
 
    if (index > 0)
       langISO = loc.substr(0, index);
@@ -457,7 +457,7 @@ int cTVDBManager::GetPicture(const char* url, MemoryStruct* data)
    return success;
 }
 
-bool cTVDBManager::imageUrlChanged(std::string url)
+bool cTVDBManager::imageUrlChanged(const std::string& url)
 {
    if (url.compare(tSeriesMedia->getStrValue("MediaUrl")) != 0)
       return true;
@@ -556,7 +556,7 @@ void cTVDBManager::processSeries(sSeriesResult ser)
    UpdateEvent(ser.eventId, seriesID, episodeID);
 }
 
-int cTVDBManager::LoadSeriesFromDd(std::string name)
+int cTVDBManager::LoadSeriesFromDd(const std::string& name)
 {
    int seriesID {0};
 
@@ -583,7 +583,7 @@ int cTVDBManager::LoadSeriesFromDd(std::string name)
    return seriesID;
 }
 
-void cTVDBManager::GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, std::string episodeName)
+void cTVDBManager::GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, const std::string& episodeName)
 {
    cDbStatement* select = new cDbStatement(tSeriesEpsiode);
    select->build("select ");
@@ -824,7 +824,7 @@ void cTVDBManager::DeleteSeries(int seriesId)
    delSer.execute();
 }
 
-bool cTVDBManager::SearchRecordingDB(std::string& name, const std::string& episode, int &seriesId, int &episodeId)
+bool cTVDBManager::SearchRecordingDB(const std::string& name, const std::string& episode, int &seriesId, int &episodeId)
 {
    cDbStatement* select = new cDbStatement(tSeries);
 
@@ -871,7 +871,7 @@ bool cTVDBManager::searchRecordingOnline(const char* name, const std::string& ep
    return false;
 }
 
-int cTVDBManager::LoadEpisode(std::string name, int seriesId)
+int cTVDBManager::LoadEpisode(const std::string& name, int seriesId)
 {
    int episodeId = 0;
    cDbStatement* select = new cDbStatement(tSeriesEpsiode);

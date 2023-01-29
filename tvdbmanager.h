@@ -48,7 +48,7 @@ class cTVDBManager
       bool GetSeriesWithEpisodesFromEPG(std::vector<sSeriesResult>* result);
       void processSeries(sSeriesResult ser);
       int CleanupSeries();
-      bool SearchRecordingDB(std::string& name, const std::string& episode, int& seriesId, int& episodeId);
+      bool SearchRecordingDB(const std::string& name, const std::string& episode, int& seriesId, int& episodeId);
       bool searchRecordingOnline(const char* name, const std::string& episode, int& seriesId, int& episodeId);
       bool CheckScrapInfoDB(int scrapSeriesId, int scrapEpisodeId);
       bool CheckScrapInfoOnline(int scrapSeriesId, int scrapEpisodeId);
@@ -80,12 +80,12 @@ class cTVDBManager
       void saveSeriesEpisode(const  cTVDBSeries::Episode* episode, int seriesID = 0);
       void saveSeriesActors(cTVDBSeries* series);
       bool loadMedia(int seriesId, int seasonNumber, int episodeId, int actorId, int mediaType, uint lfn);
-      bool imageUrlChanged(std::string url);
+      bool imageUrlChanged(const std::string& url);
       int GetPicture(const char* url, MemoryStruct* data);
-      int LoadSeriesFromDd(std::string name);
-      void GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, std::string episodeName);
+      int LoadSeriesFromDd(const std::string& name);
+      void GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, const std::string& episodeName);
       void checkLoadSeasonPoster(int seriesID, int season);
-      int LoadEpisode(std::string name, int seriesId);
+      int LoadEpisode(const std::string& name, int seriesId);
       int lookupEpisodeId(int seriesID, int season, int part);
 
       void UpdateEvent(tEventId eventID, int seriesID, int episodeID);

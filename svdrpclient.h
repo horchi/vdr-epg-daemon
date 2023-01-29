@@ -42,7 +42,7 @@ public:
 class cListBase {
 protected:
   cListObject *objects, *lastObject;
-  cListBase(void);
+  cListBase();
   int count;
 public:
   virtual ~cListBase();
@@ -51,7 +51,7 @@ public:
   void Del(cListObject *Object, bool DeleteObject = true);
   virtual void Move(int From, int To);
   void Move(cListObject *From, cListObject *To);
-  virtual void Clear(void);
+  virtual void Clear();
   cListObject *Get(int Index) const;
   int Count(void) const { return count; }
   void Sort(void);

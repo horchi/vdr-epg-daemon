@@ -766,7 +766,7 @@ int cEpgHttpd::storeUsers(json_t* jInData, json_t* response)
          userDb->store();
          userDb->reset();
 
-         tell(1, "%s user '%s'", state[0] == 'D' ? "deleted" : insert ? "Inserted" : "Updated", user);
+         tell(1, "%s user '%s'", insert ? "Inserted" : "Updated", user);
       }
    }
 

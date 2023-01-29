@@ -142,7 +142,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
 
             if (!isdigit(line[2]))
             {
-               tell(0, "CONSTABEL: Warning: (%s) Ignoring unexpected season line [%s]  missing number at position 3", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Ignoring unexpected season line [%s], missing number at position 3", name.c_str(), line);
                continue;
             }
 
@@ -155,7 +155,10 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
                   tell(0, "CONSTABEL: Info: (%s) Season line [%s] not in sequence, expected season %d", name.c_str(), line, seasonNr);
 
                if (seasonNr > maxSeasons)
+               {
                   tell(0, "CONSTABEL: Warning: (%s) Ignoring unexpected season line [%s] only %d seasons expected", name.c_str(), line, maxSeasons);
+                  continue;
+               }
 
                // store part count of the season
 
@@ -173,12 +176,12 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
       // found episode line ...
 
       std::string partNameComp;
-      char partName[200] {};
-      char comment[200] {};
-      char ex1[250] {};
-      char ex2[250] {};
-      char ex3[250] {};
-      char ex[250] {};
+      char partName[200+TB] {};
+      char comment[200+TB] {};
+      char ex1[250+TB] {};
+      char ex2[250+TB] {};
+      char ex3[250+TB] {};
+      char ex[250+TB] {};
 
       int se {0};
       int ep {0};

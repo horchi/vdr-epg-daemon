@@ -214,8 +214,8 @@ int main(int argc, char** argv)
 {
    if (argc > 1 && strcmp(argv[1], "-c") == 0)
    {
-      char partName[200] {};
-      char comment[200] {};
+      char partName[200+TB] {};
+      char comment[200+TB] {};
       int se {0};
       int ep {0};
       int no {0};

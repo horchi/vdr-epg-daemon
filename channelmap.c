@@ -19,7 +19,7 @@
 int cEpgd::loadChannelmap()
 {
    ifstream cmfile;
-   string s;
+   std::string s;
    int line = 0;
    int count = 0;
    int status = success;
@@ -76,7 +76,7 @@ int cEpgd::loadChannelmap()
 
       size_t p = s.find_first_of("//");
 
-      if (p != string::npos)
+      if (p != std::string::npos)
          s.erase(p);
 
       if (s.empty())
@@ -86,7 +86,7 @@ int cEpgd::loadChannelmap()
 
       p = s.find_first_of("=");
 
-      if ((p == string::npos) || !s.substr(p+1).length())
+      if ((p == std::string::npos) || !s.substr(p+1).length())
       {
          tell(0, "Error parsing '%s' at line %d!", path, line);
          status = fail;
@@ -146,11 +146,10 @@ int cEpgd::loadChannelmap()
 // Update Map Row
 //***************************************************************************
 
-int cEpgd::updateMapRow(char* extid, const char* source, const char* chan,
-                        int merge, int vps)
+int cEpgd::updateMapRow(char* extid, const char* source, const char* chan, int merge, int vps)
 {
-   int insert = no;
-   int changed = 0;
+   int insert {no};
+   int changed {0};
 
    // updflg:
    // I - insert
@@ -171,10 +170,9 @@ int cEpgd::updateMapRow(char* extid, const char* source, const char* chan,
    {
       merge = 0;
    }
-   else if (isZero(extid) && strcmp(source, "vdr") != 0)
+   else if (isZero(extid))
    {
-      tell(1, "Ignoring config with empty extid for channel '%s', '%s'",
-           chan, source);
+      tell(1, "Ignoring config with empty external ID for channel '%s', '%s'", chan, source);
       return fail;
    }
 

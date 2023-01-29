@@ -170,7 +170,8 @@ void cMovieDBManager::ProcessMovie(sMovieResult mov) {
     UpdateEvent(mov.eventId, movieID);
 }
 
-int cMovieDBManager::LoadMovieFromDB(string title) {
+int cMovieDBManager::LoadMovieFromDB(const std::string& title)
+{
     int status = success;
     int movieID = 0;
     tMovies->clear();
@@ -194,15 +195,16 @@ int cMovieDBManager::LoadMovieFromDB(string title) {
     return movieID;
 }
 
-void cMovieDBManager::UpdateEvent(tEventId eventID, int movieID) {
+void cMovieDBManager::UpdateEvent(tEventId eventID, int movieID)
+{
    stringstream upd;
-    upd << "update " << tEvents->TableName();
-    upd << " set scrsp = " << time(0);
-    upd << ", scrmovieid = " << movieID;
-    upd << " where eventid = " << eventID;
-    cDbStatement updStmt(connection, upd.str().c_str());
-    updStmt.prepare();
-    updStmt.execute();
+   upd << "update " << tEvents->TableName();
+   upd << " set scrsp = " << time(0);
+   upd << ", scrmovieid = " << movieID;
+   upd << " where eventid = " << eventID;
+   cDbStatement updStmt(connection, upd.str().c_str());
+   updStmt.prepare();
+   updStmt.execute();
 }
 
 void cMovieDBManager::SaveMovie(cMovieDbMovie *movie) {
@@ -451,7 +453,7 @@ void cMovieDBManager::DeleteMovie(int movieId) {
     delMov.execute();
 }
 
-bool cMovieDBManager::SearchRecordingDB(string name, int &movieId)
+bool cMovieDBManager::SearchRecordingDB(const std::string& name, int &movieId)
 {
     int status = success;
     cDbStatement *select = new cDbStatement(tMovies);
@@ -481,7 +483,7 @@ bool cMovieDBManager::SearchRecordingDB(string name, int &movieId)
     return found;
 }
 
-bool cMovieDBManager::SearchRecordingOnline(string name, int &movieId)
+bool cMovieDBManager::SearchRecordingOnline(const std::string& name, int &movieId)
 {
     cMovieDbMovie *movieRec = movieDbScraper->Scrap(name);
 
@@ -500,13 +502,14 @@ bool cMovieDBManager::SearchRecordingOnline(string name, int &movieId)
     return false;
 }
 
-cMovieDbMovie *cMovieDBManager::SearchRecordingSophisticated(string name) {
+cMovieDbMovie *cMovieDBManager::SearchRecordingSophisticated(const std::string& name)
+{
     cMovieDbMovie *movieFound = NULL;
     size_t posHyphen  = name.find_first_of("-");
     size_t posBracket = name.find_first_of("(");
-    bool hasHyphen  = (posHyphen  != string::npos)?true:false;
-    bool hasBracket = (posBracket != string::npos)?true:false;
-    string nameMod;
+    bool hasHyphen  = (posHyphen  != std::string::npos)?true:false;
+    bool hasBracket = (posBracket != std::string::npos)?true:false;
+    std::string nameMod;
     //first remove all "-"
     if (hasBracket) {
         nameMod = str_replace("-", " ", name);
