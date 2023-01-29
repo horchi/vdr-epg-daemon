@@ -361,6 +361,18 @@ MariaBb HINTS:
   - *ATTENTION* if you have binary-logging (log_bin) enabled!
      disable it OR add log-bin-trust-function-creators to your configuration and restart the database
 
+Slow Database :
+---------------
+
+On problems with slow database performance try this settings (adjust to the available):
+
+innodb_buffer_pool_size = 10G
+key_buffer_size         = 10M
+max_allowed_packet      = 1G
+thread_stack            = 192K
+thread_cache_size       = 8
+query_cache_limit       = 1M
+query_cache_size        = 8M
 
 Considerations:
 ---------------

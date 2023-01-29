@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.6"
-#define VERSION_DATE "27.01.2023"
+#define _VERSION     "1.3.7"
+#define VERSION_DATE "29.01.2023"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+2023-01-29: version 1.3.7 (horchi)
+   - added: Database tuning parameters to the README
+
 2023-01-28: version 1.3.6 (horchi)
    - change: Using syslog severity (Tkx to kfb77)
 

@@ -274,7 +274,7 @@ int cTVDBManager::updateStoreArtwork(const cTVDBSeries::Artwork& artwork, uint l
 
 void cTVDBManager::saveSeriesEpisodes(cTVDBSeries* series)
 {
-   tell(1, "Storing %zu episodes of series '%d' to database and loading their artwork ..",
+   tell(2, "Storing %zu episodes of series '%d' to database and loading their artwork ..",
         series->getEpisodes()->size(), series->seriesID);
 
    for (const auto& episode : *series->getEpisodes())
@@ -471,7 +471,7 @@ bool cTVDBManager::imageUrlChanged(const std::string& url)
 
 void cTVDBManager::processSeries(sSeriesResult ser)
 {
-   tell(1, "Checking eventID: %lld, Title: %s, season:%d part:%d number:%d", ser.eventId, ser.title.c_str(), ser.season, ser.part, ser.number);
+   tell(2, "Checking eventID: %lld, Title: %s, season:%d part:%d number:%d", ser.eventId, ser.title.c_str(), ser.season, ser.part, ser.number);
 
    int seriesID {0};
 
