@@ -114,7 +114,7 @@ int cDbService::toType(const char* theTypes)
    int type = ftNo;
 
    // field can of more than one type -> bitmask
-   
+
    while (getToken(p, token, sizeTokenMax, '|') == success)
    {
       for (int i = 0; types[i].type != ftUnknown; i++)
@@ -135,7 +135,7 @@ const char* cDbService::toName(FieldType type, char* buf)
    *buf = 0;
 
    // field can of more than one type -> bitmask !!
-   
+
    for (int i = 0; types[i].type != ftUnknown; i++)
    {
       if (types[i].type & type)
@@ -147,7 +147,7 @@ const char* cDbService::toName(FieldType type, char* buf)
          continue;
       }
    }
-   
+
    return buf;
 }
 
@@ -190,13 +190,13 @@ cDbDict::~cDbDict()
 // Get Table
 //***************************************************************************
 
-cDbTableDef* cDbDict::getTable(const char* aName) 
-{ 
+cDbTableDef* cDbDict::getTable(const char* aName)
+{
    std::map<std::string, cDbTableDef*>::iterator t;
 
    if ((t = tables.find(aName)) != tables.end())
       return t->second;
-   
+
    return 0;
 }
 
@@ -246,12 +246,12 @@ int cDbDict::in(const char* file, int filter)
       char* p = strstr(line, "//");
 
       if (p) *p = 0;
-      
+
       allTrim(line);
-      
+
       if (isEmpty(line))
          continue;
-      
+
       if (atLine(line) != success)
       {
          tell(0, "Error: Found unexpected definition '%s', aborting", line);
@@ -260,7 +260,7 @@ int cDbDict::in(const char* file, int filter)
       }
    }
 
-   fclose(f);   
+   fclose(f);
    free(line);
 
    return success;
@@ -283,13 +283,13 @@ void cDbDict::forget()
    }
 
    free(path);
-   
+
    curTable = 0;
    inside = no;
    path = 0;
    fieldFilter = 0;   // 0 -> filter off use all fields
    fltFromNameFct = 0;
-}    
+}
 
 //***************************************************************************
 // Show
@@ -329,7 +329,7 @@ int cDbDict::atLine(const char* line)
       p = line + strlen("Table ");
       strcpy(tableName, p);
       allTrim(tableName);
-      
+
       if (!getTable(tableName))
       {
          curTable = new cDbTableDef(tableName);
@@ -372,14 +372,14 @@ int cDbDict::atLine(const char* line)
 
 int cDbDict::parseFilter(cDbFieldDef* f, const char* value)
 {
-   const int sizeNameMax = 50;
-   char name[sizeNameMax+TB];
+   const int sizeNameMax {50};
+   char name[sizeNameMax+TB] {};
    const char* v = value;
-   
+
    f->filter = 0;
-   
+
    while (getToken(v, name, sizeNameMax, '|') == success)
-   {     
+   {
       if (isalpha(*name) && fltFromNameFct)
          f->filter |= fltFromNameFct(name);
       else
@@ -401,12 +401,12 @@ int cDbDict::parseField(const char* line)
 
    cDbFieldDef* f = new cDbFieldDef;
    f->filter = 0xFFFF;
-   
+
    if (!curTable)
       return fail;
 
    // first parse fixed part of field definition up to the 'type'
-   
+
    for (int i = 0; i < dtCount; i++)
    {
       if (getToken(p, token, sizeTokenMax) != success)
@@ -418,7 +418,7 @@ int cDbDict::parseField(const char* line)
          tell(0, "Error: Can't parse line [%s]", line);
          return fail;
       }
-      
+
       if (i == dtCount-1 && strchr(token, ','))
          *(strchr(token, ',')) = 0;
 
@@ -444,7 +444,7 @@ int cDbDict::parseField(const char* line)
          tell(0, "Error: Skipping token '%s' missing content!", token);
          break;
       }
-         
+
       if (strcasecmp(token, "filter") == 0)
          parseFilter(f, content);
 
@@ -454,7 +454,7 @@ int cDbDict::parseField(const char* line)
       else
          tell(0, "Warning: Skipping unexpected token '%s'", token);
    }
-   
+
    if (!f->isValid())
    {
       tell(0, "Error: Can't parse line [%s], invalid field configuration", line);
@@ -464,7 +464,7 @@ int cDbDict::parseField(const char* line)
 
    if (f->filterMatch(fieldFilter))
    {
-      f->index = curTable->fieldCount(); 
+      f->index = curTable->fieldCount();
       curTable->addField(f);
    }
    else
@@ -505,7 +505,7 @@ int cDbDict::parseIndex(const char* line)
 
          break;
       }
-      
+
       if (strchr(token, ','))
       {
          done = yes;

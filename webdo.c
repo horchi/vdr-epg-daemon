@@ -495,7 +495,7 @@ int cEpgHttpd::doChannelSwitch(MHD_Connection* tcp, json_t* obj)
    int statusCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
    char* messageTxt {};
 
-   tell(0, "Switching vdr '%s' to channel '%s'", uuidPar, channelPar);
+   tell(1, "Switching vdr '%s' to channel '%s'", uuidPar, channelPar);
 
    vdrDb->clear();
    vdrDb->setValue("Uuid", uuidPar);
@@ -1877,7 +1877,7 @@ int cEpgHttpd::doSendMail(json_t* jInData, json_t* response)
 
    // send HTML mail
 
-   tell(0, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receiver, mimeType);
+   tell(1, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receiver, mimeType);
 
    asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
             subject, body, mimeType, receiver);
@@ -1916,8 +1916,7 @@ int cEpgHttpd::doLogin(json_t* jInData, json_t* response)
 
       if (currentSession && (it = sessions.find(currentSession->id)) != sessions.end())
       {
-         tell(0, "User '%s' for session '%s' logged out",
-              currentSession->user.c_str(), currentSession->id.c_str());
+         tell(1, "User '%s' for session '%s' logged out", currentSession->user.c_str(), currentSession->id.c_str());
 
          sessions.erase(it);
          currentSession = 0;
@@ -1948,7 +1947,7 @@ int cEpgHttpd::doLogin(json_t* jInData, json_t* response)
          json_object_set_new(oLogin, "rights", json_integer(userDb->getIntValue("RIGHTS")));
          json_object_set_new(oLogin, "session", json_string(session.id.c_str()));
 
-         tell(0, "Login of user '%s' for session '%s' confirmed",
+         tell(1, "Login of user '%s' for session '%s' confirmed",
               userDb->getStrValue("USER"), session.id.c_str());
       }
    }

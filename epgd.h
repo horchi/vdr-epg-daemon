@@ -142,7 +142,7 @@ class cEpgd : public cFrame, public cSystemNotification
       int wakeupVdr(const char* uuid);
       int triggerVdrs(const char* trg, const char* plug = 0, const char* options = 0);
       int __attribute__ ((format(printf, 5, 6))) message(int level, char type, const char* title, const char* format, ...) override;
-      int sendTccMail(std::string& mailBody);
+      int sendTccMail(const std::string& mailBody);
       int sendTccTestMail();
 
       xmlDocPtr transformXml(const char* buffer, int size, xsltStylesheetPtr stylesheet, const char* fileRef);

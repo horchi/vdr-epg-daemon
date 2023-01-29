@@ -89,7 +89,7 @@ class cEpisodeFile : public cListObject
 
          if (stat(aPath, &fs) != 0 || !S_ISDIR(fs.st_mode))
          {
-            tell(0, "Initially creating directory '%s'", aPath);
+            tell(1, "Initially creating directory '%s'", aPath);
 
             if (mkdir(aPath, ACCESSPERMS) == -1)
                tell(0, "Can't create directory, error was %s", strerror(errno));
@@ -178,7 +178,7 @@ class cEpisodeFiles : public cList<cEpisodeFile>
                if (cEpisodeFile* l = findByLink(f->getName()))
                   f->storeToTable(episodeDb, eventsDb, l->getLines());
                else
-                  tell(0, "Warning: Ignoring invalid link '%s' destination '%s' not found", f->getLink(), f->getName());
+                  tell(1, "Warning: Ignoring invalid link '%s' destination '%s' not found", f->getLink(), f->getName());
             }
             else
             {

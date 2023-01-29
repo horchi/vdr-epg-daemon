@@ -20,8 +20,8 @@
 #include "wol.h"
 #include "curl.h"
 
-cDbConnection* connection = 0;
-const char* logPrefix = "";
+cDbConnection* connection {};
+const char* logPrefix {""};
 
 //***************************************************************************
 // Init Connection
@@ -57,7 +57,7 @@ void exitConnection()
 //
 //***************************************************************************
 
-void chkCompress()
+void chkCompressName()
 {
    std::string s = "_+*!#?=&%$< Hallo TEIL Hallo Folge ";
 
@@ -574,20 +574,6 @@ void statementTimer()
    delete timerDb;
 }
 
-void statementVdrs()
-{
-   cDbTable* vdrDb = new cDbTable(connection, "vdrs");
-   if (vdrDb->open() != success) return ;
-
-   vdrDb->clear();
-   vdrDb->setValue("UUID", "10");
-   vdrDb->find();
-   vdrDb->setValue("VIDEOTOTAL", 1782579);
-   vdrDb->store();
-
-   delete vdrDb;
-}
-
 cDbFieldDef matchDensityTitleDef("MATCHDENSITYTITLE", "matchdensitytitle", cDBS::ffInt, 0, cDBS::ftData);
 cDbFieldDef matchDensityShorttextDef("MATCHDENSITYSHORTTEXT", "matchdensityshorttext", cDBS::ffInt, 0, cDBS::ftData);
 
@@ -660,15 +646,31 @@ int main(int argc, char** argv)
    cEpgConfig::logstdout = yes;
    cEpgConfig::loglevel = 2;
 
-   md5Buf md5path;
-   createMd5("rec->FileName() dummy", md5path);
-   printf(":: '%s'\n", md5path);
+   bool md5Demo {false};
+   bool tvdbDemo {false};
+   bool localeDemo {false};
+   bool tableExistDemo {true};
 
-   createMd5OfFile("./", "common.c", md5path);
-   printf("common.c:: '%s'\n", md5path);
-
-   if (argc > 1)
+   if (md5Demo)
    {
+      md5Buf md5path;
+      createMd5("rec->FileName() dummy", md5path);
+      printf(":: '%s'\n", md5path);
+
+      createMd5OfFile("./", "common.c", md5path);
+      printf("common.c:: '%s'\n", md5path);
+
+      return 0;
+   }
+
+   if (tvdbDemo)
+   {
+      if (argc < 2)
+      {
+         printf("Missing argument 'series name'\n");
+         return 1;
+      }
+
       int size = 0;
       char* url = 0;
       MemoryStruct data;
@@ -706,53 +708,62 @@ int main(int argc, char** argv)
       free(url);
 
       return 0;
-  }
-
-   setlocale(LC_CTYPE, "");
-   char* lang = setlocale(LC_CTYPE, 0);
-
-   if (lang)
-   {
-      tell(0, "Set locale to '%s'", lang);
-
-      if ((strcasestr(lang, "UTF-8") != 0) || (strcasestr(lang, "UTF8") != 0))
-         tell(0, "detected UTF-8");
-      else
-         tell(0, "no UTF-8");
    }
-   else
+
+   if (localeDemo)
    {
-      tell(0, "Reseting locale for LC_CTYPE failed.");
+      setlocale(LC_CTYPE, "");
+      char* lang = setlocale(LC_CTYPE, 0);
+
+      if (lang)
+      {
+         tell(0, "Set locale to '%s'", lang);
+
+         if ((strcasestr(lang, "UTF-8") != 0) || (strcasestr(lang, "UTF8") != 0))
+            tell(0, "detected UTF-8");
+         else
+            tell(0, "no UTF-8");
+      }
+      else
+      {
+         tell(0, "Reseting locale for LC_CTYPE failed.");
+      }
+
+      return 0;
    }
 
    // read dictionary
 
-//   if (dbDict.in("demo.dat") != success)
    if (dbDict.in("../configs/epg.dat") != success)
    {
       tell(0, "Invalid dictionary configuration, aborting!");
       return 1;
    }
 
-//   dbDict.show();
 
    initConnection();
 
-   chkStatement5();
+   if (tableExistDemo)
+   {
+      cDbTable* table = new cDbTable(connection, "events");
 
-   // structure();
+      tell(0, "Table '%s' %sexists", table->TableName(), table->exist() ? "" : "NOT ");
+      tell(0, "Table '%s' %sexists", "foobar", table->exist("foobar") ? "" : "NOT ");
+   }
 
-//    chkCompress();
+   // chkStatement5();
 
-//    tell(0, "duration was: '%s'", ms2Dur(2340).c_str());
+   // chkCompressName();
 
-//   statementVdrs();
+   // tell(0, "duration was: '%s'", ms2Dur(2340).c_str());
 
    // statementTimer();
    // statementrecording();
    // chkStatement2();
    // chkStatement3();
-   // chkStatement4();   exitConnection();
+   // chkStatement4();
+
+   exitConnection();
 
    return 0;
 }

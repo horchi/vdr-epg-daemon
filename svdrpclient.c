@@ -34,7 +34,7 @@ ssize_t safe_read(int filedes, void *buffer, size_t size)
 
      if (p < 0 && errno == EINTR)
      {
-        tell(0, "EINTR while reading from file handle %d - retrying", filedes);
+        tell(2, "EINTR while reading from file handle %d - retrying", filedes);
         continue;
      }
      return p;
@@ -55,7 +55,7 @@ ssize_t safe_write(int filedes, const void *buffer, size_t size)
      {
         if (errno == EINTR)
         {
-           tell(0, "EINTR while writing to file handle %d - retrying", filedes);
+           tell(2, "EINTR while writing to file handle %d - retrying", filedes);
            continue;
         }
 
@@ -372,7 +372,7 @@ bool cFile::FileReadyForWriting(int FileDes, int TimeoutMs)
 // SVDRP Client
 //***************************************************************************
 
-const char* eoc = "\n";   // End Of Command
+const char* eoc {"\n"};   // End Of Command
 
 cSvdrpClient::cSvdrpClient(const char* aIp, int aPort)
 {

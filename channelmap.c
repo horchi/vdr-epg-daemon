@@ -40,13 +40,13 @@ int cEpgd::loadChannelmap()
 
    if (cmfile.fail())
    {
-      tell(0, "Error reading '%s' %s!", path, strerror(errno));
+      tell(1, "Error reading '%s' %s!", path, strerror(errno));
       free(path);
 
       return fail;
    }
 
-   tell(0, "Loading '%s'", path);
+   tell(1, "Loading '%s'", path);
 
    connection->startTransaction();
 
@@ -137,7 +137,7 @@ int cEpgd::loadChannelmap()
    cmfile.close();
    free(path);
 
-   tell(0, "%d channel mappings read.", count);
+   tell(1, "%d channel mappings read.", count);
 
    return status;
 }
@@ -267,7 +267,7 @@ int cEpgd::applyChannelmapChanges()
       {
          std::string newChannelId = mapDb->getStrValue("CHANNELID");
 
-         tell(0, "channelid '%s' was changed to '%s'", oldChannelId.c_str(), newChannelId.c_str());
+         tell(1, "channelid '%s' was changed to '%s'", oldChannelId.c_str(), newChannelId.c_str());
 
          // change the 'I'nserted row and remove the 'D'eleted row -> no further action is necessary later on
 
@@ -300,7 +300,7 @@ int cEpgd::applyChannelmapChanges()
                         table->getField("CHANNELID")->getDbName(), newChannelId.c_str(),
                         table->getField("CHANNELID")->getDbName(), oldChannelId.c_str());
 
-               tell(0, "Executing '%s'", stmt);
+               tell(1, "Executing '%s'", stmt);
                connection->query("%s", stmt);
 
                free(stmt);

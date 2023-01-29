@@ -90,7 +90,16 @@ void tell(int eloquence, const char* format, ...)
       printf("%s %s\n", buf, t);
    }
    else
-      syslog(LOG_ERR, "%s", t);
+   {
+      switch (eloquence)
+      {
+         case 0:  syslog(LOG_ERR, "%s", t);     break;
+         case 1:  syslog(LOG_WARNING, "%s", t); break;
+         case 2:  syslog(LOG_NOTICE, "%s", t);  break;
+         case 3:  syslog(LOG_INFO, "%s", t);    break;
+         default: syslog(LOG_DEBUG, "%s", t);   break;
+      }
+   }
 
    logMutex.Unlock();
 
@@ -1074,7 +1083,7 @@ int chkDir(const char* path)
 
    if (stat(path, &fs) != 0 || !S_ISDIR(fs.st_mode))
    {
-      tell(0, "Creating directory '%s'", path);
+      tell(1, "Creating directory '%s'", path);
 
       if (mkdir(path, ACCESSPERMS) == -1)
       {
@@ -1102,7 +1111,7 @@ xsltStylesheetPtr loadXSLT(const char* name, const char* path, int utf8)
    if ((stylesheet = xsltParseStylesheetFile((const xmlChar*)xsltfile)) == 0)
       tell(0, "Error: Can't load xsltfile %s", xsltfile);
    else
-      tell(0, "Info: Stylesheet '%s' loaded", xsltfile);
+      tell(1, "Info: Stylesheet '%s' loaded", xsltfile);
 
    free(xsltfile);
    return stylesheet;
@@ -1678,7 +1687,7 @@ uint64_t cMyTimeMs::Now(void)
               tell(0, "Error: cMyTimeMs: clock_gettime(CLOCK_MONOTONIC) failed");
            }
         else
-           tell(0, "Info: cMyTimeMs: not using monotonic clock - resolution is too bad (%ld s %ld ns)", tp.tv_sec, tp.tv_nsec);
+           tell(1, "Info: cMyTimeMs: not using monotonic clock - resolution is too bad (%ld s %ld ns)", tp.tv_sec, tp.tv_nsec);
         }
      else
         tell(0, "Error: cMyTimeMs: clock_getres(CLOCK_MONOTONIC) failed");

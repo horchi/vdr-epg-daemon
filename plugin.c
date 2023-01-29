@@ -33,7 +33,7 @@ int PluginLoader::load()
 {
    const char* error;
 
-   tell(0, "Loading plugin: %s", fileName);
+   tell(1, "Loading plugin: %s", fileName);
 
    if (handle)
    {

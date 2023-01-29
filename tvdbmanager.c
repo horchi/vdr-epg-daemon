@@ -29,7 +29,7 @@ cTVDBManager::cTVDBManager(bool aWithutf8)
    if (langISO.size() == 2)
       language = langISO.c_str();
 
-   tell(0, "Set scraping language to '%s'", language.c_str());
+   tell(1, "Set scraping language to '%s'", language.c_str());
 }
 
 cTVDBManager::~cTVDBManager()
@@ -94,7 +94,7 @@ int cTVDBManager::updateSeries(time_t since)
 
    // scrap updates
 
-   tell(0, "Scraping series and episodes updates since '%s'", l2pTime(since).c_str());
+   tell(1, "Scraping series and episodes updates since '%s'", l2pTime(since).c_str());
    tvdbScraper->getUpdates(since, updatedSeriesIds);
 
    // query all used series ids from database
@@ -108,7 +108,7 @@ int cTVDBManager::updateSeries(time_t since)
                          storedSeriesIds.begin(), storedSeriesIds.end(),
                          std::inserter(scrapSeriesIds, scrapSeriesIds.begin()));
 
-   tell(0, "Found (%zu) updated series by tvdb, %zu series has to updated in database",
+   tell(1, "Found (%zu) updated series by tvdb, %zu series has to updated in database",
         updatedSeriesIds.size(), scrapSeriesIds.size());
 
    int count {0};
@@ -116,7 +116,7 @@ int cTVDBManager::updateSeries(time_t since)
    for (const auto& scrapSeriesId : scrapSeriesIds)
    {
       if (count++ % 10 == 0)
-         tell(0, "TvDb: Scraped %d series, continuing rescraping", count);
+         tell(1, "TvDb: Scraped %d series, continuing rescraping", count);
 
       cTVDBSeries* series = scrapSeries(scrapSeriesId);
 
@@ -274,7 +274,7 @@ int cTVDBManager::updateStoreArtwork(const cTVDBSeries::Artwork& artwork, uint l
 
 void cTVDBManager::saveSeriesEpisodes(cTVDBSeries* series)
 {
-   tell(0, "Storing %zu episodes of series '%d' to database and loading their artwork ..",
+   tell(1, "Storing %zu episodes of series '%d' to database and loading their artwork ..",
         series->getEpisodes()->size(), series->seriesID);
 
    for (const auto& episode : *series->getEpisodes())
@@ -471,7 +471,7 @@ bool cTVDBManager::imageUrlChanged(const std::string& url)
 
 void cTVDBManager::processSeries(sSeriesResult ser)
 {
-   tell(0, "Checking eventID: %lld, Title: %s, season:%d part:%d number:%d", ser.eventId, ser.title.c_str(), ser.season, ser.part, ser.number);
+   tell(1, "Checking eventID: %lld, Title: %s, season:%d part:%d number:%d", ser.eventId, ser.title.c_str(), ser.season, ser.part, ser.number);
 
    int seriesID {0};
 

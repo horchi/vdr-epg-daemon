@@ -102,7 +102,7 @@ class cConfiguration
          free(line);
          fclose(f);
 
-         tell(0, "Read %d option from %s", count , fileName);
+         tell(1, "Read %d option from %s", count , fileName);
 
          free(fileName);
 

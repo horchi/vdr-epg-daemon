@@ -77,7 +77,7 @@ cEpgd::cEpgd()
 
    if (lang)
    {
-      tell(0, "Set locale to '%s'", lang);
+      tell(1, "Set locale to '%s'", lang);
 
       if ((strcasestr(lang, "UTF-8") != 0) || (strcasestr(lang, "UTF8") != 0))
       {
@@ -144,7 +144,7 @@ int cEpgd::init()
       return 1;
    }
 
-   tell(0, "Dictionary '%s' loaded", dictPath);
+   tell(1, "Dictionary '%s' loaded", dictPath);
    free(dictPath);
 
    if (search->init(confDir) != success)
@@ -159,7 +159,7 @@ int cEpgd::init()
    if (readConfig() != success)
       return fail;
 
-   tell(0, "Using syslog facility '%s' (%d), log level set to (%d)",
+   tell(1, "Using syslog facility '%s' (%d), log level set to (%d)",
         Syslog::toName(EpgdConfig.logFacility), EpgdConfig.logFacility, EpgdConfig.loglevel);
 
    // init database ...
@@ -338,7 +338,7 @@ int cEpgd::checkDbDdl()
    // initially create/alter tables and indices
    // ------------------------------------------
 
-   tell(0, "Checking database connection ...");
+   tell(1, "Checking database connection ...");
 
    if (connection->attachConnection() != success)
    {
@@ -348,7 +348,7 @@ int cEpgd::checkDbDdl()
 
    std::map<std::string, cDbTableDef*>::iterator t;
 
-   tell(0, "Checking table structure and indices ...");
+   tell(1, "Checking table structure and indices ...");
 
    for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); ++t)
    {
@@ -378,7 +378,7 @@ int cEpgd::checkDbDdl()
    if (status != success)
       return abrt;
 
-   tell(0, "Checking table structure and indices succeeded");
+   tell(1, "Checking table structure and indices succeeded");
 
    return status;
 }
@@ -402,10 +402,10 @@ int cEpgd::initDb()
    if (initial)
    {
       vdrDb = new cDbTable(connection, "vdrs");
-      status = vdrDb->open();
 
-      if (status == success && dbConnected())
+      if (vdrDb->exist())
       {
+         vdrDb->open();
          vdrDb->clear();
          vdrDb->setValue("UUID", "epgd");
          vdrDb->find();
@@ -982,7 +982,7 @@ int cEpgd::initDb()
 
       connection->commit();
 
-      tell(0, "Info: Updated %d events in %ld seconds", mCount, time(0) - start);
+      tell(1, "Info: Updated %d events in %ld seconds", mCount, time(0) - start);
       upd.freeResult();
       sel.freeResult();
       exitDb();
@@ -1857,7 +1857,7 @@ int cEpgd::update()
 
    cSystemNotification::notify(evStatus, "STATUS=%s %s", "Busy, started", fullupdate ? "Full-Update" : fullreload ? "Reload" : "Update");
 
-   tell(0, "EPG %s started", fullupdate ? "Full-Update" : fullreload ? "Reload" : "Update");
+   tell(1, "EPG %s started", fullupdate ? "Full-Update" : fullreload ? "Reload" : "Update");
 
    // loop from today over configured range ..
 
@@ -1872,7 +1872,7 @@ int cEpgd::update()
    fullupdate = no;
    double mb = (double)stat.bytes / 1024.0 / 1024.0;
 
-   tell(0, "EPG Update finished, loaded %d files (%.3f %cB), %d non-updates "
+   tell(1, "EPG Update finished, loaded %d files (%.3f %cB), %d non-updates "
            "skipped, %d rejected due to format error.",
            stat.files, mb > 2 ? mb : (double)stat.bytes/1024.0, mb > 2 ? 'M' : 'K',
            stat.nonUpdates, stat.rejected);
@@ -2088,7 +2088,7 @@ int cEpgd::getPictures()
 
    // fetch all images
 
-   tell(0, "Start download of new images");
+   tell(1, "Start download of new images");
 
    char* where;
    asprintf(&where, "lfn < %d", EpgdConfig.maximagesperevent);
@@ -2129,7 +2129,7 @@ int cEpgd::getPictures()
          connection->commit();
 
          double mb = (double)bytes / 1024.0 / 1024.0;
-         tell(0, "Still updating images, now %d of %d checked and %d loaded (%.3f %cB)",
+         tell(1, "Still updating images, now %d of %d checked and %d loaded (%.3f %cB)",
               total, rows, count, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
 
          connection->startTransaction();
@@ -2433,7 +2433,7 @@ int cEpgd::initScrapers()
       return status;
    }
 
-   tell(0, "TVDB scraper connected");
+   tell(1, "TVDB scraper connected");
 
    movieDbManager = new cMovieDBManager();
 
@@ -2449,7 +2449,7 @@ int cEpgd::initScrapers()
       return status;
    }
 
-   tell(0, "MOVIEDB scraper connected");
+   tell(1, "MOVIEDB scraper connected");
 
    return success;
 }
@@ -2478,7 +2478,7 @@ int cEpgd::scrapNewEvents()
 
    time_t start = time(0);
 
-   tell(0, "---------------------");
+   tell(1, "---------------------");
 
    tvdbManager->ResetBytesDownloaded();
 
@@ -2494,7 +2494,7 @@ int cEpgd::scrapNewEvents()
          int bytes = tvdbManager->GetBytesDownloaded();
          double mb = (double)bytes / 1024.0 / 1024.0;
 
-         tell(0, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
+         tell(1, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
               time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
       }
    }
@@ -2514,7 +2514,7 @@ int cEpgd::scrapNewEvents()
 
    int seriesCur {0};
 
-   tell(0, "Series for %zu new events to scrap", seriesToScrap.size());
+   tell(1, "Series for %zu new events to scrap", seriesToScrap.size());
 
    for (std::vector<cTVDBManager::sSeriesResult>::iterator it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
    {
@@ -2522,7 +2522,7 @@ int cEpgd::scrapNewEvents()
       cSystemNotification::check();
 
       if (seriesCur % 10 == 0)
-         tell(0, "Series episode %d / %zu scraped, continuing ...", seriesCur, seriesToScrap.size());
+         tell(1, "Series episode %d / %zu scraped, continuing ...", seriesCur, seriesToScrap.size());
 
       tvdbManager->processSeries(*it);
 
@@ -2536,11 +2536,11 @@ int cEpgd::scrapNewEvents()
    int bytes = tvdbManager->GetBytesDownloaded();
    double mb = (double)bytes / 1024.0 / 1024.0;
 
-   tell(0, "%d of %zu series episodes scraped in %ld s, downloaded %.3f %cB",
+   tell(1, "%d of %zu series episodes scraped in %ld s, downloaded %.3f %cB",
         seriesCur, seriesToScrap.size(), time(0) - start,
         mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
 
-   tell(0, "---------------------");
+   tell(1, "---------------------");
 
    // ------------------------------
    // scrap movies
@@ -2551,7 +2551,7 @@ int cEpgd::scrapNewEvents()
    start = time(0);
    vector<sMovieResult> moviesToScrap;
 
-   tell(0, "Scraping new movies");
+   tell(1, "Scraping new movies");
 
    movieDbManager->ResetBytesDownloaded();
 
@@ -2561,7 +2561,7 @@ int cEpgd::scrapNewEvents()
    size_t moviesTotal = moviesToScrap.size();
    size_t movieCur {0};
 
-   tell(0, "Movies for %zu new events to scrap", moviesTotal);
+   tell(1, "Movies for %zu new events to scrap", moviesTotal);
 
    time_t sectionStartAt = time(0);  // split download in parts of 40
 
@@ -2570,7 +2570,7 @@ int cEpgd::scrapNewEvents()
       movieCur++;
 
       if (movieCur % 10 == 0)
-         tell(0, "movie %zu / %zu scraped, continuing ...", movieCur, moviesTotal);
+         tell(1, "movie %zu / %zu scraped, continuing ...", movieCur, moviesTotal);
 
       if (movieCur % 40 == 0)
       {
@@ -2579,7 +2579,7 @@ int cEpgd::scrapNewEvents()
          if (duration < 10)
          {
             duration = 10 - duration;
-            tell(0, "Waiting %d seconds..", duration);
+            tell(1, "Waiting %d seconds..", duration);
             sleep(duration);
          }
 
@@ -2598,7 +2598,7 @@ int cEpgd::scrapNewEvents()
    bytes = movieDbManager->GetBytesDownloaded();
    mb = (double)bytes / 1024.0 / 1024.0;
 
-   tell(0, "%zu of %zu movies scraped in %ld s, downloaded %.3f %cB",
+   tell(1, "%zu of %zu movies scraped in %ld s, downloaded %.3f %cB",
         movieCur, moviesTotal, time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
 
    // ------------------------------
@@ -2628,15 +2628,15 @@ int cEpgd::cleanupSeriesAndMovies()
    if (tvdbManager)
    {
       cSystemNotification::check();
-      tell(0, "cleaning up series...");
-      tell(0, "%d outdated series deleted", tvdbManager->CleanupSeries());
+      tell(1, "cleaning up series...");
+      tell(1, "%d outdated series deleted", tvdbManager->CleanupSeries());
    }
 
    if (movieDbManager)
    {
       cSystemNotification::check();
-      tell(0, "cleaning up movies...");
-      tell(0, "%d outdated movies deleted", movieDbManager->CleanupMovies());
+      tell(1, "cleaning up movies...");
+      tell(1, "%d outdated movies deleted", movieDbManager->CleanupMovies());
    }
 
    return success;
@@ -2656,7 +2656,7 @@ void cEpgd::scrapNewRecordings(int count)
    recordingListDb->clear();
    recordingListDb->setValue("SCRNEW", 1);
 
-   tell(0, "SCRAP: Scraping new recordings, %d pending", count);
+   tell(1, "SCRAP: Scraping new recordings, %d pending", count);
 
    connection->startTransaction();
 
@@ -2806,7 +2806,7 @@ void cEpgd::scrapNewRecordings(int count)
    connection->commit();
 
    tell(1, "-------------------------------------------------------");
-   tell(0, "SCRAP: Scraping %d new recordings done", total);
+   tell(1, "SCRAP: Scraping %d new recordings done", total);
 }
 
 //***************************************************************************
@@ -3009,7 +3009,7 @@ int cEpgd::sendTccTestMail()
 // Send TCC Mail
 //***************************************************************************
 
-int cEpgd::sendTccMail(std::string& mailBody)
+int cEpgd::sendTccMail(const std::string& mailBody)
 {
    static time_t lastMailAt {0};
 
@@ -3098,11 +3098,11 @@ int cEpgd::sendTccMail(std::string& mailBody)
 
 int cEpgd::message(int level, char type, const char* title, const char* format, ...)
 {
-   va_list ap;
-   char* message;
+   char* message {};
    std::string receivers;
-   const char* mimeType = "text/plain";
+   const char* mimeType {"text/plain"};
 
+   va_list ap;
    va_start(ap, format);
    vasprintf(&message, format, ap);
    va_end(ap);
@@ -3121,8 +3121,8 @@ int cEpgd::message(int level, char type, const char* title, const char* format, 
 
    for (int found = selectWebUsers->find(); found; found = selectWebUsers->fetch())
    {
-      char receiver[255+TB] = "";
-      char typesToMail[10+TB] = "";
+      char receiver[255+TB] {};
+      char typesToMail[10+TB] {};
       const char* owner = parameterDb->getStrValue("OWNER");
 
       getParameter(owner, "messageMailTypes", typesToMail);

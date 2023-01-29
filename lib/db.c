@@ -597,9 +597,7 @@ void cDbStatement::showStat()
 {
    if (callsPeriod)
    {
-      tell(0, "calls %4ld in %6.2fms; total %4ld [%s]",
-           callsPeriod, duration/1000, callsTotal, stmtTxt.c_str());
-
+      tell(0, "calls %4ld in %6.2fms; total %4ld [%s]", callsPeriod, duration/1000, callsTotal, stmtTxt.c_str());
       callsPeriod = 0;
       duration = 0;
    }
@@ -726,7 +724,7 @@ int cDbTable::init(int allowAlter)
 {
    std::string str;
    std::map<std::string, cDbFieldDef*>::iterator f;
-   int n = 0;
+   int n {0};
 
    if (!isConnected())
       return fail;
@@ -857,8 +855,13 @@ int cDbTable::exist(const char* name)
    if (isEmpty(name))
       name = TableName();
 
+   attach();
+
    if (!connection || !connection->getMySql())
-      return fail;
+   {
+      tell(0, "Error: Can't check table, db connection failed");
+      return no;
+   }
 
    MYSQL_RES* result = mysql_list_tables(connection->getMySql(), name);
    MYSQL_ROW tabRow = mysql_fetch_row(result);
@@ -1045,8 +1048,7 @@ int cDbTable::alterAddField(cDbFieldDef* def)
    std::string statement;
    char colType[100];
 
-   tell(0, "Info: Missing field '%s.%s', try to alter table",
-        TableName(), def->getName());
+   tell(0, "Info: Missing field '%s.%s', try to alter table", TableName(), def->getName());
 
    // alter table channelmap add column ord int(11) [after source]
 

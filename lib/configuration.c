@@ -172,13 +172,12 @@ int cSystemNotification::getWatchdogState(int minInterval)
 
       interval = sec / 2;
 
-      tell(0, "Info: Systemd watchdog request interval"
-           " of at least(%ds), using (%ds) now!", sec, interval);
+      tell(1, "Info: Systemd watchdog request interval of at least(%ds), using (%ds) now!", sec, interval);
 
       return yes;
    }
 
-   tell(0, "Info: Systemd watchdog not configured, epgd won't be sending keep-alive messages!");
+   tell(1, "Info: Systemd watchdog not configured, epgd won't be sending keep-alive messages!");
 
 #  else
    interval = defaultInterval;
@@ -186,7 +185,7 @@ int cSystemNotification::getWatchdogState(int minInterval)
 #  endif
 
 #else
-   tell(0, "Info: Systemd support not enabled, epgd won't be sending notifications!");
+   tell(1, "Info: Systemd support not enabled, epgd won't be sending notifications!");
 #endif
 
    return no;
@@ -218,7 +217,7 @@ int cFrame::sendMail(const char* mimeType, const char* receivers,
    mailBody = strReplace("\"", "'", body);
    // mailBody = strReplace("!", "", mailBody);
 
-   tell(0, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receivers, mimeType);
+   tell(1, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receivers, mimeType);
 
    asprintf(&command, "%s \"%s\" \"%s\" \"%s\" %s", mailScript,
             subject, mailBody.c_str(), mimeType, receivers);

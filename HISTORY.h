@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.5"
+#define _VERSION     "1.3.6"
 #define VERSION_DATE "27.01.2023"
 #define DB_API       8
 
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+2023-01-28: version 1.3.6 (horchi)
+   - change: Using syslog severity (Tkx to kfb77)
+
 2023-01-28: version 1.3.5 (horchi)
    - bugfix: Fixed initial start without tables (again)
 

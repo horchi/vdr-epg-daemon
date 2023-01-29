@@ -724,7 +724,7 @@ class cDbConnection
          {
             connectDropped = yes;
 
-            tell(0, "Calling mysql_init(%ld)", syscall(__NR_gettid));
+            tell(1, "Calling mysql_init(%ld)", syscall(__NR_gettid));
 
             if (!(mysql = mysql_init(0)))
                return errorSql(this, "attachConnection(init)");
@@ -750,7 +750,7 @@ class cDbConnection
 
                if (first)
                {
-                  tell(0, "SQL client character now '%s'", mysql_character_set_name(mysql));
+                  tell(1, "SQL client character now '%s'", mysql_character_set_name(mysql));
                   first = no;
                }
             }
@@ -773,7 +773,7 @@ class cDbConnection
       {
          if (mysql)
          {
-            tell(0, "Closing mysql connection and calling mysql_thread_end(%ld)", syscall(__NR_gettid));
+            tell(1, "Closing mysql connection and calling mysql_thread_end(%ld)", syscall(__NR_gettid));
 
             mysql_close(mysql);
             mysql_thread_end();
@@ -1229,15 +1229,11 @@ class cDbView : public cDbService
       int create(const char* path, const char* sqlFile)
       {
          int status;
-         char* file = 0;
+         char* file {};
 
          asprintf(&file, "%s/%s", path, sqlFile);
-
-         tell(0, "Creating view '%s' using definition in '%s'",
-              name, file);
-
+         tell(0, "Creating view '%s' using definition in '%s'", name, file);
          status = connection->executeSqlFile(file);
-
          free(file);
 
          return status;

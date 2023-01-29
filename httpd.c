@@ -125,11 +125,11 @@ cEpgHttpd::cEpgHttpd()
 
    if (lang)
    {
-      tell(0, "Set locale to '%s'", lang);
+      tell(1, "Set locale to '%s'", lang);
 
       if ((strcasestr(lang, "UTF-8") != 0) || (strcasestr(lang, "UTF8") != 0))
       {
-         tell(0, "detected UTF-8");
+         tell(1, "detected UTF-8");
          withutf8 = yes;
       }
    }
@@ -166,7 +166,7 @@ int cEpgHttpd::init()
    if (readConfig() != success)
       return fail;
 
-   tell(0, "Log level is set to (%d)", EpgdConfig.loglevel);
+   tell(1, "Log level is set to (%d)", EpgdConfig.loglevel);
 
    if (search->init(confDir) != success)
       return fail;
@@ -184,7 +184,7 @@ int cEpgHttpd::init()
       return 1;
    }
 
-   tell(0, "Dictionary '%s' loaded", dictPath);
+   tell(1, "Dictionary '%s' loaded", dictPath);
    free(dictPath);
 
    // init database ...
@@ -221,11 +221,11 @@ int cEpgHttpd::init()
 
       if (status != success)
       {
-         tell(0, "The key/certificate files could not be loaded");
+         tell(0, "Error: The key/certificate files could not be loaded");
          return fail;
       }
 
-      tell(0, "Loading key and certificate files succeeded");
+      tell(1, "Loading key and certificate files succeeded");
    }
 
    // bind to net device - if configured
@@ -247,11 +247,11 @@ int cEpgHttpd::init()
       memcpy(&localSockAddr.sin_addr, &localAddr, sizeof(struct in_addr));
       localSockAddr.sin_port = htons(EpgdConfig.httpPort);
 
-      tell(0, "Binding listener to '%s' at '%s'", bindIp, EpgdConfig.httpDevice);
+      tell(1, "Binding listener to '%s' at '%s'", bindIp, EpgdConfig.httpDevice);
 
       // establish listener
 
-      tell(0, "Starting http server ...");
+      tell(1, "Starting http server ...");
 
       if (!EpgdConfig.httpUseTls)
       {
@@ -278,7 +278,7 @@ int cEpgHttpd::init()
    {
       // establish listener
 
-      tell(0, "Starting http server ...");
+      tell(1, "Starting http server ...");
 
       if (!EpgdConfig.httpUseTls)
       {
@@ -349,7 +349,7 @@ int cEpgHttpd::initDb()
 
    // db connection
 
-   tell(0, "Connecting to database at '%s:%d'", cDbConnection::getHost(), cDbConnection::getPort());
+   tell(1, "Connecting to database at '%s:%d'", cDbConnection::getHost(), cDbConnection::getPort());
 
    if (!connection)
       connection = new cDbConnection();
@@ -1288,16 +1288,12 @@ int cEpgHttpd::setSession(const char* sessionId)
 
       if (time(0) > s->last + tmeSecondsPerHour)
       {
-         tell(0, "Session '%s' for user '%s' expired, removing it",
-              s->id.c_str(), s->user.c_str());
-
+         tell(1, "Session '%s' for user '%s' expired, removing it", s->id.c_str(), s->user.c_str());
          sessions.erase(it);
-
          return fail;
       }
 
-      tell(2, "Session now '%s' for user '%s'",
-           s->id.c_str(), s->user.c_str());
+      tell(2, "Session now '%s' for user '%s'", s->id.c_str(), s->user.c_str());
 
       currentSession = s;
       currentSession->last = time(0);

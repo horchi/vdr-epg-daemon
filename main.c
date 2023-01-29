@@ -39,7 +39,7 @@ int validateAlterDatabase()
 
    cDbConnection* connection = new cDbConnection();
 
-   tell(0, "Checking database connection ...");
+   tell(1, "Checking database connection ...");
 
    if (connection->attachConnection() != success)
    {
@@ -49,7 +49,7 @@ int validateAlterDatabase()
 
    std::map<std::string, cDbTableDef*>::iterator t;
 
-   tell(0, "Checking table structure and indices ...");
+   tell(1, "Checking table structure and indices ...");
 
    for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); ++t)
    {

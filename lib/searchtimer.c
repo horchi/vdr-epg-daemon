@@ -828,7 +828,7 @@ int cSearchTimer::modifyTimer(cDbTable* timerDb, TimerAction action)
    timerDb->getValue("STATE")->setNull();
    timerDb->update();
 
-   tell(0, "Created '%s' request for timer (%ld) at vdr '%s'",
+   tell(1, "Created '%s' request for timer (%ld) at vdr '%s'",
         toName(action), timerDb->getIntValue("ID"), timerDb->getStrValue("VDRUUID"));
 
    // triggerVdrs("TIMERJOB", timerDb->getStrValue("VDRUUID"));
@@ -1360,7 +1360,7 @@ int cSearchTimer::createTimer(int id)
 
       if (ptyRecName->execute(useeventsDb, namingmode, tmplExpression) == success)
       {
-         tell(0, "Info: The recording name calculated by 'recording.py' is '%s'",
+         tell(1, "Info: The recording name calculated by 'recording.py' is '%s'",
               ptyRecName->getResult());
 
          if (!isEmpty(ptyRecName->getResult()))

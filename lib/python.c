@@ -216,7 +216,7 @@ int Python::init(const char* modulePath)
 {
    PyObject* pName;
 
-   tell(0, "Initialize python script '%s/%s.py'", modulePath, file);
+   tell(1, "Initialize python script '%s/%s.py'", modulePath, file);
 
    // register event methods
 
