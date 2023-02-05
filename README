@@ -156,15 +156,11 @@ read "MySQL Hints" near the end of this file.
  use mysql
  SELECT * FROM user;
 
-
 Possible Create Index Problems:
 -------------------------------
 If you get this error on epgd start while epgd is creating indexes and tables:
  "Index column size too large. The maximum column size is 767 bytes"
-Make sure the server charecter-set is set to latin1, file format is set to BARRACUDA and innodb_large_prefix ist active:
-  character-set-server = latin1
-  innodb_large_prefix  = ON
-  innodb_file_format = BARRACUDA
+Make sure the server charecter-set is set to latin1 (character-set-server = latin1)
 Remove all other collations from your mariadb config.
 We use UTF8 only on client side!
 

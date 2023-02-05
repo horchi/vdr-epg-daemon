@@ -75,6 +75,7 @@ class cTVDBSeries
 
       int readSeries();
       int readEpisodes();
+      int readEpisodesExtended(Episode& episode);
 
       int getPartAndSeason(int episodeId, int &season, int &part);
 
@@ -98,6 +99,7 @@ class cTVDBSeries
 
       int parseSeries(json_t* jResult);
       int parseEpisodes(json_t* jResult);
+      int parseEpisodesExtended(json_t* jResult, Episode& episode);
 
       std::vector<Artwork> artworks;
       std::vector<Actor> actors;

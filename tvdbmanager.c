@@ -385,7 +385,7 @@ bool cTVDBManager::loadMedia(int seriesId, int seasonNumber, int episodeId, int 
    return tSeriesMedia->find();
 }
 
-bool cTVDBManager::GetSeriesWithEpisodesFromEPG(vector<sSeriesResult>* result)
+bool cTVDBManager::GetSeriesWithEpisodesFromEPG(vector<SeriesLookupData>* result)
 {
    cDbValue season;
    cDbValue part;
@@ -415,15 +415,15 @@ bool cTVDBManager::GetSeriesWithEpisodesFromEPG(vector<sSeriesResult>* result)
 
    for (int found = selectSeries->find(); found; found = selectSeries->fetch())
    {
-      sSeriesResult res;
-      res.eventId = tEvents->getBigintValue("EventId");
-      res.title = tEvents->getStrValue("Title");
-      res.lastScraped = tEvents->getIntValue("ScrSp");
-      res.season = season.getIntValue();
-      res.part = part.getIntValue();
-      res.number = number.getIntValue();
-      res.episodeName = tEvents->getStrValue("ShortText");
-      result->push_back(res);
+      SeriesLookupData lookupData;
+      lookupData.eventId = tEvents->getBigintValue("EventId");
+      lookupData.title = tEvents->getStrValue("Title");
+      lookupData.lastScraped = tEvents->getIntValue("ScrSp");
+      lookupData.season = season.getIntValue();
+      lookupData.part = part.getIntValue();
+      lookupData.number = number.getIntValue();
+      lookupData.episodeName = tEvents->getStrValue("ShortText");
+      result->push_back(lookupData);
    }
 
    selectSeries->freeResult();
@@ -469,13 +469,14 @@ bool cTVDBManager::imageUrlChanged(const std::string& url)
 // Process Series by name (one series per call)
 //***************************************************************************
 
-void cTVDBManager::processSeries(sSeriesResult ser)
+void cTVDBManager::processSeries(SeriesLookupData lookupData)
 {
-   tell(2, "Checking eventID: %lld, Title: %s, season:%d part:%d number:%d", ser.eventId, ser.title.c_str(), ser.season, ser.part, ser.number);
+   tell(2, "Checking eventID: %lld, Title: %s, season:%d part:%d number:%d",
+        lookupData.eventId, lookupData.title.c_str(), lookupData.season, lookupData.part, lookupData.number);
 
    int seriesID {0};
 
-   const auto hit = alreadyScraped.find(ser.title);
+   const auto hit = alreadyScraped.find(lookupData.title);
 
    if (hit != alreadyScraped.end())
    {
@@ -483,13 +484,13 @@ void cTVDBManager::processSeries(sSeriesResult ser)
 
       if (!seriesID)
       {
-         //tell(0, "series %s already scraped and nothing found in tvdb", ser.title.c_str());
-         UpdateEvent(ser.eventId, 0, 0);
+         // tell(0, "series %s already scraped and nothing found in tvdb", lookupData.title.c_str());
+         UpdateEvent(lookupData.eventId, 0, 0);
          return;
       }
       else
       {
-         // tell(0, "found series %s in cache, id %d", ser.title.c_str(), seriesID);
+         // tell(0, "found series %s in cache, id %d", lookupData.title.c_str(), seriesID);
       }
    }
 
@@ -497,63 +498,63 @@ void cTVDBManager::processSeries(sSeriesResult ser)
    {
       // check if series in database
 
-      seriesID = LoadSeriesFromDd(ser.title);
+      seriesID = LoadSeriesFromDd(lookupData.title);
 
       if (seriesID)
       {
-         tell(5, "TvDb: Series '%s' already in db, id (%d)", ser.title.c_str(), seriesID);
+         tell(5, "TvDb: Series '%s' already in db, id (%d)", lookupData.title.c_str(), seriesID);
       }
       else
       {
          // scrap series
 
-         cTVDBSeries* series = scrapSeries(ser.title.c_str());
+         cTVDBSeries* series = scrapSeries(lookupData.title.c_str());
 
          if (series)
          {
             saveSeries(series);
             seriesID = series->seriesID;
-            tell(4, "TvDb: Series '%s' successfully scraped with id (%d)", ser.title.c_str(), seriesID);
+            tell(4, "TvDb: Series '%s' successfully scraped with id (%d)", lookupData.title.c_str(), seriesID);
             delete series;
             series = nullptr;
          }
          else
          {
-            tell(eloDetail, "TvDb: Series '%s' not found at tvdb.com", ser.title.c_str());
+            tell(eloDetail, "TvDb: Series '%s' not found at tvdb.com", lookupData.title.c_str());
          }
       }
    }
 
-   alreadyScraped.insert(pair<string,int>(ser.title, seriesID));
+   alreadyScraped.insert(pair<string,int>(lookupData.title, seriesID));
 
    int episodeID {0};
 
    if (seriesID)
    {
-      // tell(0, "lookup %d/%d/%d '%s'", seriesID, ser.season, ser.part, ser.episodeName.c_str());
+      // tell(0, "lookup %d/%d/%d '%s'", seriesID, lookupData.season, lookupData.part, lookupData.episodeName.c_str());
 
-      if (!ser.season && !ser.part && ser.episodeName.size() > 0)
+      if (!lookupData.season && !lookupData.part && lookupData.episodeName.size() > 0)
       {
          // try to get part and season from episode name
 
-         GetSeasonEpisodeFromEpisodename(seriesID, ser.season, ser.part, ser.episodeName);
-         // tell(0, "Got %d/%d ", ser.season, ser.part);
+         GetSeasonEpisodeFromEpisodename(seriesID, lookupData.season, lookupData.part, lookupData.episodeName);
+         // tell(0, "Got %d/%d ", lookupData.season, lookupData.part);
       }
 
       // loading season poster and episode picture
 
-      if (ser.season)
-         checkLoadSeasonPoster(seriesID, ser.season);
+      if (lookupData.season)
+         checkLoadSeasonPoster(seriesID, lookupData.season);
 
-      if (ser.season && ser.part)
-         episodeID = lookupEpisodeId(seriesID, ser.season, ser.part);
+      if (lookupData.season && lookupData.part)
+         episodeID = lookupEpisodeId(seriesID, lookupData.season, lookupData.part);
 
       // tell(0, "episodeID %d ", episodeID);
    }
 
    // updating event with series data
 
-   UpdateEvent(ser.eventId, seriesID, episodeID);
+   UpdateEvent(lookupData.eventId, seriesID, episodeID);
 }
 
 int cTVDBManager::LoadSeriesFromDd(const std::string& name)

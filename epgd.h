@@ -176,6 +176,7 @@ class cEpgd : public cFrame, public cSystemNotification
       cDbStatement* selectDistCompname {};
       cDbStatement* selectByCompName {};
       cDbStatement* selectByCompNames {};
+      cDbStatement* selectByCompNamesCombined {};
       cDbStatement* updateEpisodeAtEvents {};
       cDbStatement* updateScrReference {};
       cDbStatement* selectMaxMapOrd {};
@@ -249,6 +250,7 @@ class cEpgd : public cFrame, public cSystemNotification
 
       int evaluateEpisodes();
       int updateEpisodes();
+      int lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesLookupData& lookupData);
 
       // scraper stuff
 

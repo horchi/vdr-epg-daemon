@@ -26,7 +26,7 @@ class cTVDBManager
 {
    public:
 
-      struct sSeriesResult
+      struct SeriesLookupData
       {
          tEventId eventId {0};
          std::string title;
@@ -45,8 +45,8 @@ class cTVDBManager
       void ResetBytesDownloaded() { bytesDownloaded = 0; };
       int GetBytesDownloaded() { return bytesDownloaded; };
       int updateSeries(time_t since);
-      bool GetSeriesWithEpisodesFromEPG(std::vector<sSeriesResult>* result);
-      void processSeries(sSeriesResult ser);
+      bool GetSeriesWithEpisodesFromEPG(std::vector<SeriesLookupData>* result);
+      void processSeries(SeriesLookupData ser);
       int CleanupSeries();
       bool SearchRecordingDB(const std::string& name, const std::string& episode, int& seriesId, int& episodeId);
       bool searchRecordingOnline(const char* name, const std::string& episode, int& seriesId, int& episodeId);

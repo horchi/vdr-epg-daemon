@@ -161,6 +161,85 @@ int cEpgd::evaluateEpisodes()
 }
 
 //***************************************************************************
+// Lookup Series Data
+//***************************************************************************
+
+int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesLookupData& lookupData)
+{
+   lookupData.title = recordingListDb->getStrValue("TITLE");;
+   lookupData.episodeName = recordingListDb->getStrValue("SHORTTEXT");
+
+   tell(1, "CONSTABEL: Try lookup of '%s'/'%s' in database", lookupData.title.c_str(), lookupData.episodeName.c_str());
+
+   if (!recordingListDb->getValue("EPISODECOMPNAME")->isEmpty() && !recordingListDb->getValue("EPISODECOMPPARTNAME")->isEmpty())
+   {
+      episodeDb->clear();
+      episodeDb->setValue("COMPNAME", recordingListDb->getStrValue("EPISODECOMPNAME"));
+      episodeDb->setValue("COMPPARTNAME", recordingListDb->getStrValue("EPISODECOMPPARTNAME"));
+
+      // search episode part 1:1
+
+      if (selectByCompNames->find())
+      {
+         lookupData.title = episodeDb->getStrValue("EPISODENAME");
+         lookupData.episodeName = episodeDb->getStrValue("PARTNAME");
+
+         tell(1, "Found referenced eplist data for '%s' / '%s'", lookupData.title.c_str(), lookupData.episodeName.c_str());
+      }
+
+      return done;
+   }
+
+   // no eplist information avalible try lookup ..
+
+   std::string compTitle = lookupData.title;
+   prepareCompressed(compTitle);
+   std::string compPartName = lookupData.episodeName;
+   prepareCompressed(compPartName);
+
+   episodeDb->clear();
+   episodeDb->setValue("COMPNAME", compTitle.c_str());
+   episodeDb->setValue("COMPPARTNAME", compPartName.c_str());
+
+   tell(3, "CONSTABEL: Try lookup by of '%s'/'%s' direct", compTitle.c_str(), compPartName.c_str());
+
+   if (selectByCompNames->find())
+   {
+      lookupData.title = episodeDb->getStrValue("EPISODENAME");
+      lookupData.episodeName = episodeDb->getStrValue("PARTNAME");
+
+      tell(1, "Found eplist data for '%s' / '%s' by lookup", lookupData.title.c_str(), lookupData.episodeName.c_str());
+
+      recording->setValue("EPISODECOMPNAME", episodeDb->getStrValue("COMPNAME"));
+      recording->setValue("EPISODECOMPPARTNAME", episodeDb->getStrValue("COMPPARTNAME"));
+      recording->setValue("EPISODELANG", episodeDb->getStrValue("LANG"));
+      recording->setValue("EPISODECOMPSHORTNAME", episodeDb->getStrValue("COMPSHORTNAME"));
+   }
+   else
+   {
+      episodeDb->clear();
+      episodeDb->setValue("COMPNAME", (compTitle + compPartName).c_str());
+
+      tell(3, "CONSTABEL: Try lookup by combined name '%s'", episodeDb->getStrValue("COMPNAME"));
+
+      if (selectByCompNamesCombined->find())
+      {
+         lookupData.title = episodeDb->getStrValue("EPISODENAME");
+         lookupData.episodeName = episodeDb->getStrValue("PARTNAME");
+
+         tell(1, "Found eplist data for '%s' / '%s' by extended lookup", lookupData.title.c_str(), lookupData.episodeName.c_str());
+
+         recording->setValue("EPISODECOMPNAME", episodeDb->getStrValue("COMPNAME"));
+         recording->setValue("EPISODECOMPPARTNAME", episodeDb->getStrValue("COMPPARTNAME"));
+         recording->setValue("EPISODELANG", episodeDb->getStrValue("LANG"));
+         recording->setValue("EPISODECOMPSHORTNAME", episodeDb->getStrValue("COMPSHORTNAME"));
+      }
+   }
+
+   return done;
+}
+
+//***************************************************************************
 // Download Episodes and store to table (and filesystem if configured)
 //***************************************************************************
 

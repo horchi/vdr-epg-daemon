@@ -695,22 +695,36 @@ int cEpgd::initDb()
    status += selectByCompName->prepare();
 
    // --------------------
-   // select episodename, partname, lang
+   // select *
    //   from episodes
    //     where compname = ? and comppartname = ?
 
    selectByCompNames = new cDbStatement(episodeDb);
 
    selectByCompNames->build("select ");
-   selectByCompNames->bind("EPISODENAME", cDBS::bndOut);
-   selectByCompNames->bind("PARTNAME", cDBS::bndOut, ", ");
-   selectByCompNames->bind("LANG", cDBS::bndOut, ", ");
-   selectByCompNames->bind("STATE", cDBS::bndOut, ", ");
+   selectByCompNames->bindAllOut();
    selectByCompNames->build(" from %s where ", episodeDb->TableName());
    selectByCompNames->bind("COMPNAME", cDBS::bndIn | cDBS::bndSet);
    selectByCompNames->bind("COMPPARTNAME", cDBS::bndIn | cDBS::bndSet, " and ");
 
    status += selectByCompNames->prepare();
+
+   // --------------------
+   // select episodename, partname, lang
+   //   from episodes
+   //     where CONCAT(compname,comppartname) = ?
+
+   // #TODO - oder besser mit LV?
+   //     where epglv(CONCAT(compname,comppartname), ?) < ?
+
+   selectByCompNamesCombined = new cDbStatement(episodeDb);
+
+   selectByCompNamesCombined->build("select ");
+   selectByCompNamesCombined->bindAllOut();
+   selectByCompNamesCombined->build(" from %s where ", episodeDb->TableName());
+   selectByCompNamesCombined->bindTextFree("CONCAT(compname,comppartname) = ?", episodeDb->getValue("COMPNAME"), cDBS::bndIn);
+
+   status += selectByCompNamesCombined->prepare();
 
    // --------------------
    // select count(1)
@@ -1010,6 +1024,7 @@ int cEpgd::exitDb()
    delete selectDistCompname;        selectDistCompname = 0;
    delete selectByCompName;          selectByCompName = 0;
    delete selectByCompNames;         selectByCompNames = 0;
+   delete selectByCompNamesCombined; selectByCompNamesCombined = 0;
    delete updateEpisodeAtEvents;     updateEpisodeAtEvents = 0;
    delete updateScrReference;        updateScrReference = 0;
    delete countDvbChanges;           countDvbChanges = 0;
@@ -1296,7 +1311,7 @@ int cEpgd::checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* f
 int cEpgd::checkView(const char* name, const char* file)
 {
    int status {success};
-   md5Buf md5New  {};
+   md5Buf md5New {};
    char* param {};
 
    // create/check view
@@ -2504,7 +2519,7 @@ int cEpgd::scrapNewEvents()
    // ------------------------------
    // scrap new series in EPG
 
-   std::vector<cTVDBManager::sSeriesResult> seriesToScrap;
+   std::vector<cTVDBManager::SeriesLookupData> seriesToScrap;
 
    if (!tvdbManager->GetSeriesWithEpisodesFromEPG(&seriesToScrap))
       return fail;
@@ -2516,7 +2531,7 @@ int cEpgd::scrapNewEvents()
 
    tell(1, "Series for %zu new events to scrap", seriesToScrap.size());
 
-   for (std::vector<cTVDBManager::sSeriesResult>::iterator it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
+   for (std::vector<cTVDBManager::SeriesLookupData>::iterator it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
    {
       seriesCur++;
       cSystemNotification::check();
@@ -2744,35 +2759,14 @@ void cEpgd::scrapNewRecordings(int count)
          }
       }
 
-      // ------------------------------------
+      // ----------------------------------------
       // third - try scrap by title and subtitle
 
       seriesId = 0;
       episodeId = 0;
       movieId = 0;
 
-      if (isSeries)
-      {
-         // series ...
-
-         tell(1, "SCRAP: Searching series for recording '%s' in database", recTitle.c_str());
-
-         found = tvdbManager->SearchRecordingDB(recTitle, recSubtitle, seriesId, episodeId);
-
-         if (found)
-            tell(1, "SCRAP: Found series for recording '%s'/'%s' in database", recTitle.c_str(), recSubtitle.c_str());
-
-         if (!found)
-         {
-            tell(1, "SCRAP: Nothing found in db, searching '%s' as series online", recTitle.c_str());
-            found = tvdbManager->searchRecordingOnline(recTitle.c_str(), recSubtitle, seriesId, episodeId);
-
-            if (found)
-               tell(1, "SCRAP: Found series for recording '%s'/'%s' online, seriesId %d, episodeId %d",
-                    recTitle.c_str(), recSubtitle.c_str(), seriesId, episodeId);
-         }
-      }
-      else
+      if (!isSeries)
       {
          // movie ...
 
@@ -2781,15 +2775,37 @@ void cEpgd::scrapNewRecordings(int count)
 
          if (found)
             tell(1, "SCRAP: Found '%s' in database", recTitle.c_str());
-
-         if (!found)
+         else
          {
-
-            tell(1, "SCRAP: Nothing found in db, searching '%s' as movie online", recTitle.c_str());
+            tell(1, "SCRAP: Nothing found in db, searching '%s' as 'movie' online", recTitle.c_str());
             found = movieDbManager->SearchRecordingOnline(recTitle, movieId);
 
             if (found)
                tell(1, "SCRAP: Found '%s' as movie online, movieId %d", recTitle.c_str(), movieId);
+         }
+      }
+
+      if (!found)
+      {
+         // series ...
+
+         cTVDBManager::SeriesLookupData lookupData;
+         lookupSeriesDataForRecording(recordingListDb->getRow(), lookupData);
+
+         tell(1, "SCRAP: Searching series for recording '%s' in database", lookupData.title.c_str());
+
+         found = tvdbManager->SearchRecordingDB(lookupData.title, lookupData.episodeName, seriesId, episodeId);
+
+         if (found)
+            tell(1, "SCRAP: Found series for recording '%s'/'%s' in database", lookupData.title.c_str(), lookupData.episodeName.c_str());
+         else
+         {
+            tell(1, "SCRAP: Nothing found in db, searching '%s' as 'series' online", lookupData.title.c_str());
+            found = tvdbManager->searchRecordingOnline(lookupData.title.c_str(), lookupData.episodeName, seriesId, episodeId);
+
+            if (found)
+               tell(1, "SCRAP: Found series for recording '%s'/'%s' online, seriesId %d, episodeId %d",
+                    lookupData.title.c_str(), lookupData.episodeName.c_str(), seriesId, episodeId);
          }
       }
 

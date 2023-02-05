@@ -85,6 +85,25 @@ int cTVDBSeries::readEpisodes()
    return success;
 }
 
+int cTVDBSeries::readEpisodesExtended(Episode& episode)
+{
+   // https://api4.thetvdb.com/v4/episodes/4202143/extended?meta=translations
+
+   std::string method = "episodes/" + std::to_string(episode.id) + "/extended";
+   std::map<std::string,std::string> parameters;
+   parameters["meta"] = "translations";
+
+   json_t* jResult {};
+
+   if (tvdbV4.get(method.c_str(), jResult, &parameters) != success)
+      return fail;
+
+   parseEpisodesExtended(jResult, episode);
+   json_decref(jResult);
+
+   return success;
+}
+
 int cTVDBSeries::parseSeries(json_t* jResult)
 {
    size_t item {0}; json_t* jItem {};
@@ -232,12 +251,11 @@ int cTVDBSeries::parseEpisodes(json_t* jResult)
 {
    size_t item {0}; json_t* jItem {};
    json_t* jData = getObjectFromJson(jResult, "data");
-   json_t* j {};
 
    if (!jData)
       return 0;
 
-   j = getObjectFromJson(jData, "episodes");
+   json_t* j = getObjectFromJson(jData, "episodes");
 
    json_array_foreach(j, item, jItem)
    {
@@ -257,11 +275,33 @@ int cTVDBSeries::parseEpisodes(json_t* jResult)
       if (!episode.imageUrl.empty() && episode.imageUrl[0] == '/')
          episode.imageUrl = cTVDBv4::tvdbArtworkUrl + episode.imageUrl;
 
+      // readEpisodesExtended(episode);
+
       // lastUpdated - like "2023-01-08 02:21:27",
 
       episode.lastUpdated = str2LTime(getStringFromJson(jItem, "lastUpdated", ""), "%Y-%m-%d %H:%M:%S");
-
       episodes.push_back(std::move(episode));
+   }
+
+   return success;
+}
+
+int cTVDBSeries::parseEpisodesExtended(json_t* jResult, Episode& episode)
+{
+   size_t item {0}; json_t* jItem {};
+   json_t* jData = getObjectFromJson(jResult, "data");
+
+   if (!jData)
+      return 0;
+
+   json_t* j = getObjectFromJson(jData, "characters");
+
+   json_array_foreach(j, item, jItem)
+   {
+      // int type = getIntFromJson(jItem, "type");
+      // const char* url = getStringFromJson(jItem, "url", "");
+      // const char* personName = getStringFromJson(jItem, "personName", "");
+      // const char* peopleType = getStringFromJson(jItem, "peopleType", "");
    }
 
    return success;

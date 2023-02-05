@@ -5,7 +5,7 @@ wget -q -O - 192.168.200.101:9999/data/save-timer --post-data='{ "channel" : "S1
    "channelid" : "S19.2E-1-1057-61205",
    "eventid"   : 131954,
 
-   // ab hier optional 
+   // ab hier optional
 
    "vdruuid"   : "D355D2A5-C29F-4321-94AE-B2F2B07A31FE",
    "active"    : 1,
@@ -21,35 +21,35 @@ wget -q -O - 192.168.200.101:9999/data/save-timer --post-data='{ "channel" : "S1
 }
 
 
-wget -q -O - 192.168.200.101:9999/data/search --post-data='{ "autotimerid": 13 }' | json_pp 
+wget -q -O - 192.168.200.101:9999/data/search --post-data='{ "autotimerid": 13 }' | json_pp
 
 wget -q -O - 192.168.200.101:9999/data/save-parameters --post-data='{ "parameters": [{"value": "bla bla", "owner": "webif", "name": "test", "readonly": 1}] }'
 
 wget -q -O - 192.168.200.101:9999/data/save-parameters --post-data='{
-   "channels" : 
+   "channels" :
    {
-      "S19.2E-1-1057-61205" : 
+      "S19.2E-1-1057-61205" :
       {
          "sources" : {},
          "visible" : 1,
          "ord" : 5,
          "name" : "RTLII HD"
       },
-      "S19.2E-1-1017-61302" : 
+      "S19.2E-1-1017-61302" :
       {
          "sources" : {},
          "visible" : 1,
          "ord" : 8,
          "name" : "kabel eins HD"
       },
-      "S19.2E-1-1201-28327" : 
+      "S19.2E-1-1201-28327" :
       {
          "sources" : {},
          "visible" : 0,
          "ord" : 2,
          "name" : "WDR HD Dortmund"
       }
-   } 
+   }
 }'
 
 
@@ -62,5 +62,3 @@ login and get a session:
 KEY=21f4ab03ab3dda6b87656dcf419a7b5b
 
 SESSION=`wget -q -O - 192.168.200.101:9999/data/login --post-data="{ \"key\" : \"$KEY\" }" | json_pp | grep session | sed s/".*: ."/""/ | sed s/"\".*"/""/`
-
-
