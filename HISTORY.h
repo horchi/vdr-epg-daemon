@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.8"
+#define _VERSION     "1.3.9"
 #define VERSION_DATE "05.02.2023"
 #define DB_API       8
 
@@ -17,6 +17,9 @@
 /*
  * ------------------------------------
  *
+2023-02-05: version 1.3.9 (horchi)
+   - change: Now using LV distance of 20% for recordings eplist lookup
+
 2023-02-05: version 1.3.8 (horchi)
    - change: Improved series scraper lookup for recordings
 

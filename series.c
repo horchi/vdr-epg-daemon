@@ -169,7 +169,7 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
    lookupData.title = recordingListDb->getStrValue("TITLE");;
    lookupData.episodeName = recordingListDb->getStrValue("SHORTTEXT");
 
-   tell(1, "CONSTABEL: Try lookup of '%s'/'%s' in database", lookupData.title.c_str(), lookupData.episodeName.c_str());
+   tell(2, "CONSTABEL: Try lookup of '%s'/'%s' in database", lookupData.title.c_str(), lookupData.episodeName.c_str());
 
    if (!recordingListDb->getValue("EPISODECOMPNAME")->isEmpty() && !recordingListDb->getValue("EPISODECOMPPARTNAME")->isEmpty())
    {
@@ -220,7 +220,10 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
       episodeDb->clear();
       episodeDb->setValue("COMPNAME", (compTitle + compPartName).c_str());
 
-      tell(3, "CONSTABEL: Try lookup by combined name '%s'", episodeDb->getStrValue("COMPNAME"));
+      int dist = (compTitle + compPartName).length() / 100.0 * 20.0;
+      maxLvDistance.setValue(dist);
+
+      tell(3, "CONSTABEL: Try lookup by combined name '%s' and a max LV distance of (%d)", episodeDb->getStrValue("COMPNAME"), dist);
 
       if (selectByCompNamesCombined->find())
       {

@@ -388,6 +388,7 @@ int cEpgd::checkDbDdl()
 //***************************************************************************
 
 cDbFieldDef changeCountDef("CHG_COUNT", "count(1)", cDBS::ffUInt, 0, cDBS::ftData);
+cDbFieldDef maxLvDistanceDef("LV_DISTANCE", "", cDBS::ffUInt, 0, cDBS::ftData);
 
 int cEpgd::initDb()
 {
@@ -700,7 +701,6 @@ int cEpgd::initDb()
    //     where compname = ? and comppartname = ?
 
    selectByCompNames = new cDbStatement(episodeDb);
-
    selectByCompNames->build("select ");
    selectByCompNames->bindAllOut();
    selectByCompNames->build(" from %s where ", episodeDb->TableName());
@@ -712,17 +712,17 @@ int cEpgd::initDb()
    // --------------------
    // select episodename, partname, lang
    //   from episodes
-   //     where CONCAT(compname,comppartname) = ?
+   //     where epglv(CONCAT(compname,comppartname), ?) <= ?
 
-   // #TODO - oder besser mit LV?
-   //     where epglv(CONCAT(compname,comppartname), ?) < ?
+   maxLvDistance.setField(&maxLvDistanceDef);
 
    selectByCompNamesCombined = new cDbStatement(episodeDb);
-
    selectByCompNamesCombined->build("select ");
    selectByCompNamesCombined->bindAllOut();
    selectByCompNamesCombined->build(" from %s where ", episodeDb->TableName());
-   selectByCompNamesCombined->bindTextFree("CONCAT(compname,comppartname) = ?", episodeDb->getValue("COMPNAME"), cDBS::bndIn);
+   // selectByCompNamesCombined->bindTextFree("CONCAT(compname,comppartname) = ?", episodeDb->getValue("COMPNAME"), cDBS::bndIn);
+   selectByCompNamesCombined->bindTextFree("epglv(concat(compname,comppartname),?)", episodeDb->getValue("COMPNAME"), cDBS::bndIn);
+   selectByCompNamesCombined->bindTextFree("<= ?", &maxLvDistance, cDBS::bndIn);
 
    status += selectByCompNamesCombined->prepare();
 

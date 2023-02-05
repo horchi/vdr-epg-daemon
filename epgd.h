@@ -193,6 +193,7 @@ class cEpgd : public cFrame, public cSystemNotification
 
       cDbValue changeCount;
       cDbValue newRecCount;
+      cDbValue maxLvDistance;
 
       cDbProcedure* procMergeEpg {};
       cDbProcedure* procUser {};
