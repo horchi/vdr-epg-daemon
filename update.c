@@ -2766,6 +2766,11 @@ void cEpgd::scrapNewRecordings(int count)
       episodeId = 0;
       movieId = 0;
 
+      cTVDBManager::SeriesLookupData lookupData;
+
+      if (lookupSeriesDataForRecording(recordingListDb->getRow(), lookupData) == success)
+         isSeries = true;
+
       if (!isSeries)
       {
          // movie ...
@@ -2789,8 +2794,6 @@ void cEpgd::scrapNewRecordings(int count)
       {
          // series ...
 
-         cTVDBManager::SeriesLookupData lookupData;
-         lookupSeriesDataForRecording(recordingListDb->getRow(), lookupData);
 
          tell(1, "SCRAP: Searching series for recording '%s' in database", lookupData.title.c_str());
 

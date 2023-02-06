@@ -185,9 +185,8 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
          lookupData.episodeName = episodeDb->getStrValue("PARTNAME");
 
          tell(1, "Found referenced eplist data for '%s' / '%s'", lookupData.title.c_str(), lookupData.episodeName.c_str());
+         return success;
       }
-
-      return done;
    }
 
    // no eplist information avalible try lookup ..
@@ -203,17 +202,11 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
 
    tell(3, "CONSTABEL: Try lookup by of '%s'/'%s' direct", compTitle.c_str(), compPartName.c_str());
 
-   if (selectByCompNames->find())
+   bool found = selectByCompNames->find();
+
+   if (found)
    {
-      lookupData.title = episodeDb->getStrValue("EPISODENAME");
-      lookupData.episodeName = episodeDb->getStrValue("PARTNAME");
-
       tell(1, "Found eplist data for '%s' / '%s' by lookup", lookupData.title.c_str(), lookupData.episodeName.c_str());
-
-      recording->setValue("EPISODECOMPNAME", episodeDb->getStrValue("COMPNAME"));
-      recording->setValue("EPISODECOMPPARTNAME", episodeDb->getStrValue("COMPPARTNAME"));
-      recording->setValue("EPISODELANG", episodeDb->getStrValue("LANG"));
-      recording->setValue("EPISODECOMPSHORTNAME", episodeDb->getStrValue("COMPSHORTNAME"));
    }
    else
    {
@@ -222,24 +215,28 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
 
       int dist = (compTitle + compPartName).length() / 100.0 * 20.0;
       maxLvDistance.setValue(dist);
-
       tell(3, "CONSTABEL: Try lookup by combined name '%s' and a max LV distance of (%d)", episodeDb->getStrValue("COMPNAME"), dist);
+      found = selectByCompNamesCombined->find();
 
-      if (selectByCompNamesCombined->find())
-      {
-         lookupData.title = episodeDb->getStrValue("EPISODENAME");
-         lookupData.episodeName = episodeDb->getStrValue("PARTNAME");
-
+      if (found)
          tell(1, "Found eplist data for '%s' / '%s' by extended lookup", lookupData.title.c_str(), lookupData.episodeName.c_str());
-
-         recording->setValue("EPISODECOMPNAME", episodeDb->getStrValue("COMPNAME"));
-         recording->setValue("EPISODECOMPPARTNAME", episodeDb->getStrValue("COMPPARTNAME"));
-         recording->setValue("EPISODELANG", episodeDb->getStrValue("LANG"));
-         recording->setValue("EPISODECOMPSHORTNAME", episodeDb->getStrValue("COMPSHORTNAME"));
-      }
    }
 
-   return done;
+   if (found)
+   {
+      lookupData.title = episodeDb->getStrValue("EPISODENAME");
+      lookupData.episodeName = episodeDb->getStrValue("PARTNAME");
+      recording->setValue("EPISODECOMPNAME", episodeDb->getStrValue("COMPNAME"));
+      recording->setValue("EPISODECOMPPARTNAME", episodeDb->getStrValue("COMPPARTNAME"));
+      recording->setValue("EPISODELANG", episodeDb->getStrValue("LANG"));
+      recording->setValue("EPISODECOMPSHORTNAME", episodeDb->getStrValue("COMPSHORTNAME"));
+      recording->setValue("CATEGORY", "Serie");
+      recordingListDb->update();
+
+      return success;
+   }
+
+   return fail;
 }
 
 //***************************************************************************

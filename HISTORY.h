@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.9"
-#define VERSION_DATE "05.02.2023"
+#define _VERSION     "1.3.10"
+#define VERSION_DATE "06.02.2023"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,7 +16,10 @@
 
 /*
  * ------------------------------------
- *
+
+2023-02-06: version 1.3.10 (horchi)
+   - change: Force category 'Serie' for recording with eplist match
+
 2023-02-05: version 1.3.9 (horchi)
    - change: Now using LV distance of 20% for recordings eplist lookup
 
