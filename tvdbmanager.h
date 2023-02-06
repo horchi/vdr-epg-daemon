@@ -43,7 +43,7 @@ class cTVDBManager
       int connectDatabase(cDbConnection* c);
       int connectScraper();
       void ResetBytesDownloaded() { bytesDownloaded = 0; };
-      int GetBytesDownloaded() { return bytesDownloaded; };
+      long long GetBytesDownloaded() { return bytesDownloaded; };
       int updateSeries(time_t since);
       bool GetSeriesWithEpisodesFromEPG(std::vector<SeriesLookupData>* result);
       void processSeries(SeriesLookupData ser);
@@ -55,7 +55,7 @@ class cTVDBManager
 
    private:
 
-      int bytesDownloaded {0};
+      long long bytesDownloaded {0};
       int withutf8 {no};
       std::string language {"en"};
       std::map<std::string,int> alreadyScraped;
@@ -86,7 +86,7 @@ class cTVDBManager
       void GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, const std::string& episodeName);
       void checkLoadSeasonPoster(int seriesID, int season);
       int LoadEpisode(const std::string& name, int seriesId);
-      int lookupEpisodeId(int seriesID, int season, int part);
+      int lookupEpisodeId(int seriesID, const SeriesLookupData& lookupData);
 
       void UpdateEvent(tEventId eventID, int seriesID, int episodeID);
       void DeleteSeries(int seriesId);

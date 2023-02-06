@@ -189,6 +189,7 @@ Table episodes
    INSSP                ""  inssp                Int          0 Meta,
    UPDSP                ""  updsp                Int          0 Meta,
 
+   COMBINEDCOMP         ""  combinedcomp         MText      300 Data,
    STATE                ""  state                Ascii        1 Data,
    LINK                 ""  link                 Int          0 Data,
    SHORTNAME            ""  shortname            Ascii      100 Data,
@@ -212,6 +213,7 @@ Table episodes
 Index episodes
 {
    updsp                ""  UPDSP,
+   combinedComp         ""  COMBINEDCOMP,
 }
 
 // ----------------------------------------------------------------

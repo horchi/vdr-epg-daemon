@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.10"
+#define _VERSION     "1.3.11"
 #define VERSION_DATE "06.02.2023"
 #define DB_API       8
 
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2023-02-06: version 1.3.11 (horchi)
+   - change: Improved series lookup and constable merge for bad provider data
+             (e.g. if title and episode name are supplied together in the title of the program)
 
 2023-02-06: version 1.3.10 (horchi)
    - change: Force category 'Serie' for recording with eplist match

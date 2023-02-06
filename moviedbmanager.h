@@ -33,7 +33,7 @@ class cMovieDBManager
 {
 private:
 
-    int bytesDownloaded {0};
+    long long bytesDownloaded {0};
     int withutf8 {no};
     std::string language {"en"};
     map<std::string,int> alreadyScraped;
@@ -74,7 +74,7 @@ public:
     int ConnectDatabase(cDbConnection *conn);
     bool ConnectScraper();
     void ResetBytesDownloaded() { bytesDownloaded = 0; };
-    int GetBytesDownloaded() { return bytesDownloaded; };
+    long long GetBytesDownloaded() { return bytesDownloaded; };
     bool GetMoviesFromEPG(vector<sMovieResult> *result);
     void ProcessMovie(sMovieResult mov);
     bool SearchRecordingDB(const std::string& name, int &movieId);

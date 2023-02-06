@@ -20,6 +20,11 @@ int cEpgd::evaluateEpisodes()
    if (!EpgdConfig.seriesEnabled)
       return done;
 
+   connection->startTransaction();
+   tell(1, "Update episodes.combinedcomp");
+   connection->query("update episodes set combinedcomp = concat(compname,comppartname) where combinedcomp is null");
+   connection->commit();
+
    tell(1, "Starting episode lookup ...");
 
    // first read all events into list ..
@@ -30,42 +35,56 @@ int cEpgd::evaluateEpisodes()
 
    for (int l = selectDistCompname->find(); l && !doShutDown(); l = selectDistCompname->fetch())
    {
-      // const int maxTitleDist = (((double)strlen(episodeCompName)) / 100.0 * 20.0);
-      char* episodeCompName = strdup(episodeDb->getStrValue("COMPNAME"));
+      std::string episodeCompName = episodeDb->getStrValue("COMPNAME");
       ec++;
 
       eventsDb->clear();
-      eventsDb->setValue("COMPTITLE", episodeCompName);
+      eventsDb->setValue("COMPTITLE", (episodeCompName + "%").c_str());
 
       // loop over all events matching this episode by COMPTITLE
+
+      // tell(1, "Searching events for eplist '%s'", (episodeCompName + "%").c_str());
 
       for (int n = selectByCompTitle->find(); n; n = selectByCompTitle->fetch())
       {
          cSystemNotification::check();
 
-         if (strlen(eventsDb->getStrValue("COMPSHORTTEXT")) == 0)
-            continue;
-
-         const char* evtCompShortText = eventsDb->getStrValue("COMPSHORTTEXT");
-
-         eventsDb->setValue("EPISODECOMPNAME", episodeCompName);
+         eventsDb->setValue("EPISODECOMPNAME", episodeCompName.c_str());
 
          if (!episodeDb->getValue("COMPSHORTNAME")->isNull())
             eventsDb->setValue("EPISODECOMPSHORTNAME", episodeDb->getStrValue("COMPSHORTNAME"));
 
          episodeDb->clear();
-         episodeDb->setValue("COMPNAME", episodeCompName);
-         episodeDb->setValue("COMPPARTNAME", evtCompShortText);
+         episodeDb->setValue("COMPNAME", episodeCompName.c_str());
+         episodeDb->setValue("COMPPARTNAME", eventsDb->getStrValue("COMPSHORTTEXT"));
 
          // search episode part 1:1
 
-         if (selectByCompNames->find())
+         bool found = selectByCompNames->find();
+
+         if (!found && eventsDb->getValue("COMPSHORTTEXT")->isEmpty())
+         {
+            // COMPTITLE seems to be combined
+
+            episodeDb->clear();
+            episodeDb->setValue("COMBINEDCOMP", eventsDb->getStrValue("COMPTITLE"));
+            // int dist = strlen(eventsDb->getStrValue("COMPTITLE")) / 100.0 * 20.0;
+            // maxLvDistance.setValue(dist);
+            tell(3, "CONSTABEL: Try event lookup by combined name '%s'", episodeDb->getStrValue("COMBINEDCOMP"));
+
+            found = selectByCompNamesCombined->find();
+
+            if (found)
+               tell(2, "Found eplist match for '%s'/'%s' by combined name", episodeDb->getStrValue("COMPNAME"), episodeDb->getStrValue("COMPPARTNAME"));
+         }
+
+         if (found)
          {
             pp++;
 
             // check if changed
 
-            if (!eventsDb->hasValue("EPISODECOMPPARTNAME", evtCompShortText)
+            if (!eventsDb->hasValue("EPISODECOMPPARTNAME", episodeDb->getStrValue("COMPPARTNAME"))
                 || !eventsDb->hasValue("EPISODELANG", episodeDb->getStrValue("LANG"))
                 || episodeDb->getCharValue("STATE") == cEpisodeFile::esChanged)
             {
@@ -73,7 +92,7 @@ int cEpgd::evaluateEpisodes()
                // updateEpisodeAtEvents resets also scrsp, scrseriesepisode and scrseriesid
 
                eventsDb->setValue("UPDSP", time(0));
-               eventsDb->setValue("EPISODECOMPPARTNAME", evtCompShortText);
+               eventsDb->setValue("EPISODECOMPPARTNAME", episodeDb->getStrValue("COMPPARTNAME"));
                eventsDb->setValue("EPISODELANG", episodeDb->getStrValue("LANG"));
 
                updateEpisodeAtEvents->execute();
@@ -81,12 +100,12 @@ int cEpgd::evaluateEpisodes()
 
                if (episodeDb->getCharValue("STATE") == cEpisodeFile::esChanged)
                   tell(2, "Series update detected, reset series reference for all event of to '%s/%s'",
-                       episodeCompName, evtCompShortText);
+                       episodeCompName.c_str(), episodeDb->getStrValue("COMPPARTNAME"));
             }
          }
-
          else  // if not found try match by LV
          {
+            const char* evtCompShortText = eventsDb->getStrValue("COMPSHORTTEXT");
             const int maxDist = (((double)strlen(evtCompShortText)) / 100.0 * 20.0);
             int d {0};
             int dMin {maxDist+1};
@@ -130,8 +149,7 @@ int cEpgd::evaluateEpisodes()
                   updated++;
 
                   if (episodeDb->getCharValue("STATE") == cEpisodeFile::esChanged)
-                     tell(2, "Series update detected, reset series reference for all event of to '%s/%s'",
-                          episodeCompName, bestCompPart);
+                     tell(2, "Series update detected, reset series reference for all event of to '%s/%s'", episodeCompName.c_str(), bestCompPart);
                }
             }
 
@@ -145,7 +163,6 @@ int cEpgd::evaluateEpisodes()
       }
 
       selectByCompTitle->freeResult();
-      free(episodeCompName);
    }
 
    // episodeDb->getConnection()->query("update %s set %s = '%c'", episodeDb->TableName(),
@@ -211,12 +228,12 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
    else
    {
       episodeDb->clear();
-      episodeDb->setValue("COMPNAME", (compTitle + compPartName).c_str());
+      episodeDb->setValue("COMBINEDCOMP", (compTitle + compPartName).c_str());
 
       int dist = (compTitle + compPartName).length() / 100.0 * 20.0;
       maxLvDistance.setValue(dist);
-      tell(3, "CONSTABEL: Try lookup by combined name '%s' and a max LV distance of (%d)", episodeDb->getStrValue("COMPNAME"), dist);
-      found = selectByCompNamesCombined->find();
+      tell(3, "CONSTABEL: Try lookup by combined name '%s' and a max LV distance of (%d)", episodeDb->getStrValue("COMBINEDCOMP"), dist);
+      found = selectByCompNamesCombinedLv->find();
 
       if (found)
          tell(1, "Found eplist data for '%s' / '%s' by extended lookup", lookupData.title.c_str(), lookupData.episodeName.c_str());

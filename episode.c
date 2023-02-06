@@ -246,6 +246,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
 
       episodeDb->clearChanged();
 
+      episodeDb->setValue("COMBINEDCOMP", (compName + partNameComp).c_str());
       episodeDb->setValue("EPISODENAME", ename.c_str());
       episodeDb->setValue("LINK", isLink());
       episodeDb->setValue("PARTNAME", partName);

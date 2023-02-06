@@ -177,6 +177,7 @@ class cEpgd : public cFrame, public cSystemNotification
       cDbStatement* selectByCompName {};
       cDbStatement* selectByCompNames {};
       cDbStatement* selectByCompNamesCombined {};
+      cDbStatement* selectByCompNamesCombinedLv {};
       cDbStatement* updateEpisodeAtEvents {};
       cDbStatement* updateScrReference {};
       cDbStatement* selectMaxMapOrd {};

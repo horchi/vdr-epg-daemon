@@ -1,7 +1,7 @@
 CREATE VIEW thetvdbview as
 select
  ev.eventid,
- case when ep.compname = 'TATORT' then concat('Tatort',replace(substring(ep.extracol1,11),' und ',' & ')) else ev.title end title,
+ case when ep.compname = 'TATORT' then concat('Tatort',replace(substring(ep.extracol1,11),' und ',' & ')) else ep.episodename end title,
  ev.scrsp,
  case when ep.compname = 'TATORT' then Null else ep.season end season,
  case when ep.compname = 'TATORT' then Null else ep.part end part,

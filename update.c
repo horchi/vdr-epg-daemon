@@ -502,6 +502,8 @@ int cEpgd::initDb()
    // prepare statements
    // ---------------------------
 
+   maxLvDistance.setField(&maxLvDistanceDef);
+
    // --------------------
    // select max(ord) from channelmap
 
@@ -616,6 +618,7 @@ int cEpgd::initDb()
    updateEpisodeAtEvents->build(", %s = null", eventsDb->getField("SCRSERIESEPISODE")->getDbName());
    updateEpisodeAtEvents->build(", %s = null", eventsDb->getField("SCRSERIESID")->getDbName());
    updateEpisodeAtEvents->build(", %s = null", eventsDb->getField("SCRSP")->getDbName());
+   updateEpisodeAtEvents->build(", %s = 'Serie'", eventsDb->getField("CATEGORY")->getDbName());
    updateEpisodeAtEvents->build(" where ");
    updateEpisodeAtEvents->bind("EVENTID", cDBS::bndIn | cDBS::bndSet);
    updateEpisodeAtEvents->bind("CHANNELID", cDBS::bndIn | cDBS::bndSet, " and ");
@@ -632,11 +635,12 @@ int cEpgd::initDb()
    selectByCompTitle->build("select ");
    selectByCompTitle->bind("EVENTID", cDBS::bndOut);
    selectByCompTitle->bind("CHANNELID", cDBS::bndOut, ", ");
+   selectByCompTitle->bind("COMPTITLE", cDBS::bndOut, ", ");
    selectByCompTitle->bind("COMPSHORTTEXT", cDBS::bndOut, ", ");
    selectByCompTitle->bind("EPISODECOMPPARTNAME", cDBS::bndOut, ", ");
    selectByCompTitle->bind("EPISODELANG", cDBS::bndOut, ", ");
    selectByCompTitle->build(" from %s where ", eventsDb->TableName());
-   selectByCompTitle->bind("COMPTITLE", cDBS::bndIn | cDBS::bndSet);
+   selectByCompTitle->bindCmp(0, "COMPTITLE", 0, " like ");
 
    status += selectByCompTitle->prepare();
 
@@ -714,15 +718,25 @@ int cEpgd::initDb()
    //   from episodes
    //     where epglv(CONCAT(compname,comppartname), ?) <= ?
 
-   maxLvDistance.setField(&maxLvDistanceDef);
+   selectByCompNamesCombinedLv = new cDbStatement(episodeDb);
+   selectByCompNamesCombinedLv->build("select ");
+   selectByCompNamesCombinedLv->bindAllOut();
+   selectByCompNamesCombinedLv->build(" from %s where ", episodeDb->TableName());
+   selectByCompNamesCombinedLv->bindTextFree("epglv(combinedcomp,?)", episodeDb->getValue("COMBINEDCOMP"), cDBS::bndIn);
+   selectByCompNamesCombinedLv->bindTextFree(" <= ?", &maxLvDistance, cDBS::bndIn);
+
+   status += selectByCompNamesCombinedLv->prepare();
+
+   // --------------------
+   // select episodename, partname, lang
+   //   from episodes
+   //     where epglv(CONCAT(compname,comppartname), ?) <= ?
 
    selectByCompNamesCombined = new cDbStatement(episodeDb);
    selectByCompNamesCombined->build("select ");
    selectByCompNamesCombined->bindAllOut();
    selectByCompNamesCombined->build(" from %s where ", episodeDb->TableName());
-   // selectByCompNamesCombined->bindTextFree("CONCAT(compname,comppartname) = ?", episodeDb->getValue("COMPNAME"), cDBS::bndIn);
-   selectByCompNamesCombined->bindTextFree("epglv(concat(compname,comppartname),?)", episodeDb->getValue("COMPNAME"), cDBS::bndIn);
-   selectByCompNamesCombined->bindTextFree("<= ?", &maxLvDistance, cDBS::bndIn);
+   selectByCompNamesCombined->bindTextFree("combinedcomp = ?", episodeDb->getValue("COMBINEDCOMP"), cDBS::bndIn);
 
    status += selectByCompNamesCombined->prepare();
 
@@ -1025,6 +1039,7 @@ int cEpgd::exitDb()
    delete selectByCompName;          selectByCompName = 0;
    delete selectByCompNames;         selectByCompNames = 0;
    delete selectByCompNamesCombined; selectByCompNamesCombined = 0;
+   delete selectByCompNamesCombinedLv; selectByCompNamesCombinedLv = 0;
    delete updateEpisodeAtEvents;     updateEpisodeAtEvents = 0;
    delete updateScrReference;        updateScrReference = 0;
    delete countDvbChanges;           countDvbChanges = 0;
@@ -1697,6 +1712,8 @@ void cEpgd::loop()
          continue;
       }
 
+      // evaluateEpisodes(); // #TODO test call
+
       // the real work ...
 
       setState(Es::esBusyEvents);
@@ -1794,7 +1811,6 @@ int cEpgd::checkConnection()
       {
          tell(0, "Retry #%d failed, retrying in 60 seconds!", retry);
          exitDb();
-
          return fail;
       }
 
@@ -2506,7 +2522,7 @@ int cEpgd::scrapNewEvents()
       {
          setParameter("epgd", "lastTvDvScrap", time(0));
 
-         int bytes = tvdbManager->GetBytesDownloaded();
+         long long bytes = tvdbManager->GetBytesDownloaded();
          double mb = (double)bytes / 1024.0 / 1024.0;
 
          tell(1, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
@@ -2548,7 +2564,7 @@ int cEpgd::scrapNewEvents()
          return fail;
    }
 
-   int bytes = tvdbManager->GetBytesDownloaded();
+   long long bytes = tvdbManager->GetBytesDownloaded();
    double mb = (double)bytes / 1024.0 / 1024.0;
 
    tell(1, "%d of %zu series episodes scraped in %ld s, downloaded %.3f %cB",

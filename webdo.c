@@ -164,6 +164,7 @@ int cEpgHttpd::collectScraperData(json_t* oScraperData, int movieId, int seriesI
          }
          else
          {
+            tell(0, "Series episode id %d not found!", episodeId);
             json_t* oSeriesMedias = json_object();
             json_t* oSeriesActors = json_object();
 
