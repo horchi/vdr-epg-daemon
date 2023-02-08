@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.11"
-#define VERSION_DATE "06.02.2023"
+#define _VERSION     "1.3.12"
+#define VERSION_DATE "07.02.2023"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-02-07: version 1.3.12 (horchi)
+   - change: Minor code cleanup and log message improvements
 
 2023-02-06: version 1.3.11 (horchi)
    - change: Improved series lookup and constable merge for bad provider data

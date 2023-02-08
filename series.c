@@ -68,7 +68,7 @@ int cEpgd::evaluateEpisodes()
 
             episodeDb->clear();
             episodeDb->setValue("COMBINEDCOMP", eventsDb->getStrValue("COMPTITLE"));
-            // int dist = strlen(eventsDb->getStrValue("COMPTITLE")) / 100.0 * 20.0;
+            // int dist = strlen(episodeDb->getStrValue("COMBINEDCOMP")) / 100.0 * 20.0;
             // maxLvDistance.setValue(dist);
             tell(3, "CONSTABEL: Try event lookup by combined name '%s'", episodeDb->getStrValue("COMBINEDCOMP"));
 
@@ -302,6 +302,8 @@ int cEpgd::updateEpisodes()
       return fail;
    }
 
+   tell(0, "Connected to eplist server at '%s'", EpgdConfig.seriesUrl);
+
    // select characterset
 
    if (!cl.send(withutf8 ? "CHARSET utf-8" : "CHARSET iso-8859-1"))
@@ -323,7 +325,7 @@ int cEpgd::updateEpisodes()
    }
 
    if (csconf.First() && csconf.First()->Text())
-      tell(1, "Got '%s'", csconf.First()->Text());
+      tell(2, "Got '%s'", csconf.First()->Text());
 
    // identify myself
 

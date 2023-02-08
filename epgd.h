@@ -54,7 +54,7 @@ class Plugin
 {
    public:
 
-      Plugin()          {}
+      Plugin() {}
       virtual ~Plugin() {}
 
       virtual int init(cEpgd* aObject, int aUtf8)

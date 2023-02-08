@@ -196,7 +196,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
          {
             if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, comment) < 4)
             {
-               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 4 columns expected", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at least 4 columns expected", name.c_str(), line);
                continue;
             }
             break;
@@ -205,7 +205,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
          {
             if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%250[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, ex1, comment) < 5)
             {
-               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 5 columns expected", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at least 5 columns expected", name.c_str(), line);
                continue;
             }
             break;
@@ -214,7 +214,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
          {
             if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%250[^\t\n]\t%250[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, ex1, ex2, comment) < 6)
             {
-               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 6 columns expected", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at least 6 columns expected", name.c_str(), line);
                continue;
             }
             break;
@@ -223,7 +223,7 @@ int cEpisodeFile::storeToTable(cDbTable* episodeDb, cDbTable* eventsDb, const cL
          {
             if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%250[^\t\n]\t%250[^\t\n]\t%250[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, ex1, ex2, ex3, comment) < 7)
             {
-               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at lease 7 columns expected", name.c_str(), line);
+               tell(0, "CONSTABEL: Warning: (%s) Got invalid episode line [%s], at least 7 columns expected", name.c_str(), line);
                continue;
             }
             break;

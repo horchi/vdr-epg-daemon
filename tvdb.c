@@ -231,7 +231,7 @@ int main(int argc, char** argv)
       //    "01<tab>1<tab>1<tab>Schatten der Vergangenheit<tab>[extcol1<tab>[extcol2<tab>[extcol3]]][<tab>#comment]<tab>"
 
       if (sscanf(line, "%d\t%d\t%d\t%200[^\t\n]\t%200[^\t\n]", &se, &ep, &no, partName, comment) < 4)
-         printf("CONSTABEL: Warning: Got invalid episode line [%s], at lease 4 columns expected\n", line);
+         printf("CONSTABEL: Warning: Got invalid episode line [%s], at least 4 columns expected\n", line);
       else
          printf("%d/%d/%d '%s' - %s\n", se, ep, no, partName, comment);
 

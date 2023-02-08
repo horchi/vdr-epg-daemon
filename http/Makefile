@@ -34,14 +34,14 @@ common:
 	cp ./3rdParty/fontello/LICENSE.txt ./www/font/
 
 # kopiert alle Sprachrelevanten Dateien nach www/lang
+
 lang:
 	cp -ua ./src/lang/* ./www/lang/
 
 # baut das default-theme und hinter dann auch ggf. weitere themes
+
 style:
 	$(LESS_Compiler) -f ./tools/less-rhino-1.7.0.js ./tools/lessc-rhino-1.7.0.js --ru ./src/css/theme/default.less ./www/epgd.css
-
-
 
 install: install-env install-core install-lang install-font install-images
 

@@ -104,7 +104,7 @@ cEpgd::~cEpgd()
 
    cDbConnection::exit();
 
-   for (auto it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); ++it)
       delete *it;
 
    plugins.clear();
@@ -144,6 +144,7 @@ int cEpgd::init()
       return 1;
    }
 
+   tell(0, "Starting epgd");
    tell(1, "Dictionary '%s' loaded", dictPath);
    free(dictPath);
 
@@ -1796,13 +1797,9 @@ void cEpgd::loop()
 
 int cEpgd::checkConnection()
 {
-   // check connection
-
    if (!dbConnected())
    {
       static int retry {0};
-
-      // try to connect
 
       tell(0, "Trying to re-connect to database!");
       retry++;
@@ -2069,7 +2066,7 @@ int cEpgd::storeImageRefs(tEventId evtId, const char* source, const char* images
       imageRefDb->setValue("SOURCE", source);
       imageRefDb->setValue("FILEREF", fileRef);
 
-      for (auto it = plugins.begin(); it < plugins.end(); it++)
+      for (auto it = plugins.begin(); it < plugins.end(); ++it)
       {
          Plugin* plg = (*it)->getPlugin();
 
@@ -2368,7 +2365,7 @@ int cEpgd::loadFromFs(MemoryStruct* data, const char* filename, const char* subP
 
 int cEpgd::cleanupBefore()
 {
-   for (auto it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); ++it)
    {
       Plugin* p = (*it)->getPlugin();
 
@@ -2387,7 +2384,7 @@ int cEpgd::cleanupBefore()
 
 int cEpgd::cleanupAfter()
 {
-   for (auto it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); ++it)
    {
       Plugin* p = (*it)->getPlugin();
 
@@ -2404,10 +2401,9 @@ int cEpgd::cleanupAfter()
 // Get Picture
 //***************************************************************************
 
-int cEpgd::getPicture(const char* source, const char* imagename,
-                      const char* fileRef, MemoryStruct* data)
+int cEpgd::getPicture(const char* source, const char* imagename, const char* fileRef, MemoryStruct* data)
 {
-   for (auto it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); ++it)
    {
       Plugin* p = (*it)->getPlugin();
 
@@ -2426,7 +2422,7 @@ int cEpgd::getPicture(const char* source, const char* imagename,
 
 int cEpgd::processDay(int day, int fullupdate, Statistic* stat)
 {
-   for (auto it = plugins.begin(); it < plugins.end(); it++)
+   for (auto it = plugins.begin(); it < plugins.end(); ++it)
    {
       Plugin* p = (*it)->getPlugin();
 
@@ -2458,8 +2454,9 @@ int cEpgd::initScrapers()
       return fail;
    }
 
-   if ((status = tvdbManager->connectDatabase(connection)) != success)
+   if ((status = tvdbManager->initDb(connection)) != success)
    {
+      tvdbManager->exitDb();
       tell(0, "Error while connecting to series database");
       return status;
    }
@@ -2491,6 +2488,8 @@ int cEpgd::initScrapers()
 
 void cEpgd::exitScrapers()
 {
+   tvdbManager->exitDb();
+
    delete tvdbManager;     tvdbManager = nullptr;
    delete movieDbManager;  movieDbManager = nullptr;
 }
@@ -2537,7 +2536,7 @@ int cEpgd::scrapNewEvents()
 
    std::vector<cTVDBManager::SeriesLookupData> seriesToScrap;
 
-   if (!tvdbManager->GetSeriesWithEpisodesFromEPG(&seriesToScrap))
+   if (!tvdbManager->getSeriesWithEpisodesFromEPG(seriesToScrap))
       return fail;
 
    start = time(0);
@@ -2547,15 +2546,15 @@ int cEpgd::scrapNewEvents()
 
    tell(1, "Series for %zu new events to scrap", seriesToScrap.size());
 
-   for (std::vector<cTVDBManager::SeriesLookupData>::iterator it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
+   // for (auto it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
+   for (const auto& lookupData : seriesToScrap)
    {
-      seriesCur++;
       cSystemNotification::check();
 
-      if (seriesCur % 10 == 0)
+      if (seriesCur++ % 10 == 0)
          tell(1, "Series episode %d / %zu scraped, continuing ...", seriesCur, seriesToScrap.size());
 
-      tvdbManager->processSeries(*it);
+      tvdbManager->processSeries(lookupData); // *it
 
       if (doShutDown())
          break;
@@ -2596,11 +2595,10 @@ int cEpgd::scrapNewEvents()
 
    time_t sectionStartAt = time(0);  // split download in parts of 40
 
-   for (vector<sMovieResult>::iterator it = moviesToScrap.begin(); it != moviesToScrap.end(); ++it)
+   // for (vector<sMovieResult>::iterator it = moviesToScrap.begin(); it != moviesToScrap.end(); ++it)
+   for (const auto&  movie : moviesToScrap)
    {
-      movieCur++;
-
-      if (movieCur % 10 == 0)
+      if (movieCur++ % 10 == 0)
          tell(1, "movie %zu / %zu scraped, continuing ...", movieCur, moviesTotal);
 
       if (movieCur % 40 == 0)
@@ -2617,7 +2615,7 @@ int cEpgd::scrapNewEvents()
          sectionStartAt = time(0);
       }
 
-      movieDbManager->ProcessMovie(*it);
+      movieDbManager->ProcessMovie(movie); // (*it);
 
       if (doShutDown())
          break;

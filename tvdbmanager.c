@@ -34,17 +34,9 @@ cTVDBManager::cTVDBManager(bool aWithutf8)
 
 cTVDBManager::~cTVDBManager()
 {
-   delete tvdbScraper;
-   delete tSeries;
-   delete tSeriesEpsiode;
-   delete tSeriesMedia;
-   delete tSeriesActor;
-   delete tEvents;
-   delete tEpisodes;
-   delete tRecordingList;
 }
 
-int cTVDBManager::connectDatabase(cDbConnection* c)
+int cTVDBManager::initDb(cDbConnection* c)
 {
    if (!c)
       return fail;
@@ -73,7 +65,93 @@ int cTVDBManager::connectDatabase(cDbConnection* c)
    tRecordingList = new cDbTable(connection, "recordinglist");
    if ((status = tRecordingList->open()) != success) return status;
 
+   // prepare statements
+
+   // ------------------------
+   //
+
+   selectSeriesByName = new cDbStatement(tSeries);
+   statements.push_back(selectSeriesByName);
+
+   selectSeriesByName->build("select ");
+   selectSeriesByName->bind("SERIESID", cDBS::bndOut);
+   selectSeriesByName->build(" from %s where ", tSeries->TableName());
+   selectSeriesByName->bind("SERIESNAME", cDBS::bndIn | cDBS::bndSet);
+
+   status += selectSeriesByName->prepare();
+
+   // ------------------------
+   //
+
+   selectEpisodeByName = new cDbStatement(tSeriesEpsiode);
+   statements.push_back(selectEpisodeByName);
+
+   selectEpisodeByName->build("select ");
+   selectEpisodeByName->bind("EPISODENUMBER", cDBS::bndOut);
+   selectEpisodeByName->bind("SEASONNUMBER", cDBS::bndOut, ", ");
+   selectEpisodeByName->bind("EPISODEID", cDBS::bndOut, ", ");
+   selectEpisodeByName->build(" from %s where ", tSeriesEpsiode->TableName());
+   selectEpisodeByName->bind("SERIESID", cDBS::bndIn | cDBS::bndSet);
+   selectEpisodeByName->bind("EPISODENAME", cDBS::bndIn | cDBS::bndSet, " and ");
+
+   status += selectEpisodeByName->prepare();
+
+   // ------------------------
+
+   selectEpisodeByNumbers = new cDbStatement(tSeriesEpsiode);
+   statements.push_back(selectEpisodeByNumbers);
+
+   selectEpisodeByNumbers->build("select ");
+   selectEpisodeByNumbers->bind("EPISODEID", cDBS::bndOut);
+   selectEpisodeByNumbers->build(" from %s where ", tSeriesEpsiode->TableName());
+   selectEpisodeByNumbers->bind("EPISODENUMBER", cDBS::bndIn | cDBS::bndSet);
+   selectEpisodeByNumbers->bind("SEASONNUMBER", cDBS::bndIn | cDBS::bndSet, " and ");
+   selectEpisodeByNumbers->bind("SERIESID", cDBS::bndIn | cDBS::bndSet, " and ");
+
+   status += selectEpisodeByNumbers->prepare();
+
+   // ------------------------
+
+   updateEvent = new cDbStatement(tEvents);
+   statements.push_back(updateEvent);
+
+   updateEvent->build("update %s set ", tEvents->TableName());
+   updateEvent->bind("SCRSP", cDBS::bndIn | cDBS::bndSet);
+   updateEvent->bind("SCRSERIESID", cDBS::bndIn | cDBS::bndSet, ", ");
+   updateEvent->bind("SCRSERIESEPISODE", cDBS::bndIn | cDBS::bndSet, ", ");
+   updateEvent->build(" where ");
+   updateEvent->bind("EVENTID", cDBS::bndIn | cDBS::bndSet);
+
+   status += updateEvent->prepare();
+
+   // ------------------------
+
+   if (status != success)
+   {
+      tell(0, "Error: At least %d statements of cTVDBManager not prepared successfully", status*-1);
+      return status;
+   }
+
    return success;
+}
+
+int cTVDBManager::exitDb()
+{
+   for (auto stmt : statements)
+      delete stmt;
+
+   statements.clear();
+
+   delete tvdbScraper;    tvdbScraper = nullptr;
+   delete tSeries;        tSeries = nullptr;
+   delete tSeriesEpsiode; tSeriesEpsiode = nullptr;
+   delete tSeriesMedia;   tSeriesMedia = nullptr;
+   delete tSeriesActor;   tSeriesActor = nullptr;
+   delete tEvents;        tEvents = nullptr;
+   delete tEpisodes;      tEpisodes = nullptr;
+   delete tRecordingList; tRecordingList = nullptr;
+
+   return done;
 }
 
 int cTVDBManager::connectScraper()
@@ -385,7 +463,7 @@ bool cTVDBManager::loadMedia(int seriesId, int seasonNumber, int episodeId, int 
    return tSeriesMedia->find();
 }
 
-bool cTVDBManager::GetSeriesWithEpisodesFromEPG(vector<SeriesLookupData>* result)
+bool cTVDBManager::getSeriesWithEpisodesFromEPG(std::vector<SeriesLookupData>& result)
 {
    cDbValue season;
    cDbValue part;
@@ -398,13 +476,13 @@ bool cTVDBManager::GetSeriesWithEpisodesFromEPG(vector<SeriesLookupData>* result
    cDbStatement* selectSeries = new cDbStatement(tEvents);
 
    selectSeries->build("select ");
-   selectSeries->bind("EventId", cDBS::bndOut);
-   selectSeries->bind("Title", cDBS::bndOut, ", ");
-   selectSeries->bind("ScrSp", cDBS::bndOut, ", ");
+   selectSeries->bind("EVENTID", cDBS::bndOut);
+   selectSeries->bind("TITLE", cDBS::bndOut, ", ");
+   selectSeries->bind("SCRSP", cDBS::bndOut, ", ");
    selectSeries->bind(&season, cDBS::bndOut, ", ");
    selectSeries->bind(&part, cDBS::bndOut, ", ");
    selectSeries->bind(&number, cDBS::bndOut, ", ");
-   selectSeries->bind("ShortText", cDBS::bndOut, ", ");
+   selectSeries->bind("SHORTTEXT", cDBS::bndOut, ", ");
    selectSeries->build(" from thetvdbview");
 
    if (selectSeries->prepare() != success)
@@ -416,14 +494,14 @@ bool cTVDBManager::GetSeriesWithEpisodesFromEPG(vector<SeriesLookupData>* result
    for (int found = selectSeries->find(); found; found = selectSeries->fetch())
    {
       SeriesLookupData lookupData;
-      lookupData.eventId = tEvents->getBigintValue("EventId");
-      lookupData.title = tEvents->getStrValue("Title");
-      lookupData.lastScraped = tEvents->getIntValue("ScrSp");
+      lookupData.eventId = tEvents->getBigintValue("EVENTID");
+      lookupData.title = tEvents->getStrValue("TITLE");
+      lookupData.lastScraped = tEvents->getIntValue("SCRSP");
       lookupData.season = season.getIntValue();
       lookupData.part = part.getIntValue();
       lookupData.number = number.getIntValue();
-      lookupData.episodeName = tEvents->getStrValue("ShortText");
-      result->push_back(lookupData);
+      lookupData.episodeName = tEvents->getStrValue("SHORTTEXT");
+      result.push_back(lookupData);
    }
 
    selectSeries->freeResult();
@@ -436,7 +514,7 @@ int cTVDBManager::GetPicture(const char* url, MemoryStruct* data)
 {
    // tell(0, "Debug: Download image '%s'", url);
 
-   int maxSize = tSeriesMedia->getField("MediaContent")->getSize();
+   int maxSize = tSeriesMedia->getField("MEDIACONTENT")->getSize();
    int imgFileSize {0};
    data->clear();
 
@@ -498,7 +576,13 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
    {
       // check if series in database
 
-      seriesID = LoadSeriesFromDd(lookupData.title);
+      tSeries->clear();
+      tSeries->setValue("SeriesName", lookupData.title.c_str());
+
+      if (selectSeriesByName->find())
+         seriesID = tSeries->getIntValue("SERIESID");
+
+      selectSeriesByName->freeResult();
 
       if (seriesID)
       {
@@ -525,7 +609,7 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
       }
    }
 
-   alreadyScraped.insert(pair<string,int>(lookupData.title, seriesID));
+   alreadyScraped.insert(pair<std::string,int>(lookupData.title, seriesID));
 
    int episodeID {0};
 
@@ -533,11 +617,22 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
    {
       tell(0, "lookup %d/%d/%d '%s'", seriesID, lookupData.season, lookupData.part, lookupData.episodeName.c_str());
 
-      if (!lookupData.season && !lookupData.part && lookupData.episodeName.size() > 0)
+      if (!lookupData.season && !lookupData.part && lookupData.episodeName.size())
       {
-         // try to get part and season from episode name
+         // try to get part and season by episode name
 
-         GetSeasonEpisodeFromEpisodename(seriesID, lookupData.season, lookupData.part, lookupData.episodeName);
+         tSeriesEpsiode->clear();
+         tSeriesEpsiode->setValue("SERIESID", seriesID);
+         tSeriesEpsiode->setValue("EPISODENAME", lookupData.episodeName.c_str());
+
+         if (selectEpisodeByName->find())
+         {
+            lookupData.season = tSeriesEpsiode->getIntValue("SEASONNUMBER");
+            lookupData.part = tSeriesEpsiode->getIntValue("EPISODENUMBER");
+         }
+
+         selectEpisodeByName->freeResult();
+
          // tell(0, "Got %d/%d ", lookupData.season, lookupData.part);
       }
 
@@ -555,63 +650,6 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
    // updating event with series data
 
    UpdateEvent(lookupData.eventId, seriesID, episodeID);
-}
-
-int cTVDBManager::LoadSeriesFromDd(const std::string& name)
-{
-   int seriesID {0};
-
-   tSeries->clear();
-   tSeries->setValue("SeriesName", name.c_str());
-   cDbStatement* select = new cDbStatement(tSeries);
-   select->build("select ");
-   select->bind("SeriesId", cDBS::bndOut);
-   select->build(" from %s where ", tSeries->TableName());
-   select->bind("SeriesName", cDBS::bndIn | cDBS::bndSet);
-
-   if (select->prepare() != success)
-   {
-      delete select;
-      return 0;
-   }
-
-   if (select->find())
-      seriesID = tSeries->getIntValue("SeriesId");
-
-   select->freeResult();
-   delete select;
-
-   return seriesID;
-}
-
-void cTVDBManager::GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, const std::string& episodeName)
-{
-   cDbStatement* select = new cDbStatement(tSeriesEpsiode);
-   select->build("select ");
-   select->bind("EpisodeNumber", cDBS::bndOut);
-   select->bind("SeasonNumber", cDBS::bndOut, ", ");
-   select->build(" from %s where ", tSeriesEpsiode->TableName());
-   select->bind("SeriesId", cDBS::bndIn | cDBS::bndSet);
-   select->bind("EpisodeName", cDBS::bndIn | cDBS::bndSet, " and ");
-
-   if (select->prepare() != success)
-   {
-      delete select;
-      return;
-   }
-
-   tSeriesEpsiode->clear();
-   tSeriesEpsiode->setValue("SeriesId", seriesID);
-   tSeriesEpsiode->setValue("EpisodeName", episodeName.c_str());
-
-   if (select->find())
-   {
-      season = tSeriesEpsiode->getIntValue("SeasonNumber");
-      part = tSeriesEpsiode->getIntValue("EpisodeNumber");
-   }
-
-   select->freeResult();
-   delete select;
 }
 
 void cTVDBManager::checkLoadSeasonPoster(int seriesID, int season)
@@ -641,61 +679,30 @@ void cTVDBManager::checkLoadSeasonPoster(int seriesID, int season)
    }
 }
 
-int cTVDBManager::lookupEpisodeId(int seriesID, const SeriesLookupData& lookupData) //  season, int part)
+int cTVDBManager::lookupEpisodeId(int seriesID, const SeriesLookupData& lookupData)
 {
-   cDbStatement* select = new cDbStatement(tSeriesEpsiode);
-
-   select->build("select ");
-   select->bind("EpisodeId", cDBS::bndOut);
-   select->build(" from %s where ", tSeriesEpsiode->TableName());
-   select->bind("EpisodeNumber", cDBS::bndIn | cDBS::bndSet);
-   select->bind("SeasonNumber", cDBS::bndIn | cDBS::bndSet, " and ");
-   select->bind("SeriesId", cDBS::bndIn | cDBS::bndSet, " and ");
-
-   if (select->prepare() != success)
-   {
-      delete select;
-      return 0;
-   }
-
    int episodeID {0};
 
    tSeriesEpsiode->clear();
-   tSeriesEpsiode->setValue("EpisodeNumber", lookupData.part);
-   tSeriesEpsiode->setValue("SeasonNumber", lookupData.season);
-   tSeriesEpsiode->setValue("SeriesId", seriesID);
+   tSeriesEpsiode->setValue("EPISODENAME", lookupData.episodeName.c_str());
+   tSeriesEpsiode->setValue("SERIESID", seriesID);
 
-   if (select->find())
-      episodeID = tSeriesEpsiode->getIntValue("EpisodeId");
+   if (selectEpisodeByName->find())
+      episodeID = tSeriesEpsiode->getIntValue("EPISODEID");
 
-   select->freeResult();
-   delete select;
+   selectEpisodeByName->freeResult();
 
    if (!episodeID)
    {
-      select = new cDbStatement(tSeriesEpsiode);
-
-      select->build("select ");
-      select->bind("EPISODEID", cDBS::bndOut);
-      select->build(" from %s where ", tSeriesEpsiode->TableName());
-      select->bind("EPISODENAME", cDBS::bndIn | cDBS::bndSet);
-      select->bind("SERIESID", cDBS::bndIn | cDBS::bndSet, " and ");
-
-      if (select->prepare() != success)
-      {
-         delete select;
-         return 0;
-      }
-
       tSeriesEpsiode->clear();
-      tSeriesEpsiode->setValue("EPISODENAME", lookupData.episodeName.c_str());
+      tSeriesEpsiode->setValue("EPISODENUMBER", lookupData.part);
+      tSeriesEpsiode->setValue("SEASONNUMBER", lookupData.season);
       tSeriesEpsiode->setValue("SERIESID", seriesID);
 
-      if (select->find())
+      if (selectEpisodeByNumbers->find())
          episodeID = tSeriesEpsiode->getIntValue("EpisodeId");
 
-      select->freeResult();
-      delete select;
+      selectEpisodeByNumbers->freeResult();
    }
 
    return episodeID;
@@ -703,30 +710,28 @@ int cTVDBManager::lookupEpisodeId(int seriesID, const SeriesLookupData& lookupDa
 
 void cTVDBManager::UpdateEvent(tEventId eventID, int seriesID, int episodeID)
 {
-   stringstream upd;
-   upd << "update " << tEvents->TableName();
-   upd << " set scrsp = " << time(0);
-   upd << ", scrseriesid = " << seriesID;
-   upd << ", scrseriesepisode = " << episodeID;
-   upd << " where eventid = " << eventID;
-   cDbStatement updStmt(connection, upd.str().c_str());
-   updStmt.prepare();
-   updStmt.execute();
+   tEvents->clear();
+   tEvents->setBigintValue("EVENTID", eventID);
+   tEvents->setValue("SCRSP", time(0));
+   tEvents->setValue("SCRSERIESID", seriesID);
+   tEvents->setValue("SCRSERIESEPISODE", episodeID);
+
+   updateEvent->execute();
 }
 
 int cTVDBManager::CleanupSeries()
 {
    int numDelete {0};
-   set<int> activeSeriesIds;
+   std::set<int> activeSeriesIds;
 
    // fetching seriesIds from current events
 
    cDbStatement* selectSeriesIds = new cDbStatement(tEvents);
    selectSeriesIds->build("select distinct ");
-   selectSeriesIds->bind("ScrSeriesId", cDBS::bndOut);
+   selectSeriesIds->bind("SCRSERIESID", cDBS::bndOut);
    selectSeriesIds->build(" from %s where ", tEvents->TableName());
-   selectSeriesIds->build(" %s is not null ", tEvents->getField("ScrSeriesId")->getDbName());
-   selectSeriesIds->build(" and %s > 0 ", tEvents->getField("ScrSeriesId")->getDbName());
+   selectSeriesIds->build(" %s is not null ", tEvents->getField("SCRSERIESID")->getDbName());
+   selectSeriesIds->build(" and %s > 0 ", tEvents->getField("SCRSERIESID")->getDbName());
 
    if (selectSeriesIds->prepare() != success)
    {
@@ -737,7 +742,7 @@ int cTVDBManager::CleanupSeries()
    tEvents->clear();
 
    for (int res = selectSeriesIds->find(); res; res = selectSeriesIds->fetch())
-      activeSeriesIds.insert(tEvents->getIntValue("ScrSeriesId"));
+      activeSeriesIds.insert(tEvents->getIntValue("SCRSERIESID"));
 
    selectSeriesIds->freeResult();
    delete selectSeriesIds;
@@ -767,13 +772,13 @@ int cTVDBManager::CleanupSeries()
 
    // fetching all seriesIds from database
 
-   vector<int> storedSeriesIds;
+   std::vector<int> storedSeriesIds;
    cDbStatement* selectStoredSeriesIds = new cDbStatement(tSeries);
    selectStoredSeriesIds->build("select ");
-   selectStoredSeriesIds->bind("SeriesId", cDBS::bndOut);
+   selectStoredSeriesIds->bind("SERIESID", cDBS::bndOut);
    selectStoredSeriesIds->build(" from %s where ", tSeries->TableName());
-   selectStoredSeriesIds->build(" %s is not null ", tSeries->getField("SeriesId")->getDbName());
-   selectStoredSeriesIds->build(" and %s > 0 ", tSeries->getField("SeriesId")->getDbName());
+   selectStoredSeriesIds->build(" %s is not null ", tSeries->getField("SERIESID")->getDbName());
+   selectStoredSeriesIds->build(" and %s > 0 ", tSeries->getField("SERIESID")->getDbName());
 
    if (selectStoredSeriesIds->prepare() != success)
    {
@@ -784,7 +789,7 @@ int cTVDBManager::CleanupSeries()
    tSeries->clear();
 
    for (int res = selectStoredSeriesIds->find(); res; res = selectStoredSeriesIds->fetch())
-      storedSeriesIds.push_back(tSeries->getIntValue("SeriesId"));
+      storedSeriesIds.push_back(tSeries->getIntValue("SERIESID"));
 
    selectStoredSeriesIds->freeResult();
    delete selectStoredSeriesIds;
@@ -794,12 +799,10 @@ int cTVDBManager::CleanupSeries()
    if (numDelete < 1)
       return numDelete;
 
-   for (vector<int>::iterator sId = storedSeriesIds.begin(); sId != storedSeriesIds.end(); ++sId)
+   for (const auto& sId : storedSeriesIds)
    {
-      set<int>::iterator hit = activeSeriesIds.find(*sId);
-
-      if (hit == activeSeriesIds.end())
-         DeleteSeries(*sId);
+      if (activeSeriesIds.find(sId) == activeSeriesIds.end())
+         DeleteSeries(sId);
    }
 
    return numDelete;
@@ -854,33 +857,19 @@ void cTVDBManager::DeleteSeries(int seriesId)
 
 bool cTVDBManager::SearchRecordingDB(const std::string& name, const std::string& episode, int &seriesId, int &episodeId)
 {
-   cDbStatement* select = new cDbStatement(tSeries);
-
-   select->build("select ");
-   select->bind("SeriesId", cDBS::bndOut);
-   select->build(" from %s where ", tSeries->TableName());
-   select->bind("SeriesName", cDBS::bndIn | cDBS::bndSet);
-
-   if (select->prepare() != success)
-   {
-      delete select;
-      return false;
-   }
-
    tSeries->clear();
-   tSeries->setValue("SeriesName", name.c_str());
-   int found = select->find();
+   tSeries->setValue("SERIESNAME", name.c_str());
 
-   if (found)
+   if (selectSeriesByName->find())
    {
-      seriesId = tSeries->getIntValue("SeriesId");
+      seriesId = tSeries->getIntValue("SERIESID");
       episodeId = LoadEpisode(episode, seriesId);
+      return true;
    }
 
-   select->freeResult();
-   delete select;
+   selectSeriesByName->freeResult();
 
-   return found;
+   return false;
 }
 
 bool cTVDBManager::searchRecordingOnline(const char* name, const std::string& episode, int& seriesId, int& episodeId)
@@ -901,37 +890,22 @@ bool cTVDBManager::searchRecordingOnline(const char* name, const std::string& ep
 
 int cTVDBManager::LoadEpisode(const std::string& name, int seriesId)
 {
-   int episodeId = 0;
-   cDbStatement* select = new cDbStatement(tSeriesEpsiode);
-   select->build("select ");
-   select->bind("EpisodeId", cDBS::bndOut);
-   select->build(" from %s where ", tSeriesEpsiode->TableName());
-   select->bind("EpisodeName", cDBS::bndIn | cDBS::bndSet);
-   select->bind("SeriesId", cDBS::bndIn | cDBS::bndSet, " and ");
-
-   if (select->prepare() != success)
-   {
-      delete select;
-      return false;
-   }
-
    tSeriesEpsiode->clear();
-   tSeriesEpsiode->setValue("EpisodeName", name.c_str());
-   tSeriesEpsiode->setValue("SeriesId", seriesId);
+   tSeriesEpsiode->setValue("EPISODENAME", name.c_str());
+   tSeriesEpsiode->setValue("SERIESID", seriesId);
 
-   if (select->find())
-      episodeId = tSeriesEpsiode->getIntValue("EpisodeId");
+   if (selectEpisodeByName->find())
+      return tSeriesEpsiode->getIntValue("EPISODEID");
 
-   select->freeResult();
-   delete select;
-   return episodeId;
+   selectEpisodeByName->freeResult();
+
+   return 0;
 }
-
 
 bool cTVDBManager::CheckScrapInfoDB(int scrapSeriesId, int scrapEpisodeId)
 {
    tSeries->clear();
-   tSeries->setValue("SeriesId", scrapSeriesId);
+   tSeries->setValue("SERIESID", scrapSeriesId);
 
    if (!tSeries->find())
       return false;
@@ -939,11 +913,11 @@ bool cTVDBManager::CheckScrapInfoDB(int scrapSeriesId, int scrapEpisodeId)
    if (scrapEpisodeId)
    {
       tSeriesEpsiode->clear();
-      tSeriesEpsiode->setValue("EpisodeId", scrapEpisodeId);
+      tSeriesEpsiode->setValue("EPISODEID", scrapEpisodeId);
 
       if (tSeriesEpsiode->find())
       {
-         int season = tSeriesEpsiode->getIntValue("SeasonNumber");
+         int season = tSeriesEpsiode->getIntValue("SEASONNUMBER");
 
          if (season)
             checkLoadSeasonPoster(scrapSeriesId, season);
@@ -967,11 +941,8 @@ bool cTVDBManager::CheckScrapInfoOnline(int scrapSeriesId, int scrapEpisodeId)
       int part {0};
       int season {0};
 
-      if (series->getPartAndSeason(scrapEpisodeId, season, part) == success)
-      {
-         if (season)
-            checkLoadSeasonPoster(scrapSeriesId, season);
-      }
+      if (series->getPartAndSeason(scrapEpisodeId, season, part) == success && season)
+         checkLoadSeasonPoster(scrapSeriesId, season);
    }
 
    delete series;

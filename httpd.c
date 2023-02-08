@@ -2217,7 +2217,7 @@ int main(int argc, char** argv)
    // shutdown
 
    job->exit();
-   tell(0, "normal exit");
+   tell(0, "epghttpd exited normally");
 
    delete job;
 

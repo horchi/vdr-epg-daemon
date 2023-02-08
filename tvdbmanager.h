@@ -40,12 +40,14 @@ class cTVDBManager
       cTVDBManager(bool aWithutf8 = true);
       virtual ~cTVDBManager();
 
-      int connectDatabase(cDbConnection* c);
+      int initDb(cDbConnection* c);
+      int exitDb();
+
       int connectScraper();
       void ResetBytesDownloaded() { bytesDownloaded = 0; };
       long long GetBytesDownloaded() { return bytesDownloaded; };
       int updateSeries(time_t since);
-      bool GetSeriesWithEpisodesFromEPG(std::vector<SeriesLookupData>* result);
+      bool getSeriesWithEpisodesFromEPG(std::vector<SeriesLookupData>& result);
       void processSeries(SeriesLookupData ser);
       int CleanupSeries();
       bool SearchRecordingDB(const std::string& name, const std::string& episode, int& seriesId, int& episodeId);
@@ -60,6 +62,7 @@ class cTVDBManager
       std::string language {"en"};
       std::map<std::string,int> alreadyScraped;
       cTVDBScraper* tvdbScraper {};
+
       cDbConnection* connection {};
       cDbTable* tSeries {};
       cDbTable* tSeriesEpsiode {};
@@ -68,6 +71,13 @@ class cTVDBManager
       cDbTable* tEvents {};
       cDbTable* tEpisodes {};
       cDbTable* tRecordingList {};
+
+      cDbStatement* selectSeriesByName {};
+      cDbStatement* selectEpisodeByName {};
+      cDbStatement* updateEvent {};
+      cDbStatement* selectEpisodeByNumbers {};
+
+      std::vector<cDbStatement*> statements;
 
       int getAllIDs(std::set<int>& IDs, cDbTable* table, const char* field);
       cTVDBSeries* scrapSeries(const char* search);
@@ -82,8 +92,6 @@ class cTVDBManager
       bool loadMedia(int seriesId, int seasonNumber, int episodeId, int actorId, int mediaType, uint lfn);
       bool imageUrlChanged(const std::string& url);
       int GetPicture(const char* url, MemoryStruct* data);
-      int LoadSeriesFromDd(const std::string& name);
-      void GetSeasonEpisodeFromEpisodename(int seriesID, int& season, int& part, const std::string& episodeName);
       void checkLoadSeasonPoster(int seriesID, int season);
       int LoadEpisode(const std::string& name, int seriesId);
       int lookupEpisodeId(int seriesID, const SeriesLookupData& lookupData);

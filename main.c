@@ -219,7 +219,7 @@ int main(int argc, char** argv)
 
    // shutdown
 
-   tell(0, "normal exit");
+   tell(0, "epgd exited normally");
 
    delete job;
 

@@ -1826,7 +1826,7 @@ int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
    const char* expression = getStringFromJson(jInData, "expression", "");
 
    if (isEmpty(expression))
-      return buildResponse(response, MHD_HTTP_BAD_REQUEST, "Ignoring search request need at lease a expression or id!");
+      return buildResponse(response, MHD_HTTP_BAD_REQUEST, "Ignoring search request need at least a expression or id!");
 
    cDbRow* searchTimer = new cDbRow("searchtimers");
    cDbTableDef* def = searchTimer->getTableDef();

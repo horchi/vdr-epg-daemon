@@ -85,7 +85,7 @@ cppchk:
 	cppcheck --template="{file}:{line}:{severity}:{message}" --quiet --force *.c *.h
 
 %.o: %.c
-	@echo Compile "$(*F)" ...
+	@echo Compile "$(*F)" ..
 	$(doCompile) $(*F).c -o $@
 
 #--------------------------------------------------------
