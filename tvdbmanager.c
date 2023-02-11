@@ -377,17 +377,16 @@ void cTVDBManager::saveSeriesEpisodes(cTVDBSeries* series)
          tSeriesMedia->setValue("MediaRating", 0.0);
 
          MemoryStruct data;
-         int status {success};
 
          if (episode.imageUrl.empty())
             tSeriesMedia->store();
-         else if ((status = GetPicture(episode.imageUrl.c_str(), &data)) == success)
+         else if (GetPicture(episode.imageUrl.c_str(), &data) == success)
          {
             tSeriesMedia->setValue("MediaContent", data.memory, data.size);
             tSeriesMedia->store();
          }
          else
-            tell(3, "Downloading image '%s' failed with %d", episode.imageUrl.c_str(), status);
+            tell(3, "Downloading image '%s' failed", episode.imageUrl.c_str());
       }
    }
 }

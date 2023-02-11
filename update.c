@@ -97,7 +97,6 @@ cEpgd::~cEpgd()
 
    xsltCleanupGlobals();
    xmlCleanupParser();
-
    exitDb();
 
    delete search;
@@ -204,7 +203,7 @@ int cEpgd::init()
 int cEpgd::initUuid()
 {
    MemoryStruct data;
-   char* uuidFile;
+   char* uuidFile {};
 
    asprintf(&uuidFile, "%s/uuid", confDir);
 
@@ -1029,48 +1028,48 @@ int cEpgd::exitDb()
    search->exitDb();
    cParameters::exitDb();
 
-   delete selectMaxMapOrd;           selectMaxMapOrd = 0;
-   delete selectMapOrdOf;            selectMapOrdOf = 0;
-   delete selectAllMap;              selectAllMap = 0;
-   delete selectMapByUpdFlg;         selectMapByUpdFlg = 0;
-   delete selectMapByExt;            selectMapByExt = 0;
-   delete selectByCompTitle;         selectByCompTitle = 0;
-   delete selectMaxUpdSp;            selectMaxUpdSp = 0;
-   delete selectDistCompname;        selectDistCompname = 0;
-   delete selectByCompName;          selectByCompName = 0;
-   delete selectByCompNames;         selectByCompNames = 0;
-   delete selectByCompNamesCombined; selectByCompNamesCombined = 0;
-   delete selectByCompNamesCombinedLv; selectByCompNamesCombinedLv = 0;
-   delete updateEpisodeAtEvents;     updateEpisodeAtEvents = 0;
-   delete updateScrReference;        updateScrReference = 0;
-   delete countDvbChanges;           countDvbChanges = 0;
-   delete selectNewRecordings;       selectNewRecordings = 0;
-   delete countNewRecordings;        countNewRecordings = 0;
-   delete selectRecordingEvent;      selectRecordingEvent = 0;
-   delete selectRecOtherClient;      selectRecOtherClient = 0;
-   delete selectActiveVdrs;          selectActiveVdrs = 0;
-   delete selectWebUsers;            selectWebUsers = 0;
-   delete cleanupTimerActions;       cleanupTimerActions = 0;
-   delete selectNotAssumedTimers;    selectNotAssumedTimers = 0;
+   delete selectMaxMapOrd;           selectMaxMapOrd = nullptr;
+   delete selectMapOrdOf;            selectMapOrdOf = nullptr;
+   delete selectAllMap;              selectAllMap = nullptr;
+   delete selectMapByUpdFlg;         selectMapByUpdFlg = nullptr;
+   delete selectMapByExt;            selectMapByExt = nullptr;
+   delete selectByCompTitle;         selectByCompTitle = nullptr;
+   delete selectMaxUpdSp;            selectMaxUpdSp = nullptr;
+   delete selectDistCompname;        selectDistCompname = nullptr;
+   delete selectByCompName;          selectByCompName = nullptr;
+   delete selectByCompNames;         selectByCompNames = nullptr;
+   delete selectByCompNamesCombined; selectByCompNamesCombined = nullptr;
+   delete selectByCompNamesCombinedLv; selectByCompNamesCombinedLv = nullptr;
+   delete updateEpisodeAtEvents;     updateEpisodeAtEvents = nullptr;
+   delete updateScrReference;        updateScrReference = nullptr;
+   delete countDvbChanges;           countDvbChanges = nullptr;
+   delete selectNewRecordings;       selectNewRecordings = nullptr;
+   delete countNewRecordings;        countNewRecordings = nullptr;
+   delete selectRecordingEvent;      selectRecordingEvent = nullptr;
+   delete selectRecOtherClient;      selectRecOtherClient = nullptr;
+   delete selectActiveVdrs;          selectActiveVdrs = nullptr;
+   delete selectWebUsers;            selectWebUsers = nullptr;
+   delete cleanupTimerActions;       cleanupTimerActions = nullptr;
+   delete selectNotAssumedTimers;    selectNotAssumedTimers = nullptr;
 
-   delete procMergeEpg;              procMergeEpg = 0;
-   delete procUser;                  procUser = 0;
+   delete procMergeEpg;              procMergeEpg = nullptr;
+   delete procUser;                  procUser = nullptr;
 
-   delete eventsDb;                  eventsDb = 0;
-   delete useeventsDb;               useeventsDb = 0;
-   delete fileDb;                    fileDb = 0;
-   delete imageRefDb;                imageRefDb = 0;
-   delete imageDb;                   imageDb = 0;
-   delete episodeDb;                 episodeDb = 0;
-   delete mapDb;                     mapDb = 0;
-   delete vdrDb;                     vdrDb = 0;
-   delete compDb;                    compDb = 0;
-   delete parameterDb;               parameterDb = 0;
-   delete recordingListDb;           recordingListDb = 0;
-   delete timerDb;                   timerDb = 0;
-   delete messageDb;                 messageDb = 0;
+   delete eventsDb;                  eventsDb = nullptr;
+   delete useeventsDb;               useeventsDb = nullptr;
+   delete fileDb;                    fileDb = nullptr;
+   delete imageRefDb;                imageRefDb = nullptr;
+   delete imageDb;                   imageDb = nullptr;
+   delete episodeDb;                 episodeDb = nullptr;
+   delete mapDb;                     mapDb = nullptr;
+   delete vdrDb;                     vdrDb = nullptr;
+   delete compDb;                    compDb = nullptr;
+   delete parameterDb;               parameterDb = nullptr;
+   delete recordingListDb;           recordingListDb = nullptr;
+   delete timerDb;                   timerDb = nullptr;
+   delete messageDb;                 messageDb = nullptr;
 
-   delete connection; connection = 0;
+   delete connection; connection = nullptr;
 
    return done;
 }
@@ -1101,7 +1100,7 @@ int cEpgd::migrateFromDbApi6()
    tell(0, "... done");
 
    delete select;
-   delete imageRefDb; imageRefDb = 0;
+   delete imageRefDb; imageRefDb = nullptr;
 
    return status;
 }
@@ -1162,7 +1161,7 @@ const char* endOf(const char* buf, const char* token)
    return 0;
 }
 
-const char* getLine(const char* buf, const char* startChar = 0, const char* endChar = 0)
+const char* getLine(const char* buf, const char* startChar = nullptr, const char* endChar = nullptr)
 {
    static char line[100+TB] {};
    const char* p {};
@@ -2949,25 +2948,25 @@ int cEpgd::wakeupVdr(const char* uuid)
 // Send TCC TEST Mail
 //***************************************************************************
 
-struct cTccTimerData
-{
-   long id;
-   int begin;
-   int end;
-   std::string channel;
-   std::string file;
-};
-
-struct cTccTransponder
-{
-   int count;
-   std::list<cTccTimerData> timers;
-};
-
 int cEpgd::sendTccTestMail()
 {
    int conflicts {0};
    std::string mailBody;
+
+   struct cTccTimerData
+   {
+      long id {0};
+      int begin {0};
+      int end {0};
+      std::string channel;
+      std::string file;
+   };
+
+   struct cTccTransponder
+   {
+      int count {0};
+      std::list<cTccTimerData> timers;
+   };
 
    for (int tt = 1; tt < 3; tt++)
    {
@@ -3001,7 +3000,7 @@ int cEpgd::sendTccTestMail()
 
       for (it = transponders.begin(); it != transponders.end(); ++it)
       {
-         char buf[1024+TB];
+         char buf[1024+TB] {};
          std::list<cTccTimerData>::iterator li;
 
          for (li = it->second.timers.begin(); li != it->second.timers.end(); ++li)
@@ -3029,8 +3028,7 @@ int cEpgd::sendTccTestMail()
       }
 
       mailBody += mailPart;
-      mailBody +=
-                       "</tbody>";
+      mailBody += "</tbody>";
    }
 
    sendTccMail(mailBody);
@@ -3175,7 +3173,6 @@ int cEpgd::message(int level, char type, const char* title, const char* format, 
       mimeType = "text/html";
 
    sendMail(mimeType, receivers.c_str(), title, message);
-
    free(message);
 
    return done;
