@@ -325,10 +325,7 @@ epgd Configuration:
   Password
       Password of your proxy
 
-  Loglevel #
-      Logging level 1-5 (Errors, Infos, Debug ...) (default 1)
-
-When choosing a loglevel consider carefully the impact on i/o-performance of your system. If you are using some kind of pattern driven logfile parsing software like logchecker you may want to use ./contrib/epgd.ignore
+If you are using some kind of pattern driven logfile parsing software like logchecker you may want to use ./contrib/epgd.ignore
 
 HINTS / PITFALLS:
 -----------------

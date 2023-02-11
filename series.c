@@ -21,11 +21,11 @@ int cEpgd::evaluateEpisodes()
       return done;
 
    connection->startTransaction();
-   tell(1, "Update episodes.combinedcomp");
+   tell(eloInfo, "Update episodes.combinedcomp");
    connection->query("update episodes set combinedcomp = concat(compname,comppartname) where combinedcomp is null");
    connection->commit();
 
-   tell(1, "Starting episode lookup ...");
+   tell(eloInfo, "Starting episode lookup ...");
 
    // first read all events into list ..
 
@@ -43,7 +43,7 @@ int cEpgd::evaluateEpisodes()
 
       // loop over all events matching this episode by COMPTITLE
 
-      // tell(1, "Searching events for eplist '%s'", (episodeCompName + "%").c_str());
+      // tell(eloInfo, "Searching events for eplist '%s'", (episodeCompName + "%").c_str());
 
       for (int n = selectByCompTitle->find(); n; n = selectByCompTitle->fetch())
       {
@@ -70,12 +70,12 @@ int cEpgd::evaluateEpisodes()
             episodeDb->setValue("COMBINEDCOMP", eventsDb->getStrValue("COMPTITLE"));
             // int dist = strlen(episodeDb->getStrValue("COMBINEDCOMP")) / 100.0 * 20.0;
             // maxLvDistance.setValue(dist);
-            tell(3, "CONSTABEL: Try event lookup by combined name '%s'", episodeDb->getStrValue("COMBINEDCOMP"));
+            tell(eloDetail, "CONSTABEL: Try event lookup by combined name '%s'", episodeDb->getStrValue("COMBINEDCOMP"));
 
             found = selectByCompNamesCombined->find();
 
             if (found)
-               tell(2, "Found eplist match for '%s'/'%s' by combined name", episodeDb->getStrValue("COMPNAME"), episodeDb->getStrValue("COMPPARTNAME"));
+               tell(eloDetail, "Found eplist match for '%s'/'%s' by combined name", episodeDb->getStrValue("COMPNAME"), episodeDb->getStrValue("COMPPARTNAME"));
          }
 
          if (found)
@@ -99,7 +99,7 @@ int cEpgd::evaluateEpisodes()
                updated++;
 
                if (episodeDb->getCharValue("STATE") == cEpisodeFile::esChanged)
-                  tell(2, "Series update detected, reset series reference for all event of to '%s/%s'",
+                  tell(eloDetail, "Series update detected, reset series reference for all event of to '%s/%s'",
                        episodeCompName.c_str(), episodeDb->getStrValue("COMPPARTNAME"));
             }
          }
@@ -149,7 +149,7 @@ int cEpgd::evaluateEpisodes()
                   updated++;
 
                   if (episodeDb->getCharValue("STATE") == cEpisodeFile::esChanged)
-                     tell(2, "Series update detected, reset series reference for all event of to '%s/%s'", episodeCompName.c_str(), bestCompPart);
+                     tell(eloDetail, "Series update detected, reset series reference for all event of to '%s/%s'", episodeCompName.c_str(), bestCompPart);
                }
             }
 
@@ -171,7 +171,7 @@ int cEpgd::evaluateEpisodes()
    selectDistCompname->freeResult();
    connection->commit();
 
-   tell(1, "Lookup done for %d series, matched %d parts by compare and %d parts by lv in %ld seconds; Updated %d",
+   tell(eloInfo, "Lookup done for %d series, matched %d parts by compare and %d parts by lv in %ld seconds; Updated %d",
         ec, pp, plv, time(0)-lStart, updated);
 
    return success;
@@ -186,7 +186,7 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
    lookupData.title = recordingListDb->getStrValue("TITLE");;
    lookupData.episodeName = recordingListDb->getStrValue("SHORTTEXT");
 
-   tell(2, "CONSTABEL: Try lookup of '%s'/'%s' in database", lookupData.title.c_str(), lookupData.episodeName.c_str());
+   tell(eloDetail, "CONSTABEL: Try lookup of '%s'/'%s' in database", lookupData.title.c_str(), lookupData.episodeName.c_str());
 
    if (!recordingListDb->getValue("EPISODECOMPNAME")->isEmpty() && !recordingListDb->getValue("EPISODECOMPPARTNAME")->isEmpty())
    {
@@ -201,7 +201,7 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
          lookupData.title = episodeDb->getStrValue("EPISODENAME");
          lookupData.episodeName = episodeDb->getStrValue("PARTNAME");
 
-         tell(1, "Found referenced eplist data for '%s' / '%s'", lookupData.title.c_str(), lookupData.episodeName.c_str());
+         tell(eloInfo, "Found referenced eplist data for '%s' / '%s'", lookupData.title.c_str(), lookupData.episodeName.c_str());
          return success;
       }
    }
@@ -217,13 +217,13 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
    episodeDb->setValue("COMPNAME", compTitle.c_str());
    episodeDb->setValue("COMPPARTNAME", compPartName.c_str());
 
-   tell(3, "CONSTABEL: Try lookup by of '%s'/'%s' direct", compTitle.c_str(), compPartName.c_str());
+   tell(eloDetail, "CONSTABEL: Try lookup by of '%s'/'%s' direct", compTitle.c_str(), compPartName.c_str());
 
    bool found = selectByCompNames->find();
 
    if (found)
    {
-      tell(1, "Found eplist data for '%s' / '%s' by lookup", lookupData.title.c_str(), lookupData.episodeName.c_str());
+      tell(eloInfo, "Found eplist data for '%s' / '%s' by lookup", lookupData.title.c_str(), lookupData.episodeName.c_str());
    }
    else
    {
@@ -232,11 +232,11 @@ int cEpgd::lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesL
 
       int dist = (compTitle + compPartName).length() / 100.0 * 20.0;
       maxLvDistance.setValue(dist);
-      tell(3, "CONSTABEL: Try lookup by combined name '%s' and a max LV distance of (%d)", episodeDb->getStrValue("COMBINEDCOMP"), dist);
+      tell(eloDetail, "CONSTABEL: Try lookup by combined name '%s' and a max LV distance of (%d)", episodeDb->getStrValue("COMBINEDCOMP"), dist);
       found = selectByCompNamesCombinedLv->find();
 
       if (found)
-         tell(1, "Found eplist data for '%s' / '%s' by extended lookup", lookupData.title.c_str(), lookupData.episodeName.c_str());
+         tell(eloInfo, "Found eplist data for '%s' / '%s' by extended lookup", lookupData.title.c_str(), lookupData.episodeName.c_str());
    }
 
    if (found)
@@ -277,11 +277,11 @@ int cEpgd::updateEpisodes()
 
    int full = fullupdate || minutes == na;
 
-   tell(1, "Starting '%s' episode download ...", full ? "fullupdate" : "update");
+   tell(eloInfo, "Starting '%s' episode download ...", full ? "fullupdate" : "update");
 
    if (!minutes && !full)
    {
-      tell(1, "Nothing to be done, all episodes are up-to-date");
+      tell(eloInfo, "Nothing to be done, all episodes are up-to-date");
       return done;
    }
 
@@ -290,7 +290,7 @@ int cEpgd::updateEpisodes()
 
    if (full && lastFullRun > time(0) - 6 * tmeSecondsPerHour)
    {
-      tell(1, "Info: Skipping fullupdate of episodes, last run less than 6 hours ago!");
+      tell(eloInfo, "Info: Skipping fullupdate of episodes, last run less than 6 hours ago!");
       return done;
    }
 
@@ -298,17 +298,17 @@ int cEpgd::updateEpisodes()
 
    if (cl.open() != 0)
    {
-      tell(1, "Open connection to '%s' failed, aborting transfer!", EpgdConfig.seriesUrl);
+      tell(eloInfo, "Open connection to '%s' failed, aborting transfer!", EpgdConfig.seriesUrl);
       return fail;
    }
 
-   tell(0, "Connected to eplist server at '%s'", EpgdConfig.seriesUrl);
+   tell(eloInfo, "Connected to eplist server at '%s'", EpgdConfig.seriesUrl);
 
    // select characterset
 
    if (!cl.send(withutf8 ? "CHARSET utf-8" : "CHARSET iso-8859-1"))
    {
-      tell(0, "Error: Send 'CHARSET ...' failed, aborting transfer!");
+      tell("Error: Send 'CHARSET ...' failed, aborting transfer!");
       cl.close();
       return fail;
    }
@@ -319,13 +319,13 @@ int cEpgd::updateEpisodes()
 
    if (cl.receive(&csconf) != 225)
    {
-      tell(0, "Error: SVDRPCL: did not receive charset confirmation. Closing...");
+      tell("Error: SVDRPCL: did not receive charset confirmation. Closing...");
       cl.abort();
       return fail;
    }
 
    if (csconf.First() && csconf.First()->Text())
-      tell(2, "Got '%s'", csconf.First()->Text());
+      tell(eloDetail, "Got '%s'", csconf.First()->Text());
 
    // identify myself
 
@@ -340,7 +340,7 @@ int cEpgd::updateEpisodes()
 
    if (full)
    {
-      tell(1, "Requesting all episodes due to '%s'", minutes != na ? "fullupdate" : "empty table");
+      tell(eloInfo, "Requesting all episodes due to '%s'", minutes != na ? "fullupdate" : "empty table");
       sprintf(command, "GET all");
       episodeDb->truncate();        // truncate table!
    }
@@ -349,13 +349,13 @@ int cEpgd::updateEpisodes()
    {
       minutes += 5;      // request 5 minutes more to compensate time diffs to constabel.net
       minutes += 90;     // request 90 minutes more to compensate TZ etc. :o
-      tell(1, "Requesting episode changes of last %d minutes", minutes);
+      tell(eloInfo, "Requesting episode changes of last %d minutes", minutes);
       sprintf(command, "TGET newer than %d minutes", minutes);
    }
 
    if (!cl.send(command))
    {
-      tell(0, "Error: Send '%s' failed, aborting transfer!", command);
+      tell("Error: Send '%s' failed, aborting transfer!", command);
       cl.close();
 
       return fail;
@@ -377,7 +377,7 @@ int cEpgd::updateEpisodes()
          {
             if (result->Count() < 2)
             {
-               tell(1, "Protocol violation, aborting!");
+               tell(eloInfo, "Protocol violation, aborting!");
                abort = true;
             }
             else
@@ -414,7 +414,7 @@ int cEpgd::updateEpisodes()
                      break;
                   }
 
-                  tell(3, "Got line '%s'", l->Text());
+                  tell(eloDetail, "Got line '%s'", l->Text());
                }
 
                if (result->Count())
@@ -450,11 +450,11 @@ int cEpgd::updateEpisodes()
    if (full)
       setParameter("epgd", "lastEpisodeFullRun", time(0));
 
-   tell(1, "Received %d episode files", files.Count());
+   tell(eloInfo, "Received %d episode files", files.Count());
 
    if (files.Count() > 0)
    {
-      tell(1, "Storing episode data");
+      tell(eloInfo, "Storing episode data");
 
       // insert / update series into database ...
 

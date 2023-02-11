@@ -36,7 +36,7 @@ int cEpgHttpd::storeChannels(json_t* jInData, json_t* response)
          json_t* _val = json_object_iter_value(iiter);
 
          if (strcmp(key, "sources") == 0)
-            tell(3, "  'store ext sources and id' ... to be implemented ...");  // store ext sources and id -> TO BE IMPLEMENTED
+            tell(eloDetail, "  'store ext sources and id' ... to be implemented ...");  // store ext sources and id -> TO BE IMPLEMENTED
          else if (strcmp(key, "name") == 0)
             name = json_string_value(_val);
          else if (strcmp(key, "visible") == 0)
@@ -44,12 +44,12 @@ int cEpgHttpd::storeChannels(json_t* jInData, json_t* response)
          else if (strcmp(key, "order") == 0)
             ord = json_integer_value(_val);
          else
-            tell(0, "Error: Got unexpected json object '%s'", key);
+            tell("Error: Got unexpected json object '%s'", key);
       }
 
       if (!isEmpty(channelid) && ord != na && visible != na)
       {
-         tell(3, "Store: '%s' name=%s; ord=%d; visible=%d", channelid, name, ord, visible);
+         tell(eloDetail, "Store: '%s' name=%s; ord=%d; visible=%d", channelid, name, ord, visible);
          mapDb->clear();
          mapDb->setValue("ChannelId", channelid);
          mapDb->setValue("ChannelName", name);
@@ -155,7 +155,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
          if (!selectTimerById->find())
          {
             selectTimerById->freeResult();
-            tell(0, "Timer (%ld) not found, maybe deleted from other user, skipping", timerid);
+            tell(eloWarning, "Timer (%ld) not found, maybe deleted from other user, skipping", timerid);
             continue;
          }
 
@@ -308,7 +308,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
       {
          if (ptyRecName->execute(useeventsDb, namingmode, tmplExpression) == success)
          {
-            tell(1, "Info: The recording name (mode=%d) calculated by 'recording.py' is '%s'",
+            tell(eloDetail, "Info: The recording name (mode=%d) calculated by 'recording.py' is '%s'",
                  namingmode, ptyRecName->getResult());
 
             if (!isEmpty(ptyRecName->getResult()))
@@ -399,7 +399,7 @@ int cEpgHttpd::modifyCreateTimer(cDbRow* timerRow)
       {
          connection->commit();
 
-         tell(0, "Timer (%d) at vdr '%s' not found, aborting modify request!",
+         tell(eloWarning, "Timer (%d) at vdr '%s' not found, aborting modify request!",
               timerid, timerDb->getStrValue("VDRUUID"));
 
          return fail;
@@ -441,7 +441,7 @@ int cEpgHttpd::modifyCreateTimer(cDbRow* timerRow)
       status += timerDb->insert();
 
       if (status == success)
-         tell(1, "Created 'move' request for timer (%d) to '%s'", timerid, timerDb->getStrValue("VDRUUID"));
+         tell(eloInfo, "Created 'move' request for timer (%d) to '%s'", timerid, timerDb->getStrValue("VDRUUID"));
    }
    else
    {
@@ -456,7 +456,7 @@ int cEpgHttpd::modifyCreateTimer(cDbRow* timerRow)
          status = timerDb->insert();
 
       if (status == success)
-         tell(1, "Created '%s' request for timer (%d) at vdr '%s'",
+         tell(eloInfo, "Created '%s' request for timer (%d) at vdr '%s'",
               knownTimer ? "modify" : "create",
               timerid, timerDb->getStrValue("VDRUUID"));
    }
@@ -502,7 +502,7 @@ int cEpgHttpd::storeSearchTimer(json_t* jInData, json_t* response)
          {
             failed++;
             // failedMsg +=
-            tell(0, "Warning: Can't delete searchtimer %ld, not fount, ignoring", id);
+            tell(eloWarning, "Warning: Can't delete searchtimer %ld, not fount, ignoring", id);
             continue;
          }
 
@@ -522,7 +522,7 @@ int cEpgHttpd::storeSearchTimer(json_t* jInData, json_t* response)
    const char* name = getStringFromJson(jInData, "name", expression);
    const char* state = getStringFromJson(jInData, "state", "");
 
-   tell(2, "%s searchtimer%s '%s' with expression '%s'",
+   tell(eloInfo, "%s searchtimer%s '%s' with expression '%s'",
         *state == 'D' ? "Delete" : id == na ? "Append" : "Modify",
         id == na ? "" : std::string(" " + num2Str(id)).c_str(), name , expression);
 
@@ -645,7 +645,7 @@ int cEpgHttpd::storeParameters(json_t* jInData, json_t* response)
          {
             if (!currentSession || strcmp(owner+1, currentSession->user.c_str()) != 0)
             {
-               tell(0, "Warning: Modification of parameter '%s/%s' for other user '%s' rejected",
+               tell(eloWarning, "Warning: Modification of parameter '%s/%s' for other user '%s' rejected",
                     owner+1, name, currentSession ? currentSession->user.c_str() : "<null>");
                failed++;
 
@@ -655,7 +655,7 @@ int cEpgHttpd::storeParameters(json_t* jInData, json_t* response)
 
          if (!value)
          {
-            tell(0, "Warning: Ignoring save request for parameter '%s/%s', missing value", owner+1, name);
+            tell(eloWarning, "Warning: Ignoring save request for parameter '%s/%s', missing value", owner+1, name);
             json_array_append_new(oFails, json_integer(i));
             failed++;
 
@@ -728,14 +728,12 @@ int cEpgHttpd::storeUsers(json_t* jInData, json_t* response)
 
          if (!insert && state[0] == 'C')
          {
-            tell(0, "Warning: Ignoring 'create' user request, user '%s' already exists",
-                 user);
+            tell(eloWarning, "Warning: Ignoring 'create' user request, user '%s' already exists", user);
             continue;
          }
          else if (insert && state[0] != 'C')
          {
-            tell(0, "Warning: Ignoring '%s' user request, user '%s' not found",
-                 state[0] == 'D' ? "delete" : "modify", user);
+            tell(eloWarning, "Warning: Ignoring '%s' user request, user '%s' not found", state[0] == 'D' ? "delete" : "modify", user);
             continue;
          }
 
@@ -766,7 +764,7 @@ int cEpgHttpd::storeUsers(json_t* jInData, json_t* response)
          userDb->store();
          userDb->reset();
 
-         tell(1, "%s user '%s'", insert ? "Inserted" : "Updated", user);
+         tell(eloInfo, "%s user '%s'", insert ? "Inserted" : "Updated", user);
       }
    }
 

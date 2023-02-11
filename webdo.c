@@ -164,7 +164,7 @@ int cEpgHttpd::collectScraperData(json_t* oScraperData, int movieId, int seriesI
          }
          else
          {
-            tell(0, "Series episode id %d not found!", episodeId);
+            tell(eloWarning, "Series episode id %d not found!", episodeId);
             json_t* oSeriesMedias = json_object();
             json_t* oSeriesActors = json_object();
 
@@ -454,14 +454,14 @@ int cEpgHttpd::doHitKey(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doLog(MHD_Connection* tcp, json_t* obj)
 {
-   int level = getIntParameter(tcp, "loglevel", 1);
+   // int level = getIntParameter(tcp, "loglevel", 1);
    const char* msg = getStrParameter(tcp, "message", "");
    char* buffer = (char*)malloc(strlen(msg)+TB);
 
    urlUnescape(buffer, msg);
 
    if (!isEmpty(buffer))
-      tell(level, "webif: %s", buffer);
+      tell(eloInfo, "webif: %s", buffer);
 
    free(buffer);
 
@@ -476,9 +476,9 @@ int cEpgHttpd::doDebug(MHD_Connection* tcp, json_t* obj)
 {
    // 'GET' parameters
 
-   EpgdConfig.loglevel = getIntParameter(tcp, "loglevel", EpgdConfig.loglevel);
+   EpgdConfig.eloquence = (Eloquence)getIntParameter(tcp, "eloquence", EpgdConfig.eloquence);
 
-   tell(0, "Set log level to (%d)", EpgdConfig.loglevel);
+   tell(eloInfo, "Set eloquence to (%d)", EpgdConfig.eloquence);
 
    return buildResponse(obj, MHD_HTTP_OK, "done");
 }
@@ -496,7 +496,7 @@ int cEpgHttpd::doChannelSwitch(MHD_Connection* tcp, json_t* obj)
    int statusCode = MHD_HTTP_INTERNAL_SERVER_ERROR;
    char* messageTxt {};
 
-   tell(1, "Switching vdr '%s' to channel '%s'", uuidPar, channelPar);
+   tell(eloInfo, "Switching vdr '%s' to channel '%s'", uuidPar, channelPar);
 
    vdrDb->clear();
    vdrDb->setValue("Uuid", uuidPar);
@@ -556,7 +556,7 @@ int cEpgHttpd::doChannelSwitch(MHD_Connection* tcp, json_t* obj)
       asprintf(&messageTxt, "Info: Can't switch channel, vdr '%s' not known!", uuidPar);
    }
 
-   tell(0, "%s", messageTxt);
+   tell(eloInfo, "%s", messageTxt);
 
    vdrDb->reset();
 
@@ -610,7 +610,7 @@ int cEpgHttpd::doChannelLogo(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
 
          data->modTime = fileModTime(path);
 
-         tell(3, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
+         tell(eloDetail, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
 
          if (!data->expireAt || data->modTime > data->expireAt)
          {
@@ -632,7 +632,7 @@ int cEpgHttpd::doChannelLogo(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
                   imlib_free_image();
                }
                else
-                  tell(2, "The image '%s' could not be loaded, error was '%s' (%d)",
+                  tell(eloDetail, "The image '%s' could not be loaded, error was '%s' (%d)",
                        path, strImlibError(err), err);
             }
          }
@@ -643,7 +643,7 @@ int cEpgHttpd::doChannelLogo(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
       }
    }
    else
-      tell(1, "Info: Channelname for '%s' unknown", id);
+      tell(eloInfo, "Info: Channelname for '%s' unknown", id);
 
    selectMapById->freeResult();
 
@@ -668,7 +668,7 @@ int cEpgHttpd::doEpgImage(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
    if (!useId)
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Missing event id in request");
 
-   tell(3, "lookup image for (%d/%d)", useId, no);
+   tell(eloDetail, "lookup image for (%d/%d)", useId, no);
 
    useeventsDb->clear();
    useeventsDb->setValue("USEID", useId);
@@ -677,7 +677,7 @@ int cEpgHttpd::doEpgImage(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
    {
       tEventId  id = imageid.getBigintValue();
 
-      tell(3, "found event for useid %d -> eventid is %llu", useId, id);
+      tell(eloDetail, "found event for useid %d -> eventid is %llu", useId, id);
 
       imageRefDb->clear();
       imageRefDb->setBigintValue("EventId", id);
@@ -694,13 +694,13 @@ int cEpgHttpd::doEpgImage(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
          {
             data->modTime = imageUpdSp->getIntValue();
 
-            tell(3, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
+            tell(eloDetail, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
 
             if (!data->expireAt || data->modTime > data->expireAt)
             {
                data->size = imageImage->getStrValueSize();
 
-               tell(3, "found image with %ld bytes", data->size);
+               tell(eloDetail, "found image with %ld bytes", data->size);
 
                // imageImage->getStrValue();
 
@@ -747,7 +747,7 @@ int cEpgHttpd::doMovieMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* data
    if (movieId == na || actorId == na || mediaType == na)
       return buildResponse(obj, MHD_HTTP_BAD_REQUEST, "Missing madatory request parameter");
 
-   tell(3, "lookup movie media for (%d/%d/%d)", movieId, actorId, mediaType);
+   tell(eloDetail, "lookup movie media for (%d/%d/%d)", movieId, actorId, mediaType);
 
    movieMediaDb->clear();
    movieMediaDb->setValue("MovieId", movieId);
@@ -756,7 +756,7 @@ int cEpgHttpd::doMovieMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* data
 
    if (movieMediaDb->find() && !moviemediaMediaContent->isNull())
    {
-      tell(3, "found movie media for %d/%d/%d", movieId, actorId, mediaType);
+      tell(eloDetail, "found movie media for %d/%d/%d", movieId, actorId, mediaType);
 
       // fake modTime until movieMediaDb table dont support updsp !!
 
@@ -764,13 +764,13 @@ int cEpgHttpd::doMovieMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* data
 
       data->modTime = data->expireAt ? data->expireAt : time(0);  // fake!!
 
-      tell(3, "Media: modified at: %s; expire at: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
+      tell(eloDetail, "Media: modified at: %s; expire at: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
 
       if (!data->expireAt || data->modTime > data->expireAt)
       {
          data->size = moviemediaMediaContent->getStrValueSize();
 
-         tell(3, "found media with %ld bytes", data->size);
+         tell(eloDetail, "found media with %ld bytes", data->size);
 
          data->memory = (char*)malloc(data->size);
          memcpy(data->memory, moviemediaMediaContent->getStrValue(), data->size);
@@ -809,7 +809,7 @@ int cEpgHttpd::doSeriesMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
    if (seriesId == na || seasonNumber == na || episodeId == na || mediaType == na)
       return buildResponse(obj, MHD_HTTP_BAD_REQUEST, "Missing madatory request parameter");
 
-   tell(3, "lookup series media for (%d/%d/%d/%d/%d/%d)", seriesId, seasonNumber, episodeId, actorId, mediaType, lfn);
+   tell(eloDetail, "lookup series media for (%d/%d/%d/%d/%d/%d)", seriesId, seasonNumber, episodeId, actorId, mediaType, lfn);
 
    seriesMediaDb->clear();
    seriesMediaDb->setValue("SERIESID", seriesId);
@@ -823,14 +823,14 @@ int cEpgHttpd::doSeriesMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
    {
       data->modTime = seriesMediaDb->getIntValue("UPDSP");
 
-      tell(3, "Found series media for (%d/%d/%d/%d/%d)", seriesId, seasonNumber, episodeId, actorId, mediaType);
-      tell(3, "Media: modified at: %s; expire at: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
+      tell(eloDetail, "Found series media for (%d/%d/%d/%d/%d)", seriesId, seasonNumber, episodeId, actorId, mediaType);
+      tell(eloDetail, "Media: modified at: %s; expire at: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
 
       if (!data->expireAt || data->modTime > data->expireAt)
       {
          data->size = seriesmediaMediaContent->getStrValueSize();
 
-         tell(3, "found media with %ld bytes", data->size);
+         tell(eloDetail, "found media with %ld bytes", data->size);
 
          data->memory = (char*)malloc(data->size);
          memcpy(data->memory, seriesmediaMediaContent->getStrValue(), data->size);
@@ -1093,7 +1093,7 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
    {
       data->modTime = eventsUpdSp->getIntValue();
 
-      tell(3, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
+      tell(eloDetail, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
 
       if (!data->expireAt || data->modTime > data->expireAt)
       {
@@ -1187,7 +1187,7 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
             {
                if (!currentSession || !hasUserMask(currentSession->rights, umFsk))
                {
-                  tell(1, "Skipping recording '%s' due FSK flag", recordingListDb->getStrValue("TITLE"));
+                  tell(eloInfo, "Skipping recording '%s' due FSK flag", recordingListDb->getStrValue("TITLE"));
                   continue;
                }
             }
@@ -1206,7 +1206,7 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
 
             json_array_append_new(oRecordings, oRecData);
 
-            tell(2, "Found recording for '%s' wich a match density of (%ld%%/%ld%%)",
+            tell(eloDetail, "Found recording for '%s' wich a match density of (%ld%%/%ld%%)",
                  recordingListDb->getStrValue("TITLE"),
                  matchDensityTitle.getIntValue(), matchDensityShorttext.getIntValue());
          }
@@ -1223,7 +1223,7 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
    }
    else
    {
-      tell(0, "Warning: Event '%d' not found", id);
+      tell(eloWarning, "Warning: Event '%d' not found", id);
    }
 
    select->freeResult();
@@ -1251,7 +1251,7 @@ int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
 
    if (begTimePar < time(0) - 2*tmeSecondsPerDay)
    {
-      tell(0, "Error: Requested time '%s' out of range!", l2pTime(begTimePar).c_str());
+      tell("Error: Requested time '%s' out of range!", l2pTime(begTimePar).c_str());
    }
    else
    {
@@ -1266,7 +1266,7 @@ int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
             select = selectEventsNext;
             useeventsDb->setValue("STARTTIME", begTimePar);
 
-            tell(2, "Select events starting after '%s'", l2pTime(begTimePar).c_str());
+            tell(eloDetail, "Select events starting after '%s'", l2pTime(begTimePar).c_str());
          }
          else
          {
@@ -1274,7 +1274,7 @@ int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
             useeventsDb->setValue("STARTTIME", begTimePar);
             endTime.setValue(begTimePar);
 
-            tell(2, "Select events running at '%s'(%ld), channelid '%s'",
+            tell(eloDetail, "Select events running at '%s'(%ld), channelid '%s'",
                  l2pTime(begTimePar).c_str(), begTimePar, channelidPar);
          }
       }
@@ -1284,7 +1284,7 @@ int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
          useeventsDb->setValue("StartTime", begTimePar);
          startTime.setValue(endTimePar);
 
-         tell(2, "Select events starting between '%s'(%ld) and '%s'(%ld), channelid '%s'",
+         tell(eloDetail, "Select events starting between '%s'(%ld) and '%s'(%ld), channelid '%s'",
               l2pTime(begTimePar).c_str(), begTimePar, l2pTime(endTimePar).c_str(), endTimePar, channelidPar);
       }
 
@@ -1497,12 +1497,20 @@ int cEpgHttpd::doParameters(MHD_Connection* tcp, json_t* obj)
       json_object_set_new(oData, "valexp", json_string(definition->regexp));
       json_object_set_new(oData, "readonly", json_integer(definition->readonly));
 
+      if (strcmp(definition->name, "eloquence") == 0)
+      {
+         json_t* oArray = json_array();
+         for (int i = 0; Elo::eloquences[i]; i++)
+            json_array_append_new(oArray, json_string(Elo::eloquences[i]));
+         json_object_set_new(oData, "options", oArray);
+      }
+
       json_array_append_new(oParameters, oData);
    }
 
    json_object_set_new(obj, "parameters", oParameters);
    json_object_set_new(obj, "timezone", json_integer(isDST() ? timezone - 3600 : timezone));
-   tell(2, "daylight (%d); timezone is (%ld)", isDST(), timezone);
+   tell(eloDetail, "daylight (%d); timezone is (%ld)", isDST(), timezone);
 
    return MHD_HTTP_OK;
 }
@@ -1564,7 +1572,7 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
    // timerIncAction.setValue(incAction);
    // timerExcAction.setValue(excAction);
 
-   tell(2, "Searching timer with state/action '%s/%s'", state, action);
+   tell(eloDetail, "Searching timer with state/action '%s/%s'", state, action);
 
    // query ...
 
@@ -1616,7 +1624,7 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
          if (searchtimerDb->find())
             search->getDoneFor(searchtimerDb->getRow(), useeventsDb->getRow(), oData);
          else
-            tell(0, "Warning: Searchtimer %ld not found", timerDb->getIntValue("AUTOTIMERID"));
+            tell(eloInfo, "Warning: Searchtimer %ld not found", timerDb->getIntValue("AUTOTIMERID"));
       }
 
       json_array_append_new(oTimer, oData);
@@ -1650,7 +1658,7 @@ int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
 
       if (!vdrDb->getIntValue("SHAREINWEB"))
       {
-         tell(1, "Skipping recording '%s' due to not shareinweb flag", recordingListDb->getStrValue("TITLE"));
+         tell(eloInfo, "Skipping recording '%s' due to not shareinweb flag", recordingListDb->getStrValue("TITLE"));
          continue;
       }
 
@@ -1660,7 +1668,7 @@ int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
       {
          if (!currentSession || !hasUserMask(currentSession->rights, umFsk))
          {
-            tell(1, "Skipping recording '%s' due FSK flag", recordingListDb->getStrValue("TITLE"));
+            tell(eloInfo, "Skipping recording '%s' due FSK flag", recordingListDb->getStrValue("TITLE"));
             continue;
          }
       }
@@ -1789,7 +1797,7 @@ int cEpgHttpd::doSearchtimers(MHD_Connection* tcp, json_t* obj)
 
    selectAllSearchTimer->freeResult();
    json_object_set_new(obj, "searchtimers", oTimer);
-   tell(3, "Finished searchtimer request with %d results", count);
+   tell(eloDetail, "Finished searchtimer request with %d results", count);
 
    return MHD_HTTP_OK;
 }
@@ -1878,7 +1886,7 @@ int cEpgHttpd::doSendMail(json_t* jInData, json_t* response)
 
    // send HTML mail
 
-   tell(1, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receiver, mimeType);
+   tell(eloInfo, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receiver, mimeType);
 
    asprintf(&command, "%s '%s' '%s' '%s' %s", mailScript,
             subject, body, mimeType, receiver);
@@ -1917,7 +1925,7 @@ int cEpgHttpd::doLogin(json_t* jInData, json_t* response)
 
       if (currentSession && (it = sessions.find(currentSession->id)) != sessions.end())
       {
-         tell(1, "User '%s' for session '%s' logged out", currentSession->user.c_str(), currentSession->id.c_str());
+         tell(eloInfo, "User '%s' for session '%s' logged out", currentSession->user.c_str(), currentSession->id.c_str());
 
          sessions.erase(it);
          currentSession = 0;
@@ -1948,7 +1956,7 @@ int cEpgHttpd::doLogin(json_t* jInData, json_t* response)
          json_object_set_new(oLogin, "rights", json_integer(userDb->getIntValue("RIGHTS")));
          json_object_set_new(oLogin, "session", json_string(session.id.c_str()));
 
-         tell(1, "Login of user '%s' for session '%s' confirmed",
+         tell(eloInfo, "Login of user '%s' for session '%s' confirmed",
               userDb->getStrValue("USER"), session.id.c_str());
       }
    }
@@ -1959,7 +1967,7 @@ int cEpgHttpd::doLogin(json_t* jInData, json_t* response)
       json_object_set_new(oLogin, "rights", json_integer(0));
       json_object_set_new(oLogin, "session", json_string(""));
 
-      tell(0, "Warning: Login of '%s' denied", userDb->getStrValue("USER"));
+      tell(eloInfo, "Warning: Login of '%s' denied", userDb->getStrValue("USER"));
    }
 
    json_object_set_new(response, "login", oLogin);

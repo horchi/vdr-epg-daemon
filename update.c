@@ -77,17 +77,17 @@ cEpgd::cEpgd()
 
    if (lang)
    {
-      tell(1, "Set locale to '%s'", lang);
+      tell(eloInfo, "Set locale to '%s'", lang);
 
       if ((strcasestr(lang, "UTF-8") != 0) || (strcasestr(lang, "UTF8") != 0))
       {
-         tell(2, "detected UTF-8");
+         tell(eloDetail, "detected UTF-8");
          withutf8 = yes;
       }
    }
    else
    {
-      tell(0, "Info: Detecting locale setting for LC_CTYPE failed");
+      tell(eloInfo, "Info: Detecting locale setting for LC_CTYPE failed");
    }
 }
 
@@ -139,12 +139,12 @@ int cEpgd::init()
 
    if (dbDict.in(dictPath, ffEpgd) != success)
    {
-      tell(0, "Fatal: Dictionary not loaded, aborting!");
+      tell("Fatal: Dictionary not loaded, aborting!");
       return 1;
    }
 
-   tell(0, "Starting epgd");
-   tell(1, "Dictionary '%s' loaded", dictPath);
+   tell(eloInfo, "Starting epgd");
+   tell(eloDetail, "Dictionary '%s' loaded", dictPath);
    free(dictPath);
 
    if (search->init(confDir) != success)
@@ -159,8 +159,7 @@ int cEpgd::init()
    if (readConfig() != success)
       return fail;
 
-   tell(1, "Using syslog facility '%s' (%d), log level set to (%d)",
-        Syslog::toName(EpgdConfig.logFacility), EpgdConfig.logFacility, EpgdConfig.loglevel);
+   tell(eloDetail, "Using syslog facility '%s' (%d)", Syslog::toName(EpgdConfig.logFacility), EpgdConfig.logFacility);
 
    // init database ...
 
@@ -173,7 +172,7 @@ int cEpgd::init()
    cDbConnection::setPass(EpgdConfig.dbPass);
    cDbConnection::setConfPath(confDir);
 
-   // cDbStatement::explain = EpgdConfig.loglevel >= 4;
+   // cDbStatement::explain = EpgdConfig.eloquence & eloDebugDb;
 
    chkDir(EpgdConfig.cachePath);
 
@@ -213,17 +212,17 @@ int cEpgd::initUuid()
       {
          memset(EpgdConfig.uuid, 0, sizeof(EpgdConfig.uuid));
          memcpy(EpgdConfig.uuid, data.memory, min(data.size, sizeof(EpgdConfig.uuid)));
-         tell(1, "Loading uuid from '%s' succeeded [%s]", uuidFile, EpgdConfig.uuid);
+         tell(eloInfo, "Loading uuid from '%s' succeeded [%s]", uuidFile, EpgdConfig.uuid);
       }
       else
       {
-         tell(0, "Error: Load of uuid from '%s' failed, using '<unknown>' instead", uuidFile);
+         tell("Error: Load of uuid from '%s' failed, using '<unknown>' instead", uuidFile);
          sstrcpy(EpgdConfig.uuid, "<unknown>", sizeof(EpgdConfig.uuid));
       }
    }
    else
    {
-      tell(1, "Initially creating uuid, storing to '%s'", uuidFile);
+      tell(eloInfo, "Initially creating uuid, storing to '%s'", uuidFile);
       sstrcpy(EpgdConfig.uuid, getUniqueId(), sizeof(EpgdConfig.uuid));
       storeToFile(uuidFile, EpgdConfig.uuid, strlen(EpgdConfig.uuid));
    }
@@ -322,7 +321,7 @@ int cEpgd::atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "HttpUser"))           sstrcpy(EpgdConfig.httpUser, Value, sizeof(EpgdConfig.httpUser));
    else if (!strcasecmp(Name, "HttpPass"))           sstrcpy(EpgdConfig.httpPass, Value, sizeof(EpgdConfig.httpPass));
 
-   else if (!strcasecmp(Name, "LogLevel"))           EpgdConfig.loglevel = EpgdConfig.argLoglevel == na ? atoi(Value) : EpgdConfig.argLoglevel;
+   // else if (!strcasecmp(Name, "LogLevel"))           EpgdConfig.loglevel = EpgdConfig.argLoglevel == na ? atoi(Value) : EpgdConfig.argLoglevel;
 
    else
       return fail;
@@ -338,23 +337,23 @@ int cEpgd::checkDbDdl()
    // initially create/alter tables and indices
    // ------------------------------------------
 
-   tell(1, "Checking database connection ...");
+   tell(eloInfo, "Checking database connection ...");
 
    if (connection->attachConnection() != success)
    {
-      tell(0, "Fatal: Initial database connect failed, aborting");
+      tell("Fatal: Initial database connect failed, aborting");
       return abrt;
    }
 
    std::map<std::string, cDbTableDef*>::iterator t;
 
-   tell(1, "Checking table structure and indices ...");
+   tell(eloInfo, "Checking table structure and indices ...");
 
    for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); ++t)
    {
       cDbTable* table = new cDbTable(connection, t->first.c_str());
 
-      tell(1, "Checking table '%s'", t->first.c_str());
+      tell(eloInfo, "Checking table '%s'", t->first.c_str());
 
       if (!table->exist())
       {
@@ -378,7 +377,7 @@ int cEpgd::checkDbDdl()
    if (status != success)
       return abrt;
 
-   tell(1, "Checking table structure and indices succeeded");
+   tell(eloInfo, "Checking table structure and indices succeeded");
 
    return status;
 }
@@ -494,7 +493,7 @@ int cEpgd::initDb()
 
    if (status != success)
    {
-      tell(0, "Error: Missing functions epglv/epglvr, please install first!");
+      tell("Error: Missing functions epglv/epglvr, please install first!");
       return abrt;
    }
 
@@ -867,7 +866,7 @@ int cEpgd::initDb()
 
    if (status != success)
    {
-      tell(0, "Error: At least %d statements not prepared successfully", status*-1);
+      tell("Error: At least %d statements not prepared successfully", status*-1);
       return status;
    }
 
@@ -935,18 +934,31 @@ int cEpgd::initDb()
 
    if (!count)
    {
-      tell(0, "Info: No external events on database, force initial check!");
+      tell(eloWarning, "Info: No external events on database, force initial check!");
       EpgdConfig.checkInitial = yes;
    }
 
    // wakeupVdr("920654A9-28C8-439B-97F2-F6F3A7A2C583");
+
+   // eloquence
+
+   char elo[255+TB] {};
+   getParameter("epgd", "eloquence", elo);
+   EpgdConfig.eloquence = Elo::stringToEloquence(elo);
+
+   if (EpgdConfig.argEloquence != (Eloquence)na)
+   {
+      EpgdConfig.eloquence = EpgdConfig.argEloquence;
+      EpgdConfig.argEloquence = (Eloquence)na;
+   }
+
+   tell(eloInfo, "Info: Eloquence set to '%s' => 0x%04x", elo, EpgdConfig.eloquence);
 
    // ----------------------------------------------------------
    // init parameter 'mergeStart' (used by merge procedure)
    //   reset it on empty useevents table
 
    useeventsDb->countWhere("", count);
-
    getParameter("epgd", "mergeStart");   // if not set -> init to default
 
    if (!count)
@@ -988,7 +1000,7 @@ int cEpgd::initDb()
       {
          std::string comp;
 
-         tell(0, "Update comp of %" PRId64 "in 'Maintanance Mode'", eventsDb->getBigintValue("EVENTID"));
+         tell(eloInfo, "Update comp of %" PRId64 "in 'Maintanance Mode'", eventsDb->getBigintValue("EVENTID"));
 
          if (!eventsDb->isNull("TITLE"))
          {
@@ -1010,7 +1022,7 @@ int cEpgd::initDb()
 
       connection->commit();
 
-      tell(1, "Info: Updated %d events in %ld seconds", mCount, time(0) - start);
+      tell(eloInfo, "Info: Updated %d events in %ld seconds", mCount, time(0) - start);
       upd.freeResult();
       sel.freeResult();
       exitDb();
@@ -1085,7 +1097,7 @@ int cEpgd::migrateFromDbApi6()
    imageRefDb = new cDbTable(connection, "imagerefs");
    if ((status = imageRefDb->open()) != success) return status;
 
-   tell(0, "Migration of table '%s' from version <= 6 ...", imageRefDb->TableName());
+   tell(eloInfo, "Migration of table '%s' from version <= 6 ...", imageRefDb->TableName());
 
    cDbStatement* select = new cDbStatement(imageRefDb);
 
@@ -1097,7 +1109,7 @@ int cEpgd::migrateFromDbApi6()
    if (status == success)
       select->execute();
 
-   tell(0, "... done");
+   tell(eloInfo, "... done");
 
    delete select;
    delete imageRefDb; imageRefDb = nullptr;
@@ -1111,11 +1123,11 @@ int cEpgd::migrateFromDbApi6()
 
 int cEpgd::migrateFromDbApi7()
 {
-   tell(0, "Migration of series tables from version < 8 ...");
+   tell(eloInfo, "Migration of series tables from version < 8 ...");
 
    if (connection->attachConnection() != success)
    {
-      tell(0, "Fatal: Initial database connect failed, aborting");
+      tell("Fatal: Initial database connect failed, aborting");
       return abrt;
    }
 
@@ -1197,7 +1209,7 @@ int cEpgd::tryFillEmptyRecTableFields()
 
    recTableFixTrigger = false;
 
-   tell(0, "tryFillEmptyRecTableFields ...");
+   tell(eloInfo, "tryFillEmptyRecTableFields ...");
 
    cDbStatement* select = new cDbStatement(recordingListDb);
    select->build("select ");
@@ -1261,7 +1273,7 @@ int cEpgd::tryFillEmptyRecTableFields()
       }
    }
 
-   tell(0, "... done");
+   tell(eloInfo, "... done");
 
    delete select;
 
@@ -1284,7 +1296,7 @@ int cEpgd::checkProcedure(const char* name, cDBS::ProcType type, cDbProcedure* f
 
    if (createMd5OfFile(confDir, file, md5New) != success)
    {
-      tell(0, "Error: Can't access procedure '%s/%s'", confDir, file);
+      tell("Error: Can't access procedure '%s/%s'", confDir, file);
       free(file);
       return fail;
    }
@@ -1337,7 +1349,7 @@ int cEpgd::checkView(const char* name, const char* file)
 
    if (createMd5OfFile(confDir, file, md5New) != success)
    {
-      tell(0, "Error: Can't access view '%s/%s'", confDir, file);
+      tell("Error: Can't access view '%s/%s'", confDir, file);
       status = fail;
    }
 
@@ -1413,7 +1425,7 @@ void cEpgd::setState(Es::State state, time_t lastUpdate, int silent)
    if (actualState != state)
    {
       if (!silent)
-         tell(0, "State now '%s'", Es::toName(state));
+         tell(eloWarning, "State now '%s'", Es::toName(state));
 
       vdrDb->clear();
       vdrDb->setValue("UUID", "EPGD");
@@ -1450,7 +1462,7 @@ int cEpgd::loadPlugins()
 
    if (!(dir = opendir(EpgdConfig.pluginPath)))
    {
-      tell(0, "Error: Opening plugin directory '%s' failed, %s", EpgdConfig.pluginPath, strerror(errno));
+      tell("Error: Opening plugin directory '%s' failed, %s", EpgdConfig.pluginPath, strerror(errno));
       return fail;
    }
 
@@ -1521,13 +1533,13 @@ void cEpgd::scheduleAutoUpdate(int wait)
       nextUpdateAt = time(0) + EpgdConfig.updatetime * 60 * 60;
 
    if ((nextUpdateAt-time(0))/60 < 1)
-      tell(0, "Scheduled next update in %ld second(s)",
+      tell(eloInfo, "Scheduled next update in %ld second(s)",
            nextUpdateAt-time(0));
    else if ((nextUpdateAt-time(0))/60/60 < 1)
-      tell(0, "Scheduled next update in %ld minute(s)",
+      tell(eloInfo, "Scheduled next update in %ld minute(s)",
            (nextUpdateAt-time(0))/60);
    else
-      tell(0, "Scheduled next update in %ld hour(s)",
+      tell(eloInfo, "Scheduled next update in %ld hour(s)",
            (nextUpdateAt-time(0))/60/60);
 }
 
@@ -1660,12 +1672,12 @@ void cEpgd::loop()
                   connection->startTransaction();
 
                   cSystemNotification::startNotifyThread(5*tmeSecondsPerMinute);
-                  procMergeEpg->call(2);
+                  procMergeEpg->call(eloInfo);
                   cSystemNotification::stopNotifyThread();
 
                   connection->commit();
 
-                  tell(1, "%ld DVB pending, mergeepg done after %s",
+                  tell(eloInfo, "%ld DVB pending, mergeepg done after %s",
                        changeCount.getIntValue(), ms2Dur(cMyTimeMs::Now()-start).c_str());
 
                   lastMergeAt = time(0);
@@ -1692,7 +1704,7 @@ void cEpgd::loop()
 
          // print sql statistic for statement debugging
 
-         if (EpgdConfig.loglevel > 2)
+         if (EpgdConfig.eloquence & eloDebug2)
             connection->showStat("merge/rec-scrap");
       }
 
@@ -1781,7 +1793,7 @@ void cEpgd::loop()
 
       setState(Es::esStandby, time(0));
 
-      if (EpgdConfig.loglevel > 2)
+      if (EpgdConfig.eloquence & eloDebug2)
          connection->showStat("main loop");
    }
 
@@ -1798,18 +1810,18 @@ int cEpgd::checkConnection()
    {
       static int retry {0};
 
-      tell(0, "Trying to re-connect to database!");
+      tell(eloWarning, "Trying to re-connect to database!");
       retry++;
 
       if (initDb() != success)
       {
-         tell(0, "Retry #%d failed, retrying in 60 seconds!", retry);
+         tell(eloWarning, "Retry #%d failed, retrying in 60 seconds!", retry);
          exitDb();
          return fail;
       }
 
       retry = 0;
-      tell(0, "Connection established successfull!");
+      tell(eloWarning, "Connection established successfull!");
    }
 
    return success;
@@ -1857,7 +1869,7 @@ int cEpgd::updateSearchTimers(int force, const char* reason)
       {
          if (!timerDb->hasValue("VDRUUID", "any") && !timerDb->hasCharValue("TYPE", ttView))
          {
-            tell(1, "Info: Timer (%ld) for '%s' start in the next 48 hours, "
+            tell(eloInfo, "Info: Timer (%ld) for '%s' start in the next 48 hours, "
                  "try to wakeup VDR to permit takeover",
                  timerDb->getIntValue("ID"),
                  timerDb->getStrValue("FILE"));
@@ -1882,7 +1894,7 @@ int cEpgd::update()
 
    cSystemNotification::notify(evStatus, "STATUS=%s %s", "Busy, started", fullupdate ? "Full-Update" : fullreload ? "Reload" : "Update");
 
-   tell(1, "EPG %s started", fullupdate ? "Full-Update" : fullreload ? "Reload" : "Update");
+   tell(eloInfo, "EPG %s started", fullupdate ? "Full-Update" : fullreload ? "Reload" : "Update");
 
    // loop from today over configured range ..
 
@@ -1897,7 +1909,7 @@ int cEpgd::update()
    fullupdate = no;
    double mb = (double)stat.bytes / 1024.0 / 1024.0;
 
-   tell(1, "EPG Update finished, loaded %d files (%.3f %cB), %d non-updates "
+   tell(eloInfo, "EPG Update finished, loaded %d files (%.3f %cB), %d non-updates "
            "skipped, %d rejected due to format error.",
            stat.files, mb > 2 ? mb : (double)stat.bytes/1024.0, mb > 2 ? 'M' : 'K',
            stat.nonUpdates, stat.rejected);
@@ -1928,13 +1940,13 @@ xmlDocPtr cEpgd::transformXml(const char* buffer, int size,
       if ((doc = xmlReadMemory(buffer, size, "tmp.xml.gz", 0, readOptions)))
    {
       if ((transformedDoc = xsltApplyStylesheet(stylesheet, doc, 0)) == 0)
-         tell(1, "Error applying XSLT stylesheet");
+         tell(eloWarning, "Error applying XSLT stylesheet");
 
       xmlFreeDoc(doc);
    }
    else
    {
-      tell(1, "Error parsing XML File '%s'", fileRef);
+      tell(eloWarning, "Error parsing XML File '%s'", fileRef);
    }
 
    return transformedDoc;
@@ -1972,7 +1984,7 @@ int cEpgd::parseEvent(cDbRow* event, xmlNode* node)
       else if (cDbFieldDef* f = eventsDb->getField(name))
       {
          if (strcmp(name, "starttime") == 0 && atoi(content) == 0)
-            tell(0, "Warning: Invalid event, starttime is null!");
+            tell(eloWarning, "Warning: Invalid event, starttime is null!");
 
          if (f->getFormat() == cDbService::ffAscii || f->getFormat() == cDbService::ffText || f->getFormat() == cDbService::ffMText)
             event->setValue(f, content);
@@ -1981,7 +1993,7 @@ int cEpgd::parseEvent(cDbRow* event, xmlNode* node)
       }
 
       else
-         tell(1, "Ignoring unexpected element <%s>\n", name);
+         tell(eloInfo, "Ignoring unexpected element <%s>\n", name);
 
       xmlFree(content);
    }
@@ -2018,7 +2030,7 @@ int cEpgd::parseEvent(cDbRow* event, xmlNode* node)
                               event->getStrValue("FILEREF"));
 
    else
-      tell(4, "no images for event %" PRId64 " in %s",
+      tell(eloDebug, "no images for event %" PRId64 " in %s",
            event->getBigintValue("EVENTID"),
            event->getStrValue("FILEREF"));
 
@@ -2089,7 +2101,7 @@ int cEpgd::storeImageRefs(tEventId evtId, const char* source, const char* images
 
    free(imagesCsv);
 
-   tell(3, "There are %d images for event %lld", count, evtId);
+   tell(eloDetail, "There are %d images for event %lld", count, evtId);
 
    return count;
 }
@@ -2113,7 +2125,7 @@ int cEpgd::getPictures()
 
    // fetch all images
 
-   tell(1, "Start download of new images");
+   tell(eloInfo, "Start download of new images");
 
    char* where;
    asprintf(&where, "lfn < %d", EpgdConfig.maximagesperevent);
@@ -2154,7 +2166,7 @@ int cEpgd::getPictures()
          connection->commit();
 
          double mb = (double)bytes / 1024.0 / 1024.0;
-         tell(1, "Still updating images, now %d of %d checked and %d loaded (%.3f %cB)",
+         tell(eloInfo, "Still updating images, now %d of %d checked and %d loaded (%.3f %cB)",
               total, rows, count, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
 
          connection->startTransaction();
@@ -2179,7 +2191,7 @@ int cEpgd::getPictures()
             bytes += imgFileSize;
             count++;
 
-            tell(2, "Downloaded image '%s' with (%d) bytes", imagename, imgFileSize);
+            tell(eloDetail, "Downloaded image '%s' with (%d) bytes", imagename, imgFileSize);
 
             if (imgFileSize < maxSize)
             {
@@ -2188,7 +2200,7 @@ int cEpgd::getPictures()
             }
             else
             {
-               tell(0, "Warning, skipping storage of image due to size "
+               tell(eloWarning, "Warning, skipping storage of image due to size "
                     "limit of %d byte, got image with %d bytes", maxSize, imgFileSize);
             }
 
@@ -2210,7 +2222,7 @@ int cEpgd::getPictures()
 
    double mb = (double)bytes / 1024.0 / 1024.0;
 
-   tell(0, "Loaded %d images (%.3f %cB), checked %d; %d failed to load in %ld seconds",
+   tell(eloInfo, "Loaded %d images (%.3f %cB), checked %d; %d failed to load in %ld seconds",
         count, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K',
         total, notFound, time(0)-start);
 
@@ -2227,7 +2239,7 @@ int cEpgd::cleanupEvents()
    struct tm tm;
    time_t historyFrom;
 
-   tell(1, "Starting cleanup of events");
+   tell(eloInfo, "Starting cleanup of events");
 
    // detete all fileref entrys older than 24 hours (works only for epgdata events)
 
@@ -2236,7 +2248,7 @@ int cEpgd::cleanupEvents()
 
    asprintf(&where, "substr(name,1,8) <= '%4d%02d%02d' and source = 'epgdata'",
             tm.tm_year + 1900, tm.tm_mon+1, tm.tm_mday);
-   tell(1, "Delete fileref [%s]", where);
+   tell(eloInfo, "Delete fileref [%s]", where);
    fileDb->deleteWhere("%s", where);
    free(where);
 
@@ -2248,12 +2260,12 @@ int cEpgd::cleanupEvents()
    time_t minEventTime = time(0) - 6 * tmeSecondsPerHour;
 
    asprintf(&where, "starttime+duration < %ld", minEventTime);
-   tell(1, "Delete events [%s]", where);
+   tell(eloInfo, "Delete events [%s]", where);
    eventsDb->deleteWhere("%s", where);
    free(where);
 
    asprintf(&where, "cnt_starttime+cnt_duration < %ld", minEventTime);
-   tell(1, "Delete useevents [%s]", where);
+   tell(eloInfo, "Delete useevents [%s]", where);
    useeventsDb->deleteWhere("%s", where);
    free(where);
 
@@ -2265,13 +2277,13 @@ int cEpgd::cleanupEvents()
 
    compDb->deleteWhere("eventid not in (select eventid from events where source = 'vdr');");
 
-   tell(1, "Cleanup of events finished");
+   tell(eloInfo, "Cleanup of events finished");
 
    long int hist = 3;
 
    getParameter("epgd", "timerJobFailedHistory", hist);
 
-   tell(1, "Starting cleanup of failed timer actions, older than %ld days", hist);
+   tell(eloInfo, "Starting cleanup of failed timer actions, older than %ld days", hist);
 
    timerDb->clear();
    timerDb->setCharValue("ACTION", taFailed);
@@ -2279,7 +2291,7 @@ int cEpgd::cleanupEvents()
    cleanupTimerActions->execute();
    cleanupTimerActions->freeResult();
 
-   tell(1, "Cleanup of timer actions finished");
+   tell(eloInfo, "Cleanup of timer actions finished");
 
    return dbConnected() ? success : fail;
 }
@@ -2295,14 +2307,14 @@ int cEpgd::cleanupPictures()
       // remove unused images
 
       cSystemNotification::check();
-      tell(1, "Starting cleanup of imagerefs");
+      tell(eloInfo, "Starting cleanup of imagerefs");
       imageRefDb->deleteWhere("eventid not in (select eventid from events)");
 
       cSystemNotification::check(yes);
-      tell(1, "Starting cleanup of images");
+      tell(eloInfo, "Starting cleanup of images");
       imageDb->deleteWhere("imagename not in (select imagename from imagerefs)");
 
-      tell(1, "Image cleanup finished");
+      tell(eloInfo, "Image cleanup finished");
    }
 
    return dbConnected() ? success : fail;
@@ -2427,7 +2439,7 @@ int cEpgd::processDay(int day, int fullupdate, Statistic* stat)
 
       if (p->ready())
       {
-         tell(1, "Updating '%s' day today+%d now", p->getSource(), day);
+         tell(eloInfo, "Updating '%s' day today+%d now", p->getSource(), day);
          p->processDay(day, fullupdate, stat);
       }
    }
@@ -2447,34 +2459,34 @@ int cEpgd::initScrapers()
 
    if (tvdbManager->connectScraper() != success)
    {
-      tell(0, "Error while connecting tvdb scraper");
+      tell("Error while connecting tvdb scraper");
       return fail;
    }
 
    if ((status = tvdbManager->initDb(connection)) != success)
    {
       tvdbManager->exitDb();
-      tell(0, "Error while connecting to series database");
+      tell("Error while connecting to series database");
       return status;
    }
 
-   tell(1, "TVDB scraper connected");
+   tell(eloInfo, "TVDB scraper connected");
 
    movieDbManager = new cMovieDBManager();
 
    if (!movieDbManager->ConnectScraper())
    {
-      tell(0, "Error while connecting movieDb scraper");
+      tell("Error while connecting movieDb scraper");
       return fail;
    }
 
    if ((status = movieDbManager->ConnectDatabase(connection)) != success)
    {
-      tell(0, "Error while connecting to movies database");
+      tell("Error while connecting to movies database");
       return status;
    }
 
-   tell(1, "MOVIEDB scraper connected");
+   tell(eloInfo, "MOVIEDB scraper connected");
 
    return success;
 }
@@ -2513,7 +2525,7 @@ int cEpgd::scrapNewEvents()
 
    if (lastTvDvScrap > 0)
    {
-      tell(1, "---------------------");
+      tell(eloInfo, "---------------------");
 
       if (tvdbManager->updateSeries(lastTvDvScrap) == success)
       {
@@ -2522,7 +2534,7 @@ int cEpgd::scrapNewEvents()
          long long bytes = tvdbManager->GetBytesDownloaded();
          double mb = (double)bytes / 1024.0 / 1024.0;
 
-         tell(1, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
+         tell(eloInfo, "Update of series and episodes done in %ld s, downloaded %.3f %cB",
               time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
       }
    }
@@ -2542,8 +2554,8 @@ int cEpgd::scrapNewEvents()
 
    int seriesCur {0};
 
-   tell(1, "---------------------");
-   tell(1, "Series for %zu new events to scrap", seriesToScrap.size());
+   tell(eloInfo, "---------------------");
+   tell(eloInfo, "Series for %zu new events to scrap", seriesToScrap.size());
 
    // for (auto it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
    for (const auto& lookupData : seriesToScrap)
@@ -2551,7 +2563,7 @@ int cEpgd::scrapNewEvents()
       cSystemNotification::check();
 
       if (seriesCur++ % 10 == 0)
-         tell(1, "Series episode %d / %zu scraped, continuing ...", seriesCur, seriesToScrap.size());
+         tell(eloInfo, "Series episode %d / %zu scraped, continuing ...", seriesCur, seriesToScrap.size());
 
       tvdbManager->processSeries(lookupData); // *it
 
@@ -2565,11 +2577,11 @@ int cEpgd::scrapNewEvents()
    long long bytes = tvdbManager->GetBytesDownloaded();
    double mb = (double)bytes / 1024.0 / 1024.0;
 
-   tell(1, "%d of %zu series episodes scraped in %ld s, downloaded %.3f %cB",
+   tell(eloInfo, "%d of %zu series episodes scraped in %ld s, downloaded %.3f %cB",
         seriesCur, seriesToScrap.size(), time(0) - start,
         mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
 
-   tell(1, "---------------------");
+   tell(eloInfo, "---------------------");
 
    // ------------------------------
    // scrap movies
@@ -2580,7 +2592,7 @@ int cEpgd::scrapNewEvents()
    start = time(0);
    vector<sMovieResult> moviesToScrap;
 
-   tell(1, "Scraping new movies");
+   tell(eloInfo, "Scraping new movies");
 
    movieDbManager->ResetBytesDownloaded();
 
@@ -2590,7 +2602,7 @@ int cEpgd::scrapNewEvents()
    size_t moviesTotal = moviesToScrap.size();
    size_t movieCur {0};
 
-   tell(1, "Movies for %zu new events to scrap", moviesTotal);
+   tell(eloInfo, "Movies for %zu new events to scrap", moviesTotal);
 
    time_t sectionStartAt = time(0);  // split download in parts of 40
 
@@ -2598,7 +2610,7 @@ int cEpgd::scrapNewEvents()
    for (const auto&  movie : moviesToScrap)
    {
       if (movieCur++ % 10 == 0)
-         tell(1, "movie %zu / %zu scraped, continuing ...", movieCur, moviesTotal);
+         tell(eloInfo, "movie %zu / %zu scraped, continuing ...", movieCur, moviesTotal);
 
       if (movieCur % 40 == 0)
       {
@@ -2607,7 +2619,7 @@ int cEpgd::scrapNewEvents()
          if (duration < 10)
          {
             duration = 10 - duration;
-            tell(1, "Waiting %d seconds..", duration);
+            tell(eloInfo, "Waiting %d seconds..", duration);
             sleep(duration);
          }
 
@@ -2626,7 +2638,7 @@ int cEpgd::scrapNewEvents()
    bytes = movieDbManager->GetBytesDownloaded();
    mb = (double)bytes / 1024.0 / 1024.0;
 
-   tell(1, "%zu of %zu movies scraped in %ld s, downloaded %.3f %cB",
+   tell(eloInfo, "%zu of %zu movies scraped in %ld s, downloaded %.3f %cB",
         movieCur, moviesTotal, time(0) - start, mb > 2 ? mb : (double)bytes/1024.0, mb > 2 ? 'M' : 'K');
 
    // ------------------------------
@@ -2656,15 +2668,15 @@ int cEpgd::cleanupSeriesAndMovies()
    if (tvdbManager)
    {
       cSystemNotification::check();
-      tell(1, "cleaning up series...");
-      tell(1, "%d outdated series deleted", tvdbManager->CleanupSeries());
+      tell(eloInfo, "cleaning up series...");
+      tell(eloInfo, "%d outdated series deleted", tvdbManager->CleanupSeries());
    }
 
    if (movieDbManager)
    {
       cSystemNotification::check();
-      tell(1, "cleaning up movies...");
-      tell(1, "%d outdated movies deleted", movieDbManager->CleanupMovies());
+      tell(eloInfo, "cleaning up movies...");
+      tell(eloInfo, "%d outdated movies deleted", movieDbManager->CleanupMovies());
    }
 
    return success;
@@ -2684,7 +2696,7 @@ void cEpgd::scrapNewRecordings(int count)
    recordingListDb->clear();
    recordingListDb->setValue("SCRNEW", 1);
 
-   tell(1, "SCRAP: Scraping new recordings, %d pending", count);
+   tell(eloInfo, "SCRAP: Scraping new recordings, %d pending", count);
 
    connection->startTransaction();
 
@@ -2711,8 +2723,8 @@ void cEpgd::scrapNewRecordings(int count)
 
       total++;
 
-      tell(1, "-------------------------------------------------------");
-      tell(1, "Found new recording '%s'/'%s'", recTitle.c_str(), recSubtitle.c_str());
+      tell(eloInfo, "-------------------------------------------------------");
+      tell(eloInfo, "Found new recording '%s'/'%s'", recTitle.c_str(), recSubtitle.c_str());
 
       // --------------------------------------------
       // first -  scrap by scrapInfo if available
@@ -2737,7 +2749,7 @@ void cEpgd::scrapNewRecordings(int count)
 
       if (found)
       {
-         tell(1, "SCRAP: Scrap for recording '%s' successfully done by user defined scrapinfo", recTitle.c_str());
+         tell(eloInfo, "SCRAP: Scrap for recording '%s' successfully done by user defined scrapinfo", recTitle.c_str());
          recordingListDb->setValue("SCRNEW", 0);
          recordingListDb->setValue("SCRSP", time(0));
          recordingListDb->setValue("SCRSERIESID", scrapInfoSeriesId);
@@ -2759,7 +2771,7 @@ void cEpgd::scrapNewRecordings(int count)
 
          if (found)
          {
-            tell(1, "SCRAP: Found active event for recording '%s'", recTitle.c_str());
+            tell(eloInfo, "SCRAP: Found active event for recording '%s'", recTitle.c_str());
 
             recordingListDb->setValue("SCRNEW", 0);
             recordingListDb->setValue("SCRSP", time(0));
@@ -2788,18 +2800,18 @@ void cEpgd::scrapNewRecordings(int count)
       {
          // movie ...
 
-         tell(1, "SCRAP: Searching '%s' as movie in database", recTitle.c_str());
+         tell(eloInfo, "SCRAP: Searching '%s' as movie in database", recTitle.c_str());
          found = movieDbManager->SearchRecordingDB(recTitle, movieId);
 
          if (found)
-            tell(1, "SCRAP: Found '%s' in database", recTitle.c_str());
+            tell(eloInfo, "SCRAP: Found '%s' in database", recTitle.c_str());
          else
          {
-            tell(1, "SCRAP: Nothing found in db, searching '%s' as 'movie' online", recTitle.c_str());
+            tell(eloInfo, "SCRAP: Nothing found in db, searching '%s' as 'movie' online", recTitle.c_str());
             found = movieDbManager->SearchRecordingOnline(recTitle, movieId);
 
             if (found)
-               tell(1, "SCRAP: Found '%s' as movie online, movieId %d", recTitle.c_str(), movieId);
+               tell(eloInfo, "SCRAP: Found '%s' as movie online, movieId %d", recTitle.c_str(), movieId);
          }
       }
 
@@ -2808,24 +2820,24 @@ void cEpgd::scrapNewRecordings(int count)
          // series ...
 
 
-         tell(1, "SCRAP: Searching series for recording '%s' in database", lookupData.title.c_str());
+         tell(eloInfo, "SCRAP: Searching series for recording '%s' in database", lookupData.title.c_str());
 
          found = tvdbManager->SearchRecordingDB(lookupData.title, lookupData.episodeName, seriesId, episodeId);
 
          if (found)
-            tell(1, "SCRAP: Found series for recording '%s'/'%s' in database", lookupData.title.c_str(), lookupData.episodeName.c_str());
+            tell(eloInfo, "SCRAP: Found series for recording '%s'/'%s' in database", lookupData.title.c_str(), lookupData.episodeName.c_str());
          else
          {
-            tell(1, "SCRAP: Nothing found in db, searching '%s' as 'series' online", lookupData.title.c_str());
+            tell(eloInfo, "SCRAP: Nothing found in db, searching '%s' as 'series' online", lookupData.title.c_str());
             found = tvdbManager->searchRecordingOnline(lookupData.title.c_str(), lookupData.episodeName, seriesId, episodeId);
 
             if (found)
-               tell(1, "SCRAP: Found series for recording '%s'/'%s' online, seriesId %d, episodeId %d",
+               tell(eloInfo, "SCRAP: Found series for recording '%s'/'%s' online, seriesId %d, episodeId %d",
                     lookupData.title.c_str(), lookupData.episodeName.c_str(), seriesId, episodeId);
          }
       }
 
-      tell(1, "SCRAP: Recording %s scraped '%s'", found ? "successfully" : "NOT successfully", recTitle.c_str());
+      tell(eloInfo, "SCRAP: Recording %s scraped '%s'", found ? "successfully" : "NOT successfully", recTitle.c_str());
 
       recordingListDb->setValue("SCRNEW", 0);
       recordingListDb->setValue("SCRSP", time(0));
@@ -2837,8 +2849,8 @@ void cEpgd::scrapNewRecordings(int count)
 
    connection->commit();
 
-   tell(1, "-------------------------------------------------------");
-   tell(1, "SCRAP: Scraping %d new recordings done", total);
+   tell(eloInfo, "-------------------------------------------------------");
+   tell(eloInfo, "SCRAP: Scraping %d new recordings done", total);
 }
 
 //***************************************************************************
@@ -2904,10 +2916,10 @@ int cEpgd::triggerVdrs(const char* trg, const char* plug, const char* options)
       else
          asprintf(&command, "%s %s", trg, !isEmpty(options) ? options : "");
 
-      tell(1, "Send '%s' to '%s:%d'", command,ip, port);
+      tell(eloInfo, "Send '%s' to '%s:%d'", command,ip, port);
 
       if (!cl.send(command))
-         tell(0, "Error: Send '%s' to '%s:%d' failed!", command, ip, port);
+         tell("Error: Send '%s' to '%s:%d' failed!", command, ip, port);
       else
          cl.receive(&result);
 
@@ -3005,7 +3017,7 @@ int cEpgd::sendTccTestMail()
 
          for (li = it->second.timers.begin(); li != it->second.timers.end(); ++li)
          {
-            tell(3, "TCC: found (%ld) '%s'", (*li).id, (*li).file.c_str());
+            tell(eloDetail, "TCC: found (%ld) '%s'", (*li).id, (*li).file.c_str());
 
             sprintf(buf,
                     "<tr>"
@@ -3144,7 +3156,7 @@ int cEpgd::message(int level, char type, const char* title, const char* format, 
    messageDb->setValue("TEXT", message);
    messageDb->insert();
 
-   tell(level, "(%s) %s", title, message);
+   tell((Eloquence)level, "(%s) %s", title, message);
 
    // loop over web users
 
@@ -3164,7 +3176,7 @@ int cEpgd::message(int level, char type, const char* title, const char* format, 
       getParameter(owner, "mailReceiver", receiver);
 
       if (isEmpty(receiver))
-         tell(2, "Info: No mail receiver for user '%s', can't send mail", owner+1);
+         tell(eloDetail, "Info: No mail receiver for user '%s', can't send mail", owner+1);
       else
          receivers += receiver + std::string(",");
    }

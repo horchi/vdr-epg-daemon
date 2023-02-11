@@ -13,11 +13,11 @@
 // Statics
 //***************************************************************************
 
-int cEpgConfig::logstdout = no;
-int cEpgConfig::loglevel = 1;
-int cEpgConfig::argLoglevel = na;
-int cEpgConfig::logFacility = LOG_USER;
-const char* cEpgConfig::logName = "unknown";
+int cEpgConfig::logstdout {no};
+Eloquence cEpgConfig::eloquence {eloInfo};
+Eloquence cEpgConfig::argEloquence {eloInfo};
+int cEpgConfig::logFacility {LOG_USER};
+const char* cEpgConfig::logName {"unknown"};
 
 //***************************************************************************
 // Common EPG Service Configuration
@@ -25,19 +25,7 @@ const char* cEpgConfig::logName = "unknown";
 
 cEpgConfig::cEpgConfig()
 {
-   // database connection
-
-   sstrcpy(dbHost, "localhost", sizeof(dbHost));
-   dbPort = 3306;
-   sstrcpy(dbName, "epg2vdr", sizeof(dbName));
-   sstrcpy(dbUser, "epg2vdr", sizeof(dbUser));
-   sstrcpy(dbPass, "epg", sizeof(dbPass));
-
    sstrcpy(netDevice, getFirstInterface(), sizeof(netDevice));
-
-   uuid[0] = 0;
-
-   getepgimages = yes;
 }
 
 //***************************************************************************

@@ -101,9 +101,7 @@ class cConfiguration
 
          free(line);
          fclose(f);
-
-         tell(1, "Read %d option from %s", count , fileName);
-
+         tell(eloInfo, "Read %d option from %s", count , fileName);
          free(fileName);
 
          return success;

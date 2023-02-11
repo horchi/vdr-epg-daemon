@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef __PARAMETERS_H
-#define __PARAMETERS_H
+#pragma once
 
 #include "db.h"
 
@@ -23,7 +22,8 @@ class cParameters
          ptNum,
          ptTime,     // unix time
          ptBool,
-         ptAscii
+         ptAscii,
+         ptBitMask,
       };
 
       struct Parameter
@@ -55,5 +55,3 @@ class cParameters
       static Parameter parameters[];
       static Parameter* getDefinition(const char* owner, const char* name);
 };
-
-#endif // __PARAMETERS_H

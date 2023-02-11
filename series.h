@@ -89,10 +89,10 @@ class cEpisodeFile : public cListObject
 
          if (stat(aPath, &fs) != 0 || !S_ISDIR(fs.st_mode))
          {
-            tell(1, "Initially creating directory '%s'", aPath);
+            tell(eloInfo, "Initially creating directory '%s'", aPath);
 
             if (mkdir(aPath, ACCESSPERMS) == -1)
-               tell(0, "Can't create directory, error was %s", strerror(errno));
+               tell("Can't create directory, error was %s", strerror(errno));
          }
 
          if (isLink())
@@ -103,7 +103,7 @@ class cEpisodeFile : public cListObject
             unlink(ln.c_str());
 
             if (symlink(file.c_str(), ln.c_str()) != 0)
-               tell(0, "SERIES: Failed to create symlink '%s', error was '%s'",
+               tell("SERIES: Failed to create symlink '%s', error was '%s'",
                     ln.c_str(), strerror(errno));
          }
          else
@@ -115,7 +115,7 @@ class cEpisodeFile : public cListObject
 
             if (!(fp = fopen(file.c_str(), "w+")))
             {
-               tell(0, "SERIES: Store '%s' failed, '%s'", file.c_str(), strerror(errno));
+               tell("SERIES: Store '%s' failed, '%s'", file.c_str(), strerror(errno));
                return -1;
             }
 
@@ -178,7 +178,7 @@ class cEpisodeFiles : public cList<cEpisodeFile>
                if (cEpisodeFile* l = findByLink(f->getName()))
                   f->storeToTable(episodeDb, eventsDb, l->getLines());
                else
-                  tell(1, "Warning: Ignoring invalid link '%s' destination '%s' not found", f->getLink(), f->getName());
+                  tell(eloWarning, "Warning: Ignoring invalid link '%s' destination '%s' not found", f->getLink(), f->getName());
             }
             else
             {

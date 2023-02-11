@@ -60,7 +60,7 @@ int cCurl::create()
 
       if (curl_global_init(CURL_GLOBAL_SSL /*CURL_GLOBAL_ALL*/) != 0)
       {
-         tell(0, "Error, something went wrong with curl_global_init()");
+         tell("Error, something went wrong with curl_global_init()");
          return fail;
       }
 
@@ -90,7 +90,7 @@ int cCurl::init(const char* httpproxy)
    {
       if (!(handle = curl_easy_init()))
       {
-         tell(0, "Could not create new curl instance");
+         tell("Could not create new curl instance");
          return fail;
       }
    }
@@ -207,7 +207,7 @@ int cCurl::get(const char* aUrl, MemoryStruct* data, std::map<std::string,std::s
       long httpCode {0};
 
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
-      tell(1, "Error: HTTP/GET failed '%s'; http code (%ld) [%s]", curl_easy_strerror(res), httpCode, url.c_str());
+      tell("Error: HTTP/GET failed '%s'; http code (%ld) [%s]", curl_easy_strerror(res), httpCode, url.c_str());
       data->clear();
       curl_slist_free_all(headers);
 
@@ -228,7 +228,7 @@ int cCurl::post(const char* url, const char* jData, std::string& sOutput)
    sOutput = "";
    init();
 
-   tell(2, "-> (%s) '%s' [%s]", method, url, jData);
+   tell(eloDetail, "-> (%s) '%s' [%s]", method, url, jData);
 
    struct curl_slist* headers {};
 
@@ -247,7 +247,7 @@ int cCurl::post(const char* url, const char* jData, std::string& sOutput)
       long httpCode {0};
 
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
-      tell(1, "Error: HTTP/GET failed '%s'; http code (%ld) [%s]", curl_easy_strerror(res), httpCode, url);
+      tell(eloWarning, "Warning: HTTP/GET failed '%s'; http code (%ld) [%s]", curl_easy_strerror(res), httpCode, url);
       curl_slist_free_all(headers);
       curl_slist_free_all(headers);
       sOutput = "";
@@ -278,14 +278,14 @@ int cCurl::GetUrl(const char* url, std::string* sOutput, const std::string& sRef
    curl_easy_setopt(handle, CURLOPT_FAILONERROR, yes);
    curl_easy_setopt(handle, CURLOPT_WRITEDATA, sOutput);       // Set option to write to string
 
-   tell(5, "Debug: CURL request url '%s' [%s]", url, getBacktrace(3).c_str());
+   tell(eloDebugCurl, "Debug: CURL request url '%s' [%s]", url, getBacktrace(3).c_str());
 
    if ((res = curl_easy_perform(handle)) != CURLE_OK)
    {
       long httpCode {0};
 
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
-      tell(1, "Error: Getting URL failed; %s (%d); http code was (%ld) [%s]",
+      tell(eloWarning, "Error: Getting URL failed; %s (%d); http code was (%ld) [%s]",
            curl_easy_strerror(res), res, httpCode, url);
 
       *sOutput = "";
@@ -497,7 +497,7 @@ size_t cCurl::WriteHeaderCallback(char* ptr, size_t size, size_t nmemb, void* da
             {
                p += strlen("filename=");
 
-               tell(4, "found filename at [%s]", p);
+               tell(eloDebugCurl, "found filename at [%s]", p);
 
                if (*p == '"')
                   p++;
@@ -513,7 +513,7 @@ size_t cCurl::WriteHeaderCallback(char* ptr, size_t size, size_t nmemb, void* da
                if ((p = strchr(mem->name, '"')))
                   *p = 0;
 
-               tell(4, "set name to '%s'", mem->name);
+               tell(eloDebugCurl, "set name to '%s'", mem->name);
             }
          }
       }
@@ -581,7 +581,7 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
       long httpCode {0};
 
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
-      tell(1, "Error: Download failed, got %ld bytes; %s (%d); http code was (%ld) [%s]",
+      tell(eloWarning, "Error: Download failed, got %ld bytes; %s (%d); http code was (%ld) [%s]",
            data->size, curl_easy_strerror(res), res, httpCode, url);
 
       data->clear();
@@ -597,7 +597,7 @@ int cCurl::downloadFile(const char* url, int& size, MemoryStruct* data, int time
 
    if (code == 400 || code == 404 || code == 500)
    {
-      tell(eloAlways, "Curl: Got http code (%ld)", code);
+      tell(eloInfo, "Curl: Got http code (%ld)", code);
       data->clear();
       data->statusCode = code;
       exit();

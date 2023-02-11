@@ -29,7 +29,7 @@ cTVDBManager::cTVDBManager(bool aWithutf8)
    if (langISO.size() == 2)
       language = langISO.c_str();
 
-   tell(1, "Set scraping language to '%s'", language.c_str());
+   tell(eloInfo, "Set scraping language to '%s'", language.c_str());
 }
 
 cTVDBManager::~cTVDBManager()
@@ -128,7 +128,7 @@ int cTVDBManager::initDb(cDbConnection* c)
 
    if (status != success)
    {
-      tell(0, "Error: At least %d statements of cTVDBManager not prepared successfully", status*-1);
+      tell("Error: At least %d statements of cTVDBManager not prepared successfully", status*-1);
       return status;
    }
 
@@ -172,7 +172,7 @@ int cTVDBManager::updateSeries(time_t since)
 
    // scrap updates
 
-   tell(1, "Scraping series and episodes updates since '%s'", l2pTime(since).c_str());
+   tell(eloInfo, "Scraping series and episodes updates since '%s'", l2pTime(since).c_str());
    tvdbScraper->getUpdates(since, updatedSeriesIds);
 
    // query all used series ids from database
@@ -186,7 +186,7 @@ int cTVDBManager::updateSeries(time_t since)
                          storedSeriesIds.begin(), storedSeriesIds.end(),
                          std::inserter(scrapSeriesIds, scrapSeriesIds.begin()));
 
-   tell(1, "Found (%zu) updated series by tvdb, %zu series has to updated in database",
+   tell(eloInfo, "Found (%zu) updated series by tvdb, %zu series has to updated in database",
         updatedSeriesIds.size(), scrapSeriesIds.size());
 
    int count {0};
@@ -194,7 +194,7 @@ int cTVDBManager::updateSeries(time_t since)
    for (const auto& scrapSeriesId : scrapSeriesIds)
    {
       if (count++ % 10 == 0)
-         tell(1, "TvDb: Scraped %d series, continuing rescraping", count);
+         tell(eloInfo, "TvDb: Scraped %d series, continuing rescraping", count);
 
       cTVDBSeries* series = scrapSeries(scrapSeriesId);
 
@@ -352,7 +352,7 @@ int cTVDBManager::updateStoreArtwork(const cTVDBSeries::Artwork& artwork, uint l
 
 void cTVDBManager::saveSeriesEpisodes(cTVDBSeries* series)
 {
-   tell(2, "Storing %zu episodes of series '%d' to database and loading their artwork ..",
+   tell(eloDetail, "Storing %zu episodes of series '%d' to database and loading their artwork ..",
         series->getEpisodes()->size(), series->seriesID);
 
    for (const auto& episode : *series->getEpisodes())
@@ -386,7 +386,7 @@ void cTVDBManager::saveSeriesEpisodes(cTVDBSeries* series)
             tSeriesMedia->store();
          }
          else
-            tell(3, "Downloading image '%s' failed", episode.imageUrl.c_str());
+            tell(eloDebug, "Downloading image '%s' failed", episode.imageUrl.c_str());
       }
    }
 }
@@ -511,7 +511,7 @@ bool cTVDBManager::getSeriesWithEpisodesFromEPG(std::vector<SeriesLookupData>& r
 
 int cTVDBManager::GetPicture(const char* url, MemoryStruct* data)
 {
-   // tell(0, "Debug: Download image '%s'", url);
+   // tell(eloInfo, "Debug: Download image '%s'", url);
 
    int maxSize = tSeriesMedia->getField("MEDIACONTENT")->getSize();
    int imgFileSize {0};
@@ -548,7 +548,7 @@ bool cTVDBManager::imageUrlChanged(const std::string& url)
 
 void cTVDBManager::processSeries(SeriesLookupData lookupData)
 {
-   tell(2, "Checking eventID: %lld, Title: %s, season:%d part:%d number:%d",
+   tell(eloDetail, "Checking eventID: %lld, Title: %s, season:%d part:%d number:%d",
         lookupData.eventId, lookupData.title.c_str(), lookupData.season, lookupData.part, lookupData.number);
 
    int seriesID {0};
@@ -561,13 +561,13 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
 
       if (!seriesID)
       {
-         // tell(0, "series %s already scraped and nothing found in tvdb", lookupData.title.c_str());
+         // tell(eloInfo, "series %s already scraped and nothing found in tvdb", lookupData.title.c_str());
          UpdateEvent(lookupData.eventId, 0, 0);
          return;
       }
       else
       {
-         // tell(0, "found series %s in cache, id %d", lookupData.title.c_str(), seriesID);
+         // tell(eloInfo, "found series %s in cache, id %d", lookupData.title.c_str(), seriesID);
       }
    }
 
@@ -585,7 +585,7 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
 
       if (seriesID)
       {
-         tell(5, "TvDb: Series '%s' already in db, id (%d)", lookupData.title.c_str(), seriesID);
+         tell(eloDebug2, "TvDb: Series '%s' already in db, id (%d)", lookupData.title.c_str(), seriesID);
       }
       else
       {
@@ -597,7 +597,7 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
          {
             saveSeries(series);
             seriesID = series->seriesID;
-            tell(4, "TvDb: Series '%s' successfully scraped with id (%d)", lookupData.title.c_str(), seriesID);
+            tell(eloDebug2, "TvDb: Series '%s' successfully scraped with id (%d)", lookupData.title.c_str(), seriesID);
             delete series;
             series = nullptr;
          }
@@ -614,7 +614,7 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
 
    if (seriesID)
    {
-      tell(0, "lookup %d/%d/%d '%s'", seriesID, lookupData.season, lookupData.part, lookupData.episodeName.c_str());
+      tell(eloInfo, "lookup %d/%d/%d '%s'", seriesID, lookupData.season, lookupData.part, lookupData.episodeName.c_str());
 
       if (!lookupData.season && !lookupData.part && lookupData.episodeName.size())
       {
@@ -632,7 +632,7 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
 
          selectEpisodeByName->freeResult();
 
-         // tell(0, "Got %d/%d ", lookupData.season, lookupData.part);
+         // tell(eloInfo, "Got %d/%d ", lookupData.season, lookupData.part);
       }
 
       // loading season poster and episode picture
@@ -643,7 +643,7 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
       if (lookupData.season && lookupData.part)
          episodeID = lookupEpisodeId(seriesID, lookupData);
 
-      // tell(0, "episodeID %d ", episodeID);
+      // tell(eloInfo, "episodeID %d ", episodeID);
    }
 
    // updating event with series data

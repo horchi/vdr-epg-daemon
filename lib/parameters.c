@@ -40,6 +40,7 @@ cParameters::Parameter cParameters::parameters[] =
 
    { "epgd",     "maxEventTime",                   ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   yes },
    { "epgd",     "minEventTime",                   ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   yes },
+   { "epgd",     "eloquence",                      ptBitMask, "Error,Warning,Info",       "",                      no,   yes },
 
    { "epgd",     "md5",                            ptAscii,   "",                         "^.{0,150}$",           yes,   no  },
 
@@ -112,7 +113,7 @@ cParameters::Parameter* cParameters::getDefinition(const char* owner, const char
          return &parameters[i];
    }
 
-   tell(0, "Warning: Requested parameter '%s/%s' not known, ignoring", owner, name);
+   tell(eloWarning, "Warning: Requested parameter '%s/%s' not known, ignoring", owner, name);
 
    return 0;
 }
@@ -199,7 +200,7 @@ int cParameters::getParameter(const char* owner, const char* name, char* value)
 
 int cParameters::getParameter(const char* owner, const char* name, long int& value)
 {
-   char txt[100]; *txt = 0;
+   char txt[100] {};
    int found;
 
    found = getParameter(owner, name, txt);
@@ -226,7 +227,7 @@ int cParameters::setParameter(const char* owner, const char* name, const char* v
    if (!value)
       return fail;
 
-   tell(2, "Storing '%s' for '%s' with value '%s'", name, owner, value);
+   tell(eloDetail, "Storing '%s' for '%s' with value '%s'", name, owner, value);
 
    // validate parameter
 
@@ -234,7 +235,7 @@ int cParameters::setParameter(const char* owner, const char* name, const char* v
    {
       if (rep(value, definition->regexp) != success)
       {
-         tell(0, "Warning: Ignoring '%s' for parameter '%s/%s' don't match expression '%s'",
+         tell(eloWarning, "Warning: Ignoring '%s' for parameter '%s/%s' don't match expression '%s'",
               value, owner, name, definition->regexp);
 
          return fail;

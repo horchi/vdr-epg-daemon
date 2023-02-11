@@ -78,7 +78,7 @@ void cSystemNotification::action()
    }
 
    if (time(0) >= timeoutAt)
-      tell(0, "Warning: Ending notification thread, timeout reached!");
+      tell(eloWarning, "Warning: Ending notification thread, timeout reached!");
 }
 
 //***************************************************************************
@@ -106,7 +106,7 @@ int cSystemNotification::notify(int event, const char* format, ...)
       case evKeepalive: asprintf(&message, "WATCHDOG=1\n%s", tmp);   break;
    }
 
-   tell(event == evKeepalive ? 2 : 1, "Calling sd_notify(%s)", message);
+   tell(event == evKeepalive ? eloDetail : eloInfo, "Calling sd_notify(%s)", message);
    sd_notify(0, message);
 
    free(tmp);
@@ -124,19 +124,18 @@ int cSystemNotification::notify(int event, const char* format, ...)
          if (f)
          {
             pid_t pid = getpid();
-            tell(1, "Creating pidfile '%s'; pid %d", pidfile, pid);
+            tell(eloInfo, "Creating pidfile '%s'; pid %d", pidfile, pid);
             fprintf(f, "%d\n", pid);
             fclose(f);
          }
          else
-            tell(0, "Error: Can't create pid file '%s' error was (%d) '%s'",
-                 pidfile, errno, strerror(errno));
+            tell("Error: Can't create pid file '%s' error was (%d) '%s'", pidfile, errno, strerror(errno));
       }
       else if (event == evStopping)
       {
          if (fileExists(pidfile))
          {
-            tell(1, "Removing pidfile '%s'", pidfile);
+            tell(eloInfo, "Removing pidfile '%s'", pidfile);
             removeFile(pidfile);
          }
       }
@@ -165,19 +164,19 @@ int cSystemNotification::getWatchdogState(int minInterval)
 
       if (sec < minInterval*2)
       {
-         tell(0, "Warning: Systemd watchdog configured to (%ds) but min %ds are required,"
+         tell(eloWarning, "Warning: Systemd watchdog configured to (%ds) but min %ds are required,"
               "  ignoring watchdog", sec, minInterval * 2);
          return no;
       }
 
       interval = sec / 2;
 
-      tell(1, "Info: Systemd watchdog request interval of at least(%ds), using (%ds) now!", sec, interval);
+      tell(eloInfo, "Info: Systemd watchdog request interval of at least(%ds), using (%ds) now!", sec, interval);
 
       return yes;
    }
 
-   tell(1, "Info: Systemd watchdog not configured, epgd won't be sending keep-alive messages!");
+   tell(eloInfo, "Info: Systemd watchdog not configured, epgd won't be sending keep-alive messages!");
 
 #  else
    interval = defaultInterval;
@@ -217,7 +216,7 @@ int cFrame::sendMail(const char* mimeType, const char* receivers,
    mailBody = strReplace("\"", "'", body);
    // mailBody = strReplace("!", "", mailBody);
 
-   tell(1, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receivers, mimeType);
+   tell(eloInfo, "Send mail '%s' with [%s] to '%s' (%s)", subject, body, receivers, mimeType);
 
    asprintf(&command, "%s \"%s\" \"%s\" \"%s\" %s", mailScript,
             subject, mailBody.c_str(), mimeType, receivers);
@@ -225,10 +224,9 @@ int cFrame::sendMail(const char* mimeType, const char* receivers,
    if ((res = system(command)) != 0)
    {
       if (res == -1)
-         tell(0, "Error: Command '%s' failed, can't fork process, result was (%s)",
-              command, strerror(errno));
+         tell("Error: Command '%s' failed, can't fork process, result was (%s)", command, strerror(errno));
       else
-         tell(0, "Error: Result of command '%s' was (%d)", mailScript, res);
+         tell("Error: Result of command '%s' was (%d)", mailScript, res);
    }
 
    free(command);

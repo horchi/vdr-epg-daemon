@@ -36,13 +36,13 @@ int sendWol(const char* mac, const char* device)
 
    if ((sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
    {
-      tell(0, "Error: Cannot open socket '%s'", strerror(errno));
+      tell("Error: Cannot open socket '%s'", strerror(errno));
       return fail;
    }
 
    if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char*)&optval, sizeof(optval)) < 0)
    {
-      tell(0, "Error: Cannot set socket options '%s'", strerror(errno));
+      tell("Error: Cannot set socket options '%s'", strerror(errno));
       return fail;
    }
 
@@ -50,7 +50,7 @@ int sendWol(const char* mac, const char* device)
 
    if (packMacAddr(mac, &wolHeader.macAddr) < 0)
    {
-      tell(0, "Error: MAC Address '%s' ist not valid", mac);
+      tell("Error: MAC Address '%s' ist not valid", mac);
       return fail;
    }
 
@@ -61,7 +61,7 @@ int sendWol(const char* mac, const char* device)
 
    if (inet_aton(wolHeader.remoteAddr, &addr.sin_addr) == 0)
    {
-      tell(0, "Error: Invalid remote ip address given '%s'", wolHeader.remoteAddr);
+      tell("Error: Invalid remote ip address given '%s'", wolHeader.remoteAddr);
       return fail;
    }
 
@@ -74,11 +74,11 @@ int sendWol(const char* mac, const char* device)
 
    if (sendto(sock, packet, sizeof(packet), 0, (struct sockaddr*)&addr, sizeof(addr)) < 0)
    {
-      tell(0, "Error: Cannot send data '%s'", strerror(errno));
+      tell("Error: Cannot send data '%s'", strerror(errno));
       return fail;
    }
 
-   tell(1, "Info: Successful sent WOL magic packet to '%s' via bcast '%s'",
+   tell(eloInfo, "Info: Successful sent WOL magic packet to '%s' via bcast '%s'",
         wolHeader.macAddr.macAddrStr, bcast);
 
    close(sock);

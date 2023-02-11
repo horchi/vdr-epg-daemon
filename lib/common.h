@@ -90,36 +90,43 @@ const char* toCase(Case cs, char* str);
 
 enum Eloquence
 {
-   eloAlways         = 0x00000,
+   eloError          = 0x00001,
+   eloWarning        = 0x00002,
+   eloInfo           = 0x00004,
+   eloDetail         = 0x00008,
+   eloDebug          = 0x00010,
+   eloDebug2         = 0x00020,
+   eloWebSock        = 0x00040,
+   eloDebugWebSock   = 0x00080,
+   eloMqtt           = 0x00100,
+   eloDb             = 0x00200,
+   eloDebugDb        = 0x00400,
 
-   eloInfo           = 0x00001,
-   eloDetail         = 0x00002,
-   eloDebug          = 0x00004,
-   eloDebug2         = 0x00008,
-   eloWebSock        = 0x00010,
-   eloDebugWebSock   = 0x00020,
-   eloMqtt           = 0x00040,
-   eloDb             = 0x00080,
-   eloDebugDb        = 0x00100,
+   eloTvDb           = 0x00800,
+   eloCurl           = 0x01000,
+   eloDebugCurl      = 0x02000,
 
-   eloTvDb           = 0x00200,
-   eloCurl           = 0x00400,
-   eloDebugCurl      = 0x00800
+   eloNone = na
 };
 
 class Elo
 {
    public:
 
-      // static const char* eloquences[];
-      // static Eloquence stringToEloquence(const std::string& string);
-      // static int toEloquence(const char* str);
+      static const char* eloquences[];
+      static Eloquence stringToEloquence(const std::string& string);
+      static int toEloquence(const char* str);
 };
 
 extern const char* logPrefix;
 
 const char* getLogPrefix();
-void __attribute__ ((format(printf, 2, 3))) tell(int eloquence, const char* format, ...);
+void __attribute__ ((format(printf, 2, 3))) tell(Eloquence elo, const char* format, ...);
+void __attribute__ ((format(printf, 1, 2))) tell(const char* format, ...);
+void vtell(Eloquence elo, const char* format, va_list more);
+
+// for plugin compatibility
+void __attribute__ ((format(printf, 2, 3))) tell(int level, const char* format, ...);
 
 //***************************************************************************
 // Syslog
@@ -221,7 +228,7 @@ class MemoryStruct
          {
             free(zmemory);
             zsize = 0;
-            tell(0, "Error gzip failed!");
+            tell("Error gzip failed!");
 
             return fail;
          }
@@ -439,7 +446,7 @@ class LogDuration
 {
    public:
 
-      explicit LogDuration(const char* aMessage, int aLogLevel = 2);
+      explicit LogDuration(const char* aMessage, Eloquence aElo = eloInfo);
       ~LogDuration();
 
       void show(const char* label = "");
@@ -448,7 +455,7 @@ class LogDuration
 
       char message[1000];
       uint64_t durationStart;
-      int logLevel;
+      Eloquence elo;
 };
 
 //***************************************************************************
@@ -467,8 +474,7 @@ class Sem
          locked = no;
 
          if ((id = semget(key, 1, 0666 | IPC_CREAT)) == -1)
-            tell(0, "Error: Can't get semaphore, errno (%d) '%s'",
-                 errno, strerror(errno));
+            tell("Error: Can't get semaphore, errno (%d) '%s'", errno, strerror(errno));
       }
 
       ~Sem()
@@ -494,8 +500,7 @@ class Sem
 
          if (semop(id, sops, 2) == -1)
          {
-            tell(0, "Error: Can't lock semaphore, errno (%d) '%s'",
-                 errno, strerror(errno));
+            tell("Error: Can't lock semaphore, errno (%d) '%s'", errno, strerror(errno));
 
             return fail;
          }
@@ -519,9 +524,7 @@ class Sem
          if (semop(id, sops, 1) == -1)
          {
             if (errno != EAGAIN)
-               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'",
-                    errno, strerror(errno));
-
+               tell("Error: Can't lock semaphore, errno was (%d) '%s'", errno, strerror(errno));
             return fail;
          }
 
@@ -552,9 +555,7 @@ class Sem
          if (semop(id, sops, 1) == -1)
          {
             if (errno != EAGAIN)
-               tell(0, "Error: Can't lock semaphore, errno was (%d) '%s'",
-                    errno, strerror(errno));
-
+               tell("Error: Can't lock semaphore, errno was (%d) '%s'", errno, strerror(errno));
             return fail;
          }
 
@@ -575,8 +576,7 @@ class Sem
          if (semop(id, &sops, 1) == -1)
          {
             if (errno != EAGAIN)
-               tell(0, "Error: Can't unlock semaphore, errno (%d) '%s'",
-                    errno, strerror(errno));
+               tell("Error: Can't unlock semaphore, errno (%d) '%s'", errno, strerror(errno));
 
             return fail;
          }

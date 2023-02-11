@@ -46,7 +46,7 @@ int cTVDBScraper::getUpdates(time_t since, std::set<int>& seriesIds)
 
       if (!jData)
       {
-         tell(0, "TvDb: Query updates page %d failed", page);
+         tell("TvDb: Query updates page %d failed", page);
          continue;
       }
 
@@ -111,7 +111,7 @@ int cTVDBScraper::readSeriesId(const char* seriesName)
 
    if (!jData)
    {
-      tell(0, "Missing 'data' in result of of call for '%s'", seriesName);
+      tell("Missing 'data' in result of of call for '%s'", seriesName);
       return 0;
    }
 
@@ -128,7 +128,7 @@ int cTVDBScraper::readSeriesId(const char* seriesName)
       if (strcasestr(name, seriesName))
       {
          seriesID = atoi(getStringFromJson(jSeries, "tvdb_id", ""));
-         // tell(eloAlways, "Found series '%s', id is %d", name, seriesID);
+         // tell(eloInfo, "Found series '%s', id is %d", name, seriesID);
          break;
       }
 
@@ -159,7 +159,7 @@ int cTVDBScraper::readSeriesId(const char* seriesName)
    {
       jSeries = json_array_get(jData, 0);
       seriesID = atoi(getStringFromJson(jSeries, "tvdb_id", ""));
-      tell(0, "Series '%s' not found by aliases, using first of (%ld) search results -> '%s'(%d)",
+      tell(eloInfo, "Series '%s' not found by aliases, using first of (%ld) search results -> '%s'(%d)",
            seriesName, json_array_size(jData), getStringFromJson(jSeries, "name", ""), seriesID);
    }
 

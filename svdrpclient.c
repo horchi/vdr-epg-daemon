@@ -34,7 +34,7 @@ ssize_t safe_read(int filedes, void *buffer, size_t size)
 
      if (p < 0 && errno == EINTR)
      {
-        tell(2, "EINTR while reading from file handle %d - retrying", filedes);
+        tell(eloDetail, "EINTR while reading from file handle %d - retrying", filedes);
         continue;
      }
      return p;
@@ -55,7 +55,7 @@ ssize_t safe_write(int filedes, const void *buffer, size_t size)
      {
         if (errno == EINTR)
         {
-           tell(2, "EINTR while writing to file handle %d - retrying", filedes);
+           tell(eloDetail, "EINTR while writing to file handle %d - retrying", filedes);
            continue;
         }
 
@@ -274,7 +274,7 @@ bool cFile::Open(const char *FileName, int Flags, mode_t Mode)
 {
   if (!IsOpen())
      return Open(open(FileName, Flags, Mode));
-  tell(0, "Error: attempt to re-open %s", FileName);
+  tell("Error: attempt to re-open %s", FileName);
   return false;
 }
 
@@ -293,14 +293,14 @@ bool cFile::Open(int FileDes)
             if (!files[f])
                files[f] = true;
             else
-               tell(0, "Error: file descriptor %d already in files[]", f);
+               tell("Error: file descriptor %d already in files[]", f);
             return true;
          }
          else
-            tell(0, "Error: file descriptor %d is larger than FD_SETSIZE (%d)", f, FD_SETSIZE);
+            tell("Error: file descriptor %d is larger than FD_SETSIZE (%d)", f, FD_SETSIZE);
       }
       else
-         tell(0, "Error: attempt to re-open file descriptor %d", FileDes);
+         tell("Error: attempt to re-open file descriptor %d", FileDes);
    }
 
    return false;
@@ -398,7 +398,7 @@ int cSvdrpClient::connect()
 {
    if (!ip)
    {
-      tell(0, "Error: SVDRPCL: No server IP specified");
+      tell("Error: SVDRPCL: No server IP specified");
       return fail;
    }
 
@@ -418,7 +418,7 @@ int cSvdrpClient::connect()
 
       else if ((remoteAddr = inet_addr(ip)) == INADDR_NONE)
       {
-         tell(0, "Error: SVDRPCL: Can't map hostname '%s' to ip", ip);
+         tell("Error: SVDRPCL: Can't map hostname '%s' to ip", ip);
          return fail;
       }
 
@@ -426,7 +426,7 @@ int cSvdrpClient::connect()
    }
    else if (!::inet_aton(ip, &server_addr.sin_addr))
    {
-      tell(0, "Error: SVDRPCL: Invalid server IP '%s'", ip);
+      tell("Error: SVDRPCL: Invalid server IP '%s'", ip);
       return fail;
    }
 
@@ -434,7 +434,7 @@ int cSvdrpClient::connect()
 
    if (sock < 0)
    {
-      tell(0, "Error: SVDRPCL: Creating socket for connection to %s: %s failed", ip, strerror(errno));
+      tell("Error: SVDRPCL: Creating socket for connection to %s: %s failed", ip, strerror(errno));
       return fail;
    }
 
@@ -444,7 +444,7 @@ int cSvdrpClient::connect()
 
    if (flags < 0 || ::fcntl(sock, F_SETFL, flags | O_NONBLOCK) < 0)
    {
-      tell(0, "Error: SVDRPCL: Unable to use nonblocking I/O for %s: %s", ip, strerror(errno));
+      tell("Error: SVDRPCL: Unable to use nonblocking I/O for %s: %s", ip, strerror(errno));
       return fail;
    }
 
@@ -452,7 +452,7 @@ int cSvdrpClient::connect()
    {
       if (errno != EINPROGRESS)
       {
-         tell(0, "Error: SVDRPCL: connect to %s:%d failed: %s", ip, port, strerror(errno));
+         tell("Error: SVDRPCL: connect to %s:%d failed: %s", ip, port, strerror(errno));
          return fail;
       }
 
@@ -493,7 +493,7 @@ int cSvdrpClient::connect()
 
       if (result != 0)
       {
-         tell(0, "Error: SVDRPCL: Connecting to '%s:%d' %s failed", ip, port, strerror(errno));
+         tell("Error: SVDRPCL: Connecting to '%s:%d' %s failed", ip, port, strerror(errno));
          ::close(sock);
 
          return fail;
@@ -525,7 +525,7 @@ int cSvdrpClient::open()
 
    if (receive(&greeting) != 220)
    {
-      tell(0, "Error: SVDRPCL: Did not receive greeting from %s. Closing...", ip);
+      tell("Error: SVDRPCL: Did not receive greeting from %s. Closing...", ip);
       abort();
 
       return fail;
@@ -536,7 +536,7 @@ int cSvdrpClient::open()
    if (greeting.First() && greeting.First()->Text())
       msg = greeting.First()->Text();
 
-   tell(2, "SVDRPCL: connected to %s:%d '%s'", ip, port, msg);
+   tell(eloDetail, "SVDRPCL: connected to %s:%d '%s'", ip, port, msg);
 
    return success;
 }
@@ -570,7 +570,7 @@ int cSvdrpClient::send(const char* cmd, int reconnect)
 
    if (!file.IsOpen())
    {
-      tell(0, "Error: SVDRPCL: unable to send command to %s. Socket is closed", ip);
+      tell("Error: SVDRPCL: unable to send command to %s. Socket is closed", ip);
       return false;
    }
 
@@ -578,7 +578,7 @@ int cSvdrpClient::send(const char* cmd, int reconnect)
 
    if (safe_write(file, cmd, len) < 0 || safe_write(file, eoc, strlen(eoc)) < 0)
    {
-      tell(0, "Error: SVDRPCL: Writing to %s: %s failed", ip, strerror(errno));
+      tell("Error: SVDRPCL: Writing to %s: %s failed", ip, strerror(errno));
       abort();
 
       return false;
@@ -604,7 +604,7 @@ int cSvdrpClient::receive(cList<cLine>* list, int timeoutMs)
          const char* s = buffer + 4;
 
          if (code >= 451 && code <= 699)
-            tell(0, "Error: Got (%ld) '%s'", code, s);
+            tell("Error: Got (%ld) '%s'", code, s);
 
          if (list)
             list->Add(new cLine(s));
@@ -614,7 +614,7 @@ int cSvdrpClient::receive(cList<cLine>* list, int timeoutMs)
       }
       else
       {
-         tell(0, "Error: SVDRPCL: Unexpected reply from %s '%s'", ip, buffer);
+         tell("Error: SVDRPCL: Unexpected reply from %s '%s'", ip, buffer);
          close();
          break;
       }
@@ -660,7 +660,7 @@ int cSvdrpClient::readLine(int timeoutMs)
 
                if (!buffer)
                {
-                  tell(0, "Error: SVDRPCL: Unable to increase buffer size to %d byte", bufSize);
+                  tell("Error: SVDRPCL: Unable to increase buffer size to %d byte", bufSize);
                   close();
 
                   return false;
@@ -672,7 +672,7 @@ int cSvdrpClient::readLine(int timeoutMs)
       }
       else
       {
-         tell(0, "Error: SVDRPCL: Lost connection '%s'", ip);
+         tell("Error: SVDRPCL: Lost connection '%s'", ip);
          buffer[0] = 0;
          abort();
 
@@ -680,7 +680,7 @@ int cSvdrpClient::readLine(int timeoutMs)
       }
    }
 
-   tell(0, "Error: SVDRPCL: Timeout waiting server reply '%s'", ip);
+   tell("Error: SVDRPCL: Timeout waiting server reply '%s'", ip);
    buffer[0] = 0;
    abort();
 

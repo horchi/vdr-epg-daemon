@@ -53,14 +53,14 @@ int demoStatement()
 
    cDbTable* eventsDb = new cDbTable(connection, "events");
 
-   tell(0, "------------------- attach table ---------------");
+   tell("------------------- attach table ---------------");
 
    // open table (attach)
 
    if (eventsDb->open() != success)
       return fail;
 
-   tell(0, "---------------- prepare select statement -------------");
+   tell("---------------- prepare select statement -------------");
 
    // vorbereiten (prepare) eines statement, am besten einmal bei programmstart!
    // ----------
@@ -89,9 +89,9 @@ int demoStatement()
       return fail;
    }
 
-   tell(0, "------------------ prepare done ----------------------");
+   tell("------------------ prepare done ----------------------");
 
-   tell(0, "------------------ create some rows  ----------------------");
+   tell("------------------ create some rows  ----------------------");
 
    eventsDb->clear();     // alle values löschen
 
@@ -111,18 +111,18 @@ int demoStatement()
       free(title);
    }
 
-   tell(0, "------------------ done  ----------------------");
+   tell("------------------ done  ----------------------");
 
-   tell(0, "-------- select all where eventid > 1000 -------------");
+   tell("-------- select all where eventid > 1000 -------------");
 
    eventsDb->clear();     // alle values löschen
    eventsDb->setValue(eventsDb->getField("EventId"), 1000);
 
    for (int f = selectByCompTitle->find(); f; f = selectByCompTitle->fetch())
    {
-      tell(0, "id: %ld", eventsDb->getIntValue(eventsDb->getField("EventId")));
-      tell(0, "channel: %s", eventsDb->getStrValue(eventsDb->getField("ChannelId")));
-      tell(0, "titel: %s", eventsDb->getStrValue(eventsDb->getField("Title")));
+      tell("id: %ld", eventsDb->getIntValue(eventsDb->getField("EventId")));
+      tell("channel: %s", eventsDb->getStrValue(eventsDb->getField("ChannelId")));
+      tell("titel: %s", eventsDb->getStrValue(eventsDb->getField("Title")));
    }
 
    // freigeben der Ergebnissmenge !!
@@ -166,7 +166,7 @@ int joinDemo()
 
    // F_INIT(events, EventId); // ergibt: cDbFieldDef* eventsEventId; dbDict.init(eventsEventId, "events", "EventId");
 
-   tell(0, "----------------- open table connection ---------------");
+   tell("----------------- open table connection ---------------");
 
    // open tables (attach)
 
@@ -179,7 +179,7 @@ int joinDemo()
    if (imageRefDb->open() != success)
       return fail;
 
-   tell(0, "---------------- prepare select statement -------------");
+   tell("---------------- prepare select statement -------------");
 
    // all images
 
@@ -240,10 +240,10 @@ int joinDemo()
       return fail;
    }
 
-   tell(0, "------------------ prepare done ----------------------");
+   tell("------------------ prepare done ----------------------");
 
 
-   tell(0, "------------------ select ----------------------");
+   tell("------------------ select ----------------------");
 
    time_t since = 0; //time(0) - 60 * 60;
    imageRefDb->clear();
@@ -259,10 +259,10 @@ int joinDemo()
       int lfn = imageRefDb->getIntValue(imageRefDb->getField("Lfn"));
       int size = imageSize.getIntValue();
 
-      tell(0, "Found (%d) '%s', %d, %d", eventid, imageName, lfn, size);
+      tell("Found (%d) '%s', %d, %d", eventid, imageName, lfn, size);
    }
 
-   tell(0, "------------------ done ----------------------");
+   tell("------------------ done ----------------------");
 
    // freigeben der Ergebnissmenge !!
 
@@ -293,7 +293,7 @@ int insertDemo()
 
    if (timerDb->insert() == success)
    {
-      tell(0, "Insert succeeded with ID %d", timerDb->getLastInsertId());
+      tell("Insert succeeded with ID %d", timerDb->getLastInsertId());
    }
 
    delete timerDb;
@@ -312,7 +312,7 @@ int findUseEvent()
 
    // select event by useid
 
-   tell(0, "========================================");
+   tell("========================================");
 
    cDbStatement* selectEventById = new cDbStatement(useeventsDb);
 
@@ -330,7 +330,7 @@ int findUseEvent()
 
    selectEventById->prepare();
 
-   tell(0, "========================================");
+   tell("========================================");
 
    useeventsDb->clear();
    useeventsDb->setValue("USEID", 1146680);
@@ -372,13 +372,13 @@ int findUseEvent()
       if (!(f = fopen(fileName, "w")))
       {
          selectEventById->freeResult();
-         tell(0, "Error opening file '%s' failed, %s", fileName, strerror(errno));
+         tell("Error opening file '%s' failed, %s", fileName, strerror(errno));
          free(fileName);
 
          return fail;
       }
 
-      tell(0, "Storing event details to '%s'", fileName);
+      tell("Storing event details to '%s'", fileName);
 
       for (int i = 0; flds[i]; i++)
       {
@@ -386,7 +386,7 @@ int findUseEvent()
 
          if (!field)
          {
-            tell(0, "Warning: Field '%s' not found at table '%s'", flds[i], useeventsDb->TableName());
+            tell("Warning: Field '%s' not found at table '%s'", flds[i], useeventsDb->TableName());
             continue;
          }
 
@@ -407,7 +407,7 @@ int findUseEvent()
       fclose(f);
    }
 
-   tell(0, "========================================");
+   tell("========================================");
 
    selectEventById->freeResult();
 
@@ -453,7 +453,7 @@ int updateRecordingDirectory()
       }
    }
 
-   tell(0, "inserted %d directories", ins);
+   tell("inserted %d directories", ins);
 
    delete recordingDirDb;
    free(dir);
@@ -468,7 +468,7 @@ int updateRecordingDirectory()
 int main(int argc, char** argv)
 {
    cEpgConfig::logstdout = yes;
-   cEpgConfig::loglevel = 2;
+   cEpgConfig::eloquence = (Eloquence)(eloInfo | eloDetail | eloWarning | eloError);
 
    const char* imagename = "https://cellular.images.dvbdata.com:1234/4998510/4998510/320x240.jpg";
    char* buffer = 0;
@@ -478,11 +478,11 @@ int main(int argc, char** argv)
    else
       buffer = strdup(imagename);
 
-   tell(0, "%s", buffer);
+   tell("%s", buffer);
 
    replaceChars(buffer, "<>:\"/\\:|?*", '_');
 
-   tell(0, "%s", buffer);
+   tell("%s", buffer);
    free(buffer);
 
    const char* path = "/etc/epgd/epg.dat";
@@ -496,15 +496,15 @@ int main(int argc, char** argv)
 
    if (dbDict.in(path, ffEpgd) != success)
    {
-      tell(0, "Invalid dictionary configuration, aborting!");
+      tell("Invalid dictionary configuration, aborting!");
       return 1;
    }
 
    cUserTimes userTimes;
 
-   tell(0, "--------------");
+   tell("--------------");
    //userTimes.clear();
-   tell(0, "--------------");
+   tell("--------------");
 
    userTimes.add("@Now", "What's on now?") ;
    userTimes.add("@Next", "What's on next?" );
@@ -512,13 +512,13 @@ int main(int argc, char** argv)
    userTimes.add("22:20", "late night");
    userTimes.add("00:00");
 
-   tell(0, "--------------");
+   tell("--------------");
 
    for (int i = 0; i < 6; i++)
    {
       cUserTimes::UserTime* t = userTimes.next();
 
-      tell(0, "%d - %s (%s) %s", t->getHHMM(), t->getTitle(), t->getHHMMStr(), t->isHighlighted() ? "highlighted" : "");
+      tell("%d - %s (%s) %s", t->getHHMM(), t->getTitle(), t->getHHMMStr(), t->isHighlighted() ? "highlighted" : "");
    }
 
    return 0;
@@ -531,14 +531,14 @@ int main(int argc, char** argv)
    // joinDemo();
    // insertDemo();
 
-   tell(0, "uuid: '%s'", getUniqueId());
+   tell("uuid: '%s'", getUniqueId());
 
-   tell(0, "- - - - - - - - - - - - - - - - - ");
+   tell("- - - - - - - - - - - - - - - - - ");
 
    //updateRecordingDirectory();
    findUseEvent();
 
-   tell(0, "- - - - - - - - - - - - - - - - - ");
+   tell("- - - - - - - - - - - - - - - - - ");
 
    exitConnection();
 

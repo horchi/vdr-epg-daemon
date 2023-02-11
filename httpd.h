@@ -92,7 +92,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
 
       bool doShutDown()               { return shutdown; }
 
-      static void downF(int signal)  { tell(0, "Shutdown triggered with signal %d", signal); shutdown = true; }
+      static void downF(int signal)  { tell(eloWarning, "Shutdown triggered with signal %d", signal); shutdown = true; }
 
    protected:
 

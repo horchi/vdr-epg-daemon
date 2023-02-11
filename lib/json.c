@@ -44,8 +44,8 @@ json_t* jsonLoad(const char* data)
 
    if (!jData)
    {
-      tell(eloAlways, "Error: Ignoring invalid json in '%s'", data);
-      tell(eloAlways, "Error decoding json: %s (%s, line %d column %d, position %d)",
+      tell(eloInfo, "Error: Ignoring invalid json in '%s'", data);
+      tell(eloInfo, "Error decoding json: %s (%s, line %d column %d, position %d)",
            error.text, error.source, error.line, error.column, error.position);
       return nullptr;
    }
@@ -117,7 +117,7 @@ int getFieldFromJson(json_t* obj, cDbRow* row, const char* fname, const char* ex
 
    if (!value)
    {
-      tell(2, "Info: Lookup of db value for '%s' failed", fname);
+      tell(eloWarning, "Info: Lookup of db value for '%s' failed", fname);
       return fail;
    }
 

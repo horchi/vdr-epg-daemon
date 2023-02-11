@@ -177,7 +177,7 @@ int Epgdata::initDb()
 
       if (!(dir = opendir(path)))
       {
-         tell(0, "Error: Opening cache path '%s' failed, %s", path, strerror(errno));
+         tell("Error: Opening cache path '%s' failed, %s", path, strerror(errno));
          free(path);
          return fail;
       }
@@ -208,7 +208,7 @@ int Epgdata::initDb()
          obj->fileDb->setValue("FILEREF", fileRef);
          obj->fileDb->store();
 
-         tell(1, "Added '%s' to table fileref", dp->d_name);
+         tell(eloInfo, "Added '%s' to table fileref", dp->d_name);
          free(fileRef);
          free(tag);
       }
@@ -312,13 +312,13 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
 
    if (status != success || isEmpty(data.name))
    {
-      tell(1, "Download header for day (%d) at '%s' failed, aborting, got name '%s', status was %d",
+      tell(eloInfo, "Download header for day (%d) at '%s' failed, aborting, got name '%s', status was %d",
            day, logurl, data.name, status);
       status = fail;
       goto Exit;
    }
 
-   tell(2, "Got info for day (%d), file '%s' with tag '%s'", day, data.name, data.tag);
+   tell(eloDetail, "Got info for day (%d), file '%s' with tag '%s'", day, data.name, data.tag);
 
    asprintf(&fileRef, "%s-%s", data.name, data.tag);
    asprintf(&path, "%s/%s", directory, data.name);
@@ -349,7 +349,7 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
    {
       // don't check for update of existing files more than 'upddays' in the future
 
-      tell(2, "Skipping update check of file '%s' for day %d", data.name, day);
+      tell(eloDetail, "Skipping update check of file '%s' for day %d", data.name, day);
 
       statistic->nonUpdates++;
       status = success;
@@ -357,7 +357,7 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
    }
    else if (haveOneForThisDay && obj->fileDb->hasValue("FileRef", fileRef))
    {
-      tell(3, "Skipping download of day (%d) due to non-update", day);
+      tell(eloDebug, "Skipping download of day (%d) due to non-update", day);
       statistic->nonUpdates++;
       status = success;
       load = no;
@@ -374,7 +374,7 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
 
    if (!load && fileExists(fspath))
    {
-      tell(1, "File '%s' exist, loading from filesystem", fspath);
+      tell(eloInfo, "File '%s' exist, loading from filesystem", fspath);
 
       obj->loadFromFs(&data, valueName.getStrValue(), getSource());
 
@@ -392,13 +392,13 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
 
    if (load)
    {
-      tell(0, "Download file: '%s' to '%s", logurl, data.name);
+      tell(eloInfo, "Download file: '%s' to '%s", logurl, data.name);
 
       data.clear();
 
       if (obj->downloadFile(url, fileSize, &data, timeout) != success)
       {
-         tell(0, "Download of day (%d) from '%s' failed", day, logurl);
+         tell("Error: Download of day (%d) from '%s' failed", day, logurl);
          status = fail;
          goto Exit;
       }
@@ -420,8 +420,7 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
 
    if (unzip(path, /*filter*/ ".xml", uzdata.memory, bSize, entryName) == success)
    {
-      tell(0, "Processing file '%s' for day %d (%d/%d)",
-           fileRef, day, haveOneForThisDay, load);
+      tell(eloInfo, "Processing file '%s' for day %d (%d/%d)", fileRef, day, haveOneForThisDay, load);
 
       uzdata.size = bSize;
 
@@ -450,7 +449,7 @@ int Epgdata::processDay(int day, int fullupdate, Statistic* statistic)
 //          // mark 'old' entrys in events table as deleted
 //          // and 'fake' fileref to new to avoid deletion at cleanup
 
-//          tell(0, "Removing events of fileref '%s' for day %d", oldFileRef, day);
+//          tell(eloInfo, "Removing events of fileref '%s' for day %d", oldFileRef, day);
 
 //          obj->eventsDb->clear();
 //          obj->eventsDb->setValue("DelFlg", "Y");
@@ -500,13 +499,13 @@ int Epgdata::processFile(const char* data, int size, const char* fileRef)
 
    if ((transformedDoc = obj->transformXml(data, size, pxsltStylesheet, fileRef)) == 0)
    {
-      tell(0, "XSLT transformation for '%s' failed, ignoring", fileRef);
+      tell("Error: XSLT transformation for '%s' failed, ignoring", fileRef);
       return fail;
    }
 
    if (!(xmlRoot = xmlDocGetRootElement(transformedDoc)))
    {
-      tell(0, "Invalid xml document returned from xslt for '%s', ignoring", fileRef);
+      tell("Error: Invalid xml document returned from xslt for '%s', ignoring", fileRef);
       return fail;
    }
 
@@ -528,7 +527,7 @@ int Epgdata::processFile(const char* data, int size, const char* fileRef)
       if (!(prop = (char*)xmlGetProp(node, (xmlChar*)"id")) || !*prop || !(eventid = atoll(prop)))
       {
          xmlFree(prop);
-         tell(0, "Missing event id, ignoring!");
+         tell("Missing event id, ignoring!");
          continue;
       }
 
@@ -539,7 +538,7 @@ int Epgdata::processFile(const char* data, int size, const char* fileRef)
       if (!(prop = (char*)xmlGetProp(node, (xmlChar*)"provid")) || !*prop || !atoi(prop))
       {
          xmlFree(prop);
-         tell(0, "Missing provider id, ignoring!");
+         tell("Missing provider id, ignoring!");
          continue;
       }
 
@@ -619,7 +618,7 @@ int Epgdata::processFile(const char* data, int size, const char* fileRef)
 
    xmlFreeDoc(transformedDoc);
 
-   tell(2, "XML File '%s' processed, updated %d events", fileRef, count);
+   tell(eloDetail, "XML File '%s' processed, updated %d events", fileRef, count);
 
    return success;
 }
@@ -655,16 +654,16 @@ int Epgdata::getPicture(const char* imagename, const char* fileRef, MemoryStruct
 
    if (!imagename)
    {
-      tell(2, "Error: No image url given, skipping image");
+      tell(eloDetail, "Error: No image url given, skipping image");
       return 0;
    }
 
-   tell(0, "Downloading image '%s'", imagename);
+   tell(eloInfo, "Downloading image '%s'", imagename);
    status = obj->downloadFile(imagename, fileSize, data);
 
    if (status != success)
    {
-      tell(0, "Error: downloading image from url '%s' failed", imagename);
+      tell("Error: downloading image from url '%s' failed", imagename);
       return 0;
    }
 
@@ -694,7 +693,7 @@ int Epgdata::cleanupAfter()
       if (last && strncmp(name, last, 8) == 0)
       {
          char* where;
-         tell(1, "Remove old epgdata file '%s' from table", name);
+         tell(eloInfo, "Remove old epgdata file '%s' from table", name);
          asprintf(&where, "name = '%s'", name);
          obj->fileDb->deleteWhere("%s", where);
          free(where);
@@ -717,13 +716,13 @@ int Epgdata::cleanupAfter()
 
    if (!(dir = opendir(pdir)))
    {
-      tell(1, "Can't open directory '%s', '%s'", pdir, strerror(errno));
+      tell(eloWarning, "Can't open directory '%s', '%s'", pdir, strerror(errno));
       free(pdir);
 
       return done;
    }
 
-   tell(1, "Starting cleanup of epgdata zip's in '%s'", pdir);
+   tell(eloInfo, "Starting cleanup of epgdata zip's in '%s'", pdir);
 
    free(pdir);
 
@@ -755,11 +754,9 @@ int Epgdata::cleanupAfter()
 
    closedir(dir);
 
-   tell(1, "Cleanup finished, removed (%d) epgdata files", count);
+   tell(eloInfo, "Cleanup finished, removed (%d) epgdata files", count);
 
    return success;
 }
-
-//***************************************************************************
 
 extern "C" void* EPGPluginCreator() { return new Epgdata(); }

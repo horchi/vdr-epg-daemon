@@ -199,7 +199,7 @@ int scaleImageToJpegBuffer(Imlib_Image image, MemoryStruct* data, int width, int
       imlib_context_set_image(scaledImage);
       imlib_free_image();
 
-      tell(2, "Scaled image to %d/%d, now %d bytes", width, height, (int)data->size);
+      tell(eloDetail, "Scaled image to %d/%d, now %d bytes", width, height, (int)data->size);
    }
    else
    {

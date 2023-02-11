@@ -222,7 +222,7 @@ int cTVDBSeries::parseSeries(json_t* jResult)
             artwork.seasonId = seasons[sessionId].number;
          }
 
-         // tell(eloAlways, "Debug: Series (%d) got artwork '%s'", seriesID, artwork.url.c_str());
+         // tell(eloInfo, "Debug: Series (%d) got artwork '%s'", seriesID, artwork.url.c_str());
          artworks.push_back(std::move(artwork));
       }
    }
@@ -305,11 +305,11 @@ int cTVDBSeries::parseEpisodesExtended(json_t* jResult, Episode& episode)
       const char* personName = getStringFromJson(jItem, "personName", "");
       const char* peopleType = getStringFromJson(jItem, "peopleType", "");
 
-      tell(0, "Additional character (%d/%d): %s/%s as '%s'(%d) [%s]", episode.seriesID, episode.id, name, personName, peopleType, type, url);
+      tell(eloInfo, "Additional character (%d/%d): %s/%s as '%s'(%d) [%s]", episode.seriesID, episode.id, name, personName, peopleType, type, url);
       n++;
    }
 
-   tell(0, "Got %d Additional characters for series/episode %d/%d", n,  episode.seriesID, episode.id);
+   tell(eloInfo, "Got %d Additional characters for series/episode %d/%d", n,  episode.seriesID, episode.id);
    return success;
 }
 

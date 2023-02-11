@@ -40,13 +40,13 @@ int cEpgd::loadChannelmap()
 
    if (cmfile.fail())
    {
-      tell(1, "Error reading '%s' %s!", path, strerror(errno));
+      tell("Error reading '%s' %s!", path, strerror(errno));
       free(path);
 
       return fail;
    }
 
-   tell(1, "Loading '%s'", path);
+   tell(eloInfo, "Loading '%s'", path);
 
    connection->startTransaction();
 
@@ -88,7 +88,7 @@ int cEpgd::loadChannelmap()
 
       if ((p == std::string::npos) || !s.substr(p+1).length())
       {
-         tell(0, "Error parsing '%s' at line %d!", path, line);
+         tell("Error parsing '%s' at line %d!", path, line);
          status = fail;
          break;
       }
@@ -111,7 +111,7 @@ int cEpgd::loadChannelmap()
 
       if (!right || !source || !extid)
       {
-         tell(0, "Error: Syntax error in '%s' at line %d!", path, line);
+         tell("Error: Syntax error in '%s' at line %d!", path, line);
 
          free(right);
          free(source);
@@ -137,7 +137,7 @@ int cEpgd::loadChannelmap()
    cmfile.close();
    free(path);
 
-   tell(1, "%d channel mappings read.", count);
+   tell(eloInfo, "%d channel mappings read.", count);
 
    return status;
 }
@@ -161,7 +161,7 @@ int cEpgd::updateMapRow(char* extid, const char* source, const char* chan, int m
 
    if (!isZero(extid) && strcmp(source, "vdr") == 0)
    {
-      tell(1, "Force extid of for channel '%s' to 0, due to source 'vdr'", chan);
+      tell(eloInfo, "Force extid of for channel '%s' to 0, due to source 'vdr'", chan);
       free(extid);
       extid = strdup("0");
       merge = 0;
@@ -172,7 +172,7 @@ int cEpgd::updateMapRow(char* extid, const char* source, const char* chan, int m
    }
    else if (isZero(extid))
    {
-      tell(1, "Ignoring config with empty external ID for channel '%s', '%s'", chan, source);
+      tell(eloInfo, "Ignoring config with empty external ID for channel '%s', '%s'", chan, source);
       return fail;
    }
 
@@ -219,7 +219,7 @@ int cEpgd::updateMapRow(char* extid, const char* source, const char* chan, int m
 
    if (changed || insert)
    {
-      tell(1, "Channel '%s' %s, source '%s', extid %s, merge %d",
+      tell(eloInfo, "Channel '%s' %s, source '%s', extid %s, merge %d",
            chan, insert ? "inserted" : "updated", source, extid, merge);
 
       mapDb->setValue("MERGESP", 0L);   // reset mergesp!
@@ -229,7 +229,7 @@ int cEpgd::updateMapRow(char* extid, const char* source, const char* chan, int m
 
       if (!EpgdConfig.checkInitial)
       {
-         tell(1, "At least one channelmap change detected, force initial check!");
+         tell(eloInfo, "At least one channelmap change detected, force initial check!");
          EpgdConfig.checkInitial = yes;
       }
    }
@@ -267,7 +267,7 @@ int cEpgd::applyChannelmapChanges()
       {
          std::string newChannelId = mapDb->getStrValue("CHANNELID");
 
-         tell(1, "channelid '%s' was changed to '%s'", oldChannelId.c_str(), newChannelId.c_str());
+         tell(eloInfo, "channelid '%s' was changed to '%s'", oldChannelId.c_str(), newChannelId.c_str());
 
          // change the 'I'nserted row and remove the 'D'eleted row -> no further action is necessary later on
 
@@ -290,7 +290,7 @@ int cEpgd::applyChannelmapChanges()
 
             if (td->getField("CHANNELID", yes))
             {
-               tell(3, "Table '%s' has a channelid field", td->getName());
+               tell(eloDetail, "Table '%s' has a channelid field", td->getName());
 
                cDbTable* table = new cDbTable(connection, t->first.c_str());
                char* stmt;
@@ -300,7 +300,7 @@ int cEpgd::applyChannelmapChanges()
                         table->getField("CHANNELID")->getDbName(), newChannelId.c_str(),
                         table->getField("CHANNELID")->getDbName(), oldChannelId.c_str());
 
-               tell(1, "Executing '%s'", stmt);
+               tell(eloInfo, "Executing '%s'", stmt);
                connection->query("%s", stmt);
 
                free(stmt);
@@ -321,7 +321,7 @@ int cEpgd::applyChannelmapChanges()
 
       if (flg == 'U' || flg == 'D' || flg == 'I')
       {
-         tell(1, "Removing fileref and event entrys for channel '%s' "
+         tell(eloInfo, "Removing fileref and event entrys for channel '%s' "
               "(extid %s) of '%s' due to channelmap change (%c)",
               mapDb->getStrValue("CHANNELID"),
               mapDb->getStrValue("EXTERNALID"),

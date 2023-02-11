@@ -125,17 +125,17 @@ cEpgHttpd::cEpgHttpd()
 
    if (lang)
    {
-      tell(1, "Set locale to '%s'", lang);
+      tell(eloInfo, "Set locale to '%s'", lang);
 
       if ((strcasestr(lang, "UTF-8") != 0) || (strcasestr(lang, "UTF8") != 0))
       {
-         tell(1, "detected UTF-8");
+         tell(eloInfo, "detected UTF-8");
          withutf8 = yes;
       }
    }
    else
    {
-      tell(0, "Warning: Detecting locale setting for LC_CTYPE failed");
+      tell(eloWarning, "Warning: Detecting locale setting for LC_CTYPE failed");
    }
 
    tzset();  // init timezone environment
@@ -166,7 +166,19 @@ int cEpgHttpd::init()
    if (readConfig() != success)
       return fail;
 
-   tell(1, "Log level is set to (%d)", EpgdConfig.loglevel);
+   // eloquence
+
+   char elo[255+TB] {};
+   getParameter("epgd", "eloquence", elo);
+   EpgdConfig.eloquence = Elo::stringToEloquence(elo);
+
+   if (EpgdConfig.argEloquence != eloNone)
+   {
+      EpgdConfig.eloquence = EpgdConfig.argEloquence;
+      EpgdConfig.argEloquence = eloNone;
+   }
+
+   tell(eloInfo, "Info: Eloquence set to '%s' => 0x%04x", elo, EpgdConfig.eloquence);
 
    if (search->init(confDir) != success)
       return fail;
@@ -180,11 +192,11 @@ int cEpgHttpd::init()
 
    if (dbDict.in(dictPath) != success)
    {
-      tell(0, "Fatal: Dictionary not loaded, aborting!");
+      tell("Fatal: Dictionary not loaded, aborting!");
       return 1;
    }
 
-   tell(1, "Dictionary '%s' loaded", dictPath);
+   tell(eloInfo, "Dictionary '%s' loaded", dictPath);
    free(dictPath);
 
    // init database ...
@@ -221,11 +233,11 @@ int cEpgHttpd::init()
 
       if (status != success)
       {
-         tell(0, "Error: The key/certificate files could not be loaded");
+         tell("Error: The key/certificate files could not be loaded");
          return fail;
       }
 
-      tell(1, "Loading key and certificate files succeeded");
+      tell(eloInfo, "Loading key and certificate files succeeded");
    }
 
    // bind to net device - if configured
@@ -247,11 +259,11 @@ int cEpgHttpd::init()
       memcpy(&localSockAddr.sin_addr, &localAddr, sizeof(struct in_addr));
       localSockAddr.sin_port = htons(EpgdConfig.httpPort);
 
-      tell(1, "Binding listener to '%s' at '%s'", bindIp, EpgdConfig.httpDevice);
+      tell(eloInfo, "Binding listener to '%s' at '%s'", bindIp, EpgdConfig.httpDevice);
 
       // establish listener
 
-      tell(1, "Starting http server ...");
+      tell(eloInfo, "Starting http server ...");
 
       if (!EpgdConfig.httpUseTls)
       {
@@ -278,7 +290,7 @@ int cEpgHttpd::init()
    {
       // establish listener
 
-      tell(1, "Starting http server ...");
+      tell(eloInfo, "Starting http server ...");
 
       if (!EpgdConfig.httpUseTls)
       {
@@ -302,11 +314,11 @@ int cEpgHttpd::init()
 
    if (!daemon)
    {
-      tell(0, "Error: Start of http server failed");
+      tell("Error: Start of http server failed");
       return fail;
    }
 
-   tell(0, "Listener at port %d established, waiting for connections", EpgdConfig.httpPort);
+   tell(eloInfo, "Listener at port %d established, waiting for connections", EpgdConfig.httpPort);
 
    cSystemNotification::notify(evReady);
    cSystemNotification::getWatchdogState(10);
@@ -349,7 +361,7 @@ int cEpgHttpd::initDb()
 
    // db connection
 
-   tell(1, "Connecting to database at '%s:%d'", cDbConnection::getHost(), cDbConnection::getPort());
+   tell(eloInfo, "Connecting to database at '%s:%d'", cDbConnection::getHost(), cDbConnection::getPort());
 
    if (!connection)
       connection = new cDbConnection();
@@ -1252,19 +1264,19 @@ int cEpgHttpd::checkConnection()
    {
       static int retry {0};
 
-      tell(0, "Trying to re-connect to database!");
+      tell(eloWarning, "Trying to re-connect to database!");
       retry++;
 
       if (initDb() != success)
       {
-         tell(0, "Retry #%d failed!", retry);
+         tell(eloWarning, "Retry #%d failed!", retry);
          exitDb();
 
          return fail;
       }
 
       retry = 0;
-      tell(0, "Connection established successfull!");
+      tell(eloWarning, "Connection established successfull!");
    }
 
    return success;
@@ -1288,12 +1300,12 @@ int cEpgHttpd::setSession(const char* sessionId)
 
       if (time(0) > s->last + tmeSecondsPerHour)
       {
-         tell(1, "Session '%s' for user '%s' expired, removing it", s->id.c_str(), s->user.c_str());
+         tell(eloInfo, "Session '%s' for user '%s' expired, removing it", s->id.c_str(), s->user.c_str());
          sessions.erase(it);
          return fail;
       }
 
-      tell(2, "Session now '%s' for user '%s'", s->id.c_str(), s->user.c_str());
+      tell(eloDetail, "Session now '%s' for user '%s'", s->id.c_str(), s->user.c_str());
 
       currentSession = s;
       currentSession->last = time(0);
@@ -1330,7 +1342,7 @@ int cEpgHttpd::hasRights(const char* url, json_t* response, int& statusCode)
    if (!needLogin())
       return yes;
 
-   tell(2, "Checking rights of '%s' for user '%s' with%s session", url,
+   tell(eloDetail, "Checking rights of '%s' for user '%s' with%s session", url,
         currentSession ? currentSession->user.c_str() : "<null>",
         currentSession ? "" : "out");
 
@@ -1380,7 +1392,7 @@ int cEpgHttpd::buildResponse(json_t* obj, int state, const char* format, ...)
    va_end(ap);
 
    if (state != MHD_HTTP_OK)
-      tell(0, "Error: %s", messageTxt);
+      tell("Error: %s", messageTxt);
 
    json_object_set_new(oResult, "state", json_integer(state));
    json_object_set_new(oResult, "message", json_string(messageTxt));
@@ -1515,7 +1527,7 @@ int cEpgHttpd::performDataRequest(MHD_Connection* tcp, const char* url, MemorySt
    {
       json2Data(response, data, encoding);
 
-      if (EpgdConfig.loglevel >= 2)
+      if (EpgdConfig.eloquence & eloDebug2)
          json_dump_file(response, "debug-dump.json", JSON_PRESERVE_ORDER);
    }
 
@@ -1540,7 +1552,7 @@ int cEpgHttpd::performHttpGet(MHD_Connection* tcp, const char* inurl, MemoryStru
 
    data->modTime = getModTimeOf(url, "");
 
-   tell(3, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
+   tell(eloDebug, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
 
    if (!data->expireAt || data->modTime > data->expireAt)
    {
@@ -1580,7 +1592,7 @@ int cEpgHttpd::performPostData(const char* url, MemoryStruct* data)
    json_error_t error;
    json_t* jInData = json_loads(data->memory, 0, &error);
 
-   tell(2, "<- post (%s) '%s'", url, data->memory);
+   tell(eloDetail, "<- post (%s) '%s'", url, data->memory);
 
    if (!jInData)
    {
@@ -1646,9 +1658,9 @@ int cEpgHttpd::performPostData(const char* url, MemoryStruct* data)
 MHD_Result debugPrint(void *cls, enum MHD_ValueKind kind, const char *key, const char *value)
 {
    if (kind == MHD_GET_ARGUMENT_KIND)
-      tell(0, "Parameter: '%s' - '%s'", key, value);
+      tell(eloDebug, "Parameter: '%s' - '%s'", key, value);
    else if (kind == MHD_HEADER_KIND)
-      tell(0, "Header: '%s' - '%s'", key, value);
+      tell(eloDebug, "Header: '%s' - '%s'", key, value);
 
    return MHD_YES;
 }
@@ -1697,7 +1709,7 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
 
    // debug
 
-   if (EpgdConfig.loglevel >= 3)
+   if (EpgdConfig.eloquence & eloDebug2)
    {
       // MHD_get_connection_values(tcp, MHD_GET_ARGUMENT_KIND, debugPrint, 0);
       MHD_get_connection_values(tcp, MHD_HEADER_KIND, debugPrint, 0);
@@ -1713,19 +1725,19 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
       asprintf(&session, "%.*s", (int)(strchr(url+4, '/') - url - 4), url + 4);
       url = strchr(url+4, '/');
 
-      tell(3, "SESSION: '%s'", session);
+      tell(eloDebug, "SESSION: '%s'", session);
       singleton->setSession(session);
       free(session);
    }
 
-   tell(3, "Cache info: cacheExpire = %s; cacheTag = %s; cacheControl = %s", l2pTime(data.expireAt).c_str(), cacheTag, cacheControl);
+   tell(eloDebug, "Cache info: cacheExpire = %s; cacheTag = %s; cacheControl = %s", l2pTime(data.expireAt).c_str(), cacheTag, cacheControl);
 
    // dispatch ...
 
    if (strcmp(method, "POST") == 0)
    {
-      if (EpgdConfig.loglevel >= 2)
-         tell(3, "<- '%s' / %s%s [%s](%d)", url, id ? "id=" : "", id ? id : "", upload_data, (int)(*upload_data_size));
+      if (EpgdConfig.eloquence & eloDebug)
+         tell(eloDebug, "<- '%s' / %s%s [%s](%d)", url, id ? "id=" : "", id ? id : "", upload_data, (int)(*upload_data_size));
 
       if (!(*con_cls))                     // start of new incoming data
       {
@@ -1773,13 +1785,13 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
             return askForAuthentication(tcp, realm);
       }
 
-      if (EpgdConfig.loglevel >= 2)
+      if (EpgdConfig.eloquence & eloDebug)
       {
          char parmDebug[1000+TB] = "";
 
          MHD_get_connection_values(tcp, MHD_GET_ARGUMENT_KIND, parameterInfo, parmDebug);
-         tell(2, "<- %s with [%s] (expire at %s)", url, parmDebug, l2pTime(data.expireAt).c_str());
-         tell(3, "data: %s; expire: %s", l2pTime(data.modTime).c_str(), l2pTime(data.expireAt).c_str());
+         tell(eloDetail, "<- %s with [%s] (expire at %s)", url, parmDebug, l2pTime(data.expireAt).c_str());
+         tell(eloDebug, "data: %s; expire: %s", l2pTime(data.modTime).c_str(), l2pTime(data.expireAt).c_str());
       }
 
       if (strstr(url, "/data") == url)                                // data requested ...
@@ -1792,7 +1804,7 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
          if (data.modTime <= data.expireAt)
          {
             statusCode = MHD_HTTP_NOT_MODIFIED;
-            tell(2, "-> %d 'not modified'", statusCode);
+            tell(eloDetail, "-> %d 'not modified'", statusCode);
          }
          else if (!data.size)
          {
@@ -1800,7 +1812,7 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
             data.size = strlen(data.memory);
 
             statusCode = MHD_HTTP_NOT_FOUND;
-            tell(1, "-> %d 'file not found'", statusCode);
+            tell(eloInfo, "-> %d 'file not found'", statusCode);
          }
       }
    }
@@ -1854,7 +1866,7 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
          // dumpSize = strlen(data.name);
       }
 
-      tell(2, "-> %s (%ld) (%s); Content-Type: %s; %s%s [%s]",
+      tell(eloDetail, "-> %s (%ld) (%s); Content-Type: %s; %s%s [%s]",
            !isEmpty(data.name) ? "file" : "data",
            data.size,
            ms2Dur(cMyTimeMs::Now()-requestStartAt).c_str(),
@@ -1862,7 +1874,7 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
            !isEmpty(data.contentEncoding) ? "Content-Encoding: " : "", data.contentEncoding,
            dump);
 
-//       tell(2, "-> %s (%ld); Content-Type: %s; %s%s [%.*s%s]",
+//       tell(eloDetail, "-> %s (%ld); Content-Type: %s; %s%s [%.*s%s]",
 //            !isEmpty(data.name) ? "file" : "data",
 //            data.size, data.contentType,
 //            !isEmpty(data.contentEncoding) ? "Content-Encoding: " : "", data.contentEncoding,
@@ -1885,7 +1897,7 @@ int cEpgHttpd::triggerEpgd()
 
    if (!vdrDb->find() || vdrDb->getValue("PID")->isNull())
    {
-      tell(0, "Error: Can't lookup epgd information, abort trigger");
+      tell("Error: Can't lookup epgd information, abort trigger");
       return fail;
    }
 
@@ -1896,7 +1908,7 @@ int cEpgHttpd::triggerEpgd()
    if (pid > 0)
    {
       if (kill(pid, SIGUSR1) == 0)
-         tell(1, "Triggered searchtimer update at %s", EPGDNAME);
+         tell(eloInfo, "Triggered searchtimer update at %s", EPGDNAME);
    }
 
    return success;
@@ -1950,12 +1962,12 @@ int cEpgHttpd::triggerVdr(const char* ip, unsigned int port, const char* trg,
    else
       asprintf(&command, "%s %s", trg, !isEmpty(options) ? options : "");
 
-   tell(1, "Send '%s' to '%s:%d'", command, ip, port);
+   tell(eloInfo, "Send '%s' to '%s:%d'", command, ip, port);
 
    if (!cl.send(command))
    {
       status = fail;
-      tell(0, "Error: Send '%s' at '%s:%d' failed!", command, ip, port);
+      tell("Error: Send '%s' at '%s:%d' failed!", command, ip, port);
    }
    else
    {
@@ -2046,7 +2058,7 @@ int cEpgHttpd::message(int level, char type, const char* title, const char* form
    messageDb->setValue("TEXT", message);
    messageDb->insert();
 
-   tell(level, "%s: %s", title, message);
+   tell((Eloquence)level, "%s: %s", title, message);
 
    // loop over web users
 
@@ -2066,7 +2078,7 @@ int cEpgHttpd::message(int level, char type, const char* title, const char* form
       getParameter(owner, "mailReceiver", receiver);
 
       if (isEmpty(receiver))
-         tell(0, "Warning: Missing mail receiver, can't send mail to '%s'", owner+1);
+         tell(eloWarning, "Warning: Missing mail receiver, can't send mail to '%s'", owner+1);
       else
          receivers += receiver + std::string(",");
    }
@@ -2095,7 +2107,7 @@ int cEpgHttpd::atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "NetDevice"))          sstrcpy(EpgdConfig.netDevice, Value, sizeof(EpgdConfig.netDevice));
 
    else if (!strcasecmp(Name, "CachePath"))          sstrcpy(EpgdConfig.cachePath, Value, sizeof(EpgdConfig.cachePath));
-   else if (!strcasecmp(Name, "LogLevel"))           EpgdConfig.loglevel = EpgdConfig.argLoglevel == na ? atoi(Value) : EpgdConfig.argLoglevel;
+   // else if (!strcasecmp(Name, "LogLevel"))           EpgdConfig.loglevel = EpgdConfig.argLoglevel == na ? atoi(Value) : EpgdConfig.argLoglevel;
    else if (!strcasecmp(Name, "HttpDevice"))         sstrcpy(EpgdConfig.httpDevice, Value, sizeof(EpgdConfig.httpDevice));
    else if (!strcasecmp(Name, "HttpPort"))           EpgdConfig.httpPort = atoi(Value);
    else if (!strcasecmp(Name, "HttpTls"))            EpgdConfig.httpUseTls = atoi(Value);
@@ -2116,7 +2128,7 @@ void showUsage()
    printf("    -n              don't daemonize\n");
    printf("    -t              log to stdout\n");
    printf("    -c <config-dir> use config in <config-dir>\n");
-   printf("    -l <log-level>  set log level\n");
+   printf("    -l <eloquence>  set eloquence\n");
    printf("    -i <pidfile>\n");
 }
 
@@ -2129,7 +2141,7 @@ int main(int argc, char** argv)
    cEpgHttpd* job;
    int nofork = no;
    int logstdout = na;
-   int loglevel = na;
+   Eloquence _eloquence {eloNone};
 
    // Usage ..
 
@@ -2151,7 +2163,7 @@ int main(int argc, char** argv)
          case 'v': printf("epghttpd version %s from %s\n", VERSION, VERSION_DATE); return 0;
          case 't': logstdout = yes;                           break;
          case 'n': nofork = yes;                              break;
-         case 'l': if (argv[i+1]) loglevel = atoi(argv[++i]); break;
+         case 'l': if (argv[i+1]) _eloquence = (Eloquence)atoi(argv[i+1]); break;
          case 'c': if (argv[i+1]) confDir = argv[++i];        break;
          case 'i':
          {
@@ -2171,12 +2183,8 @@ int main(int argc, char** argv)
    if (logstdout != na)
       EpgdConfig.logstdout = logstdout;
 
-   if (loglevel != na)
-   {
-      EpgdConfig.loglevel = loglevel;
-      EpgdConfig.argLoglevel = loglevel;
-   }
-
+   EpgdConfig.argEloquence = _eloquence;
+   EpgdConfig.eloquence = _eloquence == eloNone ? (Eloquence)(eloError|eloWarning|eloInfo) : _eloquence;
    EpgdConfig.logName = "epghttpd";
    EpgdConfig.logFacility = Syslog::toCode("user");
 
@@ -2217,7 +2225,7 @@ int main(int argc, char** argv)
    // shutdown
 
    job->exit();
-   tell(0, "epghttpd exited normally");
+   tell(eloInfo, "epghttpd exited normally");
 
    delete job;
 

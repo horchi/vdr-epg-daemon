@@ -45,4 +45,4 @@
 ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: detected UTF-8
 ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: no images for event
 ^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: shutdown
-^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: try loading image from 
+^\w{3} [ :0-9]{11} [._[:alnum:]-]+ epgd: try loading image from

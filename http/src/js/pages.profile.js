@@ -33,10 +33,10 @@ epgd.pages.profile = {
                     + '<tr><td>' + epgd.tr.pages.timerList.chFormat + '</td><td><input id="chFormat" readonly onclick="epgd.timerEditChFormat(this)" value="' + epgd.profile.chFormat + '" /></td></tr>'
                     + '<tr><td>VDR</td><td><select id="timerDefaultVDRuuid"><option value="">Auto</option>' + $('#menu_vdrs').find('select').html() + '</select></td></tr>'
                     + '<tr><td>' + epgd.tr.pages.profile.mailReceiver + '</td><td><input type="mail" value="' + (epgd.profile.mailReceiver || '') + '" id="mailReceiver" /><button onclick="epgd.utils.sendMail(\'checkMailAddress\',\'it works\',\'\',$(form.mailReceiver).val())">' + epgd.tr.test + '</button></td></tr>'
-                    + '<tr><td>' + epgd.tr.pages.profile.sendMessages + '</td><td>' 
+                    + '<tr><td>' + epgd.tr.pages.profile.sendMessages + '</td><td>'
                         + jQuery.map(epgd.tr.pages.timerList.messageTypes, function (value, key) {
                             return '<input type="checkbox" value="' + key + '" name="messageMailTypes"' + (epgd.profile.messageMailTypes.indexOf(key) >= 0 ? ' checked="checked"' : '') + ' />' + value;
-                        }).join('&nbsp;&nbsp;')                   
+                        }).join('&nbsp;&nbsp;')
                     + '</td></tr>'
                 + '<tr><th colspan="2">' + epgd.tr.menu.search + '</th><tr>'
                     + '<tr><td>' + epgd.tr.advanced + '</td><td><input type="checkbox" id="searchAdv" /></td></tr>'
@@ -69,7 +69,7 @@ epgd.pages.profile = {
                                 var elem = this;
                                 epgd.ajax({ url: epgd.login.url + "data/users", cache:false }, function (data) {
                                     var u = null,
-                                        $dialog, 
+                                        $dialog,
                                         uName;
                                     for (uName in data.users) { u = data.users[uName]; if (u.active) return (elem.hasUsers = elem.checked = true) };
                                     $dialog = $('<form title="' + epgd.tr.pages.editUser.user + ' ' + (u ? u.user : epgd.tr.pages.editUser.add) + '"></form>');
@@ -87,32 +87,47 @@ epgd.pages.profile = {
                         epgd.ajax({ url: epgd.login.url + "data/parameters", async: true, cache: false, dataType: "json" }, function (data) {
                             var html = '', i, p, val,
                                 tr = epgd.tr.pages.profile.system,
-                                ptTime = 1, ptBool = 2; // ptNum = 0, , ptAscii = 3
+                                ptTime = 1, ptBool = 2, ptBitMask = 4; // ptNum = 0, , ptAscii = 3
                             for (i in data.parameters) {
                                 p = data.parameters[i];
                                 if (p.owner == 'epgd') {
                                     html += '<tr><td>' + (tr[p.name] || p.name) + '</td><td>';
                                     val = typeof p.value == "undefined" ? p["default"] : p.value;
                                     if (p.type == ptTime)
-                                        val= epgd.utils.formatDateTime(val); 
-                                    if (p.readonly)
-                                        html += val;
-                                    else {
-                                        html += '<input data-value="' + val + '" data-valexp="' + (p.valexp || '') + '" id="' + p.name + '"';
-                                        if (p.type == ptBool)
-                                            html += ' type="checkbox"' + (val == "1" ? ' checked' : '');
-                                        else
-                                            html += ' type="text" class="full" value="' + val + '"';
-                                        html += ' /></td></tr>';
-                                    }
-                                }                                                                   
-                            }                                                                                                      
+                                       val= epgd.utils.formatDateTime(val);
+                                   else if (p.type == ptBitMask) {
+                                      html += '<span id="bmaskgroup_' + p.name + '" style="width:75%;">';
+                                      var array = val.split(',');
+                                      for (var o = 0; o < p.options.length; o++) {
+                                         var checked = false;
+                                         for (var n = 0; n < array.length; n++) {
+                                            if (array[n] == p.options[o])
+                                               checked = true;
+                                         }
+                                         html += '<input id="bmask' + p.name + '_' + p.options[o] + '"' +
+                                            ' type="checkbox" ' + (checked ? 'checked' : '') + '/>' +
+                                            '<label for="bmask' + p.name + '_' + p.options[o] + '">' + p.options[o] + '</label>';
+                                      }
+                                      html += '</span>';
+                                   }
+                                   else if (p.readonly)
+                                      html += val;
+                                   else {
+                                      html += '<input data-value="' + val + '" data-valexp="' + (p.valexp || '') + '" id="' + p.name + '"';
+                                      if (p.type == ptBool)
+                                         html += ' type="checkbox"' + (val == "1" ? ' checked' : '');
+                                      else
+                                         html += ' type="text" class="full" value="' + val + '"';
+                                      html += ' /></td></tr>';
+                                   }
+                                }
+                            }
                             html && $(panel).find('table').append('<tbody id="pSystem"><tr><th>' + tr.label + '</th><th style="min-width:300px"></th></tr>' + html + '</tbody>') //&& $( "#page_profile" ).accordion('refresh');
                         });
                     }
                 }
             }
-        })[0]; 
+        })[0];
         this.form.namingModeSerie.selectedIndex = epgd.profile.namingModeSerie;
         this.form.namingModeSearchSerie.selectedIndex = epgd.profile.namingModeSearchSerie;
         this.form.namingModeMovie.selectedIndex = epgd.profile.namingModeMovie;
@@ -184,70 +199,86 @@ epgd.pages.profile = {
         checkData({ name: "maxListEntries", value: $(form.maxListEntries).val() || '', owner: owner });
         checkData({ name: "recordSubFolderSort", value: $(form.recordSubFolderSort).val() || '1', owner: owner });
 
-        panel = $('#pSystem').parent().parent()[0];
-        if (panel && panel.hasLoaded) {
-            checkData({ name: "needLogin", value: $(form.needLogin).prop('checked') ? "1" : "0", owner: "webif" });
-            $('#pSystem input').each(function () {
-                if (this.type == 'checkbox') {
-                    if (this.checked != (this.getAttribute('data-value') == "1"))
-                        data.push({ name: this.id, value: (this.checked ? "1" : "0"), owner: "epgd", valexp: this.getAttribute('data-valexp')});
-                } else if (this.getAttribute('data-value') != this.value) {
-                    if (epgd.pages.profile.validate.checkRegex(this))
-                        data.push({ name: this.id, value: this.value, owner: "epgd" });
-                    else{
-                        data = [];
-                        return false;
-                    }
+       panel = $('#pSystem').parent().parent()[0];
+       if (panel && panel.hasLoaded) {
+          checkData({ name: "needLogin", value: $(form.needLogin).prop('checked') ? "1" : "0", owner: "webif" });
+          $('#pSystem input').each(function () {
+             if (this.type == 'checkbox') {
+                if (!this.id.startsWith('bmask')) {
+                   if (this.checked != (this.getAttribute('data-value') == "1"))
+                      data.push({ name: this.id, value: (this.checked ? "1" : "0"), owner: "epgd", valexp: this.getAttribute('data-valexp')});
                 }
-            });
-        }
+             }
+             else if (this.getAttribute('data-value') != this.value) {
+                if (epgd.pages.profile.validate.checkRegex(this))
+                   data.push({ name: this.id, value: this.value, owner: "epgd" });
+                else{
+                   data = [];
+                   return false;
+                }
+             }
+          });
+          let rootConfig = document.getElementById("pSystem");
+          let elements = rootConfig.querySelectorAll("[id^='bmaskgroup_']");
+          for (var i = 0; i < elements.length; i++) {
+             let name = elements[i].id.substring(elements[i].id.indexOf("_") + 1);
+             let bits = rootConfig.querySelectorAll("[id^='bmask" + name + "_']");
+             let value = '';
+             for (let i = 0; i < bits.length; i++) {
+                let o = bits[i].id.substring(bits[i].id.indexOf("_") + 1);
+                if (bits[i].checked)
+                   value += o + ','
+             }
+             data.push({ 'name': name, 'value': value, 'owner': "epgd" });
+          }
+       }
        if (data.length) {
-            if (panel) panel.hasLoaded = false;
-            panel = $("#page_profile").accordion("option", "active");
-            $("#page_profile").accordion("option", "active", false).accordion("option", "active", panel);
-            epgd.ajax({
-                url: epgd.login.url + 'data/save-parameters',
-                type: 'post',
-                data: JSON.stringify({ "parameters": data })
-            }, function (res) {
-                res = res.result;
-                if (res && res.state == 200)
-                    epgd.utils.topInfo(epgd.tr.dataSaved);
-                else
-                    epgd.utils.topInfo(res.message, { isError: 1 });
-                epgd.profile_load();
-            }, function (jqxhr) {
-                try {
-                    var msg = '';
-                    $(jqxhr.responseJSON.result.failed).each(function () {
-                        msg += '<li>' + form[data[this].name].parentNode.previousSibling.innerHTML + '</li>';
-                    });
-                    if (msg) {
-                        epgd.utils.popup('<ol>' + msg + '</ol>', { title: epgd.tr.error.invalid });
-                        return true;
-                    }
-                } catch (e) { }
-                return false;
-            });
-        }
+          if (panel) panel.hasLoaded = false;
+          panel = $("#page_profile").accordion("option", "active");
+          $("#page_profile").accordion("option", "active", false).accordion("option", "active", panel);
+          epgd.ajax({
+             url: epgd.login.url + 'data/save-parameters',
+             type: 'post',
+             data: JSON.stringify({ "parameters": data })
+          }, function (res) {
+             res = res.result;
+             if (res && res.state == 200)
+                epgd.utils.topInfo(epgd.tr.dataSaved);
+             else
+                epgd.utils.topInfo(res.message, { isError: 1 });
+             epgd.profile_load();
+          }, function (jqxhr) {
+             try {
+                var msg = '';
+                $(jqxhr.responseJSON.result.failed).each(function () {
+                   msg += '<li>' + form[data[this].name].parentNode.previousSibling.innerHTML + '</li>';
+                });
+                if (msg) {
+                   epgd.utils.popup('<ol>' + msg + '</ol>', { title: epgd.tr.error.invalid });
+                   return true;
+                }
+             } catch (e) { }
+             return false;
+          });
+       }
     },
-    validate: {
-        quickTimes: function (input) {
-            input.value = input.value.replace(/\n{2,}/g, '\n').replace(/^\n+|\n+$/g, '');
-            if (!/^(\n?[^=]+=!?(([0-1]?[0-9]|2[0-4]):[0-5]?[0-9]|@Now|@Next|@[A-Za-z0-9]*))*$/.test(input.value)) {
-                input.focus();
-                epgd.utils.popup(epgd.tr.error.invalid);
-                return false;
-            }
-            return true;
-        },
-        checkRegex: function (input) {
-            if (input.getAttribute('data-valexp') && !new RegExp(input.getAttribute('data-valexp')).test(input.value)) {
-                input.focus();
-                epgd.utils.popup(epgd.tr.error.invalid);
-                return false;
-            }
-            return true;
-        }
+   validate: {
+      quickTimes: function (input) {
+         input.value = input.value.replace(/\n{2,}/g, '\n').replace(/^\n+|\n+$/g, '');
+         if (!/^(\n?[^=]+=!?(([0-1]?[0-9]|2[0-4]):[0-5]?[0-9]|@Now|@Next|@[A-Za-z0-9]*))*$/.test(input.value)) {
+            input.focus();
+            epgd.utils.popup(epgd.tr.error.invalid);
+            return false;
+         }
+         return true;
+      },
+      checkRegex: function (input) {
+         if (input.getAttribute('data-valexp') && !new RegExp(input.getAttribute('data-valexp')).test(input.value)) {
+            input.focus();
+            epgd.utils.popup(epgd.tr.error.invalid);
+            return false;
+         }
+         return true;
+      }
     }
 };

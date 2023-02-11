@@ -66,7 +66,7 @@ int main(int argc, char** argv)
    char* filename = argv[1];
 
    cEpgConfig::logstdout = yes;
-   cEpgConfig::loglevel = 0;
+   cEpgConfig::eloquence = (Eloquence)(eloInfo | eloDetail | eloWarning | eloError);
 
    // at first allpy locale !!
 

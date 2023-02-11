@@ -135,7 +135,7 @@ class cEpgd : public cFrame, public cSystemNotification
 
       // static stuff
 
-      static void downF(int signal) { tell(0, "Shutdown triggered with signal %d", signal); shutdown = true; }
+      static void downF(int signal) { tell(eloWarning, "Shutdown triggered with signal %d", signal); shutdown = true; }
       static bool doShutDown()      { return shutdown; }
       static void triggerF(int aSignal);
 

@@ -61,7 +61,7 @@ int exit()
 int main(int argc, char** argv)
 {
    cEpgConfig::logstdout = yes;
-   cEpgConfig::loglevel = 0;
+   cEpgConfig::eloquence = eloInfo | eloDetail | eloWarning | eloError;
    int namingmode = tnmAuto;
    const char* tmplExpression = "";
 

@@ -22,7 +22,7 @@ void showUsage()
    printf("    -t              log to stdout\n");
    printf("    -c <config-dir> use config in <config-dir>\n");
    printf("    -p <plugin-dir> load plugins from <plugin-dir>\n");
-   printf("    -l <log-level>  set log level\n");
+   printf("    -l <eloquence>  set eloquence\n");
 //   printf("    -u              create/update database and exit (doesn't daemonize)\n");
    printf("    -i <pidfile>\n");
 }
@@ -39,23 +39,23 @@ int validateAlterDatabase()
 
    cDbConnection* connection = new cDbConnection();
 
-   tell(1, "Checking database connection ...");
+   tell(eloInfo, "Checking database connection ...");
 
    if (connection->attachConnection() != success)
    {
-      tell(0, "Fatal: Initial database connect failed, aborting");
+      tell("Fatal: Initial database connect failed, aborting");
       return fail;
    }
 
    std::map<std::string, cDbTableDef*>::iterator t;
 
-   tell(1, "Checking table structure and indices ...");
+   tell(eloInfo, "Checking table structure and indices ...");
 
    for (t = dbDict.getFirstTableIterator(); t != dbDict.getTableEndIterator(); ++t)
    {
       cDbTable* table = new cDbTable(connection, t->first.c_str());
 
-      tell(1, "Checking table '%s'", t->first.c_str());
+      tell(eloInfo, "Checking table '%s'", t->first.c_str());
 
       if (!table->exist())
       {
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
    int doValidateAlterDatabase = no;
    int nofork = no;
    int logstdout = na;
-   int loglevel = na;
+   Eloquence _eloquence {eloNone};
    int logfacility = Syslog::toCode("user");
 
    // Usage ..
@@ -128,10 +128,10 @@ int main(int argc, char** argv)
          }
          case 'l':
          {
-            if (argv[i+1])                 // <loglevel>.<facility>
+            if (argv[i+1])                 // <eloquence>.<facility>
             {
-               const char* l = argv[++i];
-               const char* f = strchr(l, '.');
+               const char* e = argv[++i];
+               const char* f = strchr(e, '.');
 
                if (f)
                {
@@ -144,7 +144,7 @@ int main(int argc, char** argv)
                   }
                }
 
-               loglevel = atoi(l);
+               _eloquence = (Eloquence)atoi(e);
             }
 
             break;
@@ -160,12 +160,8 @@ int main(int argc, char** argv)
    if (logstdout != na)
       EpgdConfig.logstdout = logstdout;
 
-   if (loglevel != na)
-   {
-      EpgdConfig.loglevel = loglevel;
-      EpgdConfig.argLoglevel = loglevel;
-   }
-
+   EpgdConfig.argEloquence = _eloquence;
+   EpgdConfig.eloquence = _eloquence == eloNone ? (Eloquence)(eloError|eloWarning|eloInfo) : _eloquence;
    EpgdConfig.logFacility = logfacility;
    EpgdConfig.logName = "epgd";
 
@@ -219,7 +215,7 @@ int main(int argc, char** argv)
 
    // shutdown
 
-   tell(0, "epgd exited normally");
+   tell(eloInfo, "epgd exited normally");
 
    delete job;
 

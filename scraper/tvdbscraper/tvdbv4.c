@@ -42,7 +42,7 @@ int cTVDBv4::login(const char* aLang)
 
    curl.init();
 
-   tell(eloAlways, "TvDb: Try login to '%s'", tvdbV4Url);
+   tell(eloInfo, "TvDb: Try login to '%s'", tvdbV4Url);
 
    json_t* j = json_object();
    json_object_set_new(j, "apikey", json_string(tvdbApiKey));
@@ -60,7 +60,7 @@ int cTVDBv4::login(const char* aLang)
    json_t* jData = getObjectFromJson(jResult, "data");
    const char* tvdbToken = getStringFromJson(jData, "token", "");
 
-   tell(eloAlways, "TvDb: Login succeeded");
+   tell(eloInfo, "TvDb: Login succeeded");
    tell(eloDebug2, "TvDb: Got token '%s'", tvdbToken);
    curl.addHeader("Authorization: Bearer %s", tvdbToken);
 
@@ -86,16 +86,16 @@ int cTVDBv4::post(const char* method, json_t* jObject, json_t*& jResult)
 
    if (status != success)
    {
-      tell(0, "Request failed");
+      tell("Request failed");
       return fail;
    }
 
-   tell(0, "<- [%s]", result.c_str());
+   tell(eloInfo, "<- [%s]", result.c_str());
    jResult = jsonLoad(result.c_str());
 
    if (!jResult)
    {
-      tell(eloAlways, "Got invalid format in [%s]", result.c_str());
+      tell(eloInfo, "Got invalid format in [%s]", result.c_str());
       return fail;
    }
 
@@ -103,7 +103,7 @@ int cTVDBv4::post(const char* method, json_t* jObject, json_t*& jResult)
 
    if (strcmp(state, "success") != 0)
    {
-      tell(eloAlways, "TvDb: Api call '%s' failed with '%s'", method, result.c_str());
+      tell(eloInfo, "TvDb: Api call '%s' failed with '%s'", method, result.c_str());
       json_decref(jResult);
       jResult = nullptr;
       return fail;
@@ -123,7 +123,7 @@ int cTVDBv4::get(const char* method, json_t*& jResult, std::map<std::string,std:
 
    if (curl.get(url.c_str(), &data, parameters) != success)
    {
-      tell(0, "Request failed");
+      tell("Request failed");
       return fail;
    }
 
@@ -136,7 +136,7 @@ int cTVDBv4::get(const char* method, json_t*& jResult, std::map<std::string,std:
 
    if (strcmp(state, "success") != 0)
    {
-      tell(eloAlways, "TvDb: Api call '%s' failed with '%s'", "search", data.memory);
+      tell(eloInfo, "TvDb: Api call '%s' failed with '%s'", "search", data.memory);
       json_decref(jResult);
       jResult = nullptr;
       return fail;

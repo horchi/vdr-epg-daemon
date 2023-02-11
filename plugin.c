@@ -33,11 +33,11 @@ int PluginLoader::load()
 {
    const char* error;
 
-   tell(1, "Loading plugin: %s", fileName);
+   tell(eloInfo, "Loading plugin: %s", fileName);
 
    if (handle)
    {
-      tell(0, "Warning: Attempt to load plugin '%s' twice!", fileName);
+      tell(eloWarning, "Warning: Attempt to load plugin '%s' twice!", fileName);
       return fail;
    }
 
@@ -58,7 +58,7 @@ int PluginLoader::load()
    }
 
    if (error)
-      tell(0, "Error: %s", error);
+      tell("Error: %s", error);
 
    return plugin ? success : fail;
 }

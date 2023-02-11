@@ -216,7 +216,7 @@ int Python::init(const char* modulePath)
 {
    PyObject* pName;
 
-   tell(1, "Initialize python script '%s/%s.py'", modulePath, file);
+   tell(eloInfo, "Initialize python script '%s/%s.py'", modulePath, file);
 
    // register event methods
 
@@ -251,7 +251,7 @@ int Python::init(const char* modulePath)
    if (!pModule)
    {
       showError();
-      tell(0, "Failed to load '%s.py'", file);
+      tell("Failed to load '%s.py'", file);
 
       return fail;
    }
@@ -265,7 +265,7 @@ int Python::init(const char* modulePath)
       if (PyErr_Occurred())
          showError();
 
-      tell(0, "Cannot find function '%s'", function);
+      tell("Cannot find function '%s'", function);
 
       return fail;
    }
@@ -309,7 +309,7 @@ int Python::execute(cDbTable* eventsDb, int namingmode, const char* tmplExpressi
    if (!pValue)
    {
       showError();
-      tell(0, "Python: Call of function '%s()' failed", function);
+      tell("Python: Call of function '%s()' failed", function);
 
       return fail;
    }
@@ -325,7 +325,7 @@ int Python::execute(cDbTable* eventsDb, int namingmode, const char* tmplExpressi
    result = strdup(PyString_AsString(pValue));
 #endif
 
-   tell(3, "Result of call: %s", result);
+   tell(eloDetail, "Result of call: %s", result);
 
    Py_DECREF(pValue);
 
@@ -391,7 +391,7 @@ void Python::showError()
    error = dupPyString(pError);
    moduleName = pyStringFromString("traceback");
 
-   tell(0, "Python error was '%s'", error);
+   tell("Python error was '%s'", error);
 
    pythModule = PyImport_Import(moduleName);
    Py_DECREF(moduleName);
@@ -411,7 +411,7 @@ void Python::showError()
          if (pythVal)
          {
             s = dupPyString(pystr = PyObject_Str(pythVal));
-            tell(0, "   %s", s);
+            tell("   %s", s);
 
             free(s);
             Py_DECREF(pystr);

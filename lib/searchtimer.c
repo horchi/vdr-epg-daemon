@@ -92,7 +92,7 @@ int cSearchTimer::init(const char* confDir)
 {
    if (ptyRecName->init(confDir) != success)
    {
-      tell(0, "Error: Init of python script recording.py failed, aborting");
+      tell("Error: Init of python script recording.py failed, aborting");
       return fail;
    }
 
@@ -342,7 +342,7 @@ int cSearchTimer::initDb()
 
    if (status != success)
    {
-      tell(0, "Error: At least %d statements not prepared successfully", status*-1);
+      tell("Error: At least %d statements not prepared successfully", status*-1);
       return status;
    }
 
@@ -393,19 +393,19 @@ int cSearchTimer::checkConnection()
    {
       // try to connect
 
-      tell(0, "Trying to re-connect to database!");
+      tell(eloWarning, "Trying to re-connect to database!");
       retry++;
 
       if (initDb() != success)
       {
-         tell(0, "Retry #%d failed!", retry);
+         tell(eloWarning, "Retry #%d failed!", retry);
          exitDb();
 
          return fail;
       }
 
       retry = 0;
-      tell(0, "Connection established successfull!");
+      tell(eloWarning, "Connection established successfull!");
    }
 
    return success;
@@ -486,7 +486,7 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
       for (int i = 0, n = 0; searchField[i]; i++)
       {
          if (!db->getField(searchFieldName[i]))
-            tell(0, "Fatal: Search field '%s' not known!", searchFieldName[i]);
+            tell("Fatal: Search field '%s' not known!", searchFieldName[i]);
 
          else if (searchfields & searchField[i])
          {
@@ -511,7 +511,7 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
       for (int i = 0, n = 0; searchField[i]; i++)
       {
          if (!db->getField(searchFieldName[i]))
-            tell(0, "Fatal: Search field '%s' not known!", searchFieldName[i]);
+            tell("Fatal: Search field '%s' not known!", searchFieldName[i]);
 
          else if (searchfields1 & searchField[i])
          {
@@ -669,13 +669,13 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
    {
       delete select;
       select = 0;
-      tell(0, "Error: AUTOTIMER: Prepare of statement for searchtimer failed, skipping");
+      tell("Error: AUTOTIMER: Prepare of statement for searchtimer failed, skipping");
       return 0;
    }
 
    const char* p = strstr(select->asText(), " from ");
 
-   tell(2, "AUTOTIMER: Search statement [%s;]", p ? p : select->asText());
+   tell(eloInfo, "AUTOTIMER: Search statement [%s;]", p ? p : select->asText());
 
    return select;
 }
@@ -690,7 +690,7 @@ int cSearchTimer::checkTimers()
 {
    int count = 0;
 
-   tell(1, "Checking timers against actual epg and searchtimer settings");
+   tell(eloInfo, "Checking timers against actual epg and searchtimer settings");
 
    if (checkConnection() != success)
       return 0;
@@ -728,7 +728,7 @@ int cSearchTimer::checkTimers()
          }
       }
 
-      tell(2, "Checking timer(%ld) of event (%ld) against EPG",
+      tell(eloDetail, "Checking timer(%ld) of event (%ld) against EPG",
            timerDb->getIntValue("ID"), timerDb->getIntValue("EVENTID"));
 
       useeventsDb->clear();
@@ -811,7 +811,7 @@ int cSearchTimer::checkTimers()
 
    selectAllTimer->freeResult();
 
-   tell(1, "Timers check done");
+   tell(eloInfo, "Timers check done");
 
    return count;
 }
@@ -828,7 +828,7 @@ int cSearchTimer::modifyTimer(cDbTable* timerDb, TimerAction action)
    timerDb->getValue("STATE")->setNull();
    timerDb->update();
 
-   tell(1, "Created '%s' request for timer (%ld) at vdr '%s'",
+   tell(eloInfo, "Created '%s' request for timer (%ld) at vdr '%s'",
         toName(action), timerDb->getIntValue("ID"), timerDb->getStrValue("VDRUUID"));
 
    // triggerVdrs("TIMERJOB", timerDb->getStrValue("VDRUUID"));
@@ -863,7 +863,7 @@ int cSearchTimer::matchCriterias(cDbRow* searchTimer, cDbRow* event)
    if (!selectChannelFromMap->find() || mapDb->getIntValue("UNKNOWNATVDR") > 0)
    {
       mapDb->reset();
-      tell(3, "AUTOTIMER: Skipping hit, channelid '%s' is unknown at least on one VDR!",
+      tell(eloDetail, "AUTOTIMER: Skipping hit, channelid '%s' is unknown at least on one VDR!",
            event->getStrValue("CHANNELID"));
       return no;
    }
@@ -875,13 +875,13 @@ int cSearchTimer::matchCriterias(cDbRow* searchTimer, cDbRow* event)
 
    if (chNumMax > 0 && chNumber > chNumMax)
    {
-      tell(3, "AUTOTIMER: Skipping hit due to channel number - '%d' > '%d'", chNumber, chNumMax);
+      tell(eloDetail, "AUTOTIMER: Skipping hit due to channel number - '%d' > '%d'", chNumber, chNumMax);
       return no;
    }
 
    if (chNumMin > 0 && chNumber < chNumMin)
    {
-      tell(3, "AUTOTIMER: Skipping hit due to channel number - '%d' < '%d'", chNumber, chNumMin);
+      tell(eloDetail, "AUTOTIMER: Skipping hit due to channel number - '%d' < '%d'", chNumber, chNumMin);
       return no;
    }
 
@@ -891,13 +891,13 @@ int cSearchTimer::matchCriterias(cDbRow* searchTimer, cDbRow* event)
    {
       if (!chexclude && !strstr(channelids, channelid))
       {
-         tell(3, "AUTOTIMER: Skipping hit due to channelid - '%s' not in '%s'",
+         tell(eloDetail, "AUTOTIMER: Skipping hit due to channelid - '%s' not in '%s'",
               event->getStrValue("CHANNELID"), channelids);
          return no;
       }
       else if (chexclude && strstr(channelids, channelid))
       {
-         tell(3, "AUTOTIMER: Skipping hit due to channelid - '%s' it in '%s'",
+         tell(eloDetail, "AUTOTIMER: Skipping hit due to channelid - '%s' it in '%s'",
               event->getStrValue("CHANNELID"), channelids);
          return no;
       }
@@ -907,19 +907,19 @@ int cSearchTimer::matchCriterias(cDbRow* searchTimer, cDbRow* event)
 
    if (rangeStart > 0 && hhmm < rangeStart)
    {
-      tell(2, "AUTOTIMER: Skipping due to range (start before range)");
+      tell(eloInfo, "AUTOTIMER: Skipping due to range (start before range)");
       return no;
    }
 
    if (rangeEnd > 0 && hhmm > rangeEnd)
    {
-      tell(3, "AUTOTIMER: Skipping due to range (start behind range)");
+      tell(eloDetail, "AUTOTIMER: Skipping due to range (start behind range)");
       return no;
    }
 
    if (nextDays > 0 && event->getIntValue("STARTTIME") > time(0) + tmeSecondsPerDay * nextDays)
    {
-      tell(3, "AUTOTIMER: Skipping event starting at '%s' due to nextdays of (%d) (start behind range)",
+      tell(eloDetail, "AUTOTIMER: Skipping event starting at '%s' due to nextdays of (%d) (start behind range)",
            l2pTime(event->getIntValue("STARTTIME")).c_str(), nextDays);
       return no;
    }
@@ -952,7 +952,7 @@ int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, 
 
       if (!searchtimerDb->find())
       {
-         tell(0, "Warning: Searchtimer %ld not found!", searchtimerid);
+         tell(eloWarning, "Warning: Searchtimer %ld not found!", searchtimerid);
          return fail;
       }
 
@@ -964,7 +964,7 @@ int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, 
 
       if (!selectSearchTimerByName->find())
       {
-         tell(0, "Warning: Searchtimer '%s' not found!", searchtimername);
+         tell(eloWarning, "Warning: Searchtimer '%s' not found!", searchtimername);
          return fail;
       }
 
@@ -1049,7 +1049,7 @@ int cSearchTimer::getDoneFor(cDbRow* searchTimer, cDbRow* useevent, json_t* obj)
 
    if (!searchtimerDb->find())
    {
-      tell(0, "Warning: Searchtimer %ld not found", searchTimer->getIntValue("ID"));
+      tell(eloWarning, "Warning: Searchtimer %ld not found", searchTimer->getIntValue("ID"));
       return fail;
    }
 
@@ -1060,7 +1060,7 @@ int cSearchTimer::getDoneFor(cDbRow* searchTimer, cDbRow* useevent, json_t* obj)
 
    if (!useeventsDb->find())
    {
-      tell(0, "Warning: Event '%s/%" PRId64 "/%s' not found",
+      tell(eloWarning, "Warning: Event '%s/%" PRId64 "/%s' not found",
            useevent->getStrValue("CHANNELID"),
            useevent->getBigintValue("CNTEVENTID"),
            useevent->getStrValue("CNTSOURCE"));
@@ -1085,7 +1085,7 @@ int cSearchTimer::updateSearchTimers(int force, const char* reason)
    uint64_t start = cMyTimeMs::Now();
    long total = 0;
 
-   tell(1, "AUTOTIMER: Updating searchtimers due to '%s' %s", reason, force ? "(force)" : "");
+   tell(eloInfo, "AUTOTIMER: Updating searchtimers due to '%s' %s", reason, force ? "(force)" : "");
 
    if (checkConnection() != success)
       return fail;
@@ -1117,7 +1117,7 @@ int cSearchTimer::updateSearchTimers(int force, const char* reason)
          time_t starttime = useeventsDb->getIntValue("STARTTIME");
          int weekday = weekdayOf(starttime);
 
-         tell(3, "AUTOTIMER: Found event (%s) '%s' / '%s'  (%ld/%s) at day %d",
+         tell(eloDetail, "AUTOTIMER: Found event (%s) '%s' / '%s'  (%ld/%s) at day %d",
               l2pTime(starttime).c_str(),
               useeventsDb->getStrValue("TITLE"),
               useeventsDb->getStrValue("SHORTTEXT"),
@@ -1144,7 +1144,7 @@ int cSearchTimer::updateSearchTimers(int force, const char* reason)
 
             if (selectRPTimerByEvent->find())
             {
-               tell(3, "AUTOTIMER: Timer for event (%ld) '%s/%s' already scheduled, skipping",
+               tell(eloDetail, "AUTOTIMER: Timer for event (%ld) '%s/%s' already scheduled, skipping",
                     useeventsDb->getIntValue("USEID"),
                     useeventsDb->getStrValue("TITLE"),
                     useeventsDb->getStrValue("SHORTTEXT"));
@@ -1159,7 +1159,7 @@ int cSearchTimer::updateSearchTimers(int force, const char* reason)
                      hits++;
                }
 //             else
-//                tell(1, "AUTOTIMER: Skipping due to");
+//                tell(eloInfo, "AUTOTIMER: Skipping due to");
             }
 
             selectRPTimerByEvent->freeResult();
@@ -1184,7 +1184,7 @@ int cSearchTimer::updateSearchTimers(int force, const char* reason)
    selectActiveSearchtimers->freeResult();
    lastSearchTimerUpdate = time(0);
 
-   tell(1, "AUTOTIMER: Update done after %s, created (%ld) timers",
+   tell(eloInfo, "AUTOTIMER: Update done after %s, created (%ld) timers",
         ms2Dur(cMyTimeMs::Now()-start).c_str(), total);
 
    return total;
@@ -1201,7 +1201,7 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
    if (repeatfields <= 0)
       return no;
 
-   tell(3, "Check if '%s/%s' already recorded by fields (%d)",
+   tell(eloDetail, "Check if '%s/%s' already recorded by fields (%d)",
         useeventsDb->getStrValue("TITLE"),
         useeventsDb->getStrValue("SHORTTEXT"),
         repeatfields);
@@ -1248,7 +1248,7 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
 
    if (selectDoneTimer->prepare() != success)
    {
-      tell(0, "Error: AUTOTIMER: Prepare of statement for 'done' check failed, skipping");
+      tell("Error: AUTOTIMER: Prepare of statement for 'done' check failed, skipping");
       return yes;
    }
 
@@ -1264,7 +1264,7 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
       const char* state = timersDoneDb->getStrValue("STATE");
 
       if (!silent)
-         tell(3, "AUTOTIMER: The timer/recording exists with timerdone "
+         tell(eloDetail, "AUTOTIMER: The timer/recording exists with timerdone "
               "id %ld and state '%s', checked by '%s', skipping ...",
               id, state, selectDoneTimer->asText());
 
@@ -1360,7 +1360,7 @@ int cSearchTimer::createTimer(int id)
 
       if (ptyRecName->execute(useeventsDb, namingmode, tmplExpression) == success)
       {
-         tell(1, "Info: The recording name calculated by 'recording.py' is '%s'",
+         tell(eloInfo, "Info: The recording name calculated by 'recording.py' is '%s'",
               ptyRecName->getResult());
 
          if (!isEmpty(ptyRecName->getResult()))
@@ -1384,7 +1384,7 @@ int cSearchTimer::createTimer(int id)
       {
          if (timerDb->getIntValue("RETRYS") > 3)
          {
-            tell(0, "Error: AUTOTIMER: Aborting timer create for event %ld, already %ld attempts failed ",
+            tell("Error: AUTOTIMER: Aborting timer create for event %ld, already %ld attempts failed ",
                  timerDb->getIntValue("EVENTID"),
                  timerDb->getIntValue("RETRYS"));
 
@@ -1517,7 +1517,7 @@ int cSearchTimer::modifyCreateTimer(cDbRow* timerRow, int& newid, int createRetr
       {
          connection->commit();
 
-         tell(0, "Error: Timer (%d) at vdr '%s' not found, aborting modify request!",
+         tell("Error: Timer (%d) at vdr '%s' not found, aborting modify request!",
               timerid, timerDb->getStrValue("VDRUUID"));
 
          return fail;
@@ -1554,8 +1554,7 @@ int cSearchTimer::modifyCreateTimer(cDbRow* timerRow, int& newid, int createRetr
       newid = timerDb->getLastInsertId();
 
       if (status == success)
-         tell(1, "Created 'move' request for timer (%d) at vdr '%s'",
-              timerid, timerDb->getStrValue("VDRUUID"));
+         tell(eloInfo, "Created 'move' request for timer (%d) at vdr '%s'", timerid, timerDb->getStrValue("VDRUUID"));
    }
    else
    {
@@ -1588,7 +1587,7 @@ int cSearchTimer::modifyCreateTimer(cDbRow* timerRow, int& newid, int createRetr
 
       if (status == success)
       {
-         tell(1, "Created '%s' request for timer (%d), event (%ld) at vdr '%s' by autotimer (%ld)",
+         tell(eloInfo, "Created '%s' request for timer (%d), event (%ld) at vdr '%s' by autotimer (%ld)",
               knownTimer ? "modify" : "create",
               newid, timerDb->getIntValue("EVENTID"), timerDb->getStrValue("VDRUUID"),
               timerDb->getIntValue("AUTOTIMERID"));
@@ -1610,7 +1609,7 @@ int cSearchTimer::checkTimerConflicts(std::string& mailBody)
 {
    int conflicts = 0;
 
-   tell(1, "TCC: Starting timer conflict check");
+   tell(eloInfo, "TCC: Starting timer conflict check");
    mailBody = "";
 
    if (checkConnection() != success)
@@ -1627,7 +1626,7 @@ int cSearchTimer::checkTimerConflicts(std::string& mailBody)
       if (timerDb->getIntValue("TCCMAILCNT") > 0)
          continue;
 
-      tell(2, "TCC: Check conflicts for timer (%ld) '%s' on '%s'; channel '%s'",
+      tell(eloInfo, "TCC: Check conflicts for timer (%ld) '%s' on '%s'; channel '%s'",
            timerDb->getIntValue("ID"), timerDb->getStrValue("FILE"),
            vdrDb->getStrValue("NAME"), timerDb->getStrValue("CHANNELID"));
 
@@ -1653,7 +1652,7 @@ int cSearchTimer::checkTimerConflicts(std::string& mailBody)
       {
          conflicts++;
 
-         tell(1, "TCC: Timer (%ld) '%s' conflict at '%s - %s' needed %d transponders on '%s'",
+         tell(eloInfo, "TCC: Timer (%ld) '%s' conflict at '%s - %s' needed %d transponders on '%s'",
               timerDb->getIntValue("ID"),
               timerDb->getStrValue("FILE"),
               l2pTime(lStartTime).c_str(),
@@ -1682,7 +1681,7 @@ int cSearchTimer::checkTimerConflicts(std::string& mailBody)
       }
 
       else if (tunerCount <= 0)  // DEBUG-tell - to be removed?
-         tell(1, "TCC: Fatal got 0 used transponders for timer (%ld) between %s (%ld) and %s (%ld)",
+         tell(eloInfo, "TCC: Fatal got 0 used transponders for timer (%ld) between %s (%ld) and %s (%ld)",
               timerDb->getIntValue("ID"),
               l2pTime(lStartTime).c_str(), lStartTime,
               l2pTime(lEndTime).c_str(), lEndTime);
@@ -1690,7 +1689,7 @@ int cSearchTimer::checkTimerConflicts(std::string& mailBody)
 
    selectAllTimer->freeResult();
 
-   tell(1, "TCC: Finished timer conflict check with (%d) conflicts", conflicts);
+   tell(eloInfo, "TCC: Finished timer conflict check with (%d) conflicts", conflicts);
 
    return conflicts;
 }
@@ -1749,7 +1748,7 @@ int cSearchTimer::getUsedTransponderAt(time_t lStartTime, time_t lEndTime, std::
 
       for (li = it->second.timers.begin(); li != it->second.timers.end(); ++li)
       {
-         tell(3, "TCC: found (%ld) '%s'", (*li).id, (*li).file.c_str());
+         tell(eloDetail, "TCC: found (%ld) '%s'", (*li).id, (*li).file.c_str());
 
          sprintf(buf,
                  "<tr>"
@@ -1780,7 +1779,7 @@ int cSearchTimer::getUsedTransponderAt(time_t lStartTime, time_t lEndTime, std::
 
 // int cSearchTimer::rejectTimer(cDbRow* timerRow)
 // {
-//    tell(1, "Rejecting timer (%ld)", timerRow->getIntValue("ID"));
+//    tell(eloInfo, "Rejecting timer (%ld)", timerRow->getIntValue("ID"));
 
 //    timerJobsDb->clear();
 //    timerJobsDb->setValue("TIMERID", timerRow->getIntValue("ID"));
@@ -1789,7 +1788,7 @@ int cSearchTimer::getUsedTransponderAt(time_t lStartTime, time_t lEndTime, std::
 //    timerJobsDb->setValue("ASSUMED", "N");
 //    timerJobsDb->insert();
 
-//    tell(1, "Created delete job for timer (%ld)", timerRow->getIntValue("ID"));
+//    tell(eloInfo, "Created delete job for timer (%ld)", timerRow->getIntValue("ID"));
 
 //    return success;
 // }

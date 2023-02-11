@@ -86,13 +86,13 @@ void chkStatement1()
 
    if (epgDb->open() != success)
    {
-      tell(0, "Could not access database '%s:%d' (%s)",
+      tell("Could not access database '%s:%d' (%s)",
            cDbConnection::getHost(), cDbConnection::getPort(), epgDb->TableName());
 
       return ;
    }
 
-   tell(0, "---------------------------------------------------");
+   tell("---------------------------------------------------");
 
    // prepare statement to mark wasted DVB events
 
@@ -122,7 +122,7 @@ void chkStatement1()
 
    updateDelFlg->prepare();
 
-   tell(0, "---------------------------------------------------");
+   tell("---------------------------------------------------");
 }
 
 // //***************************************************************************
@@ -140,7 +140,7 @@ void chkStatement1()
 //    if (imageDb->open() != success)
 //       return ;
 
-//    tell(0, "---------------------------------------------------");
+//    tell("---------------------------------------------------");
 
 //    cDbStatement* selectAllImages = new cDbStatement(imageRefDb);
 
@@ -167,7 +167,7 @@ void chkStatement1()
 //    selectAllImages->prepare();
 
 
-//    tell(0, "---------------------------------------------------");
+//    tell("---------------------------------------------------");
 
 //    //delete s;
 //    delete imageRefDb;
@@ -192,7 +192,7 @@ void chkStatement1()
 //    if (mapDb->open() != success)
 //       return ;
 
-//    tell(0, "---------------------------------------------------");
+//    tell("---------------------------------------------------");
 
 //    cDbStatement* s = new cDbStatement(epgDb);
 
@@ -232,23 +232,23 @@ void chkStatement1()
 //    int channels = 0;
 //    char chan[100]; *chan = 0;
 
-//    tell(0, "---------------------------------------------------");
+//    tell("---------------------------------------------------");
 
 //    for (int found = s->find(); found; found = s->fetch())
 //    {
 //       if (!*chan || strcmp(chan, epgDb->getStrValue(cTableEvents::fiChannelId)) != 0)
 //       {
 //          if (*chan)
-//             tell(0, "processed %-20s with %d events", chan, count - lcount);
+//             tell("processed %-20s with %d events", chan, count - lcount);
 
 //          lcount = count;
 //          channels++;
 //          strcpy(chan, epgDb->getStrValue(cTableEvents::fiChannelId));
 
-//          tell(0, "processing %-20s now", chan);
+//          tell("processing %-20s now", chan);
 //       }
 
-//       tell(0, "-> '%s' - (%ld)", epgDb->getStrValue(cTableEvents::fiChannelId),
+//       tell("-> '%s' - (%ld)", epgDb->getStrValue(cTableEvents::fiChannelId),
 //            epgDb->getIntValue(cTableEvents::fiEventId));
 
 
@@ -257,9 +257,9 @@ void chkStatement1()
 
 //    s->freeResult();
 
-//    tell(0, "---------------------------------------------------");
-//    tell(0, "updated %d channels and %d events", channels, count);
-//    tell(0, "---------------------------------------------------");
+//    tell("---------------------------------------------------");
+//    tell("updated %d channels and %d events", channels, count);
+//    tell("---------------------------------------------------");
 
 //    delete s;
 //    delete epgDb;
@@ -445,7 +445,7 @@ void statementrecording()
 {
    int insert;
 
-   tell(0, "---------------------------------");
+   tell("---------------------------------");
 
    cDbTable* recordingListDb = new cDbTable(connection, "recordinglist");
    if (recordingListDb->open() != success) return ;
@@ -466,7 +466,7 @@ void statementrecording()
    insert = !recordingListDb->find();
    recordingListDb->clearChanged();
 
-   tell(0, "#1 %d changes", recordingListDb->getChanges());
+   tell("#1 %d changes", recordingListDb->getChanges());
 
    // recordingListDb->setValue("STATE", "E");
    recordingListDb->getValue("STATE")->setNull();
@@ -479,9 +479,9 @@ void statementrecording()
    recordingListDb->setValue("EVENTID", 1212);
    recordingListDb->setValue("CHANNELID", "xxxxxx");
 
-   tell(0, "#2 %d changes", recordingListDb->getChanges());
+   tell("#2 %d changes", recordingListDb->getChanges());
    recordingListDb->setValue("FSK", yes);
-   tell(0, "#3 %d changes", recordingListDb->getChanges());
+   tell("#3 %d changes", recordingListDb->getChanges());
 
    // don't toggle uuid if already set!
 
@@ -490,13 +490,13 @@ void statementrecording()
 
    if (insert || recordingListDb->getChanges())
    {
-      tell(0, "storing '%s' due to %d changes ", insert ? "insert" : "update", recordingListDb->getChanges());
+      tell("storing '%s' due to %d changes ", insert ? "insert" : "update", recordingListDb->getChanges());
       recordingListDb->store();
    }
 
    recordingListDb->reset();
 
-   tell(0, "---------------------------------");
+   tell("---------------------------------");
 
    delete recordingListDb;
 }
@@ -510,7 +510,7 @@ void statementTimer()
    cDbValue timerState;
    cDbFieldDef timerStateDef("STATE", "state", cDBS::ffAscii, 100, cDBS::ftData);
 
-   cEpgConfig::loglevel = 0;
+   cEpgConfig::eloquence = (Eloquence)(eloInfo | eloDetail | eloWarning | eloError);
 
    cDbTable* timerDb = new cDbTable(connection, "timers");
    if (timerDb->open() != success) return ;
@@ -550,7 +550,7 @@ void statementTimer()
    selectAllTimer->build(" where ");
    selectAllTimer->bindInChar(0, "STATE", &timerState);
 
-   cEpgConfig::loglevel = 2;
+   cEpgConfig::eloquence = (Eloquence)(eloInfo | eloDetail | eloWarning | eloError);
    selectAllTimer->prepare();
 
    // ---------------------------------
@@ -558,17 +558,17 @@ void statementTimer()
    timerDb->clear();
    timerState.setValue("A,D,P");
 
-   tell(0, "---------------------------------");
+   tell("---------------------------------");
 
    for (int found = selectAllTimer->find(); found; found = selectAllTimer->fetch())
    {
-      tell(0, "%ld) %s - %s",
+      tell("%ld) %s - %s",
            timerDb->getIntValue("ID"),
            timerDb->getStrValue("STATE"),
            timerDb->getStrValue("FILE"));
    }
 
-   tell(0, "---------------------------------");
+   tell("---------------------------------");
 
    delete selectAllTimer;
    delete timerDb;
@@ -610,14 +610,14 @@ void chkStatement5()
 
    if (selectRecordingForEventByLv->prepare() != success)
    {
-      tell(0, "prepare failed");
+      tell("prepare failed");
       return;
    }
 
-   tell(0, "---------------------------------------------------");
+   tell("---------------------------------------------------");
    const char* title = "Star Wars: Die Rache der Sith";
-   tell(0, "matches for '%s'", title);
-   tell(0, "---------------------------------------------------");
+   tell("matches for '%s'", title);
+   tell("---------------------------------------------------");
 
    recordingListDb->clear();
    recordingListDb->setValue("TITLE", title);
@@ -626,13 +626,13 @@ void chkStatement5()
    for (int f = selectRecordingForEventByLv->find(); f; f = selectRecordingForEventByLv->fetch())
    {
       count++;
-      tell(2, "%03d) match density (%ld / %ld) for recording '%s' '%s'", count,
+      tell(eloDetail, "%03d) match density (%ld / %ld) for recording '%s' '%s'", count,
            matchDensityTitle.getIntValue(), matchDensityShorttext.getIntValue(),
            recordingListDb->getStrValue("TITLE"), recordingListDb->getStrValue("SHORTTEXT"));
    }
 
-   tell(0, "---------------------------------------------------");
-   tell(2, "%d recordings", count);
+   tell("---------------------------------------------------");
+   tell(eloDetail, "%d recordings", count);
 
    selectRecordingForEventByLv->freeResult();
 }
@@ -644,7 +644,7 @@ void chkStatement5()
 int main(int argc, char** argv)
 {
    cEpgConfig::logstdout = yes;
-   cEpgConfig::loglevel = 2;
+   cEpgConfig::eloquence = (Eloquence)(eloInfo | eloDetail | eloWarning | eloError);
 
    bool md5Demo {false};
    bool tvdbDemo {false};
@@ -682,28 +682,28 @@ int main(int argc, char** argv)
       else
          asprintf(&url, "%s/eplist.cgi?action=show&file=%s", "www.eplists.de", argv[1]);
 
-      tell(0, "try to download [%s]", url);
+      tell("try to download [%s]", url);
 
       data.clear();
       data.headerOnly = yes;
 
       if (curl.downloadFile(url, size, &data, 30, "libcurl-agent/1.0") == success)
-         tell(0, "Got header for '%s-%s' with %d bytes", data.name, data.tag, size);
+         tell("Got header for '%s-%s' with %d bytes", data.name, data.tag, size);
       else
-         tell(0, "downloadFile failed!");
+         tell("downloadFile failed!");
 
       data.clear();
 
       if (curl.downloadFile(url, size, &data, 30, "libcurl-agent/1.0") == success)
       {
-         tell(0, "succeeded!");
-         tell(0, "Got: %d bytes", size);
-         tell(0, "%s", data.memory);
+         tell("succeeded!");
+         tell("Got: %d bytes", size);
+         tell("%s", data.memory);
          storeToFile("./data", data.memory, size);
-         tell(0, "stored to './data'");
+         tell("stored to './data'");
       }
       else
-         tell(0, "FAILED!");
+         tell("FAILED!");
 
       free(url);
 
@@ -717,16 +717,16 @@ int main(int argc, char** argv)
 
       if (lang)
       {
-         tell(0, "Set locale to '%s'", lang);
+         tell("Set locale to '%s'", lang);
 
          if ((strcasestr(lang, "UTF-8") != 0) || (strcasestr(lang, "UTF8") != 0))
-            tell(0, "detected UTF-8");
+            tell("detected UTF-8");
          else
-            tell(0, "no UTF-8");
+            tell("no UTF-8");
       }
       else
       {
-         tell(0, "Reseting locale for LC_CTYPE failed.");
+         tell("Reseting locale for LC_CTYPE failed.");
       }
 
       return 0;
@@ -736,7 +736,7 @@ int main(int argc, char** argv)
 
    if (dbDict.in("../configs/epg.dat") != success)
    {
-      tell(0, "Invalid dictionary configuration, aborting!");
+      tell("Invalid dictionary configuration, aborting!");
       return 1;
    }
 
@@ -747,15 +747,15 @@ int main(int argc, char** argv)
    {
       cDbTable* table = new cDbTable(connection, "events");
 
-      tell(0, "Table '%s' %sexists", table->TableName(), table->exist() ? "" : "NOT ");
-      tell(0, "Table '%s' %sexists", "foobar", table->exist("foobar") ? "" : "NOT ");
+      tell("Table '%s' %sexists", table->TableName(), table->exist() ? "" : "NOT ");
+      tell("Table '%s' %sexists", "foobar", table->exist("foobar") ? "" : "NOT ");
    }
 
    // chkStatement5();
 
    // chkCompressName();
 
-   // tell(0, "duration was: '%s'", ms2Dur(2340).c_str());
+   // tell("duration was: '%s'", ms2Dur(2340).c_str());
 
    // statementTimer();
    // statementrecording();

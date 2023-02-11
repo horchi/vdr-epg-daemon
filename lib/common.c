@@ -24,6 +24,7 @@
 #include <errno.h>
 #include <regex.h>
 #include <limits.h>
+#include <math.h>
 
 #include <algorithm>
 #include <regex>
@@ -39,6 +40,56 @@
 cMyMutex logMutex;
 
 //***************************************************************************
+// Logging
+//***************************************************************************
+
+const char* Elo::eloquences[] =
+{
+   "Error",
+   "Warning",
+   "Info",
+   "Detail",
+   "Debug",
+   "DebugDetail",
+   "WebSock",
+   "DebugWebSock",
+   "Mqtt",
+   "Db",
+   "DebugDb",
+
+   "TVDB",
+   "Curl",
+   "CurlDebug",
+
+   nullptr
+};
+
+Eloquence Elo::stringToEloquence(const std::string& string)
+{
+   int elo {0};
+   int n {0};
+
+   auto elos = split(string, ',');
+
+   for (const auto& e : elos)
+   {
+      if ((n = toEloquence(e.c_str())) != na)
+         elo |= n;
+   }
+
+   return (Eloquence)elo;
+}
+
+int Elo::toEloquence(const char* str)
+{
+   for (int i = 0; eloquences[i]; i++)
+      if (strcasecmp(eloquences[i], str) == 0)
+         return (Eloquence)pow(2, i);
+
+   return na;
+}
+
+//***************************************************************************
 // Tell
 //***************************************************************************
 
@@ -47,9 +98,31 @@ const char* getLogPrefix()
    return logPrefix;
 }
 
-void tell(int eloquence, const char* format, ...)
+void tell(const char* format, ...)
 {
-   if (cEpgConfig::loglevel < eloquence)
+   if (!format)
+      return;
+
+   va_list more;
+   va_start(more, format);
+   vtell(eloError, format, more);
+   va_end(more);
+}
+
+void tell(Eloquence elo, const char* format, ...)
+{
+   if (!format)
+      return;
+
+   va_list more;
+   va_start(more, format);
+   vtell(elo, format, more);
+   va_end(more);
+}
+
+void vtell(Eloquence elo, const char* format, va_list more)
+{
+   if (elo && !(cEpgConfig::eloquence & elo))
       return ;
 
    logMutex.Lock();
@@ -66,20 +139,17 @@ void tell(int eloquence, const char* format, ...)
 
    const int sizeBuffer {100000};
    char t[sizeBuffer+100] {};
-   va_list ap;
-
-   va_start(ap, format);
 
    if (getLogPrefix())
       snprintf(t, sizeBuffer, "%s", getLogPrefix());
 
-   vsnprintf(t+strlen(t), sizeBuffer-strlen(t), format, ap);
+   vsnprintf(t+strlen(t), sizeBuffer-strlen(t), format, more);
 
    strReplace(t, '\n', '$');
 
    if (cEpgConfig::logstdout)
    {
-      char buf[50+TB];
+      char buf[50+TB] {};
       timeval tp;
 
       gettimeofday(&tp, 0);
@@ -91,19 +161,40 @@ void tell(int eloquence, const char* format, ...)
    }
    else
    {
-      switch (eloquence)
-      {
-         case 0:  syslog(LOG_ERR, "%s", t);     break;
-         case 1:  syslog(LOG_WARNING, "%s", t); break;
-         case 2:  syslog(LOG_NOTICE, "%s", t);  break;
-         case 3:  syslog(LOG_INFO, "%s", t);    break;
-         default: syslog(LOG_DEBUG, "%s", t);   break;
-      }
+      if (elo & eloError)         syslog(LOG_ERR, "%s", t);
+      else if (elo & eloWarning)  syslog(LOG_WARNING, "%s", t);
+      else if (elo & eloInfo)     syslog(LOG_NOTICE, "%s", t);
+      else if (elo & eloDetail)   syslog(LOG_INFO, "%s", t);
+      else                        syslog(LOG_DEBUG, "%s", t);
    }
 
    logMutex.Unlock();
+}
 
-   va_end(ap);
+//***************************************************************************
+// deprecated - for compatibility to older plugins
+//***************************************************************************
+
+void tell(int level, const char* format, ...)
+{
+   if (!format)
+      return;
+
+   va_list more;
+   va_start(more, format);
+
+   if (level == 0)
+      vtell(eloError, format, more);
+   else if (level == 1)
+      vtell(eloWarning, format, more);
+   else if (level == 2)
+      vtell(eloInfo, format, more);
+   else if (level == 3)
+      vtell(eloDetail, format, more);
+   else
+      vtell(eloDebug, format, more);
+
+   va_end(more);
 }
 
 //***************************************************************************
@@ -142,7 +233,7 @@ char* Syslog::toName(int code)
 {
    for (int i = 0; facilities[i].name; i++)
       if (facilities[i].code == code)
-         return (char*) facilities[i].name;                           // #83
+         return (char*)facilities[i].name;
 
    return 0;
 }
@@ -847,7 +938,7 @@ int storeToFile(const char* filename, const char* data, int size)
    }
    else
    {
-      tell(0, "Error, can't store '%s' to filesystem '%s'", filename, strerror(errno));
+      tell("Error, can't store '%s' to filesystem '%s'", filename, strerror(errno));
       return fail;
    }
 
@@ -867,13 +958,13 @@ int loadFromFile(const char* infile, MemoryStruct* data)
 
    if (!fileExists(infile))
    {
-      tell(0, "File '%s' not found'", infile);
+      tell(eloWarning, "File '%s' not found'", infile);
       return fail;
    }
 
    if (stat(infile, &sb) < 0)
    {
-      tell(0, "Can't get info of '%s', error was '%s'", infile, strerror(errno));
+      tell("Can't get info of '%s', error was '%s'", infile, strerror(errno));
       return fail;
    }
 
@@ -906,7 +997,7 @@ int loadFromFile(const char* infile, MemoryStruct* data)
    }
    else
    {
-      tell(0, "Error, can't open '%s' for reading, error was '%s'", infile, strerror(errno));
+      tell("Error, can't open '%s' for reading, error was '%s'", infile, strerror(errno));
       return fail;
    }
 
@@ -983,7 +1074,7 @@ int isLink(const char* path)
    if (lstat(path, &sb) == 0)
       return S_ISLNK(sb.st_mode);
 
-   tell(0, "Warning: Can't detect file state for '%s' failed, error was '%s'", path, strerror(errno));
+   tell(eloWarning, "Warning: Can't detect file state for '%s' failed, error was '%s'", path, strerror(errno));
 
    return false;
 }
@@ -1005,7 +1096,7 @@ int fileSize(const char* path)
    if (lstat(path, &sb) == 0)
       return sb.st_size;
 
-   tell(0, "Warning: Can't detect size for '%s' failed, error was '%s'", path, strerror(errno));
+   tell(eloWarning, "Warning: Can't detect size for '%s' failed, error was '%s'", path, strerror(errno));
 
    return 0;
 }
@@ -1017,7 +1108,7 @@ time_t fileModTime(const char* path)
    if (lstat(path, &sb) == 0)
       return sb.st_mtime;
 
-   tell(0, "Warning: Can't detect modification time for '%s' failed, error was '%s'", path, strerror(errno));
+   tell(eloWarning, "Warning: Can't detect modification time for '%s' failed, error was '%s'", path, strerror(errno));
 
    return 0;
 }
@@ -1045,7 +1136,7 @@ int createLink(const char* link, const char* dest, int force)
 
       if (symlink(dest, link) != 0)
       {
-         tell(0, "Failed to create symlink '%s', error was '%s'", link, strerror(errno));
+         tell("Failed to create symlink '%s', error was '%s'", link, strerror(errno));
          return fail;
       }
    }
@@ -1063,12 +1154,12 @@ int removeFile(const char* filename)
 
    if (unlink(filename) != 0)
    {
-      tell(0, "Can't remove file '%s', '%s'", filename, strerror(errno));
+      tell("Can't remove file '%s', '%s'", filename, strerror(errno));
 
       return 1;
    }
 
-   tell(3, "Removed %s '%s'", lnk ? "link" : "file", filename);
+   tell(eloDetail, "Removed %s '%s'", lnk ? "link" : "file", filename);
 
    return 0;
 }
@@ -1083,11 +1174,11 @@ int chkDir(const char* path)
 
    if (stat(path, &fs) != 0 || !S_ISDIR(fs.st_mode))
    {
-      tell(1, "Creating directory '%s'", path);
+      tell(eloInfo, "Creating directory '%s'", path);
 
       if (mkdir(path, ACCESSPERMS) == -1)
       {
-         tell(0, "Can't create directory '%s'", strerror(errno));
+         tell("Error: Can't create directory '%s'", strerror(errno));
          return fail;
       }
    }
@@ -1109,9 +1200,9 @@ xsltStylesheetPtr loadXSLT(const char* name, const char* path, int utf8)
    asprintf(&xsltfile, "%s/%s-%s.xsl", path, name, utf8 ? "utf-8" : "iso-8859-1");
 
    if ((stylesheet = xsltParseStylesheetFile((const xmlChar*)xsltfile)) == 0)
-      tell(0, "Error: Can't load xsltfile %s", xsltfile);
+      tell("Error: Can't load xsltfile %s", xsltfile);
    else
-      tell(1, "Info: Stylesheet '%s' loaded", xsltfile);
+      tell(eloDetail, "Info: Stylesheet '%s' loaded", xsltfile);
 
    free(xsltfile);
    return stylesheet;
@@ -1260,11 +1351,11 @@ void tellZipError(int errorCode, const char* op, const char* msg)
    {
       case Z_OK:           return;
       case Z_STREAM_END:   return;
-      case Z_MEM_ERROR:    tell(0, "Error: Not enough memory to zip/unzip file%s!\n", op); return;
-      case Z_BUF_ERROR:    tell(0, "Error: Couldn't zip/unzip data due to output buffer size problem%s!\n", op); return;
-      case Z_DATA_ERROR:   tell(0, "Error: Zipped input data corrupted%s! Details: %s\n", op, msg); return;
-      case Z_STREAM_ERROR: tell(0, "Error: Invalid stream structure%s. Details: %s\n", op, msg); return;
-      default:             tell(0, "Error: Couldn't zip/unzip data for unknown reason (%6d)%s!\n", errorCode, op); return;
+      case Z_MEM_ERROR:    tell("Error: Not enough memory to zip/unzip file%s!\n", op); return;
+      case Z_BUF_ERROR:    tell("Error: Couldn't zip/unzip data due to output buffer size problem%s!\n", op); return;
+      case Z_DATA_ERROR:   tell("Error: Zipped input data corrupted%s! Details: %s\n", op, msg); return;
+      case Z_STREAM_ERROR: tell("Error: Invalid stream structure%s. Details: %s\n", op, msg); return;
+      default:             tell("Error: Couldn't zip/unzip data for unknown reason (%6d)%s!\n", errorCode, op); return;
    }
 }
 
@@ -1298,7 +1389,7 @@ const char* getFirstIp(int skipLo)
 
    if (getifaddrs(&ifaddr) == -1)
    {
-      tell(0, "Error: getifaddrs() failed");
+      tell("Error: getifaddrs() failed");
       return "";
    }
 
@@ -1320,7 +1411,7 @@ const char* getFirstIp(int skipLo)
 
          if (res)
          {
-            tell(0, "Error: getnameinfo() for '%s' failed: %s", gai_strerror(res), ifa->ifa_name);
+            tell("Error: getnameinfo() for '%s' failed: %s", gai_strerror(res), ifa->ifa_name);
             continue;
          }
 
@@ -1335,7 +1426,7 @@ const char* getFirstIp(int skipLo)
             inet_ntop(ifa->ifa_netmask->sa_family, p, netMask, sizeof(netMask));
          }
 
-         tell(1, "%-8s %-15s %s; netmask '%s'", ifa->ifa_name, host,
+         tell(eloDetail, "%-8s %-15s %s; netmask '%s'", ifa->ifa_name, host,
               ifa->ifa_addr->sa_family == AF_INET   ? " (AF_INET)" :
               ifa->ifa_addr->sa_family == AF_INET6  ? " (AF_INET6)" : "",
               netMask);
@@ -1361,7 +1452,7 @@ const char* getInterfaces()
 
    if (getifaddrs(&ifaddr) == -1)
    {
-      tell(0, "Error: getifaddrs() failed");
+      tell("Error: getifaddrs() failed");
       return "";
    }
 
@@ -1383,7 +1474,7 @@ const char* getInterfaces()
 
          if (res)
          {
-            tell(0, "Error: getnameinfo() failed: %s, skipping interface '%s'", gai_strerror(res), ifa->ifa_name);
+            tell("Error: getnameinfo() failed: %s, skipping interface '%s'", gai_strerror(res), ifa->ifa_name);
             continue;
          }
 
@@ -1410,7 +1501,7 @@ const char* getFirstInterface()
 
    if (getifaddrs(&ifaddr) == -1)
    {
-      tell(0, "Error: getifaddrs() failed");
+      tell("Error: getifaddrs() failed");
       return "";
    }
 
@@ -1432,7 +1523,7 @@ const char* getFirstInterface()
 
          if (res)
          {
-            tell(0, "Error: getnameinfo() failed: %s, skipping interface '%s'", gai_strerror(res), ifa->ifa_name);
+            tell("Error: getnameinfo() failed: %s, skipping interface '%s'", gai_strerror(res), ifa->ifa_name);
             continue;
          }
 
@@ -1496,7 +1587,7 @@ const char* getMaskOf(const char* device)
       void* p = &((struct sockaddr_in*)(&ifr.ifr_netmask))->sin_addr;
       inet_ntop(ifr.ifr_netmask.sa_family, p, netMask, sizeof(netMask));
 
-      tell(5, "netmask for device '%s' is '%s'", device, netMask);
+      tell(eloDebug, "Debug: Netmask for device '%s' is '%s'", device, netMask);
   }
 
   return netMask;
@@ -1519,13 +1610,13 @@ const char* bcastAddressOf(const char* ipStr, const char* maskStr)
       broadcast.s_addr = host.s_addr | ~mask.s_addr;
 
       if (inet_ntop(AF_INET, &broadcast, bcastAddress, INET_ADDRSTRLEN))
-         tell(5, "Bcast for '%s' is '%s'", ipStr, bcastAddress);
+         tell(eloDebug, "Debug: Bcast for '%s' is '%s'", ipStr, bcastAddress);
       else
-         tell(0, "Error: Failed converting number to string");
+         tell("Error: Failed converting number to string");
    }
    else
    {
-      tell(0, "Error: Failed converting strings to numbers");
+      tell("Error: Failed converting strings to numbers");
    }
 
    return bcastAddress;
@@ -1585,7 +1676,7 @@ int unzip(const char* file, const char* filter, char*& buffer, int& size, char* 
 
    if (r != ARCHIVE_OK)
    {
-      tell(0, "Error: Open '%s' failed - %s", file, strerror(errno));
+      tell("Error: Open '%s' failed - %s", file, strerror(errno));
       return 1;
    }
 
@@ -1684,19 +1775,19 @@ uint64_t cMyTimeMs::Now(void)
               monotonic = true;
               }
            else
-              tell(0, "Error: cMyTimeMs: clock_gettime(CLOCK_MONOTONIC) failed");
+              tell("Error: cMyTimeMs: clock_gettime(CLOCK_MONOTONIC) failed");
            }
         else
-           tell(1, "Info: cMyTimeMs: not using monotonic clock - resolution is too bad (%ld s %ld ns)", tp.tv_sec, tp.tv_nsec);
+           tell(eloWarning, "Info: cMyTimeMs: not using monotonic clock - resolution is too bad (%ld s %ld ns)", tp.tv_sec, tp.tv_nsec);
         }
      else
-        tell(0, "Error: cMyTimeMs: clock_getres(CLOCK_MONOTONIC) failed");
+        tell("Error: cMyTimeMs: clock_getres(CLOCK_MONOTONIC) failed");
      initialized = true;
-     }
+  }
   if (monotonic) {
      if (clock_gettime(CLOCK_MONOTONIC, &tp) == 0)
         return (uint64_t(tp.tv_sec)) * 1000 + tp.tv_nsec / 1000000;
-     tell(0, "Error: cMyTimeMs: clock_gettime(CLOCK_MONOTONIC) failed");
+     tell("Error: cMyTimeMs: clock_gettime(CLOCK_MONOTONIC) failed");
      monotonic = false;
      // fall back to gettimeofday()
      }
@@ -1786,9 +1877,9 @@ int rep(const char* string, const char* expression, const char*& s_location,
 // Class LogDuration
 //***************************************************************************
 
-LogDuration::LogDuration(const char* aMessage, int aLogLevel)
+LogDuration::LogDuration(const char* aMessage, Eloquence aElo)
 {
-   logLevel = aLogLevel;
+   elo = aElo;
    strcpy(message, aMessage);
 
    // at last !
@@ -1798,13 +1889,13 @@ LogDuration::LogDuration(const char* aMessage, int aLogLevel)
 
 LogDuration::~LogDuration()
 {
-   tell(logLevel, "duration '%s' was (%ldms)",
+   tell(elo, "duration '%s' was (%ldms)",
         message, (long)(cMyTimeMs::Now() - durationStart));
 }
 
 void LogDuration::show(const char* label)
 {
-   tell(logLevel, "elapsed '%s' at '%s' was (%ldms)",
+   tell(elo, "elapsed '%s' at '%s' was (%ldms)",
         message, label, (long)(cMyTimeMs::Now() - durationStart));
 }
 
@@ -1933,7 +2024,7 @@ int createMd5OfFile(const char* path, const char* name, md5* md5)
 
    if (!(f = fopen(file, "r")))
    {
-      tell(0, "Fatal: Cannot build MD5 of '%s'; Error was '%s'", file, strerror(errno));
+      tell("Fatal: Cannot build MD5 of '%s'; Error was '%s'", file, strerror(errno));
       free(file);
       return fail;
    }

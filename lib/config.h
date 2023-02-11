@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef __EPG_CONFIG_H
-#define __EPG_CONFIG_H
+#pragma once
 
 #include "common.h"
 
@@ -17,31 +16,29 @@
 struct cEpgConfig
 {
    public:
-      
+
       cEpgConfig();
 
       // database connection
 
       int hasDbLoginChanged(cEpgConfig* old);
 
-      char dbHost[100+TB];
-      int dbPort;
-      char dbName[100+TB];
-      char dbUser[100+TB];
-      char dbPass[100+TB];
+      char dbHost[100+TB] {"localhost"};
+      int dbPort {3306};
+      char dbName[100+TB] {"epg2vdr"};
+      char dbUser[100+TB] {"epg2vdr"};
+      char dbPass[100+TB] {"epg"};
 
-      char netDevice[20+TB];
-      char uuid[sizeUuid+TB];
+      char netDevice[20+TB] {};
+      char uuid[sizeUuid+TB] {};
 
-      int getepgimages;
+      int getepgimages {yes};
 
-      // static stuff 
+      // static stuff
 
+      static Eloquence eloquence;
+      static Eloquence argEloquence;
       static int logstdout;
-      static int loglevel;
-      static int argLoglevel;
       static int logFacility;
       static const char* logName;
 };
-
-#endif // __EPG_CONFIG_H 
