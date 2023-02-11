@@ -13,9 +13,9 @@
 #include "lib/db.h"
 #include "lib/epgservice.h"
 
-#include "scraper/themoviedbscraper/themoviedbscraper.h"
-#include "scraper/themoviedbscraper/moviedbmovie.h"
-#include "scraper/themoviedbscraper/moviedbactor.h"
+#include "scraper/moviedbscraper/themoviedbscraper.h"
+#include "scraper/moviedbscraper/moviedbmovie.h"
+#include "scraper/moviedbscraper/moviedbactor.h"
 
 #include "epgdconfig.h"
 

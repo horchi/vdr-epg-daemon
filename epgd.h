@@ -99,7 +99,7 @@ class PluginLoader
 {
    public:
 
-      explicit PluginLoader(const char* name, Plugin* p = 0);
+      explicit PluginLoader(const char* name, Plugin* p = nullptr);
       virtual ~PluginLoader();
 
       int load();

@@ -19,12 +19,6 @@ class cTVDBScraper
 {
    public:
 
-      // struct EpisodeId
-      // {
-      //    int seriesId {0};
-      //    int episodeId {0};
-      // };
-
       explicit cTVDBScraper(std::string language);
       virtual ~cTVDBScraper();
 

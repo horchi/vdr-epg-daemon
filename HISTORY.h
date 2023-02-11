@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.12"
-#define VERSION_DATE "07.02.2023"
+#define _VERSION     "1.3.13"
+#define VERSION_DATE "11.02.2023"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2023-02-11: version 1.3.13 (horchi)
+   - Bugfix: Fixed crash at exit with deactivatet TVDB scraper
+   - Change: Trigger eplist match for nes external events
 
 2023-02-07: version 1.3.12 (horchi)
    - change: Minor code cleanup and log message improvements

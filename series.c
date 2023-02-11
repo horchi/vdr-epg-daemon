@@ -483,8 +483,8 @@ int cEpgd::updateEpisodes()
 
       // start series match
 
-      if (!doShutDown())
-         evaluateEpisodes();
+      // if (!doShutDown())
+      //    evaluateEpisodes();
    }
 
    return 0;

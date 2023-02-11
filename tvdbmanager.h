@@ -15,8 +15,8 @@
 
 #include "epgdconfig.h"
 
-#include "scraper/thetvdbscraper/thetvdbscraper.h"
-#include "scraper/thetvdbscraper/tvdbseries.h"
+#include "scraper/tvdbscraper/tvdbscraper.h"
+#include "scraper/tvdbscraper/tvdbseries.h"
 
 //***************************************************************************
 // cTVDBManager

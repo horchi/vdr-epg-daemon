@@ -3,7 +3,7 @@
 //    https://thetvdb.github.io/v4-api/
 
 #include "tvdbv4.h"
-#include "thetvdbscraper.h"
+#include "tvdbscraper.h"
 
 std::map<std::string,std::string> cTVDBScraper::languages =
 {
@@ -159,7 +159,8 @@ int cTVDBScraper::readSeriesId(const char* seriesName)
    {
       jSeries = json_array_get(jData, 0);
       seriesID = atoi(getStringFromJson(jSeries, "tvdb_id", ""));
-      tell(0, "Series '%s' not found by aliases, using first of (%ld) search results -> (%d)", seriesName, json_array_size(jData), seriesID);
+      tell(0, "Series '%s' not found by aliases, using first of (%ld) search results -> '%s'(%d)",
+           seriesName, json_array_size(jData), getStringFromJson(jSeries, "name", ""), seriesID);
    }
 
    json_decref(jResult);

@@ -275,7 +275,7 @@ int cTVDBSeries::parseEpisodes(json_t* jResult)
       if (!episode.imageUrl.empty() && episode.imageUrl[0] == '/')
          episode.imageUrl = cTVDBv4::tvdbArtworkUrl + episode.imageUrl;
 
-      // readEpisodesExtended(episode);
+      // readEpisodesExtended(episode);  // takes to long :(
 
       // lastUpdated - like "2023-01-08 02:21:27",
 
@@ -294,16 +294,22 @@ int cTVDBSeries::parseEpisodesExtended(json_t* jResult, Episode& episode)
    if (!jData)
       return 0;
 
+   uint n {};
    json_t* j = getObjectFromJson(jData, "characters");
 
    json_array_foreach(j, item, jItem)
    {
-      // int type = getIntFromJson(jItem, "type");
-      // const char* url = getStringFromJson(jItem, "url", "");
-      // const char* personName = getStringFromJson(jItem, "personName", "");
-      // const char* peopleType = getStringFromJson(jItem, "peopleType", "");
+      int type = getIntFromJson(jItem, "type");
+      const char* url = getStringFromJson(jItem, "url", "");
+      const char* name = getStringFromJson(jItem, "name");
+      const char* personName = getStringFromJson(jItem, "personName", "");
+      const char* peopleType = getStringFromJson(jItem, "peopleType", "");
+
+      tell(0, "Additional character (%d/%d): %s/%s as '%s'(%d) [%s]", episode.seriesID, episode.id, name, personName, peopleType, type, url);
+      n++;
    }
 
+   tell(0, "Got %d Additional characters for series/episode %d/%d", n,  episode.seriesID, episode.id);
    return success;
 }
 

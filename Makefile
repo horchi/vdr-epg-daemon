@@ -48,10 +48,10 @@ endif
 OBJS += main.o update.o plugin.o epgdconfig.o channelmap.o series.o svdrpclient.o episode.o
 OBJS += tvdbmanager.o moviedbmanager.o
 
-OBJS += lib/fuzzy.o scraper/thetvdbscraper/thetvdbscraper.o scraper/thetvdbscraper/tvdbv4.o
-OBJS += scraper/thetvdbscraper/tvdbseries.o
-OBJS += scraper/themoviedbscraper/themoviedbscraper.o scraper/themoviedbscraper/moviedbmovie.o
-OBJS += scraper/themoviedbscraper/moviedbactor.o
+OBJS += lib/fuzzy.o scraper/tvdbscraper/tvdbscraper.o scraper/tvdbscraper/tvdbv4.o
+OBJS += scraper/tvdbscraper/tvdbseries.o
+OBJS += scraper/moviedbscraper/themoviedbscraper.o scraper/moviedbscraper/moviedbmovie.o
+OBJS += scraper/moviedbscraper/moviedbactor.o
 
 HTTPOBJS += epgdconfig.o webstore.o webdo.o webauth.o webtools.o httpd.o svdrpclient.o
 
@@ -79,7 +79,7 @@ lv:
 
 clean: clean-plugins
 	@-rm -f $(OBJS) $(HTTPOBJS) core* *~ */*~ *.so
-	@-rm -f scraper/themoviedbscraper/*~ scraper/themoviedbscraper/*~ scraper/thetvdbscraper/*~
+	@-rm -f scraper/moviedbscraper/*~ scraper/moviedbscraper/*~ scraper/tvdbscraper/*~
 	(cd epglv; $(MAKE) clean)
 	rm -f $(TARGET) $(ARCHIVE).tgz
 	rm -f $(HTTPTARGET) pytst
@@ -156,12 +156,12 @@ SCRHEADER = lib/curl.h
 
 tvdbmanager.o                                 : $(SCRHEADER) tvdbmanager.h tvdbmanager.c lib/epgservice.h lib/epgservice.c lib/db.h lib/db.c
 moviedbmanager.o                              : $(SCRHEADER) moviedbmanager.h moviedbmanager.c lib/epgservice.h lib/epgservice.c lib/db.h lib/db.c
-scraper/thetvdbscraper/tvdbv4.o               : $(SCRHEADER) scraper/thetvdbscraper/tvdbv4.c scraper/thetvdbscraper/tvdbv4.h
-scraper/thetvdbscraper/thetvdbscraper.o       : $(SCRHEADER) scraper/thetvdbscraper/thetvdbscraper.h scraper/thetvdbscraper/thetvdbscraper.c scraper/thetvdbscraper/tvdbseries.h
-scraper/thetvdbscraper/tvdbseries.o           : $(SCRHEADER) scraper/thetvdbscraper/tvdbseries.h scraper/thetvdbscraper/tvdbseries.c
-scraper/themoviedbscraper/themoviedbscraper.o : $(SCRHEADER) scraper/themoviedbscraper/themoviedbscraper.h scraper/themoviedbscraper/themoviedbscraper.c scraper/themoviedbscraper/moviedbmovie.h scraper/themoviedbscraper/moviedbactor.h
-scraper/themoviedbscraper/moviedbmovie.o      : $(SCRHEADER) scraper/themoviedbscraper/moviedbmovie.h scraper/themoviedbscraper/moviedbmovie.c scraper/themoviedbscraper/moviedbactor.h lib/fuzzy.h
-scraper/themoviedbscraper/moviedbactors.o     : $(SCRHEADER) scraper/themoviedbscraper/moviedbactor.h scraper/themoviedbscraper/moviedbactor.c
+scraper/tvdbscraper/tvdbv4.o                  : $(SCRHEADER) scraper/tvdbscraper/tvdbv4.c scraper/tvdbscraper/tvdbv4.h
+scraper/tvdbscraper/tvdbscraper.o             : $(SCRHEADER) scraper/tvdbscraper/tvdbscraper.h scraper/tvdbscraper/tvdbscraper.c scraper/tvdbscraper/tvdbseries.h
+scraper/tvdbscraper/tvdbseries.o              : $(SCRHEADER) scraper/tvdbscraper/tvdbseries.h scraper/tvdbscraper/tvdbseries.c
+scraper/moviedbscraper/themoviedbscraper.o    : $(SCRHEADER) scraper/moviedbscraper/themoviedbscraper.h scraper/moviedbscraper/themoviedbscraper.c scraper/moviedbscraper/moviedbmovie.h scraper/moviedbscraper/moviedbactor.h
+scraper/moviedbscraper/moviedbmovie.o         : $(SCRHEADER) scraper/moviedbscraper/moviedbmovie.h scraper/moviedbscraper/moviedbmovie.c scraper/moviedbscraper/moviedbactor.h lib/fuzzy.h
+scraper/moviedbscraper/moviedbactors.o        : $(SCRHEADER) scraper/moviedbscraper/moviedbactor.h scraper/moviedbscraper/moviedbactor.c
 lib/fuzzy.o                                   : lib/fuzzy.h lib/fuzzy.c
 
 # ------------------------------------------------------

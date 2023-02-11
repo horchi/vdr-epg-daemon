@@ -1446,13 +1446,12 @@ void cEpgd::setState(Es::State state, time_t lastUpdate, int silent)
 
 int cEpgd::loadPlugins()
 {
-   DIR* dir;
-   dirent* dp;
+   DIR* dir {};
+   dirent* dp {};
 
    if (!(dir = opendir(EpgdConfig.pluginPath)))
    {
-      tell(0, "Error: Opening plugin directory '%s' failed, %s",
-           EpgdConfig.pluginPath, strerror(errno));
+      tell(0, "Error: Opening plugin directory '%s' failed, %s", EpgdConfig.pluginPath, strerror(errno));
       return fail;
    }
 
@@ -1460,12 +1459,10 @@ int cEpgd::loadPlugins()
    {
       if (strncmp(dp->d_name, "libepgd-", 8) == 0 && strstr(dp->d_name, ".so"))
       {
-         char* path;
+         char* path {};
 
          asprintf(&path, "%s/%s", EpgdConfig.pluginPath, dp->d_name);
-
          PluginLoader* pl = new PluginLoader(path);
-
          free(path);
 
          if (pl->load() != success)
@@ -1713,8 +1710,6 @@ void cEpgd::loop()
          continue;
       }
 
-      // evaluateEpisodes(); // #TODO test call
-
       // the real work ...
 
       setState(Es::esBusyEvents);
@@ -1733,6 +1728,9 @@ void cEpgd::loop()
 
       if (!doShutDown())
          updateEpisodes();                      // update constabel episodes
+
+      if (!doShutDown())
+         evaluateEpisodes();
 
       if (!doShutDown() && procUser)            // call user procedure if defined
          procUser->call();
@@ -2488,7 +2486,8 @@ int cEpgd::initScrapers()
 
 void cEpgd::exitScrapers()
 {
-   tvdbManager->exitDb();
+   if (tvdbManager)
+      tvdbManager->exitDb();
 
    delete tvdbManager;     tvdbManager = nullptr;
    delete movieDbManager;  movieDbManager = nullptr;
@@ -2508,8 +2507,6 @@ int cEpgd::scrapNewEvents()
 
    time_t start = time(0);
 
-   tell(1, "---------------------");
-
    tvdbManager->ResetBytesDownloaded();
 
    time_t lastTvDvScrap {0};
@@ -2517,6 +2514,8 @@ int cEpgd::scrapNewEvents()
 
    if (lastTvDvScrap > 0)
    {
+      tell(1, "---------------------");
+
       if (tvdbManager->updateSeries(lastTvDvScrap) == success)
       {
          setParameter("epgd", "lastTvDvScrap", time(0));
@@ -2544,6 +2543,7 @@ int cEpgd::scrapNewEvents()
 
    int seriesCur {0};
 
+   tell(1, "---------------------");
    tell(1, "Series for %zu new events to scrap", seriesToScrap.size());
 
    // for (auto it = seriesToScrap.begin(); it != seriesToScrap.end(); ++it)
