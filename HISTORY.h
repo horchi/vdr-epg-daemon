@@ -18,8 +18,8 @@
  * ------------------------------------
 
 2023-02-11: version 1.3.13 (horchi)
-   - Bugfix: Fixed crash at exit with deactivatet TVDB scraper
-   - Change: Trigger eplist match for nes external events
+   - Bugfix: Fixed crash at exit with deactivated TVDB scraper
+   - Change: Trigger eplist match for new external events
 
 2023-02-07: version 1.3.12 (horchi)
    - change: Minor code cleanup and log message improvements
