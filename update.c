@@ -1423,7 +1423,7 @@ void cEpgd::setState(Es::State state, time_t lastUpdate, int silent)
    if (actualState != state)
    {
       if (!silent)
-         tell(eloWarning, "State now '%s'", Es::toName(state));
+         tell(eloInfo, "State now '%s'", Es::toName(state));
 
       vdrDb->clear();
       vdrDb->setValue("UUID", "EPGD");
