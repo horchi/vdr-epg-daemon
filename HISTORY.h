@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.14"
+#define _VERSION     "1.3.15"
 #define VERSION_DATE "11.02.2023"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-02-11: version 1.3.15 (horchi)
+   - Bugfix: Fixed crash ob epghttpd start
 
 2023-02-11: version 1.3.14 (horchi)
    - Change: Changed log message handling from level to bitmask (update and rebuild all plugins)

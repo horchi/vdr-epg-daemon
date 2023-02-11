@@ -166,20 +166,6 @@ int cEpgHttpd::init()
    if (readConfig() != success)
       return fail;
 
-   // eloquence
-
-   char elo[255+TB] {};
-   getParameter("epgd", "eloquence", elo);
-   EpgdConfig.eloquence = Elo::stringToEloquence(elo);
-
-   if (EpgdConfig.argEloquence != eloNone)
-   {
-      EpgdConfig.eloquence = EpgdConfig.argEloquence;
-      EpgdConfig.argEloquence = eloNone;
-   }
-
-   tell(eloInfo, "Info: Eloquence set to '%s' => 0x%04x", elo, EpgdConfig.eloquence);
-
    if (search->init(confDir) != success)
       return fail;
 
@@ -430,6 +416,20 @@ int cEpgHttpd::initDb()
 
    if ((status = cParameters::initDb(connection)) != success)
        return status;
+
+   // eloquence
+
+   char elo[255+TB] {};
+   getParameter("epgd", "eloquence", elo);
+   EpgdConfig.eloquence = Elo::stringToEloquence(elo);
+
+   if (EpgdConfig.argEloquence != eloNone)
+   {
+      EpgdConfig.eloquence = EpgdConfig.argEloquence;
+      EpgdConfig.argEloquence = eloNone;
+   }
+
+   tell(eloInfo, "Info: Eloquence set to '%s' => 0x%04x", elo, EpgdConfig.eloquence);
 
    // ----------
    // select *
