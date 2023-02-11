@@ -91,9 +91,9 @@ class cConfiguration
 
             if (atConfigItem(name, value) != success)
             {
-               fprintf(stderr, "Found unexpected parameter '%s', aborting\n", name);
-               free(fileName);
-               return fail;
+               fprintf(stderr, "Found unexpected parameter '%s', ignoring\n", name);
+               // free(fileName);
+               // return fail;
             }
 
             count++;

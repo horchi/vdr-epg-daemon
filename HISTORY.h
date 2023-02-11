@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.15"
+#define _VERSION     "1.3.16"
 #define VERSION_DATE "11.02.2023"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-02-11: version 1.3.16 (horchi)
+   - Change: Ingnoring unknown config parameters
 
 2023-02-11: version 1.3.15 (horchi)
    - Bugfix: Fixed crash ob epghttpd start

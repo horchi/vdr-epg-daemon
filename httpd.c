@@ -2107,7 +2107,6 @@ int cEpgHttpd::atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "NetDevice"))          sstrcpy(EpgdConfig.netDevice, Value, sizeof(EpgdConfig.netDevice));
 
    else if (!strcasecmp(Name, "CachePath"))          sstrcpy(EpgdConfig.cachePath, Value, sizeof(EpgdConfig.cachePath));
-   // else if (!strcasecmp(Name, "LogLevel"))           EpgdConfig.loglevel = EpgdConfig.argLoglevel == na ? atoi(Value) : EpgdConfig.argLoglevel;
    else if (!strcasecmp(Name, "HttpDevice"))         sstrcpy(EpgdConfig.httpDevice, Value, sizeof(EpgdConfig.httpDevice));
    else if (!strcasecmp(Name, "HttpPort"))           EpgdConfig.httpPort = atoi(Value);
    else if (!strcasecmp(Name, "HttpTls"))            EpgdConfig.httpUseTls = atoi(Value);

@@ -258,7 +258,7 @@ int main(int argc, char** argv)
    // create global cCurl instance
 
    cEpgConfig::logstdout = yes;
-   cEpgConfig::loglevel = eloInfo;
+   cEpgConfig::eloAlways = eloInfo;
 
    cCurl::create();
    curlApiV4.init();

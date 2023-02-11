@@ -321,8 +321,6 @@ int cEpgd::atConfigItem(const char* Name, const char* Value)
    else if (!strcasecmp(Name, "HttpUser"))           sstrcpy(EpgdConfig.httpUser, Value, sizeof(EpgdConfig.httpUser));
    else if (!strcasecmp(Name, "HttpPass"))           sstrcpy(EpgdConfig.httpPass, Value, sizeof(EpgdConfig.httpPass));
 
-   // else if (!strcasecmp(Name, "LogLevel"))           EpgdConfig.loglevel = EpgdConfig.argLoglevel == na ? atoi(Value) : EpgdConfig.argLoglevel;
-
    else
       return fail;
 
