@@ -321,6 +321,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
 
       if (*type != ttView)
       {
+         // tell("DEBUG: setting starttime of timer to %ld", getLongFromJson(jInData, "starttime", na));
          getFieldFromJson(jInData, &timerRow, "STARTTIME");
          getFieldFromJson(jInData, &timerRow, "ENDTIME");
       }

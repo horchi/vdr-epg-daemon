@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.16"
-#define VERSION_DATE "11.02.2023"
+#define _VERSION     "1.3.17"
+#define VERSION_DATE "12.02.2023"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-02-12: version 1.3.17 (horchi)
+   - Bugfix: Fixed timer creation from WEBIF
 
 2023-02-11: version 1.3.16 (horchi)
    - Change: Ingnoring unknown config parameters

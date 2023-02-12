@@ -145,9 +145,9 @@ int getFieldFromJson(json_t* obj, cDbRow* row, const char* fname, const char* ex
          // if (s && strcmp(s, "_not_set_") == 0)
          //    break;
 
-         if (!json_is_null(obj))
+         if (json_is_null(obj))
             value->setNull();
-         if (!json_is_integer(obj))
+         else if (json_is_integer(obj))
             value->setValue(getIntFromJson(obj, jname, 0));
 
          break;
