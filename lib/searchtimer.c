@@ -462,6 +462,7 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
       case smRegexp:     searchOp = casesensitiv ? "regexp BINARY" : "regexp"; break;
       case smLike:       searchOp = casesensitiv ? "like BINARY"   : "like";   break;
       case smContained:  searchOp = casesensitiv ? "like BINARY"   : "like";   break;
+      case smPcreRegexp: searchOp = casesensitiv ? "rlike BINARY"  : "rlike";  break;
    }
 
    select->build("select ");

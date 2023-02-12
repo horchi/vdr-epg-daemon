@@ -226,7 +226,7 @@ epgd.tr = {
             searchName: 'Name',
             searchExpression: "Suchausdruck",
             caseSensitive: "Klein-/Großschreibung",
-            searchModes: ["exakte Übereinstimmung", "regulärer Ausdruck", "Muster", "enthalten in"],
+            searchModes: ["exakte Übereinstimmung", "regulärer Ausdruck", "Muster", "enthalten in", "PCRE Ausdruck"],
             searchFields: ["Titel", "Kurztext", "Beschreibung"],
             repeatFields: ["Titel", "Kurztext"],
             empty: "Leider nichts gefunden.",
