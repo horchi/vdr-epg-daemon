@@ -58,7 +58,8 @@ enum SearchMode
    smExact = 1,
    smRegexp,
    smLike,
-   smContained
+   smContained,
+   smPcreRegexp
 };
 
 enum TimerNamingMode

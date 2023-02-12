@@ -2138,7 +2138,7 @@ void showUsage()
 int main(int argc, char** argv)
 {
    cEpgHttpd* job;
-   int nofork = no;
+   bool nofork {false};
    int logstdout = na;
    Eloquence _eloquence {eloNone};
 
@@ -2161,7 +2161,7 @@ int main(int argc, char** argv)
       {
          case 'v': printf("epghttpd version %s from %s\n", VERSION, VERSION_DATE); return 0;
          case 't': logstdout = yes;                           break;
-         case 'n': nofork = yes;                              break;
+         case 'n': nofork = true;                             break;
          case 'l': if (argv[i+1]) _eloquence = (Eloquence)atoi(argv[i+1]); break;
          case 'c': if (argv[i+1]) confDir = argv[++i];        break;
          case 'i':

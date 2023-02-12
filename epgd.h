@@ -103,7 +103,7 @@ class PluginLoader
       virtual ~PluginLoader();
 
       int load();
-      Plugin* getPlugin()    { return plugin; }
+      Plugin* getPlugin() { return plugin; }
 
    private:
 
@@ -201,8 +201,6 @@ class cEpgd : public cFrame, public cSystemNotification
 
    private:
 
-      // functions
-
       int initDb();
       int exitDb();
       int checkDbDdl();
@@ -231,21 +229,18 @@ class cEpgd : public cFrame, public cSystemNotification
       int update();
       int cleanupEvents();
       int cleanupPictures();
+      int updateSearchTimers(int force = yes, const char* reason = "");
       int getPictures();
-      int storeImageRefs(tEventId evtId, const char* source, const char* images,
-                         const char* ext, const char* fileref);
+      int storeImageRefs(tEventId evtId, const char* source, const char* images, const char* ext, const char* fileref);
       int scrapNewEvents();
       int cleanupSeriesAndMovies();
       void scrapNewRecordings(int count);
-
-      int updateSearchTimers(int force = yes, const char* reason = "");
 
       // plugin interface
 
       int cleanupBefore();
       int cleanupAfter();
-      int getPicture(const char* source, const char* imagename,
-                     const char* fileRef, MemoryStruct* data);
+      int getPicture(const char* source, const char* imagename, const char* fileRef, MemoryStruct* data);
       int processDay(int day, int fullupdate, Statistic* stat);
 
       // series

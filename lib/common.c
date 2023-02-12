@@ -60,6 +60,7 @@ const char* Elo::eloquences[] =
    "TVDB",
    "Curl",
    "CurlDebug",
+   "EPG Plugins Detail",
 
    nullptr
 };

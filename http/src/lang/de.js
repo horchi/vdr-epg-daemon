@@ -127,7 +127,7 @@ epgd.tr = {
                 'W': 'Warnung',
                 'E': 'Fehler',
                 'F': 'Fataler Fehler'
-            }, 
+            },
             chFormat: "bevorzugtes Sendeformat"
             //channelModes: ["SD", "HD", "3D", "HD,SD", "SD,HD", "3D,HD,SD", "SD,HD,3D"]
         },

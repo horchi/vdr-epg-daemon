@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.17"
+#define _VERSION     "1.3.18"
 #define VERSION_DATE "12.02.2023"
 #define DB_API       8
 
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2023-02-12: version 1.3.18 (horchi)
+   - Added: Added log eloquence for EPG plugins
+   - Bugfix: Fixed gub in json handling fpr WEBIF
 
 2023-02-12: version 1.3.17 (horchi)
    - Bugfix: Fixed timer creation from WEBIF
