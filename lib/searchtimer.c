@@ -440,7 +440,7 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
    const char* searchOp = "=";
    const char* expression = searchTimer->getStrValue("EXPRESSION");
    const char* expression1 = searchTimer->getStrValue("EXPRESSION1");
-   const char* episodename = searchTimer->getStrValue("EPISODENAME");
+   const char* episodepartname = searchTimer->getStrValue("EPISODENAME");
    const char* season = searchTimer->getStrValue("SEASON");
    const char* seasonpart = searchTimer->getStrValue("SEASONPART");
    const char* category = searchTimer->getStrValue("CATEGORY");
@@ -570,10 +570,7 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
       if (noepgmatch)
          select->build("%s is null or ", db->getField("GENRE")->getDbName());
 
-      select->build(" %s in (%s) ",
-                    db->getField("GENRE")->getDbName(),
-                    genre);
-
+      select->build(" %s in (%s) ", db->getField("GENRE")->getDbName(), genre);
       select->build(")");
    }
 
@@ -586,26 +583,22 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
       if (noepgmatch)
          select->build("%s is null or ", db->getField("TIPP")->getDbName());
 
-      select->build(" %s in (%s) ",
-                    db->getField("TIPP")->getDbName(),
-                    tipp);
-
+      select->build(" %s in (%s) ", db->getField("TIPP")->getDbName(), tipp);
       select->build(")");
    }
 
-   // Serien Titel (EPISODENAME)
+   // Serien Titel (EPISODEPARTNAME)
 
-   if (!isEmpty(episodename))
+   if (!isEmpty(episodepartname))
    {
       select->build(" and (");
 
       select->build(" %s = BINARY '%s' or (%s is null and %s = BINARY '%s')",
-                    db->getField("EPISODENAME")->getDbName(),
-                    connection->escapeSqlString(episodename).c_str(),
-                    db->getField("EPISODENAME")->getDbName(),
+                    db->getField("EPISODEPARTNAME")->getDbName(),
+                    connection->escapeSqlString(episodepartname).c_str(),
+                    db->getField("EPISODEPARTNAME")->getDbName(),
                     db->getField("TITLE")->getDbName(),
-                    connection->escapeSqlString(episodename).c_str());
-
+                    connection->escapeSqlString(episodepartname).c_str());
       select->build(")");
    }
 

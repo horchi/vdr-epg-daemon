@@ -1592,7 +1592,7 @@ int cEpgHttpd::performPostData(const char* url, MemoryStruct* data)
    json_error_t error;
    json_t* jInData = json_loads(data->memory, 0, &error);
 
-   tell(eloDetail, "<- post (%s) '%s'", url, data->memory);
+   tell(eloWebSock, "<- post (%s) '%s'", url, data->memory);
 
    if (!jInData)
    {

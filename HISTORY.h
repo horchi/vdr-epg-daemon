@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.19"
+#define _VERSION     "1.3.20"
 #define VERSION_DATE "12.02.2023"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-02-12: version 1.3.20 (horchi)
+   - Change: Improved (or fixed?) episoden search for auto timer and WEBIF
 
 2023-02-12: version 1.3.19 (horchi)
    - Added: Perl Compatible Regular Expressions (PCRE) for auto timer

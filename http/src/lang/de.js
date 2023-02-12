@@ -87,6 +87,7 @@ epgd.tr = {
                 "%extracol3%": ": ... z.B. bei Tatort der Sender (constabel, optional)"
             },
             episode: "Serientitel",
+            episodepartname: "Folge",
             noEpgMatch: 'Ignoriere fehlende EPG Info',
             noRepeat: "Wiederholungen vermeiden",
             searchTimerReload: "Suchtimer updaten",

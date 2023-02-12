@@ -276,7 +276,7 @@ epgd.timerDialog.prototype.getData = function (dontValid) {
     d = $(form.tVdr).val();
     if (!d && data.type == 'V')
         d= epgd.vdrs.current.uuid || '';
-    if (d) 
+    if (d)
         data.vdruuid = d;
     //if (!dontValid || form.tNameMode.defaultIndex != form.tNameMode.selectedIndex)
     data.namingmode = form.tNameMode.selectedIndex;
@@ -366,7 +366,7 @@ epgd.searchTimerDialog.prototype.create = function () {
         + trS.caseSensitive + '</label></div>'
         + '<div class="ui-corner-all week">' + [" "].concat(trS.searchFields).join('<input type="checkbox" name="tSFields" />') + '</div>'
         + '<div><label for="tAdv"><input type="checkbox" id="tAdv" />&nbsp;' + epgd.tr.advanced + epgd.pages.help.getIcon('sTAdv') + '</label><div class="ui-corner-all week">'
-            + '<span>' + tr.episode + '</span><input type="text" id="tSFEpisode" style="width:200px" /> '
+            + '<span>' + tr.episodepartname + '</span><input type="text" id="tSFEpisode" style="width:200px" /> '
             + '<span>' + epgd.tr.pages.eventDetail.season + '</span><input type="text" id="tSFSeason" style="width:40px" /> '
             + '<span>' + epgd.tr.pages.eventDetail.part + '</span><input type="text" id="tSFSPart" style="width:40px" /> '
             + '<br /><span>' + epgd.tr.pages.eventDetail.category + '</span><input type="text" id="tSFCat"  style="width:300px" /> '
@@ -454,7 +454,7 @@ epgd.searchTimerDialog.prototype.render = function (t) {
         form.tChExclude0.checked = 1;
     tChRangeMin.value= t.chnummin || '';
     tChRangeMax.value= t.chnummax || '';
-             
+
     form.tChFormat.value = t.chformat || (t.id ? '' : epgd.profile.chFormat);
     form.tNameMode.defaultIndex = parseInt(t.category == 'Serie' ? epgd.profile.namingModeSearchSerie : epgd.profile.namingModeSearchMovie, 10);
     form.tNameMode.selectedIndex =  typeof t.namingmode == "undefined" ? form.tNameMode.defaultIndex : t.namingmode;
