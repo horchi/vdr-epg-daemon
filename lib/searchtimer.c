@@ -478,7 +478,7 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
    select->build(" and e.updflg in (%s)", cEventState::getVisible());
    select->build(" and e.cnt_starttime >= unix_timestamp()-120");  // not more than 2 minutes running
 
-   // search fields 1
+   // expression / searchfields
 
    if (!isEmpty(expression) && strcmp(expression, "%") != 0 && strcmp(expression, "%%") != 0 && searchfields)
    {
@@ -503,7 +503,7 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
       select->build(")");
    }
 
-   // search fields 2
+   // expression1/searchfields1 (only used for search of event 'Wiederholungen' by COMPLONGDESCRIPTION)
 
    if (!isEmpty(expression1) && strcmp(expression1, "%") != 0 && strcmp(expression1, "%%") != 0 && searchfields1)
    {
