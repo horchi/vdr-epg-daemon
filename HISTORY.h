@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.20"
-#define VERSION_DATE "12.02.2023"
+#define _VERSION     "1.3.21"
+#define VERSION_DATE "13.02.2023"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -17,15 +17,19 @@
 /*
  * ------------------------------------
 
+2023-02-13: version 1.3.21 (horchi)
+   - Bugfix: Fixed search fallback to shorttext on empty episode-part-name
+   - Bugfix: Fixed search timer dialog scrolling on large result set
+
 2023-02-12: version 1.3.20 (horchi)
    - Change: Improved (or fixed?) episoden search for auto timer and WEBIF
 
 2023-02-12: version 1.3.19 (horchi)
-   - Added: Perl Compatible Regular Expressions (PCRE) for auto timer
+   - Added: Perl Compatible regular expressions (PCRE) for auto timer
 
 2023-02-12: version 1.3.18 (horchi)
    - Added: Added log eloquence for EPG plugins
-   - Bugfix: Fixed gub in json handling fpr WEBIF
+   - Bugfix: Fixed gub in json handling for WEBIF
 
 2023-02-12: version 1.3.17 (horchi)
    - Bugfix: Fixed timer creation from WEBIF

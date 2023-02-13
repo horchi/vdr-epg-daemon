@@ -7,37 +7,40 @@ epgd.timerDialogBase = function (options) {
 }
 epgd.timerDialogBase.prototype = {
     options: {
-        id: "baseDialog",
-        modal: true,
-        draggable: true,
-        resizable: true,
-        autoOpen: false,
-        width: 'auto',
-        maxHeight: $(window).height(),
-        close: function () {
-            this.list.dialog.form.reset();
-            $(this.list.dialog.form).next().remove();
-            //allFields.removeClass("ui-state-error");
-        },
-        buttons: [{
-            text: epgd.tr.del,
-            icons: { primary: "ui-icon-trash" },
-            id: 'tBDel',
-            click: function () {
-                $(this).dialog("close");
-                this.list.del(this.list.dialog.form.tID.value);
-            }
-        }, {
-            text: epgd.tr.cancel,
-            icons: { primary: "ui-icon-close" },
-            click: function () {
-                $(this).dialog("close");
-            }
-        }, {
-            text: epgd.tr.save,
-            icons: { primary: "ui-icon-disk" },
-            click: function () { this.list.dialog.save() }
-        }]
+       id: "baseDialog",
+       modal: true,
+       draggable: true,
+       resizable: true,
+       autoOpen: false,
+       position: { my: "center", at: "top" },
+       width: 'auto',
+       maxHeight: $(window).height(),
+       close: function () {
+          this.list.dialog.form.reset();
+          $(this.list.dialog.form).next().remove();
+          //allFields.removeClass("ui-state-error");
+       },
+       open: function() {
+          //console.log("set top to ", window.pageYOffset+20);
+          //$(this).css('top', window.pageYOffset+20);
+       },
+       buttons: [{
+          text: epgd.tr.del,
+          icons: { primary: "ui-icon-trash" },
+          id: 'tBDel',
+          click: function () {
+             $(this).dialog("close");
+             this.list.del(this.list.dialog.form.tID.value);
+          }
+       }, {
+          text: epgd.tr.cancel,
+          icons: { primary: "ui-icon-close" },
+            click: function () { $(this).dialog("close"); }
+       }, {
+          text: epgd.tr.save,
+          icons: { primary: "ui-icon-disk" },
+          click: function () { this.list.dialog.save() }
+       }]
     },
     save: function (data, url, failFunc, succFunc) {
         this.list.save(data || this.getData(), url, failFunc, succFunc) && !this.options.embed && this.$win.dialog("close");
@@ -114,7 +117,7 @@ epgd.timerDialogBase.prototype = {
         epgd.utils.addPlaceholders(this.form.tTemplate, '%', tr.templateFields);
         this.loadFolder();
     },
-    render : function (t) {
+    render: function (t) {
         t = t || {};
         if (!this.$win)
             this.create();
@@ -330,7 +333,7 @@ epgd.searchTimerDialog.prototype.search = function ($con, searchData) {
     if (!this.searchResultList)
         this.searchResultList = new epgd.searchResultList(null);//,this);
     if (!this.searchResultList.$con || ($con && $con[0] != this.searchResultList.$con[0]))
-        this.searchResultList.render($con || ($('<div style="border-top:1px solid #ccc"></div>').insertAfter(this.form)));
+        this.searchResultList.render($con || ($('<div style="border-top:1px solid #ccc;overflow-x:hidden;overflow-y:scroll;max-height:25vh;"></div>').insertAfter(this.form)));
     else
         this.searchResultList.$con.find('tbody').empty();
     if (!this.searchResultList.$con.parent().length) {

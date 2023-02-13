@@ -597,7 +597,7 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
                     db->getField("EPISODEPARTNAME")->getDbName(),
                     connection->escapeSqlString(episodepartname).c_str(),
                     db->getField("EPISODEPARTNAME")->getDbName(),
-                    db->getField("TITLE")->getDbName(),
+                    db->getField("SHORTTEXT")->getDbName(),
                     connection->escapeSqlString(episodepartname).c_str());
       select->build(")");
    }

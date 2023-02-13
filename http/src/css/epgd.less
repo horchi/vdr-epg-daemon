@@ -1,6 +1,6 @@
 /* Hier sind Variablen aus Jquery-ui. Sie werden folgendermass erstellt:
-    aus 3rdParty\jquery-ui-x:x.custom\development-bundle\themes\humanity\jquery-ui.css den Link kopieren und hier einf�gen.
-    Dann diesen Link (nur Auswahl) per regul�ren Ausdruck
+    aus 3rdParty\jquery-ui-x:x.custom\development-bundle\themes\humanity\jquery-ui.css den Link kopieren und hier einfügen.
+    Dann diesen Link (nur Auswahl) per regulären Ausdruck
        suchen "$([^=]+)=([^&]+)" und ersetzen "@$1: $2; "
        suchen " ([a-f0-9]{6})" und ersetzen " #$1"
 */
@@ -125,7 +125,10 @@ h5 {
     max-height: 120px;
     overflow: auto;
 }
-.ui-dialog{position:fixed}
+.ui-dialog {
+    position:fixed;
+    max-height: 90%;
+}
 
 
 .iAsButton {
