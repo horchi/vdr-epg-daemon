@@ -51,8 +51,8 @@ const char* Elo::eloquences[] =
    "Detail",
    "Debug",
    "DebugDetail",
-   "WebSock",
-   "DebugWebSock",
+   "Web",
+   "DebugWeb",
    "Mqtt",
    "Db",
    "DebugDb",
@@ -61,6 +61,7 @@ const char* Elo::eloquences[] =
    "Curl",
    "CurlDebug",
    "EPG Plugins Detail",
+   "Search",
 
    nullptr
 };
@@ -129,11 +130,11 @@ void vtell(Eloquence elo, const char* format, va_list more)
    logMutex.Lock();
 
 #ifndef VDR_PLUGIN
-   static int init = no;
+   static bool init {false};
 
    if (!init)
    {
-      init = yes;
+      init = true;
       openlog(cEpgConfig::logName, LOG_CONS, cEpgConfig::logFacility);
    }
 #endif

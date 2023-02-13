@@ -106,6 +106,7 @@ enum Eloquence
    eloCurl           = 0x01000,
    eloDebugCurl      = 0x02000,
    eloEpgPlgDetail   = 0x04000,
+   eloSearch         = 0x08000,
 
    eloNone = na
 };

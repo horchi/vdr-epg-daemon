@@ -1,66 +1,3 @@
-/* Hier sind Variablen aus Jquery-ui. Sie werden folgendermass erstellt:
-    aus 3rdParty\jquery-ui-x:x.custom\development-bundle\themes\humanity\jquery-ui.css den Link kopieren und hier einfügen.
-    Dann diesen Link (nur Auswahl) per regulären Ausdruck
-       suchen "$([^=]+)=([^&]+)" und ersetzen "@$1: $2; "
-       suchen " ([a-f0-9]{6})" und ersetzen " #$1"
-*/
-@ui-fwDefault: normal;
-@ui-fsDefault: 1.1em;
-@ui-cornerRadius: 6px;
-@ui-bgColorHeader: #cb842e;
-@ui-bgTextureHeader: glass;
-@ui-bgImgOpacityHeader: 25;
-@ui-borderColorHeader: #d49768;
-@ui-fcHeader: #ffffff;
-@ui-iconColorHeader: #ffffff;
-@ui-bgColorContent: #f4f0ec;
-@ui-bgTextureContent: inset_soft;
-@ui-bgImgOpacityContent: 100;
-@ui-borderColorContent: #e0cfc2;
-@ui-fcContent: #1e1b1d;
-@ui-iconColorContent: #c47a23;
-@ui-bgColorDefault: #ede4d4;
-@ui-bgTextureDefault: glass;
-@ui-bgImgOpacityDefault: 70;
-@ui-borderColorDefault: #cdc3b7;
-@ui-fcDefault: #3f3731;
-@ui-iconColorDefault: #f08000;
-@ui-bgColorHover: #f5f0e5;
-@ui-bgTextureHover: glass;
-@ui-bgImgOpacityHover: 100;
-@ui-borderColorHover: #f5ad66;
-@ui-fcHover: #a46313;
-@ui-iconColorHover: #f08000;
-@ui-bgColorActive: #f4f0ec;
-@ui-bgTextureActive: highlight_hard;
-@ui-bgImgOpacityActive: 100;
-@ui-borderColorActive: #e0cfc2;
-@ui-fcActive: #b85700;
-@ui-iconColorActive: #f35f07;
-@ui-bgColorHighlight: #f5f5b5;
-@ui-bgTextureHighlight: highlight_hard;
-@ui-bgImgOpacityHighlight: 75;
-@ui-borderColorHighlight: #d9bb73;
-@ui-fcHighlight: #060200;
-@ui-iconColorHighlight: #cb672b;
-@ui-bgColorError: #fee4bd;
-@ui-bgTextureError: highlight_hard;
-@ui-bgImgOpacityError: 65;
-@ui-borderColorError: #f8893f;
-@ui-fcError: #592003;
-@ui-iconColorError: #ff7519;
-@ui-bgColorOverlay: #aaaaaa;
-@ui-bgTextureOverlay: flat;
-@ui-bgImgOpacityOverlay: 75;
-@ui-opacityOverlay: 30;
-@ui-bgColorShadow: #aaaaaa;
-@ui-bgTextureShadow: flat;
-@ui-bgImgOpacityShadow: 75;
-@ui-opacityShadow: 30;
-@ui-thicknessShadow: 8px;
-@ui-offsetTopShadow: -8px;
-@ui-offsetLeftShadow: -8px;
-@ui-cornerRadiusShadow: 8px;
 
 h5 {
     margin-bottom: 5px;
@@ -1240,6 +1177,11 @@ table.ui-datepicker-calendar {
     form.typeR {
         .onlyTypeS {display:none}
     }
+}
+
+.searchForm {
+    overflow: auto;
+    height: 54vh;
 }
 
 .selMarkBlock {

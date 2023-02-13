@@ -232,7 +232,7 @@ int cEpgHttpd::doUpdateRecordingTable(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doWakeupVdr(MHD_Connection* tcp, json_t* obj)
 {
-   int status = MHD_HTTP_OK;
+   int status {MHD_HTTP_OK};
    const char* uuid = getStrParameter(tcp, "uuid");
 
    if (isEmpty(uuid))
@@ -365,13 +365,13 @@ int cEpgHttpd::doDeleteRecording(MHD_Connection* tcp, json_t* obj)
 int cEpgHttpd::doReplayRecording(MHD_Connection* tcp, json_t* obj)
 {
    int status;
-   int alive = no;
-   const char* ip = 0;
-   int port = 0;
-   char* opt = 0;
-   const char* name = 0;
-   char result[512+TB] = "";
-   const char* videoBasePath = "";
+   int alive {no};
+   const char* ip {};
+   int port {0};
+   char* opt {};
+   const char* name {};
+   char result[512+TB] {};
+   const char* videoBasePath {};
 
    const char* md5path = getStrParameter(tcp, "md5path");
    const char* owner = getStrParameter(tcp, "owner", "");
@@ -426,10 +426,9 @@ int cEpgHttpd::doReplayRecording(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doHitKey(MHD_Connection* tcp, json_t* obj)
 {
-   int alive;
-   const char* ip = 0;
-   int port = 0;
-   char result[512+TB] = "";
+   const char* ip {};
+   int port {0};
+   char result[512+TB] {};
 
    const char* vUuid = getStrParameter(tcp, "vdruuid");
    const char* key = getStrParameter(tcp, "key");
@@ -437,7 +436,7 @@ int cEpgHttpd::doHitKey(MHD_Connection* tcp, json_t* obj)
    if (isEmpty(vUuid) || isEmpty(key))
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Missing at least the vdr reference or the key code");
 
-   alive = ipOfVdr(vUuid, ip, port);
+   bool alive = ipOfVdr(vUuid, ip, port);
 
    if (!alive || isEmpty(ip) || !port)
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Can't send key code, VDR is not alive");
@@ -574,9 +573,9 @@ int cEpgHttpd::doChannelLogo(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
 {
    // 'GET' parameters
 
-   long int logoUpper;
-   long int logoById;
-   char logoSuffix[sizeMaxParameterValue+TB];
+   long int logoUpper {0};
+   long int logoById {0};
+   char logoSuffix[sizeMaxParameterValue+TB] {};
 
    const char* id = getStrParameter(tcp, "id");
    int maxW = getIntParameter(tcp, "maxW", 100);
@@ -605,8 +604,18 @@ int cEpgHttpd::doChannelLogo(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
          toCase(logoUpper ? cUpper : cLower, cnlName);
          toCase(logoUpper ? cUpper : cLower, cnlId);
 
-         asprintf(&path, "%s/channellogos/%s.%s", EpgdConfig.httpPath,
-                  logoById ? cnlId : cnlName, logoSuffix);
+         asprintf(&path, "%s/channellogos/%s.%s", EpgdConfig.httpPath, logoById ? cnlId : cnlName, logoSuffix);
+
+         // need fallback to png ?
+
+         if (!fileExists(path) && strcmp(logoSuffix, "svg") == 0)
+         {
+            free(path);
+            asprintf(&path, "%s/channellogos/%s.%s", EpgdConfig.httpPath, logoById ? cnlId : cnlName, "png");
+
+            if (fileExists(path))
+               tell(eloDebug, "SVG LOGO not found fallback to PNG '%s'", path);
+         }
 
          data->modTime = fileModTime(path);
 
@@ -854,9 +863,9 @@ int cEpgHttpd::doSeriesMedia(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
 int cEpgHttpd::doChannels(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oChannel = json_array();
-   json_t* oChanData = 0;
-   json_t* oSources = 0;
-   std::string last = "";
+   json_t* oChanData {};
+   json_t* oSources {};
+   std::string last;
 
    mapDb->clear();
 
@@ -1019,9 +1028,9 @@ int cEpgHttpd::doProxy(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
    // 'GET' parameters
 
    const char* typeId = getStrParameter(tcp, "id");
-   char* url = 0;
-   int size = 0;
-   int statusCode = MHD_HTTP_OK;
+   char* url {};
+   int size {0};
+   int statusCode {MHD_HTTP_OK};
 
    data->clear();
 
@@ -1037,15 +1046,12 @@ int cEpgHttpd::doProxy(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
 
    else if (strcasecmp(typeId, "channelpedia") == 0)
    {
-      asprintf(&url, "http://channelpedia.yavdr.com/gen/%s",
-               getStrParameter(tcp, "path", ""));
+      asprintf(&url, "http://channelpedia.yavdr.com/gen/%s", getStrParameter(tcp, "path", ""));
    }
 
    else if (strcasecmp(typeId, "constabel") == 0)
    {
-      asprintf(&url, "%s/eplist.cgi?action=show&file=%s",
-               EpgdConfig.seriesUrl,
-               getStrParameter(tcp, "title", ""));
+      asprintf(&url, "%s/eplist.cgi?action=show&file=%s", EpgdConfig.seriesUrl, getStrParameter(tcp, "title", ""));
    }
 
    if (!url)
@@ -1072,7 +1078,7 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
    // or .. time and channel
 
    time_t time = getIntParameter(tcp, "time");
-   const char* channelid= getStrParameter(tcp, "channelid");
+   const char* channelid = getStrParameter(tcp, "channelid");
 
    // check
 
@@ -1238,7 +1244,7 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
 int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oEvent = json_array();
-   cDbStatement* select;
+   cDbStatement* select {};
 
    // 'GET' parameters
 
@@ -1255,8 +1261,6 @@ int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
    }
    else
    {
-      // prepare ...
-
       useeventsDb->clear();
 
       if (!endTimePar)                            // events running at specific time
@@ -1289,8 +1293,6 @@ int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
       }
 
       useeventsDb->setValue("ChannelId", channelidPar);
-
-      // query ...
 
       for (int found = select->find(); found; found = select->fetch())
       {
@@ -1339,8 +1341,6 @@ int cEpgHttpd::doTimerJobs(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oTimer = json_array();
 
-   // prepare ...
-
    timerDb->clear();
 
    // query pending timer actions
@@ -1371,8 +1371,6 @@ int cEpgHttpd::doTimerJobs(MHD_Connection* tcp, json_t* obj)
 int cEpgHttpd::doDoneTimers(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oTimer = json_array();
-
-   // prepare ...
 
    timersDoneDb->clear();
 
@@ -1414,8 +1412,6 @@ int cEpgHttpd::doDoneTimer(MHD_Connection* tcp, json_t* obj)
    timersDoneDb->clear();
    timersDoneDb->setValue("ID", id);
 
-   // query
-
    if (timersDoneDb->find())
    {
       json_t* oTimer = json_object();
@@ -1449,11 +1445,7 @@ int cEpgHttpd::doParameters(MHD_Connection* tcp, json_t* obj)
    json_t* oParameters = json_array();
    int needLg = needLogin();
 
-   // prepare ...
-
    parametersDb->clear();
-
-   // work ...
 
    for (int i = 0; cParameters::parameters[i].name != 0; i++)
    {
@@ -1523,11 +1515,7 @@ int cEpgHttpd::doRecDirs(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oDirectories = json_array();
 
-   // prepare ...
-
    recordingDirDb->clear();
-
-   // query ...
 
    for (int found = selectRecordingDirs->find(); found; found = selectRecordingDirs->fetch())
    {
@@ -1563,8 +1551,6 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
    const char* nstate = getStrParameter(tcp, "notstate", "");
    const char* naction = getStrParameter(tcp, "notaction", "");
 
-   // prepare ...
-
    timerDb->clear();
 
    // timerIncState.setValue(incState);
@@ -1573,8 +1559,6 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
    // timerExcAction.setValue(excAction);
 
    tell(eloDetail, "Searching timer with state/action '%s/%s'", state, action);
-
-   // query ...
 
    for (int found = selectAllTimer->find(); found; found = selectAllTimer->fetch())
    {
@@ -1645,12 +1629,8 @@ int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oRecording = json_array();
 
-   // prepare ...
-
    vdrDb->clear();
    recordingListDb->clear();
-
-   // query ...
 
    for (int found = selectAllRecordings->find(); found; found = selectAllRecordings->fetch())
    {
@@ -1711,8 +1691,6 @@ int cEpgHttpd::doRecording(MHD_Connection* tcp, json_t* obj)
    if (!starttime || (!md5path && !path))
       return buildResponse(obj, MHD_HTTP_BAD_REQUEST, "Missing event start time or md5path/path in request");
 
-   // prepare
-
    recordingListDb->clear();
    recordingListDb->setValue("STARTTIME", starttime);
    recordingListDb->setValue("OWNER", owner);
@@ -1767,15 +1745,11 @@ int cEpgHttpd::doRecording(MHD_Connection* tcp, json_t* obj)
 int cEpgHttpd::doSearchtimers(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oTimer = json_array();
-   int count = 0;
+   int count {0};
 
    const char* type = getStrParameter(tcp, "type", 0);
 
-   // prepare ...
-
    searchtimerDb->clear();
-
-   // query ...
 
    for (int found = selectAllSearchTimer->find(); found; found = selectAllSearchTimer->fetch())
    {
@@ -1864,8 +1838,8 @@ int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
 
 int cEpgHttpd::doSendMail(json_t* jInData, json_t* response)
 {
-   char* command = 0;
-   char mailScript[255+TB];
+   char* command {};
+   char mailScript[255+TB] {};
    int res;
 
    const char* receiver = getStringFromJson(jInData, "receiver", "");
@@ -1914,7 +1888,7 @@ int cEpgHttpd::doSendMail(json_t* jInData, json_t* response)
 int cEpgHttpd::doLogin(json_t* jInData, json_t* response)
 {
    json_t* oLogin = json_object();
-   int accepted = no;
+   int accepted {no};
    const char* key = getStringFromJson(jInData, "key", "");
 
    if (isEmpty(key))
@@ -1983,11 +1957,7 @@ int cEpgHttpd::doMessages(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oMessages = json_array();
 
-   // prepare ...
-
    messageDb->clear();
-
-   // query messages
 
    for (int found = selectPendingMessages->find(); found; found = selectPendingMessages->fetch())
    {

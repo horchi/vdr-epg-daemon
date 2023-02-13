@@ -77,7 +77,7 @@ epgd.timerDialogBase.prototype = {
         for (i = 1; i < epgd.tr.dateTimePicker.dayNamesShort.length; i++)
             week += '<input name="tWeek" type="checkbox" />' + epgd.tr.dateTimePicker.dayNamesShort[i];
         week += '<input name="tWeek" type="checkbox" />' + epgd.tr.dateTimePicker.dayNamesShort[0];
-        this.$win = $('<div id="' + o.id + '" class="searchDialog"><form>'
+        this.$win = $('<div id="' + o.id + '" class="searchDialog"><form class="searchForm">'
          + '<div class="colBlock">'
             + '<div><label>&nbsp;</label><select id="tType"><option value="R">' + epgd.tr.pages.eventDetail.record + '</option><option value="V">' + epgd.tr.pages.eventDetail.ch_switch + '</option></select></div>'
             + '<div><label for="tSName">' + epgd.tr.pages.search.searchName + '</label><input type="text" id="tSName" /></div>'

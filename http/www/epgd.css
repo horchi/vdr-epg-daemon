@@ -117,8 +117,8 @@
 .i-error:before { content: '\e82d'; } /* '' */
 .hidden{display:none !important;visibility:hidden}.visuallyhidden{border:0;clip:rect(0 0 0 0);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px}.visuallyhidden.focusable:active,.visuallyhidden.focusable:focus{clip:auto;height:auto;margin:0;overflow:visible;position:static;width:auto}.invisible{visibility:hidden}.clearfix:before,.clearfix:after{content:" ";display:table}.clearfix:after{clear:both}.clearfix{*zoom:1}@media print{*,*:before,*:after{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a,a:visited{text-decoration:underline}a[href]:after{content:" (" attr(href) ")"}abbr[title]:after{content:" (" attr(title) ")"}a[href^="#"]:after,a[href^="javascript:"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}p,h2,h3{orphans:3;widows:3}h2,h3{page-break-after:avoid}}
 /* Hier sind Variablen aus Jquery-ui. Sie werden folgendermass erstellt:
-    aus 3rdParty\jquery-ui-x:x.custom\development-bundle\themes\humanity\jquery-ui.css den Link kopieren und hier einf�gen.
-    Dann diesen Link (nur Auswahl) per regul�ren Ausdruck
+    aus 3rdParty\jquery-ui-x:x.custom\development-bundle\themes\humanity\jquery-ui.css den Link kopieren und hier einfügen.
+    Dann diesen Link (nur Auswahl) per regulären Ausdruck
        suchen "$([^=]+)=([^&]+)" und ersetzen "@$1: $2; "
        suchen " ([a-f0-9]{6})" und ersetzen " #$1"
 */
@@ -1137,6 +1137,10 @@ table.ui-datepicker-calendar {
 }
 .searchDialog form.typeR .onlyTypeS {
   display: none;
+}
+.searchForm {
+  overflow: auto;
+  height: 54vh;
 }
 .selMarkBlock {
   display: inline-block;
