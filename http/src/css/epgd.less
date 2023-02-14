@@ -5,7 +5,7 @@ h5 {
 
 .ui-autocomplete-multiselect {
     display: inline-block;
-    background: #fff !important;
+    background: @ui-bgColorContent !important;
     border: 1px solid @ui-borderColorContent;
     border-radius: 6px;
     padding: 1px 3px 0 3px;
@@ -28,6 +28,7 @@ h5 {
     margin-right: 2px;
     margin-bottom: 1px;
     background-color: @ui-bgColorContent;
+    color: @ui-fcActive;
     font-size: 0.8em;
 }
 
@@ -70,7 +71,7 @@ h5 {
 
 .iAsButton {
     border: 1px solid @ui-borderColorDefault;
-    background-color: @ui-bgColorDefault;
+    background-color: @ui-bgColorHover;
     color: @ui-iconColorContent;
     border-radius: @ui-cornerRadius;
     text-align: center;
@@ -129,6 +130,7 @@ h5 {
 
 html{
     width:100%;
+    background-color: @ui-bgColorContent;
 }
 body {
     margin: 0;
@@ -138,12 +140,17 @@ body {
     overflow:auto;
 }
 
-input, select {
+input, select, textarea {
     padding: 2px;
     border: 1px solid @ui-borderColorContent;
     border-radius: 6px;
     vertical-align: middle;
     font-weight:normal;
+    background-color: inherit;
+}
+
+button {
+    color: @ui-fcDefault;
 }
 
 select {
@@ -172,8 +179,6 @@ select {
     z-index: 99;
     top: 0;
     left: 0;
-    //border: 5px solid white;
-    //border-width: 0px 0px 5px 0px;
     background-color: #fff;
 
     span.maxi {
@@ -524,13 +529,10 @@ table.ui-datepicker-calendar {
     }
     .left {
         left:0;
-        //border-right: 5px solid white;
     }
     .right {
         right: 0;
-        //border-left: 5px solid white;
     }
-
 }
 
 
@@ -1256,12 +1258,16 @@ table.ui-datepicker-calendar {
 
             > div {
                 display: block;
+
+                em, u {
+                    color: @ui-fcContent;
+                }
             }
         }
 
    }
-
 }
+
 .rec {
     border: 1px solid @ui-borderColorDefault;
     border-radius: 6px;
@@ -1280,13 +1286,21 @@ table.ui-datepicker-calendar {
     }
 
     b {
-        display: block;
-        background-color: white;
+        display: flex;
+        width: -webkit-fill-available;
         padding: 2px 5px;
+
+        b {
+            display: block;
+        }
 
         i {
             display: block;
             font-weight: normal;
+        }
+
+        img {
+            /* height: 70px; */
         }
     }
 
@@ -1628,6 +1642,9 @@ table.ui-datepicker-calendar {
     }
 }
 
+.content {
+    color: @ui-fcContent;
+}
 
 /*
 

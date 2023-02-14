@@ -663,28 +663,52 @@ int cEpgHttpd::doChannelLogo(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
 // Do EPG Image
 //***************************************************************************
 
-int cEpgHttpd::doEpgImage(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
+int cEpgHttpd::doImage(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
 {
-   // 'GET' parameters
-
    int useId = getIntParameter(tcp, "id");
    int maxW = getIntParameter(tcp, "maxW");
    int maxH = getIntParameter(tcp, "maxH");
-   int no = getIntParameter(tcp, "no");
+   int lfn = getIntParameter(tcp, "no");
+   const char* imgKey = getStrParameter(tcp, "imgid", 0);
 
    data->clear();
 
-   if (!useId)
+   tell(eloDetail, "doImage '%s'", imgKey);
+
+   if (!useId && isEmpty(imgKey))
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Missing event id in request");
 
-   tell(eloDetail, "lookup image for (%d/%d)", useId, no);
+   if (imgKey)
+      tell(eloDetail, "lookup image for recording (%s/%d)", imgKey, lfn);
+   else
+      tell(eloDetail, "lookup image for event (%d/%d)", useId, lfn);
 
+   int status {success};
+
+   if (!imgKey)
+      status = doEpgImage(data, useId, lfn);
+   else
+      status = doRecImage(data, imgKey, lfn);
+
+   if (status == success)
+   {
+      sprintf(data->contentType, "image/jpg");
+
+      if (scaleJpegBuffer(data, maxW, maxH) != success)
+         data->clear();
+   }
+
+   return MHD_HTTP_OK;
+}
+
+int cEpgHttpd::doEpgImage(MemoryStruct* data, int useId, int lfn)
+{
    useeventsDb->clear();
    useeventsDb->setValue("USEID", useId);
 
    if (selectEvent->find())
    {
-      tEventId  id = imageid.getBigintValue();
+      tEventId id = imageid.getBigintValue();
 
       tell(eloDetail, "found event for useid %d -> eventid is %llu", useId, id);
 
@@ -708,18 +732,9 @@ int cEpgHttpd::doEpgImage(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
             if (!data->expireAt || data->modTime > data->expireAt)
             {
                data->size = imageImage->getStrValueSize();
-
-               tell(eloDetail, "found image with %ld bytes", data->size);
-
-               // imageImage->getStrValue();
-
                data->memory = (char*)malloc(data->size);
                memcpy(data->memory, imageImage->getStrValue(), data->size);
-
-               if (scaleJpegBuffer(data, maxW, maxH) != success)
-                  data->clear();
-               else
-                  sprintf(data->contentType, "image/jpg");
+               tell(eloDetail, "found image with %ld bytes", data->size);
             }
          }
 
@@ -731,7 +746,36 @@ int cEpgHttpd::doEpgImage(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
 
    selectEvent->freeResult();
 
-   return MHD_HTTP_OK;
+   return success;
+}
+
+int cEpgHttpd::doRecImage(MemoryStruct* data, const char* imgKey, int lfn)
+{
+   recordingImageDb->clear();
+   recordingImageDb->setValue("IMGID", imgKey);
+   recordingImageDb->setValue("LFN", lfn);
+
+   if (recordingImageDb->find())
+   {
+      if (recordingImageDb->find() && !recordingImageDb->getValue("IMAGE")->isNull())
+      {
+         data->modTime = recordingImageDb->getIntValue("UPDSP");
+
+         tell(eloDetail, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
+
+         if (!data->expireAt || data->modTime > data->expireAt)
+         {
+            data->size = recordingImageDb->getValue("IMAGE")->getStrValueSize();
+            data->memory = (char*)malloc(data->size);
+            memcpy(data->memory, recordingImageDb->getValue("IMAGE")->getStrValue(), data->size);
+            tell(eloDetail, "Found recording image '%s/%d' with %ld bytes", imgKey, lfn, data->size);
+         }
+      }
+
+      recordingImageDb->reset();
+   }
+
+   return success;
 }
 
 //***************************************************************************
@@ -1636,7 +1680,7 @@ int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
    {
       json_t* oData = json_object();
 
-      if (!vdrDb->getIntValue("SHAREINWEB"))
+      if (!vdrDb->getIntValue("SHAREINWEB"))  // via join
       {
          tell(eloInfo, "Skipping recording '%s' due to not shareinweb flag", recordingListDb->getStrValue("TITLE"));
          continue;
@@ -1662,6 +1706,13 @@ int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
       addFieldToJson(oData, recordingListDb, "PATH");
       addFieldToJson(oData, recordingListDb, "DURATION");
       addFieldToJson(oData, recordingListDb, "VDRUUID");
+
+      recordingImageDb->clear();
+      recordingImageDb->setValue("IMGID", recordingListDb->getStrValue("IMGID"));
+      recordingImageDb->setValue("LFN", 0);
+
+      if (recordingImageDb->find())
+         addFieldToJson(oData, recordingListDb, "IMGID");
 
       json_array_append_new(oRecording, oData);
    }

@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.21"
-#define VERSION_DATE "13.02.2023"
+#define _VERSION     "1.3.22"
+#define VERSION_DATE "14.02.2023"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2023-02-14: version 1.3.22 (horchi)
+   - Added: Theme handling via build process
 
 2023-02-13: version 1.3.21 (horchi)
    - Bugfix: Fixed search fallback to shorttext on empty episode-part-name

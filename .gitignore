@@ -9,7 +9,7 @@ epglv/mysqlepglv.so
 epgd
 epghttpd
 PLUGINS/epgdata/libepgd-epgdata.so
-http/3rdParty
+http/3rdParty/jquery-ui-1.11.4.custom
 scripts/_references.js
 http/www/channellogos
 http/images_unused

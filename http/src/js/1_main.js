@@ -85,7 +85,7 @@ epgd.login = {
     session: '',
     rights:-1,
     url: ''
-}                       
+}
 epgd.rights = { // userMask
     umConfig: 2,
     umConfigEdit: 4 + 2,
@@ -364,13 +364,13 @@ epgd.utils = {
         console.log("error:" + message);
         try {
             $.ajax({ url: "data/log", type: 'get', async: true, cache: false, data: "level=" + (level || 0) + "&message=" + escape(message) });
-        } catch (e) {}                                                        
+        } catch (e) {}
     }
 };
 
 epgd.init = function () {
 
-    epgd.$con = $('<div id="content"></div>').appendTo(document.body);
+    epgd.$con = $('<div id="content" class="content"></div>').appendTo(document.body);
 
     $.datepicker.setDefaults(epgd.tr.dateTimePicker);
     $.datepicker.setDefaults({
@@ -514,7 +514,7 @@ epgd.init = function () {
     $(window).bind("epgd_close", function () {
         $('.epgPopUp').dialog('destroy');
     }).bind("profile_updated", function (e,changes) {
-        if (changes["minEventTime"] != undefined) 
+        if (changes["minEventTime"] != undefined)
             epgd.$dtPicker.datetimepicker("option", {"minDateTime": new Date((epgd.profile.minEventTime= parseInt(epgd.profile.minEventTime,10)) * 1000), "minDate": new Date(epgd.profile.minEventTime * 1000)});
         if (changes["maxEventTime"] != undefined)
             epgd.$dtPicker.datetimepicker("option", {"maxDateTime": new Date((epgd.profile.maxEventTime= parseInt(epgd.profile.maxEventTime,10)) * 1000), "maxDate": new Date(epgd.profile.maxEventTime * 1000)});
@@ -578,9 +578,9 @@ epgd.init = function () {
                     .prop("href", "http://" + vdr.ip + ":" + vdr.osd2webp)
                     .click(function(ev){
                         ev.stopPropagation();
-                        return true;                   
-                    }).show(); 
-            else 
+                        return true;
+                    }).show();
+            else
                 $('#osd2web').hide();
         }).mousedown(function (ev) {
             ev.stopPropagation();
@@ -604,7 +604,7 @@ epgd.init = function () {
    // window.setTimeout(function () { $(window).trigger('resize'); });
 }
 window.onerror = function (msg, url, line, col, error) {
-    // Note that col & error are new to the HTML 5 spec and may not be 
+    // Note that col & error are new to the HTML 5 spec and may not be
     // supported in every browser.  It worked for me in Chrome.
     var extra = !col ? '' : '\ncolumn: ' + col;
     extra += !error ? '' : '\nerror: ' + error.stack;

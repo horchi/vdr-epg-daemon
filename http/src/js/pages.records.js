@@ -1,6 +1,7 @@
 epgd.pages.records = {
     render: function () {
-        if (!(epgd.login.rights & epgd.rights.umRecordings) == epgd.rights.umRecordings) return epgd.utils.popup(epgd.tr.error.forbidden, { title: epgd.tr.error.error });
+       if (!(epgd.login.rights & epgd.rights.umRecordings) == epgd.rights.umRecordings)
+          return epgd.utils.popup(epgd.tr.error.forbidden, { title: epgd.tr.error.error });
         if (!epgd.profile.recordSubFolderSort)
             epgd.profile.recordSubFolderSort = 1;
         $('#menu_records').addClass("menu-active");
@@ -120,28 +121,36 @@ epgd.pages.records = {
                 }
 
                 function renderTree(t) {
-                    Object.keys(t.f).sort().forEach(function (subFolder) {
-                        var subTree = t.f[subFolder],
-                            i;
-                        html += subFolder ? '<div class="folder"><h4><span class="i-folder-closed">(' + (subTree.cnt) + ')</span><m class="i-"/>' + subFolder + '</h4>' : '<div>';
-                        subTree.f && renderTree(subTree);
-                        if (subTree.r.length) {
-                            for (i in subTree.r) {
-                                rec = subTree.r[i];
-                                rec.tit = ((rec.name != subFolder ? rec.name : '')
-                                  + (subFolder != rec.title && (rec.title != rec.name) ? '<br />' + rec.title : '')
-                                  + (rec.shorttext && (rec.shorttext != rec.name) ? '<i>' + rec.shorttext + '</i>' : '')) || subFolder;
-                                rec.html = '<div class="rec" data-start="' + rec.starttime + '" data-owner="' + (rec.owner || '')
-                                  + '" data-md5="' + rec.md5path + '" data-path="' + rec.path + '">'
-                                  + '<em>' + epgd.utils.formatDateTime(rec.starttime) + '</em><u>' + parseInt(rec.duration / 60, 10) + min + '</u><b>'
-                                  + rec.tit
-                                  + '</b></div>';
-                            };
-                            subTree.r.sort(sortFunc);
-                            for (i in subTree.r) { html += subTree.r[i].html; }
-                        }
-                        html += '</div>';
-                    });
+                   Object.keys(t.f).sort().forEach(function (subFolder) {
+                      var subTree = t.f[subFolder],
+                          i;
+                      html += subFolder ? '<div class="folder"><h4><span class="i-folder-closed">(' + (subTree.cnt) + ')</span><m class="i-"/>' + subFolder + '</h4>' : '<div>';
+                      subTree.f && renderTree(subTree);
+                      if (subTree.r.length) {
+                         for (i in subTree.r) {
+                            rec = subTree.r[i];
+                            let imgPath = rec.imgid ? 'data/eventimg' + '?no=0&maxW=100&maxH=70&imgid=' + rec.imgid : false;
+                            //if (rec.imgid && rec.imgid != '')
+                            //   console.log("recording:", rec);
+                            rec.tit = ((rec.name != subFolder ? rec.name : '')
+                                       + (subFolder != rec.title && (rec.title != rec.name) ? '<br/>' + rec.title : '')
+                                       + (rec.shorttext && (rec.shorttext != rec.name) ? '<i>' + rec.shorttext + '</i>' : '')) || subFolder;
+                            rec.html = '<div class="rec">'
+                               + '<em>' + epgd.utils.formatDateTime(rec.starttime) + '</em><u>' + parseInt(rec.duration / 60, 10) + min + '</u>'
+                               + '<b class="ui-widget-content ui-corner-all" data-start="' + rec.starttime + '" data-owner="' + (rec.owner || '')
+                               + '" data-md5="' + rec.md5path + '" data-path="' + rec.path + '">'
+                               + '  <b>'
+                               + rec.tit
+                               + '  </b>'
+                               + (imgPath ? '   <img src="' + imgPath + '" />' : '')
+                               + '</b>'
+                               + '</div>';
+                         };
+                         subTree.r.sort(sortFunc);
+                         for (i in subTree.r) { html += subTree.r[i].html; }
+                      }
+                      html += '</div>';
+                   });
                 }
 
                 p = {};
@@ -184,7 +193,7 @@ epgd.pages.records = {
             cs.$recs= epgd.$con.find('#records .rec,h4');
         if (typeof searchValue == "string")
             cs.searchValue = searchValue.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-       
+
         pattern = (fromStart ? '>' + cs.searchValue : cs.searchValue).toLowerCase() + (toEnd ? '<' : '');
         if (pattern == cs.pattern)
             return;
@@ -321,7 +330,7 @@ epgd.pages.records = {
         } else if ($recs.length){
             $recs.draggable(enable ? "enable" : "disable");
         }
-    }, 
+    },
     __dropSettings: {
         accept: ".rec",
         hoverClass: "ui-state-hover",
@@ -406,9 +415,9 @@ epgd.pages.records = {
         }, function (jqxhr, e) {
             if (!cnt)
                 cnt = 0;
-            else if (cnt >= 5) 
+            else if (cnt >= 5)
                 return epgd.utils.popup(epgd.tr.pages.records.notFoundMessage, { title: epgd.tr.error.error });
-            
+
             window.setTimeout(epgd.pages.records.__updateRec, 3000,elem,++cnt);
             return true;
         });
@@ -432,12 +441,12 @@ epgd.pages.records = {
             t;
         if (!sort)
             sort = $(">h4>m", con)[0].curSort || epgd.profile.recordSubFolderSort;
-        if (sort < 3) 
+        if (sort < 3)
             $elems.sort(function (a, b) { return a.lastChild.innerHTML > b.lastChild.innerHTML ? dir : -dir }).appendTo(con);
         else{
             t= sort < 5 ? 'data-path' : 'data-start';
             $elems.sort(function (a, b) { return a.getAttribute(t) > b.getAttribute(t) ? dir : -dir }).appendTo(con);
-        } 
+        }
         $(con).find('>div.folder').each(function () {
             epgd.pages.records.sort(this, sort);
         });

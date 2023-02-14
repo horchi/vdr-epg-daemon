@@ -10,7 +10,18 @@ LESS_Compiler=/usr/bin/rhino
 DEFAULT_LANG=de
 VERSION = $(shell grep 'define _VERSION ' ../HISTORY.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
 
-all: core common lang style
+THEME=humanity
+#THEME=darkness
+#THEME=vader
+#THEME=dark-hive
+#THEME=hot-sneaks
+#THEME=black-tie
+#THEME=south-street
+#THEME=tronastic
+
+JQUERY_UI=./3rdParty/jquery-ui-1.11.4.custom.$(THEME)
+
+all: theme core common lang style
 
 # baut aus allen JS-Files innerhalb von src/js/ eine gesamt Javascriptdatei -> www/epgd.js
 core:
@@ -23,13 +34,12 @@ core:
 common:
 #	cat ./3rdParty/modernizr.custom.js > ./www/common.js
 	cat ./3rdParty/jquery-2.2.3.min.js > ./www/common.js
-	cat ./3rdParty/jquery-ui-1.11.4.custom/jquery-ui.min.js >> ./www/common.js
+	cat $(JQUERY_UI)/jquery-ui.min.js >> ./www/common.js
 	cat ./3rdParty/jQuery-Timepicker-Addon-master/dist/jquery-ui-timepicker-addon.min.js >> ./www/common.js
 #	cat ./3rdParty/jQuery-jQuery-UI-Plugin-For-Simle-Tokenized-Autocomplete-Autocomplete-Multiselect/src/jquery.autocomplete.multiselect.js >> ./www/common.js
 	cat ./3rdParty/jquery.ui.touch-punch.min.js >> ./www/common.js
 	cat ./3rdParty/jquery-scrollstop-master/jquery.scrollstop.min.js >> ./www/common.js
 	cat ./3rdParty/yaMD5/yamd5.min.js >> ./www/common.js
-
 	cp ./3rdParty/fontello/font/* ./www/font/
 	cp ./3rdParty/fontello/LICENSE.txt ./www/font/
 
@@ -38,9 +48,22 @@ common:
 lang:
 	cp -ua ./src/lang/* ./www/lang/
 
+theme:
+	rm -f ./www/images/ui-*
+	cp $(JQUERY_UI)/images/* ./www/images
+	grep 'To view and modify this theme' $(JQUERY_UI)/jquery-ui.css | \
+		sed s/".*themeroller.."/""/ | \
+		sed -e s/"&"/"\n"/g | \
+		sed -E s/"([^=]+)=(.*)"/"@ui-\1: \2;"/g | \
+		sed -E s/" ([a-f0-9]{6})"/" #\1"/g | \
+		grep -v "ui-ffDefault" \
+		> src/css/default.less
+
 # baut das default-theme und hinter dann auch ggf. weitere themes
 
 style:
+	rm -f ./3rdParty/jquery-ui-1.11.4.custom
+	ln -s `basename $(JQUERY_UI)` ./3rdParty/jquery-ui-1.11.4.custom
 	$(LESS_Compiler) -f ./tools/less-rhino-1.7.0.js ./tools/lessc-rhino-1.7.0.js --ru ./src/css/theme/default.less ./www/epgd.css
 
 install: install-env install-core install-lang install-font install-images

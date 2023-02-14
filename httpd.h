@@ -154,7 +154,9 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int doDoneTimers(MHD_Connection* tcp, json_t* obj);
       int doDoneTimer(MHD_Connection* tcp, json_t* obj);
       int doSearchtimers(MHD_Connection* tcp, json_t* obj);
-      int doEpgImage(MHD_Connection* connection, json_t* obj, MemoryStruct* data);
+      int doImage(MHD_Connection* connection, json_t* obj, MemoryStruct* data);
+      int doEpgImage(MemoryStruct* data, int useId, int lfn = 0);
+      int doRecImage(MemoryStruct* data, const char* imgKey, int lfn = 0);
       int doChannelLogo(MHD_Connection* connection, json_t* obj, MemoryStruct* data);
       int doMovieMedia(MHD_Connection* connection, json_t* obj, MemoryStruct* data);
       int doSeriesMedia(MHD_Connection* connection, json_t* obj, MemoryStruct* data);
@@ -228,6 +230,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       cDbTable* seriesActorsDb {};
       cDbTable* recordingDirDb {};
       cDbTable* recordingListDb {};
+      cDbTable* recordingImageDb {};
       cDbTable* userDb {};
       cDbTable* messageDb {};
 

@@ -408,6 +408,9 @@ int cEpgHttpd::initDb()
    recordingListDb = new cDbTable(connection, "recordinglist");
    if ((status = recordingListDb->open()) != success) return status;
 
+   recordingImageDb = new cDbTable(connection, "recordingimages");
+   if ((status = recordingImageDb->open()) != success) return status;
+
    userDb = new cDbTable(connection, "users");
    if ((status = userDb->open()) != success) return status;
 
@@ -1229,6 +1232,7 @@ int cEpgHttpd::exitDb()
    delete seriesActorsDb;            seriesActorsDb = 0;
    delete recordingDirDb;            recordingDirDb = 0;
    delete recordingListDb;           recordingListDb = 0;
+   delete recordingImageDb;          recordingImageDb = 0;
    delete userDb;                    userDb = 0;
    delete messageDb;                 messageDb = 0;
 
@@ -1506,7 +1510,7 @@ int cEpgHttpd::performDataRequest(MHD_Connection* tcp, const char* url, MemorySt
          if (strcmp(method, "channellogo") == 0)
             statusCode = doChannelLogo(tcp, response, data);
          else if (strcmp(method, "eventimg") == 0)
-            statusCode = doEpgImage(tcp, response, data);
+            statusCode = doImage(tcp, response, data);
          else if (strcmp(method, "moviemedia") == 0)
             statusCode = doMovieMedia(tcp, response, data);
          else if (strcmp(method, "seriesmedia") == 0)
