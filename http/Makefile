@@ -10,8 +10,8 @@ LESS_Compiler=/usr/bin/rhino
 DEFAULT_LANG=de
 VERSION = $(shell grep 'define _VERSION ' ../HISTORY.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
 
-THEME=humanity
-#THEME=darkness
+#THEME=humanity
+THEME=darkness
 #THEME=vader
 #THEME=dark-hive
 #THEME=hot-sneaks
