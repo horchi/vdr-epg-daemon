@@ -1065,7 +1065,6 @@ int cEpgHttpd::initDb()
    //   from recordinglist where
    //      (state <> 'D' or state is null)
    //   and epglvr(title, ?) < 50
-//   // order by lv
 
    matchDensityTitle.setField(&matchDensityTitleDef);
    matchDensityShorttext.setField(&matchDensityShorttextDef);

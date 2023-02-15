@@ -91,16 +91,16 @@ epgd.pages.profile = {
                             for (i in data.parameters) {
                                 p = data.parameters[i];
                                 if (p.owner == 'epgd') {
-                                    html += '<tr><td>' + (tr[p.name] || p.name) + '</td><td>';
-                                    val = typeof p.value == "undefined" ? p["default"] : p.value;
-                                    if (p.type == ptTime)
-                                       val= epgd.utils.formatDateTime(val);
+                                   html += '<tr><td>' + (tr[p.name] || p.name) + '</td><td>';
+                                   val = typeof p.value == "undefined" ? p["default"] : p.value;
+                                   if (p.type == ptTime)
+                                      val= epgd.utils.formatDateTime(val);
                                    else if (p.type == ptBitMask) {
                                       html += '<span id="bmaskgroup_' + p.name + '" style="width:75%;">';
-                                      var array = val.split(',');
-                                      for (var o = 0; o < p.options.length; o++) {
-                                         var checked = false;
-                                         for (var n = 0; n < array.length; n++) {
+                                      let array = val.split(',');
+                                      for (let o = 0; o < p.options.length; o++) {
+                                         let checked = false;
+                                         for (let n = 0; n < array.length; n++) {
                                             if (array[n] == p.options[o])
                                                checked = true;
                                          }
@@ -220,7 +220,7 @@ epgd.pages.profile = {
           });
           let rootConfig = document.getElementById("pSystem");
           let elements = rootConfig.querySelectorAll("[id^='bmaskgroup_']");
-          for (var i = 0; i < elements.length; i++) {
+          for (let i = 0; i < elements.length; i++) {
              let name = elements[i].id.substring(elements[i].id.indexOf("_") + 1);
              let bits = rootConfig.querySelectorAll("[id^='bmask" + name + "_']");
              let value = '';

@@ -18,6 +18,8 @@
 
 int cEpgHttpd::collectScraperData(json_t* oScraperData, int movieId, int seriesId, int episodeId)
 {
+   tell(eloDebug, "collectScraperData for %d/%d/%d", movieId, seriesId, episodeId);
+
    if (movieId)
    {
       movieDb->clear();
@@ -87,6 +89,8 @@ int cEpgHttpd::collectScraperData(json_t* oScraperData, int movieId, int seriesI
          json_object_set_new(oMovieData, "media", oMovieMedia);
          json_object_set_new(oMovieData, "actors", oActorsData);
          json_object_set_new(oScraperData, "movie", oMovieData);
+
+         return success;
       }
    }
 
@@ -198,9 +202,11 @@ int cEpgHttpd::collectScraperData(json_t* oScraperData, int movieId, int seriesI
 
          json_object_set_new(oScraperData, "serie", oSeriesData);
       }
+
+      return success;
    }
 
-   return done;
+   return fail;
 }
 
 //***************************************************************************
@@ -1139,141 +1145,150 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
    useeventsDb->setValue("CHANNELID", channelid);
    endTime.setValue(time);
 
-   if (select->find())
-   {
-      data->modTime = eventsUpdSp->getIntValue();
-
-      tell(eloDetail, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
-
-      if (!data->expireAt || data->modTime > data->expireAt)
-      {
-         json_t* oEvtData = json_object();
-         json_t* oEpiData = json_object();
-
-         addFieldToJson(oEvtData, useeventsDb, "USEID", no, "id");
-         addFieldToJson(oEvtData, useeventsDb, "CHANNELID");
-         addFieldToJson(oEvtData, useeventsDb, "STARTTIME");
-         addFieldToJson(oEvtData, useeventsDb, "DURATION");
-         addFieldToJson(oEvtData, useeventsDb, "CATEGORY");
-         addFieldToJson(oEvtData, useeventsDb, "GENRE");
-         addFieldToJson(oEvtData, useeventsDb, "TITLE");
-         addFieldToJson(oEvtData, useeventsDb, "SHORTTEXT");
-         addFieldToJson(oEvtData, useeventsDb, "IMAGECOUNT");
-
-         addFieldToJson(oEvtData, useeventsDb, "LONGDESCRIPTION");
-         addFieldToJson(oEvtData, useeventsDb, "CNTLONGDESCRIPTION");
-         addFieldToJson(oEvtData, useeventsDb, "SHORTDESCRIPTION");
-         addFieldToJson(oEvtData, useeventsDb, "PARENTALRATING");
-         addFieldToJson(oEvtData, useeventsDb, "ACTOR");
-         addFieldToJson(oEvtData, useeventsDb, "AUDIO");
-         addFieldToJson(oEvtData, useeventsDb, "COUNTRY");
-         addFieldToJson(oEvtData, useeventsDb, "DIRECTOR");
-         addFieldToJson(oEvtData, useeventsDb, "FLAGS");
-         addFieldToJson(oEvtData, useeventsDb, "MUSIC");
-         addFieldToJson(oEvtData, useeventsDb, "PRODUCER");
-         addFieldToJson(oEvtData, useeventsDb, "SCREENPLAY");
-         addFieldToJson(oEvtData, useeventsDb, "SHORTREVIEW");
-         addFieldToJson(oEvtData, useeventsDb, "NUMRATING");
-         addFieldToJson(oEvtData, useeventsDb, "TXTRATING");
-         addFieldToJson(oEvtData, useeventsDb, "TIPP");
-         addFieldToJson(oEvtData, useeventsDb, "TOPIC");
-         addFieldToJson(oEvtData, useeventsDb, "YEAR");
-         addFieldToJson(oEvtData, useeventsDb, "RATING");
-         addFieldToJson(oEvtData, useeventsDb, "MODERATOR");
-         addFieldToJson(oEvtData, useeventsDb, "COMMENTATOR");
-         addFieldToJson(oEvtData, useeventsDb, "OTHER");
-         addFieldToJson(oEvtData, useeventsDb, "GUEST");
-         addFieldToJson(oEvtData, useeventsDb, "CAMERA");
-         addFieldToJson(oEvtData, &merge);
-
-         // timer for this Event pending?
-
-         timerDb->clear();
-         timerDb->setValue("EVENTID", useeventsDb->getIntValue("USEID"));
-         timerDb->setValue("CHANNELID", useeventsDb->getStrValue("CHANNELID"));
-
-         if (selectTimerByEventId->find())
-            addFieldToJson(oEvtData, timerDb, "ID", no, "TIMERID");
-
-         selectTimerByEventId->freeResult();
-
-         // epispode data
-
-         addFieldToJson(oEpiData, useeventsDb, "EPISODENAME",      yes, "episodename");
-         addFieldToJson(oEpiData, useeventsDb, "EPISODESHORTNAME", yes, "shortname");
-         addFieldToJson(oEpiData, useeventsDb, "EPISODEPARTNAME",  yes, "partname");
-         addFieldToJson(oEpiData, useeventsDb, "EPISODEEXTRACOL1", yes, "extracol1");
-         addFieldToJson(oEpiData, useeventsDb, "EPISODEEXTRACOL2", yes, "extracol2");
-         addFieldToJson(oEpiData, useeventsDb, "EPISODEEXTRACOL3", yes, "extracol3");
-         addFieldToJson(oEpiData, useeventsDb, "EPISODESEASON",    yes, "season");
-         addFieldToJson(oEpiData, useeventsDb, "EPISODEPART",      yes, "part");
-         addFieldToJson(oEpiData, useeventsDb, "EPISODEPARTS",     yes, "parts");
-         addFieldToJson(oEpiData, useeventsDb, "EPISODENUMBER",    yes, "number");
-
-         // ---------------------
-         // collect scraper data
-
-         json_t* oScraperData = json_object();
-
-         collectScraperData(oScraperData,
-                            useeventsDb->getIntValue("SCRMOVIEID"),
-                            useeventsDb->getIntValue("SCRSERIESID"),
-                            useeventsDb->getIntValue("SCRSERIESEPISODE"));
-
-         // -----------------------
-         // matching recordings
-
-         json_t* oRecordings = json_array();
-
-         recordingListDb->clear();
-         recordingListDb->setValue("TITLE", useeventsDb->getStrValue("TITLE"));
-         recordingListDb->setValue("SHORTTEXT", useeventsDb->getStrValue("SHORTTEXT"));
-
-         for (int f = selectRecordingForEventByLv->find(); f; f = selectRecordingForEventByLv->fetch())
-         {
-            json_t* oRecData = json_object();
-
-            if (recordingListDb->getIntValue("FSK") == 1)             // check FSK
-            {
-               if (!currentSession || !hasUserMask(currentSession->rights, umFsk))
-               {
-                  tell(eloInfo, "Skipping recording '%s' due FSK flag", recordingListDb->getStrValue("TITLE"));
-                  continue;
-               }
-            }
-
-            addFieldToJson(oRecData, recordingListDb, "NAME");
-            addFieldToJson(oRecData, recordingListDb, "TITLE");
-            addFieldToJson(oRecData, recordingListDb, "SHORTTEXT");
-            addFieldToJson(oRecData, recordingListDb, "STARTTIME");
-            addFieldToJson(oRecData, recordingListDb, "OWNER");
-            addFieldToJson(oRecData, recordingListDb, "MD5PATH");
-            addFieldToJson(oRecData, recordingListDb, "PATH");
-            addFieldToJson(oRecData, recordingListDb, "DURATION");
-            addFieldToJson(oRecData, recordingListDb, "OWNER");
-            addFieldToJson(oRecData, &matchDensityTitle);
-            addFieldToJson(oRecData, &matchDensityShorttext);
-
-            json_array_append_new(oRecordings, oRecData);
-
-            tell(eloDetail, "Found recording for '%s' wich a match density of (%ld%%/%ld%%)",
-                 recordingListDb->getStrValue("TITLE"),
-                 matchDensityTitle.getIntValue(), matchDensityShorttext.getIntValue());
-         }
-
-         selectRecordingForEventByLv->freeResult();
-
-         // final
-
-         json_object_set_new(oEvtData, "recordings", oRecordings);
-         json_object_set_new(oEvtData, "scraper", oScraperData);
-         json_object_set_new(oEvtData, "episode", oEpiData);
-         json_object_set_new(obj, "event", oEvtData);
-      }
-   }
-   else
+   if (!select->find())
    {
       tell(eloWarning, "Warning: Event '%d' not found", id);
+      select->freeResult();
+      return MHD_HTTP_OK;
+   }
+
+   data->modTime = eventsUpdSp->getIntValue();
+
+   tell(eloDetail, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
+
+   if (!data->expireAt || data->modTime > data->expireAt)
+   {
+      json_t* oEvtData = json_object();
+      json_t* oEpiData = json_object();
+
+      addFieldToJson(oEvtData, useeventsDb, "USEID", no, "id");
+      addFieldToJson(oEvtData, useeventsDb, "CHANNELID");
+      addFieldToJson(oEvtData, useeventsDb, "STARTTIME");
+      addFieldToJson(oEvtData, useeventsDb, "DURATION");
+      addFieldToJson(oEvtData, useeventsDb, "CATEGORY");
+      addFieldToJson(oEvtData, useeventsDb, "GENRE");
+      addFieldToJson(oEvtData, useeventsDb, "TITLE");
+      addFieldToJson(oEvtData, useeventsDb, "SHORTTEXT");
+      addFieldToJson(oEvtData, useeventsDb, "IMAGECOUNT");
+
+      addFieldToJson(oEvtData, useeventsDb, "LONGDESCRIPTION");
+      addFieldToJson(oEvtData, useeventsDb, "CNTLONGDESCRIPTION");
+      addFieldToJson(oEvtData, useeventsDb, "SHORTDESCRIPTION");
+      addFieldToJson(oEvtData, useeventsDb, "PARENTALRATING");
+      addFieldToJson(oEvtData, useeventsDb, "ACTOR");
+      addFieldToJson(oEvtData, useeventsDb, "AUDIO");
+      addFieldToJson(oEvtData, useeventsDb, "COUNTRY");
+      addFieldToJson(oEvtData, useeventsDb, "DIRECTOR");
+      addFieldToJson(oEvtData, useeventsDb, "FLAGS");
+      addFieldToJson(oEvtData, useeventsDb, "MUSIC");
+      addFieldToJson(oEvtData, useeventsDb, "PRODUCER");
+      addFieldToJson(oEvtData, useeventsDb, "SCREENPLAY");
+      addFieldToJson(oEvtData, useeventsDb, "SHORTREVIEW");
+      addFieldToJson(oEvtData, useeventsDb, "NUMRATING");
+      addFieldToJson(oEvtData, useeventsDb, "TXTRATING");
+      addFieldToJson(oEvtData, useeventsDb, "TIPP");
+      addFieldToJson(oEvtData, useeventsDb, "TOPIC");
+      addFieldToJson(oEvtData, useeventsDb, "YEAR");
+      addFieldToJson(oEvtData, useeventsDb, "RATING");
+      addFieldToJson(oEvtData, useeventsDb, "MODERATOR");
+      addFieldToJson(oEvtData, useeventsDb, "COMMENTATOR");
+      addFieldToJson(oEvtData, useeventsDb, "OTHER");
+      addFieldToJson(oEvtData, useeventsDb, "GUEST");
+      addFieldToJson(oEvtData, useeventsDb, "CAMERA");
+      addFieldToJson(oEvtData, &merge);
+
+      // timer for this Event pending?
+
+      timerDb->clear();
+      timerDb->setValue("EVENTID", useeventsDb->getIntValue("USEID"));
+      timerDb->setValue("CHANNELID", useeventsDb->getStrValue("CHANNELID"));
+
+      if (selectTimerByEventId->find())
+         addFieldToJson(oEvtData, timerDb, "ID", no, "TIMERID");
+
+      selectTimerByEventId->freeResult();
+
+      // epispode data
+
+      addFieldToJson(oEpiData, useeventsDb, "EPISODENAME",      yes, "episodename");
+      addFieldToJson(oEpiData, useeventsDb, "EPISODESHORTNAME", yes, "shortname");
+      addFieldToJson(oEpiData, useeventsDb, "EPISODEPARTNAME",  yes, "partname");
+      addFieldToJson(oEpiData, useeventsDb, "EPISODEEXTRACOL1", yes, "extracol1");
+      addFieldToJson(oEpiData, useeventsDb, "EPISODEEXTRACOL2", yes, "extracol2");
+      addFieldToJson(oEpiData, useeventsDb, "EPISODEEXTRACOL3", yes, "extracol3");
+      addFieldToJson(oEpiData, useeventsDb, "EPISODESEASON",    yes, "season");
+      addFieldToJson(oEpiData, useeventsDb, "EPISODEPART",      yes, "part");
+      addFieldToJson(oEpiData, useeventsDb, "EPISODEPARTS",     yes, "parts");
+      addFieldToJson(oEpiData, useeventsDb, "EPISODENUMBER",    yes, "number");
+
+      // ---------------------
+      // collect scraper data
+
+      json_t* oScraperData = json_object();
+
+      int status = collectScraperData(oScraperData,
+                                      useeventsDb->getIntValue("SCRMOVIEID"),
+                                      useeventsDb->getIntValue("SCRSERIESID"),
+                                      useeventsDb->getIntValue("SCRSERIESEPISODE"));
+
+      if (status != success)
+      {
+         json_decref(oScraperData);
+         oScraperData = nullptr;
+      }
+
+      // -----------------------
+      // matching recordings
+
+      json_t* oRecordings = json_array();
+
+      recordingListDb->clear();
+      recordingListDb->setValue("TITLE", useeventsDb->getStrValue("TITLE"));
+      recordingListDb->setValue("SHORTTEXT", useeventsDb->getStrValue("SHORTTEXT"));
+
+      for (int f = selectRecordingForEventByLv->find(); f; f = selectRecordingForEventByLv->fetch())
+      {
+         json_t* oRecData = json_object();
+
+         if (recordingListDb->getIntValue("FSK") == 1)             // check FSK
+         {
+            if (!currentSession || !hasUserMask(currentSession->rights, umFsk))
+            {
+               tell(eloInfo, "Skipping recording '%s' due FSK flag", recordingListDb->getStrValue("TITLE"));
+               continue;
+            }
+         }
+
+         addFieldToJson(oRecData, recordingListDb, "NAME");
+         addFieldToJson(oRecData, recordingListDb, "TITLE");
+         addFieldToJson(oRecData, recordingListDb, "SHORTTEXT");
+         addFieldToJson(oRecData, recordingListDb, "STARTTIME");
+         addFieldToJson(oRecData, recordingListDb, "OWNER");
+         addFieldToJson(oRecData, recordingListDb, "MD5PATH");
+         addFieldToJson(oRecData, recordingListDb, "PATH");
+         addFieldToJson(oRecData, recordingListDb, "DURATION");
+         addFieldToJson(oRecData, recordingListDb, "OWNER");
+         addFieldToJson(oRecData, &matchDensityTitle);
+         addFieldToJson(oRecData, &matchDensityShorttext);
+
+         json_array_append_new(oRecordings, oRecData);
+
+         tell(eloDetail, "Found recording for '%s' wich a match density of (%ld%%/%ld%%)",
+              recordingListDb->getStrValue("TITLE"),
+              matchDensityTitle.getIntValue(), matchDensityShorttext.getIntValue());
+      }
+
+      selectRecordingForEventByLv->freeResult();
+
+      // final
+
+      json_object_set_new(oEvtData, "recordings", oRecordings);
+
+      if (oScraperData)
+         json_object_set_new(oEvtData, "scraper", oScraperData);
+
+      json_object_set_new(oEvtData, "episode", oEpiData);
+      json_object_set_new(obj, "event", oEvtData);
    }
 
    select->freeResult();

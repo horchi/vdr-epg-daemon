@@ -320,13 +320,6 @@ select {
 #ui-menu-top {
   overflow: hidden;
   min-height: 30px;
-  /*
-
-    #ui-menu-top .ui-menu li {
-        float: left;
-        display: block;
-    }
-*/
 }
 #ui-menu-top .ui-menu {
   position: fixed;

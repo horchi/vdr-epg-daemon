@@ -254,29 +254,32 @@ epgd.eventDetail.win.prototype.render = function (detail) {
                 }
                 desc = '<h5>' + terms.episodename + '</h5>' + desc;
                 if (terms.episodegueststars)
-                    actors += '</div><div class="colFull actors"><h5>' + tr.gueststars + '</h5><br />' + terms.episodegueststars.replace(/^\||\|$/g, '').replace(/\|/g, '<br />');
+                   actors += '</div><div class="colFull actors"><h5>' + tr.gueststars + '</h5><br />' + terms.episodegueststars.replace(/^\||\|$/g, '').replace(/\|/g, '<br />');
+
+               if (!mainImg && sc.media["12"] && this.serieImgPath)
+                  mainImg = this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=' + terms.episodeid + '&media_type=12&maxW=270&maxH=146';
             }
-            if (!mainImg && sc.media["12"] && this.serieImgPath)
-                mainImg = this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=' + terms.episodeid + '&media_type=12&maxW=270&maxH=146';
-            if (sc.media["3"])
-                firstImg = this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=3&lfn=0&maxW=400&maxh=999';
-            if (sc.seriesoverview)
-                desc += desc ? '<hr /><a href="#" onclick="return !$(this).next().toggle()">Serienbeschreibung</a><div style="display:none" title="seriesoverview">' + sc.seriesoverview + "</div>" : '<div>' + sc.seriesoverview + '</div>';
-            extInfo = '<h3><span>' + tr.scrapperSerieInfo + '</span></h3><div>'
-                + '<table class="colFull">'
-                + (sc.media["1"] && this.serieImgPath ? '<tr><th colspan="2"><img src="' + this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=1&lfn=1&maxW=397&maxH=250" /></th></tr>' : '')
-                + (sc.media["12"] && this.serieImgPath ? '<tr><th colspan="2"><img src="' + this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=' + terms.episodeid + '&media_type=12&maxW=397&maxH=400" /></th></tr>' : '')
-                + (sc.seriesname ? '<tr><th>' + tr.title + '</th><td>' + sc.seriesname + '</td></tr>' : '')
-                + (sc.seriesnetwork ? '<tr><th>' + tr.network + '</th><td>' + sc.seriesnetwork + '</td></tr>' : '')
-                + (sc.seriesstatus ? '<tr><th>' + tr.seriesstatus + '</th><td>' + sc.seriesstatus + '</td></tr>' : '')
-                + (sc.seriesfirstaired ? '<tr><th>' + tr.release_date + '</th><td>' + sc.seriesfirstaired + '</td></tr>' : '')
-                + (sc.seriesgenre ? '<tr><th>' + tr.genre + '</th><td>' + sc.seriesgenre.replace(/^\||\|$/g, '').replace(/ ?\| ?/g, ', ') + '</td></tr>' : '')
-                + (sc.seriesrating ? '<tr><th>' + tr.vote_average + '</th><td class="stars"><div class="stars5" style="width:' + parseInt(sc.seriesrating * 8, 10) + 'px"></div> (' + sc.seriesrating.toFixed(1) + ' / 10)</td></tr>' : '')
-                + extInfo
-                + (epgd.profile.serieSeasonPath ? '<tr><td colspan="2"><a href="' + epgd.profile.serieSeasonPath + sc.seriesid + '" target="_blank">' + tr.homepage + '</a></td></tr>' : '')
-                + '</table>'
-                + (sc.media["7"] && this.serieImgPath ? '<img class="poster" src="' + this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=0&media_type=7&maxW=390&maxh=999" />' : '')
-                + (sc.media["2"] && this.serieImgPath ? '<img class="poster" src="' + this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=2&lfn=0&maxW=390&maxh=999" />' : '');
+           if (sc.media["3"])
+              firstImg = this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=3&lfn=0&maxW=400&maxh=999';
+           if (sc.seriesoverview)
+              desc += desc ? '<hr /><a href="#" onclick="return !$(this).next().toggle()">Serienbeschreibung</a><div style="display:none" title="seriesoverview">' + sc.seriesoverview + "</div>" : '<div>' + sc.seriesoverview + '</div>';
+           extInfo = '<h3><span>' + tr.scrapperSerieInfo + '</span></h3><div>'
+              + '<table class="colFull">'
+              + (sc.media["1"] && this.serieImgPath ? '<tr><th colspan="2"><img src="' + this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=1&lfn=1&maxW=397&maxH=250" /></th></tr>' : '');
+           if (terms)
+              extInfo += (sc.media["12"] && this.serieImgPath ? '<tr><th colspan="2"><img src="' + this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=' + terms.episodeid + '&media_type=12&maxW=397&maxH=400" /></th></tr>' : '');
+           extInfo += (sc.seriesname ? '<tr><th>' + tr.title + '</th><td>' + sc.seriesname + '</td></tr>' : '')
+              + (sc.seriesnetwork ? '<tr><th>' + tr.network + '</th><td>' + sc.seriesnetwork + '</td></tr>' : '')
+              + (sc.seriesstatus ? '<tr><th>' + tr.seriesstatus + '</th><td>' + sc.seriesstatus + '</td></tr>' : '')
+              + (sc.seriesfirstaired ? '<tr><th>' + tr.release_date + '</th><td>' + sc.seriesfirstaired + '</td></tr>' : '')
+              + (sc.seriesgenre ? '<tr><th>' + tr.genre + '</th><td>' + sc.seriesgenre.replace(/^\||\|$/g, '').replace(/ ?\| ?/g, ', ') + '</td></tr>' : '')
+              + (sc.seriesrating ? '<tr><th>' + tr.vote_average + '</th><td class="stars"><div class="stars5" style="width:' + parseInt(sc.seriesrating * 8, 10) + 'px"></div> (' + sc.seriesrating.toFixed(1) + ' / 10)</td></tr>' : '')
+              + extInfo
+              + (epgd.profile.serieSeasonPath ? '<tr><td colspan="2"><a href="' + epgd.profile.serieSeasonPath + sc.seriesid + '" target="_blank">' + tr.homepage + '</a></td></tr>' : '')
+              + '</table>';
+           if (terms)
+              extInfo += (sc.media["7"] && this.serieImgPath ? '<img class="poster" src="' + this.serieImgPath + sc.seriesid + '&season_number=' + terms.seasonnumber + '&episode_id=0&media_type=7&maxW=390&maxh=999" />' : '');
+           extInfo += (sc.media["2"] && this.serieImgPath ? '<img class="poster" src="' + this.serieImgPath + sc.seriesid + '&season_number=0&episode_id=0&media_type=2&lfn=0&maxW=390&maxh=999" />' : '');
         }
     } else {
         sc = {};

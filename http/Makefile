@@ -6,24 +6,28 @@
 #
 
 include ../Make.config
-LESS_Compiler=/usr/bin/rhino
-DEFAULT_LANG=de
+
+LESS_Compiler = /usr/bin/rhino
+DEFAULT_LANG = de
 VERSION = $(shell grep 'define _VERSION ' ../HISTORY.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
 
 #THEME=humanity
 THEME=darkness
 #THEME=vader
+#THEME=start
+#THEME=overcast
 #THEME=dark-hive
 #THEME=hot-sneaks
 #THEME=black-tie
 #THEME=south-street
 #THEME=tronastic
 
-JQUERY_UI=./3rdParty/jquery-ui-1.11.4.custom.$(THEME)
+JQUERY_UI = ./3rdParty/jquery-ui-1.11.4.custom.$(THEME)
 
 all: theme core common lang style
 
 # baut aus allen JS-Files innerhalb von src/js/ eine gesamt Javascriptdatei -> www/epgd.js
+
 core:
 	@echo "var epgd = {};" >  ./epgd.full.js
 	@cat ./src/lang/$(DEFAULT_LANG).js >>  ./epgd.full.js
@@ -31,12 +35,13 @@ core:
 	@java -jar tools/yuicompressor-2.4.8.jar ./epgd.full.js -o ./www/epgd.js -v
 
 # baut aus allen benötigten 3rdParty-scripten eine gesamt Javascriptdatei -> www/common.js
+
 common:
 #	cat ./3rdParty/modernizr.custom.js > ./www/common.js
 	cat ./3rdParty/jquery-2.2.3.min.js > ./www/common.js
 	cat $(JQUERY_UI)/jquery-ui.min.js >> ./www/common.js
 	cat ./3rdParty/jQuery-Timepicker-Addon-master/dist/jquery-ui-timepicker-addon.min.js >> ./www/common.js
-#	cat ./3rdParty/jQuery-jQuery-UI-Plugin-For-Simle-Tokenized-Autocomplete-Autocomplete-Multiselect/src/jquery.autocomplete.multiselect.js >> ./www/common.js
+#  cat ./3rdParty/jQuery-jQuery-UI-Plugin-For-Simle-Tokenized-Autocomplete-Autocomplete-Multiselect/src/jquery.autocomplete.multiselect.js >> ./www/common.js
 	cat ./3rdParty/jquery.ui.touch-punch.min.js >> ./www/common.js
 	cat ./3rdParty/jquery-scrollstop-master/jquery.scrollstop.min.js >> ./www/common.js
 	cat ./3rdParty/yaMD5/yamd5.min.js >> ./www/common.js
@@ -65,6 +70,8 @@ style:
 	rm -f ./3rdParty/jquery-ui-1.11.4.custom
 	ln -s `basename $(JQUERY_UI)` ./3rdParty/jquery-ui-1.11.4.custom
 	$(LESS_Compiler) -f ./tools/less-rhino-1.7.0.js ./tools/lessc-rhino-1.7.0.js --ru ./src/css/theme/default.less ./www/epgd.css
+
+fullinstall : all install
 
 install: install-env install-core install-lang install-font install-images
 
