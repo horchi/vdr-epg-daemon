@@ -290,6 +290,7 @@ select {
   right: 0;
   top: 2px;
   font-size: 1.3em;
+  color: #1e1b1d;
 }
 #menu-top.mini > ul {
   padding-right: 40px;
@@ -444,7 +445,6 @@ table.ui-datepicker-calendar {
   font-weight: bold;
   font-size: 10px;
   line-height: 1;
-  color: #4d4949;
   padding: 3px 5px 0 3px;
 }
 .channel img {
@@ -543,6 +543,7 @@ table.ui-datepicker-calendar {
   float: left;
   margin-left: -87px;
   cursor: pointer;
+  color: #3f3731;
 }
 #pageNow .channel img {
   max-height: 70px;

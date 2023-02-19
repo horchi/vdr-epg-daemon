@@ -10,14 +10,6 @@ epgd
 epghttpd
 PLUGINS/epgdata/libepgd-epgdata.so
 http/3rdParty/jquery-ui-1.11.4.custom
-scripts/_references.js
-http/www/channellogos
-http/images_unused
-http/src/dev.sh
-http/src/less-rhino-1.7.0.js
-http/src/lessc-rhino-1.7.0.js
-images_unused
-translate-tabledef2dat
 eptst
 http/epgd.full.js
 lib/pytst
