@@ -210,8 +210,8 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
          {
             selectEvent->freeResult();
 
-            return buildResponse(response, MHD_HTTP_BAD_REQUEST, "Event '%d' finished in the past, "
-                                 "aborting request!", eventid);
+            return buildResponse(response, MHD_HTTP_BAD_REQUEST, "Event '%d' finished in the past, aborting request! [%ld (%ld)]",
+                                 eventid, useeventsDb->getIntValue("STARTTIME"), useeventsDb->getIntValue("DURATION"));
          }
 
          hasEvent = yes;
