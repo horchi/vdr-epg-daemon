@@ -1107,8 +1107,16 @@ int cEpgHttpd::doProxy(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
    if (!url)
       return buildResponse(obj, MHD_HTTP_BAD_REQUEST, "Missing id in request");
 
+   tell(4, "Debug: Download URL '%s'", url);
+
    if (curl.downloadFile(url, size, data) != success)
+   {
+      tell(0, "Error: Download '%s' failed", url);
       statusCode = MHD_HTTP_NOT_FOUND;
+   }
+
+   if (strcasecmp(typeId, "constabel") == 0)
+      tell(4, "Debug: [%s]", data->memory);
 
    free(url);
 

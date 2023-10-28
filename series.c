@@ -68,8 +68,8 @@ int cEpgd::evaluateEpisodes()
 
             episodeDb->clear();
             episodeDb->setValue("COMBINEDCOMP", eventsDb->getStrValue("COMPTITLE"));
-            // int dist = strlen(episodeDb->getStrValue("COMBINEDCOMP")) / 100.0 * 20.0;
-            // maxLvDistance.setValue(dist);
+            int dist = strlen(episodeDb->getStrValue("COMBINEDCOMP")) / 100.0 * 20.0;
+            maxLvDistance.setValue(dist);
             tell(eloDetail, "CONSTABEL: Try event lookup by combined name '%s'", episodeDb->getStrValue("COMBINEDCOMP"));
 
             found = selectByCompNamesCombined->find();
