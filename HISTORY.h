@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.22"
-#define VERSION_DATE "14.02.2023"
+#define _VERSION     "1.3.23"
+#define VERSION_DATE "22.02.2024"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2024-02-22: version 1.3.23 (horchi)
+   - Bugfix: Fixed elglvr on empty strings
 
 2023-02-14: version 1.3.22 (horchi)
    - Added: Theme handling via build process

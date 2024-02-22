@@ -48,10 +48,11 @@ void epglvr_deinit(UDF_INIT* init)
 long long epglvr(UDF_INIT* init, UDF_ARGS* args, char* is_null, char* error)
 {
    long long len1 = 0, len2 = 0;
-
    long long diff = base_epglv(init, args, is_null, error, &len1, &len2);
-
    long long len = len1 < len2 ? len2 : len1;
+
+   if (diff <= 0)
+      return 0;
 
    return (double)diff / ((double)len / 100.0);
 }
