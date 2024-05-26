@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.23"
-#define VERSION_DATE "22.02.2024"
+#define _VERSION     "1.3.24"
+#define VERSION_DATE "26.05.2024"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2024-05-26: version 1.3.24 (horchi)
+   - Bugfix: Fixed python init (patch from seahawk1986)
 
 2024-02-22: version 1.3.23 (horchi)
    - Bugfix: Fixed elglvr on empty strings

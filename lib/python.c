@@ -221,8 +221,11 @@ int Python::init(const char* modulePath)
    // register event methods
 
 #if PY_MAJOR_VERSION >= 3
-   PyImport_AppendInittab("event", &PyInitEvent);
-   if (!usages) Py_Initialize();            // initialize the Python interpreter
+   if (!Py_IsInitialized())
+   {
+      PyImport_AppendInittab("event", &PyInitEvent);
+      Py_Initialize();            // initialize the Python interpreter
+   }
    pName = PyUnicode_FromString(file);
 #else
    if (!usages) Py_Initialize();            // initialize the Python interpreter
