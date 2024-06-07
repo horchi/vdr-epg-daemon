@@ -7,10 +7,10 @@
 
 #include "python.h"
 
-cDbTable* Python::globalEventsDb = 0;
-int Python::usages = 0;
-int Python::globalNamingMode = 0;
-const char* Python::globalTmplExpression = "";
+cDbTable* Python::globalEventsDb {};
+int Python::usages {};
+int Python::globalNamingMode {};
+const char* Python::globalTmplExpression {""};
 
 //***************************************************************************
 // Static Interface Methods (Table events)
@@ -214,7 +214,7 @@ Python::~Python()
 
 int Python::init(const char* modulePath)
 {
-   PyObject* pName;
+   PyObject* pName {};
 
    tell(eloInfo, "Initialize python script '%s/%s.py'", modulePath, file);
 

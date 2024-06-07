@@ -308,7 +308,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
       {
          if (ptyRecName->execute(useeventsDb, namingmode, tmplExpression) == success)
          {
-            tell(eloDetail, "Info: The recording name (mode=%d) calculated by 'recording.py' is '%s'",
+            tell(eloInfo, "Info: The recording name (mode=%d) calculated by 'recording.py' is '%s'",
                  namingmode, ptyRecName->getResult());
 
             if (!isEmpty(ptyRecName->getResult()))

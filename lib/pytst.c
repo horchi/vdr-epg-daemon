@@ -61,15 +61,15 @@ int exit()
 int main(int argc, char** argv)
 {
    cEpgConfig::logstdout = yes;
-   cEpgConfig::eloquence = eloInfo | eloDetail | eloWarning | eloError;
+   cEpgConfig::eloquence = (Eloquence)(eloInfo | eloDetail | eloWarning | eloError);
    int namingmode = tnmAuto;
    const char* tmplExpression = "";
 
    if (argc < 4)
    {
-      tell(0, "Usage: pytst <cnt_source> <cnt_channnelid> <cn_eventid> [<namingmode>] [<template>]");
+      tell(0, "Usage: pytst <cnt_source> <cnt_channnelid> <cnt_eventid> [<namingmode>] [<template>]");
       tell(0, " Get the data e.g. with:");
-      tell(0, "   %s", "mysql -u epg2vdr -pepg -Depg2vdr --default-character-set=utf8' epgdb -e \"select cnt_source, cnt_eventid, cnt_channelid, sub_title, sub_shorttext from useevents where sub_title like '%whatever%';\"");
+      tell(0, "   %s", "mysql -u epg2vdr -pepg -Depg2vdr --default-character-set=utf8 -e \"select cnt_source, cnt_channelid, cnt_eventid, sub_title, sub_shorttext from useevents where sub_title like '%whatever%';\"");
       return 1;
    }
 

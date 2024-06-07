@@ -69,42 +69,43 @@ class cSearchTimer
 
       // data
 
-      Python* ptyRecName;
+      Python* ptyRecName {};
 
-      cDbConnection* connection;
+      cDbConnection* connection {};
 
-      cDbTable* searchtimerDb;
-      cDbTable* useeventsDb;
-      cDbTable* timersDoneDb;
-      cDbTable* timerDb;
-      cDbTable* mapDb;
-      cDbTable* vdrDb;
-      // cDbTable* messageDb;
+      cDbTable* searchtimerDb {};
+      cDbTable* useeventsDb {};
+      cDbTable* timersDoneDb {};
+      cDbTable* timerDb {};
+      cDbTable* mapDb {};
+      cDbTable* vdrDb {};
+      // cDbTable* messageDb {};
 
-      cDbStatement* selectChannelFromMap;
-      cDbStatement* selectDoneTimer;
-      cDbStatement* selectActiveSearchtimers;
-      cDbStatement* selectSearchtimerMaxModSp;
-      cDbStatement* selectSearchTimerByName;
-      cDbStatement* selectSearchTimerById;
-      // cDbStatement* selectActiveVdrs;
-      cDbStatement* selectAllTimer;
-      cDbStatement* selectRPTimerByEvent;
-      cDbStatement* selectTimerByEventId;
-      cDbStatement* selectConflictingTimers;
-      cDbStatement* selectFailedTimerByEvent;
-      cDbStatement* selectEvent;
+      cDbStatement* selectChannelFromMap {};
+      cDbStatement* selectDoneTimer {};
+      cDbStatement* selectActiveSearchtimers {};
+      cDbStatement* selectSearchtimerMaxModSp {};
+      cDbStatement* selectSearchTimerByName {};
+      cDbStatement* selectSearchTimerById {};
+      // cDbStatement* selectActiveVdrs {};
+      cDbStatement* selectAllTimer {};
+      cDbStatement* selectRPTimerByEvent {};
+      cDbStatement* selectTimerByEventId {};
+      cDbStatement* selectConflictingTimers {};
+      cDbStatement* selectFailedTimerByEvent {};
+      cDbStatement* selectEvent {};
 
       cDbValue startValue;
       cDbValue endValue;
 
-      time_t lastSearchTimerUpdate;
+      time_t lastSearchTimerUpdate {0};
 
       static int searchField[];
       static const char* searchFieldName[];
       static int repeadCheckField[];
       static const char* repeadCheckFieldName[];
-      cFrame* parent;
+
+      cFrame* parent {};
 };
 
 //***************************************************************************

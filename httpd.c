@@ -20,10 +20,8 @@
 #include "svdrpclient.h"
 #include "httpd.h"
 
-const char* logPrefix = LOG_PREFIX;
-class Python;
-
-const char* realm = "Maintenance";
+const char* logPrefix {LOG_PREFIX};
+const char* realm {"Maintenance"};
 
 //***************************************************************************
 // EPG Http Daemon
@@ -31,7 +29,7 @@ const char* realm = "Maintenance";
 
 bool cEpgHttpd::shutdown {false};
 cEpgHttpd* cEpgHttpd::singleton {};
-const char* confDir {(char*)confDirDefault};
+const char* confDir {confDirDefault};
 
 //***************************************************************************
 // Rights Management
