@@ -33,6 +33,7 @@ core:
 	@cat ./src/lang/$(DEFAULT_LANG).js >>  ./epgd.full.js
 	@cat ./src/js/*.js >>  ./epgd.full.js
 	@java -jar tools/yuicompressor-2.4.8.jar ./epgd.full.js -o ./www/epgd.js -v
+	#cat ./epgd.full.js >> ./www/epgd.js
 
 # baut aus allen benötigten 3rdParty-scripten eine gesamt Javascriptdatei -> www/common.js
 

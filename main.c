@@ -84,12 +84,12 @@ int validateAlterDatabase()
 
 int main(int argc, char** argv)
 {
-   cEpgd* job;
-   int doValidateAlterDatabase = no;
-   int nofork = no;
-   int logstdout = na;
+   cEpgd* job {};
+   bool doValidateAlterDatabase {false};
+   bool nofork {false};
+   int logstdout {na};
    Eloquence _eloquence {eloNone};
-   int logfacility = Syslog::toCode("user");
+   int logfacility {Syslog::toCode("user")};
 
    // Usage ..
 
@@ -113,7 +113,7 @@ int main(int argc, char** argv)
          case 'n': nofork = yes;                              break;
          case 'c': if (argv[i+1]) confDir = argv[++i];        break;
          case 'M': EpgdConfig.maintanance = yes;              break;
-         case 'u': doValidateAlterDatabase = yes;             break;
+         case 'u': doValidateAlterDatabase = true;            break;
          case 'i':
          {
             if (argv[i+1])

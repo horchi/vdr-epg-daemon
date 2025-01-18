@@ -1190,15 +1190,8 @@ int cSearchTimer::updateSearchTimers(int force, const char* reason)
 
 int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
 {
-   // std::string chkFields = "";
-
    if (repeatfields <= 0)
-      return no;
-
-   tell(eloDetail, "Check if '%s/%s' already recorded by fields (%d)",
-        useeventsDb->getStrValue("TITLE"),
-        useeventsDb->getStrValue("SHORTTEXT"),
-        repeatfields);
+      return false;
 
    // --------------------------------------
    // check timersdone to avoid repeading
@@ -1212,21 +1205,11 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
    selectDoneTimer->build(" from %s where ", timersDoneDb->TableName());
 
    // retry only 'F'ailed and re'J'ected timers, don't retry 'D'eleted timers sice they are deleted by user
-   /*
-     select id, state, title,comptitle, shorttext,compshorttext from timersdone where
-     state not in ('F','J')
-     and
-          (field('DERSTAATSANWALTDASLUDER', ifnull(comptitle,''),ifnull(episodecompshortname,'')) > 0
-       or  field('',ifnull(comptitle,''),ifnull(episodecompshortname,'NoShortnameAvailable')) > 0)
-     and
-          (field('',ifnull(compshorttext,''),ifnull(episodecomppartname,'')) > 0
-       or  field('',ifnull(compshorttext,''),ifnull(episodecomppartname,'')) > 0);
-   */
 
    selectDoneTimer->build(" %s not in ('F','J')",      // mysql ignoring case by default!
                           timersDoneDb->getField("STATE")->getDbName());
 
-   if (repeatfields & sfTitle || repeatfields & sfFolge)  // 'Folge' vergelichen und 'Titel' nicht macht keinen Sinn
+   if (repeatfields & sfTitle || repeatfields & sfFolge)  // 'Folge' vergleichen und 'Titel' nicht macht keinen Sinn
    {
       selectDoneTimer->build(" and (field('%s', ifnull(comptitle,''),ifnull(episodecompshortname,'')) > 0"
                              "   or field('%s',ifnull(comptitle,''),ifnull(episodecompshortname,'NoShortnameAvailable')) > 0)",
@@ -1243,11 +1226,12 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
    if (selectDoneTimer->prepare() != success)
    {
       tell("Error: AUTOTIMER: Prepare of statement for 'done' check failed, skipping");
-      return yes;
+      return true;
    }
 
    timersDoneDb->clear();
 
+   bool result {false};
    json_t* oDones = json_array();
    int cnt = 0;
 
@@ -1265,7 +1249,8 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
       if (!obj)
       {
          selectDoneTimer->freeResult();
-         return yes;
+         result = true;
+         break;
       }
 
       // add to json object
@@ -1281,7 +1266,12 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
    if (obj && cnt)
       json_object_set_new(obj, "dones", oDones);
 
-   return no;
+   tell(eloDetail, "Check if '%s/%s' already recorded by fields (%d) -> '%s'",
+        useeventsDb->getStrValue("TITLE"),
+        useeventsDb->getStrValue("SHORTTEXT"),
+        repeatfields, result ? "yes" : "no");
+
+   return result;
 }
 
 //***************************************************************************

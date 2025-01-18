@@ -1,12 +1,10 @@
 
 #include "python.h"
 
-
 #include "config.h"
 #include "common.h"
 #include "db.h"
 #include "epgservice.h"
-
 
 cDbTable* eventsDb = 0;
 cDbConnection* connection = 0;
@@ -111,6 +109,8 @@ int main(int argc, char** argv)
    // Python stuff ..
 
    Python py("recording", "name");
+
+   py.initGlobal();
 
    if (py.init("/etc/epgd") != success)
    {

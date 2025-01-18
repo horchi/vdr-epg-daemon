@@ -168,8 +168,6 @@ PyMethodDef Python::eventMethods[] =
    {            0,                       0,                   0,                        0   }
 };
 
-#if PY_MAJOR_VERSION >= 3
-
 PyModuleDef Python::moduledef =
 {
    PyModuleDef_HEAD_INIT,    // m_base
@@ -183,8 +181,6 @@ PyModuleDef Python::moduledef =
    0,                        // inquiry m_clear         - clear function to call during GC clearing of the module object, or NULL if not needed.
    0                         // freefunc m_free         - function to call during deallocation of the module object or NULL if not needed.
 };
-
-#endif
 
 //***************************************************************************
 // Object
@@ -209,37 +205,39 @@ Python::~Python()
 }
 
 //***************************************************************************
+// STATIC Init Global
+//  - call from main thread!
+//***************************************************************************
+
+int Python::initGlobal()
+{
+   if (!Py_IsInitialized())
+   {
+      PyImport_AppendInittab("event", &PyInitEvent);
+      Py_Initialize();            // initialize the Python interpreter
+      /* PyThreadState *mainThreadState = */ PyEval_SaveThread();
+   }
+
+   return done;
+}
+
+//***************************************************************************
 // Init / Exit
 //***************************************************************************
 
 int Python::init(const char* modulePath)
 {
-   PyObject* pName {};
-
    tell(eloInfo, "Initialize python script '%s/%s.py'", modulePath, file);
 
-   // register event methods
-
-#if PY_MAJOR_VERSION >= 3
-   if (!Py_IsInitialized())
-   {
-      PyImport_AppendInittab("event", &PyInitEvent);
-      Py_Initialize();            // initialize the Python interpreter
-   }
-   pName = PyUnicode_FromString(file);
-#else
-   if (!usages) Py_Initialize();            // initialize the Python interpreter
-   Py_InitModule("event", eventMethods);
-   pName = PyString_FromString(file);
-#endif
-
+   PyGILState_STATE gstate {PyGILState_Ensure()};
+   PyObject* pName {PyUnicode_FromString(file)};
    usages++;
 
    // add search path for Python modules
 
    if (modulePath)
    {
-      char* p;
+      char* p {};
       asprintf(&p, "sys.path.append(\"%s\")", modulePath);
       PyRun_SimpleString("import sys");
       PyRun_SimpleString(p);
@@ -255,7 +253,7 @@ int Python::init(const char* modulePath)
    {
       showError();
       tell("Failed to load '%s.py'", file);
-
+      PyGILState_Release(gstate);
       return fail;
    }
 
@@ -269,9 +267,11 @@ int Python::init(const char* modulePath)
          showError();
 
       tell("Cannot find function '%s'", function);
-
+      PyGILState_Release(gstate);
       return fail;
    }
+
+   PyGILState_Release(gstate);
 
    return success;
 }
@@ -298,8 +298,7 @@ int Python::exit()
 
 int Python::execute(cDbTable* eventsDb, int namingmode, const char* tmplExpression)
 {
-   PyObject* pValue;
-
+   PyObject* pValue {};
    free(result);
    result = 0;
 
@@ -307,34 +306,28 @@ int Python::execute(cDbTable* eventsDb, int namingmode, const char* tmplExpressi
    globalNamingMode = namingmode;
    globalTmplExpression = tmplExpression;
 
+   PyGILState_STATE gstate {PyGILState_Ensure()};
+
    pValue = PyObject_CallObject(pFunc, 0);
 
    if (!pValue)
    {
       showError();
       tell("Python: Call of function '%s()' failed", function);
-
+      PyGILState_Release(gstate);
       return fail;
    }
 
-#if PY_MAJOR_VERSION >= 3
-   // PyObject* strExc = PyObject_Repr(pValue);
-   // PyObject* pyStr = PyUnicode_AsEncodedString(strExc, "utf-8", "replace");
    PyObject* pyStr = PyUnicode_AsEncodedString(pValue, "utf-8", "replace");
    result = strdup(PyBytes_AsString(pyStr));
-   // Py_XDECREF(strExc);
-
-#else
-   result = strdup(PyString_AsString(pValue));
-#endif
 
    tell(eloDetail, "Result of call: %s", result);
 
    Py_DECREF(pValue);
+   PyGILState_Release(gstate);
 
    return success;
 }
-
 
 //***************************************************************************
 // Dup Py String
@@ -342,8 +335,8 @@ int Python::execute(cDbTable* eventsDb, int namingmode, const char* tmplExpressi
 
 char* dupPyString(PyObject* pyObj)
 {
-   char* s;
-   PyObject* pyString;
+   char* s {};
+   PyObject* pyString {};
 
    if (!pyObj || !(pyString=PyObject_Str(pyObj)))
    {
@@ -351,32 +344,14 @@ char* dupPyString(PyObject* pyObj)
       return s;
    }
 
-#if PY_MAJOR_VERSION >= 3
    PyObject* pyUni = PyObject_Repr(pyString);    // Now a unicode object
    PyObject* pyStr = PyUnicode_AsEncodedString(pyUni, "utf-8", "Error ~");
    s = strdup(PyBytes_AsString(pyStr));
    Py_XDECREF(pyUni);
    Py_XDECREF(pyStr);
-#else
-   s = strdup(PyString_AsString(pyString));
-#endif
-
    Py_DECREF(pyString);
 
    return s;
-}
-
-//***************************************************************************
-// PY String From String
-//***************************************************************************
-
-PyObject* pyStringFromString(const char* s)
-{
-#if PY_MAJOR_VERSION >= 3
-   return PyUnicode_FromString(s);
-#else
-   return PyString_FromString(s);
-#endif
 }
 
 //***************************************************************************
@@ -385,14 +360,14 @@ PyObject* pyStringFromString(const char* s)
 
 void Python::showError()
 {
-   char* error;
-   PyObject *ptype = 0, *pError = 0, *ptraceback = 0;
-   PyObject *moduleName, *pythModule;
+   char* error {};
+   PyObject *ptype  {}, *pError  {}, *ptraceback  {};
+   PyObject *moduleName {}, *pythModule {};
 
    PyErr_Fetch(&ptype, &pError, &ptraceback);
 
    error = dupPyString(pError);
-   moduleName = pyStringFromString("traceback");
+   moduleName = PyUnicode_FromString("traceback");
 
    tell("Python error was '%s'", error);
 

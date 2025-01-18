@@ -247,6 +247,7 @@ const char* strImlibError(Imlib_Load_Error err)
       case IMLIB_LOAD_ERROR_PERMISSION_DENIED_TO_WRITE:         return "Permission denied to write";
       case IMLIB_LOAD_ERROR_OUT_OF_DISK_SPACE:                  return "Out of disk space";
       case IMLIB_LOAD_ERROR_UNKNOWN:                            return "Unknown format";
+      default: return "";
    }
 
    return "";

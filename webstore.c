@@ -5,7 +5,7 @@
  *
  */
 
-#include "lib/python.h"   // at first du to symbol conflict with older python headers
+#include "lib/python.h"
 
 #include "httpd.h"
 
@@ -306,6 +306,14 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
 
       if (namingmode != tnmDefault && hasEvent)
       {
+         if (!ptyRecName)
+         {
+            ptyRecName = new Python("recording", "name");
+
+            if (ptyRecName->init(confDir) != success)
+               return buildResponse(response, MHD_HTTP_NOT_FOUND, "Init python failed, aborting request!");
+         }
+
          if (ptyRecName->execute(useeventsDb, namingmode, tmplExpression) == success)
          {
             tell(eloInfo, "Info: The recording name (mode=%d) calculated by 'recording.py' is '%s'",

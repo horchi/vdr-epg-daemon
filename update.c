@@ -5,6 +5,8 @@
  *
  */
 
+#include "lib/python.h"
+
 #include <dirent.h>
 #include <unistd.h>
 #include <inttypes.h>
@@ -131,6 +133,10 @@ int cEpgd::init()
    // first - prepare my uuid
 
    initUuid();
+
+   // init python lib
+
+   Python::initGlobal();
 
    // initialize the dictionary
 
@@ -335,13 +341,13 @@ int cEpgd::checkDbDdl()
    // initially create/alter tables and indices
    // ------------------------------------------
 
-   tell(eloInfo, "Checking database connection ...");
+   // tell(eloInfo, "Checking database connection ...");
 
-   if (connection->attachConnection() != success)
-   {
-      tell("Fatal: Initial database connect failed, aborting");
-      return abrt;
-   }
+   // if (connection->attachConnection() != success)
+   // {
+   //    tell("Fatal: Initial database connect failed, aborting");
+   //    return abrt;
+   // }
 
    std::map<std::string, cDbTableDef*>::iterator t;
 
@@ -370,10 +376,10 @@ int cEpgd::checkDbDdl()
       delete table;
    }
 
-   connection->detachConnection();
+   // connection->detachConnection();
 
-   if (status != success)
-      return abrt;
+   // if (status != success)
+   //    return abrt;
 
    tell(eloInfo, "Checking table structure and indices succeeded");
 
@@ -399,6 +405,20 @@ int cEpgd::initDb()
 
    if (initial)
    {
+      int tries {0};
+
+      while (connection->attachConnection() != success)
+      {
+         if (tries++ > 5)
+         {
+            tell("Fatal: Initial database connect failed #%d times, aborting", tries);
+            return abrt;
+         }
+
+         tell("Error: DB connection failed, retry in 2 seconds");
+         sleep(2);
+      }
+
       vdrDb = new cDbTable(connection, "vdrs");
 
       if (vdrDb->exist())
@@ -429,6 +449,8 @@ int cEpgd::initDb()
 
       if ((status = checkDbDdl()) == abrt)
          return abrt;
+
+      connection->detachConnection();
    }
 
    initial = false;

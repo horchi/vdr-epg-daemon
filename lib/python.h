@@ -5,8 +5,7 @@
  *
  */
 
-#ifndef __PYTHON_H
-#define __PYTHON_H
+#pragma once
 
 #include <Python.h>
 
@@ -23,6 +22,7 @@ class Python
       Python(const char* aFile, const char* aFunction);
       ~Python();
 
+      static int initGlobal();
       int init(const char* modulePath = 0);
       int exit();
 
@@ -54,12 +54,12 @@ class Python
 
       // data
 
-      PyObject* pModule;
-      PyObject* pFunc;
+      PyObject* pModule {};
+      PyObject* pFunc {};
 
-      char* file;
-      char* function;
-      char* result;
+      char* file {};
+      char* function {};
+      char* result {};
 
       // static stuff
 
@@ -69,11 +69,6 @@ class Python
       static const char* globalTmplExpression;
       static PyMethodDef eventMethods[];
 
-#if PY_MAJOR_VERSION >= 3
       static PyObject* PyInitEvent() { return PyModule_Create(&Python::moduledef); }
       static PyModuleDef moduledef;
-#endif
 };
-
-//***************************************************************************
-#endif // __PYTHON_H

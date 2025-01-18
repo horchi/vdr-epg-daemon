@@ -368,7 +368,7 @@ class cUserTimes
          char* title;
          char* search;
          int hhmm;
-         char hhmmStr[5+TB];
+         char hhmmStr[20+TB];
       };
 
       cUserTimes()

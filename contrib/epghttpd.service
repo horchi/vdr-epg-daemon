@@ -8,6 +8,7 @@ After = epgd.service
 Type = forking
 ExecStart = <BINDEST>/epghttpd -c /etc/epgd
 Restart = always
+RestartSec = 10
 
 [Install]
 

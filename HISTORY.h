@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.24"
-#define VERSION_DATE "26.05.2024"
+#define _VERSION     "1.3.25"
+#define VERSION_DATE "18.01.2025"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2025-01-18: version 1.3.25 (horchi)
+   - Change: Porting to python lib >= 3.12
 
 2024-05-26: version 1.3.24 (horchi)
    - Bugfix: Fixed python init (patch from seahawk1986)

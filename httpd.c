@@ -23,6 +23,8 @@
 const char* logPrefix {LOG_PREFIX};
 const char* realm {"Maintenance"};
 
+thread_local Python* cEpgHttpd::ptyRecName {};
+
 //***************************************************************************
 // EPG Http Daemon
 //***************************************************************************
@@ -114,10 +116,7 @@ UserMask cEpgHttpd::toRightMask(const char* url)
 cEpgHttpd::cEpgHttpd()
 {
    lastSdWatchdogAt = time(0);
-
    search = new cSearchTimer(this);
-   ptyRecName = new Python("recording", "name");
-
    setlocale(LC_CTYPE, "");
    const char* lang = setlocale(LC_CTYPE, 0);
 
@@ -144,7 +143,6 @@ cEpgHttpd::~cEpgHttpd()
    cSystemNotification::notify(evStopping);
 
    delete search;
-   delete ptyRecName;
 }
 
 //***************************************************************************
@@ -161,14 +159,18 @@ int cEpgHttpd::init()
 #endif
    singleton = this;
 
+   // init python lib
+
+   Python::initGlobal();
+
    if (readConfig() != success)
       return fail;
 
    if (search->init(confDir) != success)
       return fail;
 
-   if (ptyRecName->init(confDir) != success)
-      return fail;
+   // if (ptyRecName->init(confDir) != success)
+   //    return fail;
 
    // initialize the dictionary
 

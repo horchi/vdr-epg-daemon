@@ -207,7 +207,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
 
       int withutf8 {no};
       cSearchTimer* search {};
-      Python* ptyRecName {};
+      static thread_local Python* ptyRecName;
 
       // database stuff
 
