@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.25"
-#define VERSION_DATE "18.01.2025"
+#define _VERSION     "1.3.26"
+#define VERSION_DATE "19.01.2025"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2025-01-19: version 1.3.26 (horchi)
+   - Change: Fixed warnings g++ 13 warnings, minor improvements
 
 2025-01-18: version 1.3.25 (horchi)
    - Change: Porting to python lib >= 3.12

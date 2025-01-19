@@ -169,9 +169,6 @@ int cEpgHttpd::init()
    if (search->init(confDir) != success)
       return fail;
 
-   // if (ptyRecName->init(confDir) != success)
-   //    return fail;
-
    // initialize the dictionary
 
    asprintf(&dictPath, "%s/epg.dat", confDir);

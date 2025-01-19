@@ -12,6 +12,22 @@
 #include "db.h"
 
 //***************************************************************************
+// Class Python GIL Lock
+//***************************************************************************
+
+class PythonGilLock
+{
+   public:
+
+      PythonGilLock() { gstate = PyGILState_Ensure(); }
+      ~PythonGilLock() { PyGILState_Release(gstate); }
+
+   private:
+
+      PyGILState_STATE gstate;
+};
+
+//***************************************************************************
 // Class Python
 //***************************************************************************
 

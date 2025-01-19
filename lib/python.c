@@ -227,11 +227,12 @@ int Python::initGlobal()
 
 int Python::init(const char* modulePath)
 {
-   tell(eloInfo, "Initialize python script '%s/%s.py'", modulePath, file);
+   PythonGilLock gilLock;
 
-   PyGILState_STATE gstate {PyGILState_Ensure()};
-   PyObject* pName {PyUnicode_FromString(file)};
+   tell(eloInfo, "Initialize python script '%s/%s.py'", modulePath, file);
    usages++;
+
+   PyObject* pName {PyUnicode_FromString(file)};
 
    // add search path for Python modules
 
@@ -253,7 +254,6 @@ int Python::init(const char* modulePath)
    {
       showError();
       tell("Failed to load '%s.py'", file);
-      PyGILState_Release(gstate);
       return fail;
    }
 
@@ -267,11 +267,8 @@ int Python::init(const char* modulePath)
          showError();
 
       tell("Cannot find function '%s'", function);
-      PyGILState_Release(gstate);
       return fail;
    }
-
-   PyGILState_Release(gstate);
 
    return success;
 }
@@ -306,7 +303,7 @@ int Python::execute(cDbTable* eventsDb, int namingmode, const char* tmplExpressi
    globalNamingMode = namingmode;
    globalTmplExpression = tmplExpression;
 
-   PyGILState_STATE gstate {PyGILState_Ensure()};
+   PythonGilLock gilLock;
 
    pValue = PyObject_CallObject(pFunc, 0);
 
@@ -314,7 +311,6 @@ int Python::execute(cDbTable* eventsDb, int namingmode, const char* tmplExpressi
    {
       showError();
       tell("Python: Call of function '%s()' failed", function);
-      PyGILState_Release(gstate);
       return fail;
    }
 
@@ -324,7 +320,6 @@ int Python::execute(cDbTable* eventsDb, int namingmode, const char* tmplExpressi
    tell(eloDetail, "Result of call: %s", result);
 
    Py_DECREF(pValue);
-   PyGILState_Release(gstate);
 
    return success;
 }

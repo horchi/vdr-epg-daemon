@@ -330,75 +330,84 @@ int cCurl::GetUrlFile(const char* url, const char* filename, const std::string& 
 
 int cCurl::PostUrl(const char* url, const std::string &sPost, std::string* sOutput, const std::string &sReferer)
 {
-  init();
+   init();
 
-  int retval = 1;
-  std::string::size_type nStart = 0, nEnd, nPos;
-  std::string sTmp, sName, sValue;
-  struct curl_httppost *formpost {};
-  struct curl_httppost *lastptr {};
-  struct curl_slist *headerlist {};
+   int retval {1};
+   std::string::size_type nStart {0}, nEnd {0}, nPos {0};
+   std::string sTmp, sName, sValue;
+   struct curl_slist* headerlist {};
 
-  // Add the POST variables here
+   curl_mime* multipart {curl_mime_init(handle)};
+   curl_mimepart* part {};
 
-  while ((nEnd = sPost.find("##", nStart)) != std::string::npos)
-  {
-     sTmp = sPost.substr(nStart, nEnd - nStart);
+   // Add the POST variables here
 
-     if ((nPos = sTmp.find("=")) == std::string::npos)
-        return 0;
+   while ((nEnd = sPost.find("##", nStart)) != std::string::npos)
+   {
+      sTmp = sPost.substr(nStart, nEnd - nStart);
 
-     sName = sTmp.substr(0, nPos);
-     sValue = sTmp.substr(nPos+1);
-     curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, sName.c_str(), CURLFORM_COPYCONTENTS, sValue.c_str(), CURLFORM_END);
-     nStart = nEnd + 2;
-  }
-  sTmp = sPost.substr(nStart);
+      if ((nPos = sTmp.find("=")) == std::string::npos)
+         return 0;
 
-  if ((nPos = sTmp.find("=")) == std::string::npos)
-     return 0;
+      sName = sTmp.substr(0, nPos);
+      sValue = sTmp.substr(nPos+1);
 
-  sName = sTmp.substr(0, nPos);
-  sValue = sTmp.substr(nPos+1);
-  curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, sName.c_str(), CURLFORM_COPYCONTENTS, sValue.c_str(), CURLFORM_END);
+      part = curl_mime_addpart(multipart);
+      curl_mime_name(part, sName.c_str());
+      curl_mime_data(part, sValue.c_str(), CURL_ZERO_TERMINATED);
 
-  retval = curl.DoPost(url, sOutput, sReferer, formpost, headerlist);
+      nStart = nEnd + 2;
+   }
+   sTmp = sPost.substr(nStart);
 
-  curl_formfree(formpost);
-  curl_slist_free_all(headerlist);
+   if ((nPos = sTmp.find("=")) == std::string::npos)
+      return 0;
 
-  return retval;
+   sName = sTmp.substr(0, nPos);
+   sValue = sTmp.substr(nPos+1);
+
+   part = curl_mime_addpart(multipart);
+   curl_mime_name(part, sName.c_str());
+   curl_mime_data(part, sValue.c_str(), CURL_ZERO_TERMINATED);
+
+   retval = curl.DoPost(url, sOutput, sReferer, multipart, headerlist);
+   curl_mime_free(multipart);
+   curl_slist_free_all(headerlist);
+
+   return retval;
 }
 
 int cCurl::PostRaw(const char* url, const std::string &sPost, std::string* sOutput, const std::string &sReferer)
 {
   init();
 
-  int retval;
-  struct curl_httppost *formpost {};
-  struct curl_slist *headerlist {};
+  int retval {0};
+  curl_mime* multipart = curl_mime_init(handle);
+  struct curl_slist* headerlist {};
 
   curl_easy_setopt(handle, CURLOPT_POSTFIELDS, sPost.c_str());
   curl_easy_setopt(handle, CURLOPT_POSTFIELDSIZE, 0); //FIXME: Should this be the size instead, in case this is binary string?
 
-  retval = curl.DoPost(url, sOutput, sReferer, formpost, headerlist);
+  retval = curl.DoPost(url, sOutput, sReferer, multipart, headerlist);
 
-  curl_formfree(formpost);
+  curl_mime_free(multipart);
   curl_slist_free_all(headerlist);
   return retval;
 }
 
-int cCurl::DoPost(const char *url, std::string* sOutput, const std::string &sReferer,
-                  struct curl_httppost *formpost, struct curl_slist *headerlist)
+int cCurl::DoPost(const char* url, std::string* sOutput, const std::string& sReferer,
+                  curl_mime* multipart, struct curl_slist* headerlist)
 {
    headerlist = curl_slist_append(headerlist, "Expect:");
 
    // Now do the form post
+
    curl_easy_setopt(handle, CURLOPT_URL, url);
+
    if (sReferer != "")
       curl_easy_setopt(handle, CURLOPT_REFERER, sReferer.c_str());
-   curl_easy_setopt(handle, CURLOPT_HTTPPOST, formpost);
 
+   curl_easy_setopt(handle, CURLOPT_MIMEPOST, multipart);
    curl_easy_setopt(handle, CURLOPT_WRITEDATA, sOutput); // Set option to write to string
 
    if (curl_easy_perform(handle) == 0)
