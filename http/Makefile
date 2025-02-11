@@ -11,8 +11,19 @@ LESS_Compiler = /usr/bin/rhino
 DEFAULT_LANG = de
 VERSION = $(shell grep 'define _VERSION ' ../HISTORY.h | awk '{ print $$3 }' | sed -e 's/[";]//g')
 
-#THEME=humanity
+# to change the theme install rhino and java:
+#  apt install default-jre rhino
+# download the theme if not already in ./3rdParty
+#  https://jqueryui.com/download/
+# and copy to ./3rdParty (follow the naming scheme!)
+# rebuild UI by (in http folder)
+#  make; make install
+
+# select (add) the theme here
+
 THEME=darkness
+#THEME=dot-luv
+#THEME=humanity
 #THEME=vader
 #THEME=start
 #THEME=overcast
@@ -22,24 +33,26 @@ THEME=darkness
 #THEME=south-street
 #THEME=tronastic
 
-JQUERY_UI = ./3rdParty/jquery-ui-1.11.4.custom.$(THEME)
+JQUERY_UI_VERSION = 1.14.1
+
+# on VERSION change patch also "./css/theme/default.less"
+
+JQUERY_UI = ./3rdParty/jquery-ui-$(JQUERY_UI_VERSION).custom.$(THEME)
 
 all: theme core common lang style
 
 # baut aus allen JS-Files innerhalb von src/js/ eine gesamt Javascriptdatei -> www/epgd.js
 
 core:
-	@echo "var epgd = {};" >  ./epgd.full.js
-	@cat ./src/lang/$(DEFAULT_LANG).js >>  ./epgd.full.js
-	@cat ./src/js/*.js >>  ./epgd.full.js
+	@echo "var epgd = {};" > ./epgd.full.js
+	@cat ./src/lang/$(DEFAULT_LANG).js >> ./epgd.full.js
+	@cat ./src/js/*.js >> ./epgd.full.js
 	@java -jar tools/yuicompressor-2.4.8.jar ./epgd.full.js -o ./www/epgd.js -v
-	#cat ./epgd.full.js >> ./www/epgd.js
 
 # baut aus allen benötigten 3rdParty-scripten eine gesamt Javascriptdatei -> www/common.js
 
 common:
-#	cat ./3rdParty/modernizr.custom.js > ./www/common.js
-	cat ./3rdParty/jquery-2.2.3.min.js > ./www/common.js
+	cat ./3rdParty/jquery-3.5.1.min.js > ./www/common.js
 	cat $(JQUERY_UI)/jquery-ui.min.js >> ./www/common.js
 	cat ./3rdParty/jQuery-Timepicker-Addon-master/dist/jquery-ui-timepicker-addon.min.js >> ./www/common.js
 #  cat ./3rdParty/jQuery-jQuery-UI-Plugin-For-Simle-Tokenized-Autocomplete-Autocomplete-Multiselect/src/jquery.autocomplete.multiselect.js >> ./www/common.js
@@ -68,8 +81,8 @@ theme:
 # baut das default-theme und hinter dann auch ggf. weitere themes
 
 style:
-	rm -f ./3rdParty/jquery-ui-1.11.4.custom
-	ln -s `basename $(JQUERY_UI)` ./3rdParty/jquery-ui-1.11.4.custom
+	rm -f ./3rdParty/jquery-ui-$(JQUERY_UI_VERSION).custom
+	ln -s `basename $(JQUERY_UI)` ./3rdParty/jquery-ui-$(JQUERY_UI_VERSION).custom
 	$(LESS_Compiler) -f ./tools/less-rhino-1.7.0.js ./tools/lessc-rhino-1.7.0.js --ru ./src/css/theme/default.less ./www/epgd.css
 
 fullinstall : all install
@@ -112,6 +125,3 @@ install-env:
 		mkdir -p "$(HTTPDEST)/images/"; \
 		chmod a+rx $(HTTPDEST)/images/; \
 	fi
-
-
-# https://jqueryui.com/download/#!version=1.11.4&components=1111111111111111111110000000000000000&zThemeParams=5d00008000e705000000000000003d8888d844329a8dfe02723de3e5701dc2cb2be0d98fe676bb46e85f3aa40c252a04b46f31562b0c806bd69f170762738b5397e133b132fe145d787e5ad5f6687b3e2fe39ebde1adf367a4dd23c595bf575aa368f41efe7ba104f8b2b474cc8ec6611e769a951b66e3c70e8268333419550d639e6a1e59b8c2f643b13b3d3f9c43eded892b613c0481985f9926a7a12f6acb61b179d33739b709ecc42656db78333df23a79cc2e9e44dd43223360bd7c1a8288e69afddc5ce632275c2382051d3325a2d6d4d3f5ba856eb9da8a390005ffac23fc020dcae25c4f3175797e6a39e2214ec32f0d9b45b2ac326b607031b09e95914759f919acde4bccf23e226717430062e95f35f0c90be401ef3eac71106fa99c6efb73290f982407c8037239f2dda9ca7b94da194e907a3b845f40b980bf01cfa3a2e190436e5fbd4b2c5f126f270843181bedf3d9866fd92d3433b20a0491082a5499b010d26cd907829aee63d41cd99674a5a85adfe4806fefb500becca6477bb5d54b7ccc64da364fb9127508ed2657afa8db823c0e569126011d1b302a5006dc73d4072bfc9c5b303c5921ca3be3a9423d7b8c82fb4361570681cc31865f8cfcef0c4a76e61b4e1f8356e37a560077d709375d023ffa791899bc8837f17cf976063affffe15b6707
