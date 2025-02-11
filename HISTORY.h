@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.27"
+#define _VERSION     "1.3.28"
 #define VERSION_DATE "11.02.2025"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2025-02-11: version 1.3.28 (horchi)
+   - Bugfix: Fixed python crash at exit
 
 2025-02-11: version 1.3.27 (horchi)
    - Change: Updated jquery / jqueryui version

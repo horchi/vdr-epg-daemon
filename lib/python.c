@@ -221,6 +221,11 @@ int Python::initGlobal()
    return done;
 }
 
+void Python::exitGlobal()
+{
+	Py_Finalize();
+}
+
 //***************************************************************************
 // Init / Exit
 //***************************************************************************
@@ -282,9 +287,6 @@ int Python::exit()
 
    if (pModule)
       Py_DECREF(pModule);
-
-   if (!usages)
-      Py_Finalize();
 
    return success;
 }

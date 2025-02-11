@@ -39,6 +39,8 @@ class Python
       ~Python();
 
       static int initGlobal();
+		static void exitGlobal();
+
       int init(const char* modulePath = 0);
       int exit();
 

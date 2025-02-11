@@ -91,6 +91,8 @@ cEpgd::cEpgd()
    {
       tell(eloInfo, "Info: Detecting locale setting for LC_CTYPE failed");
    }
+
+	Python::exitGlobal();
 }
 
 cEpgd::~cEpgd()

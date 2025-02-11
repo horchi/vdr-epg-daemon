@@ -319,6 +319,7 @@ int cEpgHttpd::exit()
    exitDb();
 
    cDbConnection::exit();
+   Python::exitGlobal();
 
    return done;
 }
