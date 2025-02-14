@@ -363,7 +363,7 @@ epgd.utils = {
     log: function (message, level) {
         console.log("error:" + message);
         try {
-            $.ajax({ url: "data/log", type: 'get', async: true, cache: false, data: "level=" + (level || 0) + "&message=" + escape(message) });
+            $.ajax({ url: epgd.login.url + "data/log", type: 'get', async: true, cache: false, data: "level=" + (level || 0) + "&message=" + escape(message) });
         } catch (e) {}
     }
 };
@@ -459,8 +459,8 @@ epgd.init = function () {
         }
         if (ev) {
             window.wrm_w = $(window).width();
-            if (!window.wrm_i) // Interval setzen, um sicher zu sein, dass die Breite jetzt stimmt
-                window.wrm_i = window.setInterval(epgd.$menu.checkMenuSize, 200,null,callback);
+           if (!window.wrm_i) // Interval setzen, um sicher zu sein, dass die Breite jetzt stimmt
+               window.wrm_i = window.setInterval(epgd.$menu.checkMenuSize, 200,null,callback);
         } else {
             if (epgd.$menu.height() > 40)
                 epgd.$menu.parent().addClass('mini');

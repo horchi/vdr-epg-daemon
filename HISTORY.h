@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.28"
-#define VERSION_DATE "11.02.2025"
+#define _VERSION     "1.3.29"
+#define VERSION_DATE "13.02.2025"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2025-02-13: version 1.3.29 (horchi)
+   - Change: downgarded jquery(ui) du to problems
 
 2025-02-11: version 1.3.28 (horchi)
    - Bugfix: Fixed python crash at exit

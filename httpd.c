@@ -141,8 +141,8 @@ cEpgHttpd::cEpgHttpd()
 cEpgHttpd::~cEpgHttpd()
 {
    cSystemNotification::notify(evStopping);
-
    delete search;
+   Python::exitGlobal();
 }
 
 //***************************************************************************
@@ -319,7 +319,6 @@ int cEpgHttpd::exit()
    exitDb();
 
    cDbConnection::exit();
-   Python::exitGlobal();
 
    return done;
 }

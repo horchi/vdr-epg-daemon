@@ -33,9 +33,9 @@ THEME=darkness
 #THEME=south-street
 #THEME=tronastic
 
-JQUERY_UI_VERSION = 1.14.1
+JQUERY_UI_VERSION = 1.11.4
 
-# on VERSION change patch also "./css/theme/default.less"
+# on VERSION change patch also "./src/css/theme/default.less"
 
 JQUERY_UI = ./3rdParty/jquery-ui-$(JQUERY_UI_VERSION).custom.$(THEME)
 
@@ -52,7 +52,7 @@ core:
 # baut aus allen benötigten 3rdParty-scripten eine gesamt Javascriptdatei -> www/common.js
 
 common:
-	cat ./3rdParty/jquery-3.5.1.min.js > ./www/common.js
+	cat ./3rdParty/jquery-2.2.3.min.js > ./www/common.js
 	cat $(JQUERY_UI)/jquery-ui.min.js >> ./www/common.js
 	cat ./3rdParty/jQuery-Timepicker-Addon-master/dist/jquery-ui-timepicker-addon.min.js >> ./www/common.js
 #  cat ./3rdParty/jQuery-jQuery-UI-Plugin-For-Simle-Tokenized-Autocomplete-Autocomplete-Multiselect/src/jquery.autocomplete.multiselect.js >> ./www/common.js

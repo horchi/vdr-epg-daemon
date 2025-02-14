@@ -12,23 +12,24 @@ epgd.pages.magazine = {
     imgPath: epgd.profile.eventImgPath ? epgd.profile.eventImgPath + '?no=0&maxW=100&maxH=70&id=' : false,
     init: function () {
         //this.initQT();
-        this.select = epgd.channels.selBox;
-
-        $(window).bind('channels_load', function () {
-            var self= epgd.pages.magazine,
-                id;
-            if (!self.$head)
-                return;
-            self.$head.empty();
-            for (id in self.list)
-                self.list[id].index = -1;
-            self._initChannels();
-            for (id in self.list)
-                if (self.list[id].index == -1) {
-                    self.preTime.removeChild(self.list[id].col);
-                    delete self.list[id];
-                };
-        });
+		 epgd.utils.log('init magazin', 2);
+       this.select = epgd.channels.selBox;
+       $(window).bind('channels_load', function () {
+          var self= epgd.pages.magazine;
+          if (!self.$head)
+             return;
+          self.$head.empty();
+          for (let id in self.list)
+             self.list[id].index = -1;
+          self._initChannels();
+          for (let id in self.list) {
+             if (self.list[id].index == -1) {
+                self.preTime.removeChild(self.list[id].col);
+                delete self.list[id];
+             }
+			 }
+       });
+		 epgd.utils.log('init magazin done', 2);
     },
     initQT: function () {
         var qt = {};
@@ -198,7 +199,7 @@ epgd.pages.magazine = {
             bot = $('<div style="width:90%; height:35px; position:fixed;z-index:99;bottom:0;left:5%"></div>').appendTo(epgd.$con)[0];
         this.timeLineL.pan = -1;
         this.timeLineR.pan = 1;
-        tp.pan = epgd.profile.magazinePan * -30;  
+        tp.pan = epgd.profile.magazinePan * -30;
         bot.pan = epgd.profile.magazinePan * 30;
 
         window.tp = tp;
@@ -223,13 +224,13 @@ epgd.pages.magazine = {
             pan = false;
         });
     },
-    setChannel: function (channel) { 
+    setChannel: function (channel) {
         if (this.list.lengt > 0)
-            this.setMain(0, this.list[channel].index); 
+            this.setMain(0, this.list[channel].index);
         else{
-            var self= this; 
+            var self= this;
             $(window).one("resize.pages_magazine",function(){
-                self.setMain(0, self.list[channel].index); 
+                self.setMain(0, self.list[channel].index);
             })
         }
     },
@@ -264,7 +265,7 @@ epgd.pages.magazine = {
             if (this.scrollStart < 0) {
                 this.scrollStart = 0;
                 this._setLineNow();
-            } 
+            }
             this.preTime.style.paddingTop = this.scrollStart + 'px';
         }
         if (this.endTime < newEndTime) {
@@ -324,7 +325,7 @@ epgd.pages.magazine = {
         window.setTimeout(function () {
             for (var i = 0, j = self.select.selectedIndex + self.viewCnt; i < self.viewCnt && j < self.select.length; i++)
                 self.select[j++].ch.updateTime();
-        }, 500);                                                                                     
+        }, 500);
     }
 };
 
@@ -399,10 +400,11 @@ epgd.pages.magazine.channel.prototype = {
                 insHtml = '<div style="height:' + h + 'px;min-height:' + h + 'px"></div>';
                 first = { starttime: startTime };
                 eTime = startTime;
-            } 
+            }
             if (insAfter) {
-                $col.append(insHtml);
-                $col.find('dt:last')[0].eTime = eTime;
+               $col.append(insHtml);
+					if ($col.find('dt:last').length)
+						$col.find('dt:last')[0].eTime = eTime;
             } else {
                 $col.prepend(insHtml);
                 if ($dt && $dt.length) {
@@ -412,9 +414,10 @@ epgd.pages.magazine.channel.prototype = {
                         h = parseInt(h/30,10) + parseInt($dt.css('min-height'), 10);
                         $dt.css({ "height": h + 'px', "min-height": h + 'px' })
                     }
-                } else
-                    $col.find('dt:last')[0].eTime = eTime;
-                $col.find('dt:first').css('margin-top', parseInt((first.starttime - startTime) / 30, 10))[0].starttime= first;
+                } else if ($col.find('dt:last').length)
+                   $col.find('dt:last')[0].eTime = eTime;
+					if ($col.find('dt:first').length)
+						$col.find('dt:first').css('margin-top', parseInt((first.starttime - startTime) / 30, 10))[0].starttime= first;
             }
             //self.html = $(col).html();
         });

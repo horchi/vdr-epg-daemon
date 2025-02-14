@@ -459,14 +459,14 @@ int cEpgHttpd::doHitKey(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doLog(MHD_Connection* tcp, json_t* obj)
 {
-   // int level = getIntParameter(tcp, "loglevel", 1);
+   int level = getIntParameter(tcp, "loglevel", 1);
    const char* msg = getStrParameter(tcp, "message", "");
    char* buffer = (char*)malloc(strlen(msg)+TB);
 
    urlUnescape(buffer, msg);
 
    if (!isEmpty(buffer))
-      tell(eloInfo, "webif: %s", buffer);
+      tell(eloAlways, "webif: (%d) %s\n", level, buffer);
 
    free(buffer);
 
