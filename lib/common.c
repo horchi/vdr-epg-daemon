@@ -1110,7 +1110,7 @@ time_t fileModTime(const char* path)
    if (lstat(path, &sb) == 0)
       return sb.st_mtime;
 
-   tell(eloWarning, "Warning: Can't detect modification time for '%s' failed, error was '%s'", path, strerror(errno));
+   tell(eloDebug, "Warning: Can't detect modification time for '%s' failed, error was '%s'", path, strerror(errno));
 
    return 0;
 }

@@ -466,7 +466,7 @@ int cEpgHttpd::doLog(MHD_Connection* tcp, json_t* obj)
    urlUnescape(buffer, msg);
 
    if (!isEmpty(buffer))
-      tell(eloAlways, "webif: (%d) %s\n", level, buffer);
+      tell(eloInfo, "webif: (%d) %s", level, buffer);
 
    free(buffer);
 

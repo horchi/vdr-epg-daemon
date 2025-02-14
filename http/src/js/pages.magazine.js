@@ -12,7 +12,6 @@ epgd.pages.magazine = {
     imgPath: epgd.profile.eventImgPath ? epgd.profile.eventImgPath + '?no=0&maxW=100&maxH=70&id=' : false,
     init: function () {
         //this.initQT();
-		 epgd.utils.log('init magazin', 2);
        this.select = epgd.channels.selBox;
        $(window).bind('channels_load', function () {
           var self= epgd.pages.magazine;
@@ -29,7 +28,6 @@ epgd.pages.magazine = {
              }
 			 }
        });
-		 epgd.utils.log('init magazin done', 2);
     },
     initQT: function () {
         var qt = {};
@@ -54,68 +52,72 @@ epgd.pages.magazine = {
         }
         this.$head.css('width',(208 * this.select.length + 55) + 'px');
     },
-    _initWinBindings: function(){
-        $(window)
+   _initWinBindings: function(){
+      $(window)
          .bind("epgd_close.pages_magazine", function () {
-             epgd.$dtPicker.hide();
-             $(window).unbind(".pages_magazine");
-             clearInterval(this.pages_magazine.timeInterval);
-             delete this.pages_magazine;
+            epgd.$dtPicker.hide();
+            $(window).unbind(".pages_magazine");
+            clearInterval(this.pages_magazine.timeInterval);
+            delete this.pages_magazine;
          })
          .bind("resize.pages_magazine", function () {
-             var w = $(window).width(),
-                 l = $(this).scrollLeft();
-             this.pages_magazine.$nav.width(w + 'px');
-             this.pages_magazine.$con.css('height', ($(window).height() - 10 - $('#magazine').offset().top) + 'px');
-             this.pages_magazine.viewCnt = parseInt((w - 110) / 208, 10);
-             if (this.pages_magazine.viewCnt < 5 ) {
-                 this.pages_magazine.timeLineR.style.left = '-50px';
-                 this.pages_magazine.$con.css('width', (208 * this.pages_magazine.select.length + 25) + 'px');
-             } else if (this.pages_magazine.viewCnt >= this.pages_magazine.select.length) {
-                 this.pages_magazine.viewCnt = this.pages_magazine.select.length;
-                 this.pages_magazine.timeLineR.style.left = '-50px';
-                 w = this.pages_magazine.viewCnt * 208 + 55;
-                 this.pages_magazine.$con.css('width', (w -30) + 'px');
-             } else {
-                 this.pages_magazine.timeLineR.style.left = (l + w - 52) + 'px';
-                 this.pages_magazine.$con.css('width', (208 * this.pages_magazine.select.length + 150) + 'px');
-             }
-             this.pages_magazine.lineNow.style.width = (w - 10) + 'px';
-             epgd.$menu.parent().offset({ 'left': l });
-             this.pages_magazine.$nav.offset({ 'left': l });
-             this.pages_magazine.update();
+            epgd.utils.log('magazin::_initWinBindings() resize.pages_magazine 222', 2);
+            let offTop = 30; // $('#magazine').offset().top;
+            let l = $(this).scrollLeft();
+            // const m = document.getElementById("magazine");
+            // const offTop = m.offsetTop;
+            this.pages_magazine.$nav.width(window.innerWidth + 'px');
+            this.pages_magazine.$con.css('height', (window.innerHeight - 10 - offTop) + 'px');
+            this.pages_magazine.viewCnt = parseInt((window.innerWidth - 110) / 208, 10);
+            if (this.pages_magazine.viewCnt < 5 ) {
+               this.pages_magazine.timeLineR.style.left = '-50px';
+               this.pages_magazine.$con.css('width', (208 * this.pages_magazine.select.length + 25) + 'px');
+            } else if (this.pages_magazine.viewCnt >= this.pages_magazine.select.length) {
+               this.pages_magazine.viewCnt = this.pages_magazine.select.length;
+               this.pages_magazine.timeLineR.style.left = '-50px';
+               let w = this.pages_magazine.viewCnt * 208 + 55;
+               this.pages_magazine.$con.css('width', (w -30) + 'px');
+            } else {
+               this.pages_magazine.timeLineR.style.left = (l + window.innerWidth - 52) + 'px';
+               this.pages_magazine.$con.css('width', (208 * this.pages_magazine.select.length + 150) + 'px');
+            }
+            this.pages_magazine.lineNow.style.width = (window.innerWidth - 10) + 'px';
+            epgd.$menu.parent().offset({ 'left': l });
+            this.pages_magazine.$nav.offset({ 'left': l });
+            this.pages_magazine.update();
+
          })
          .bind("scroll.pages_magazine", function () {
-             this.pages_magazine.timeLineL.style.left = '-50px';
-             this.pages_magazine.timeLineR.style.left = '-50px';
+            this.pages_magazine.timeLineL.style.left = '-50px';
+            this.pages_magazine.timeLineR.style.left = '-50px';
          })
          .bind("scrollstop.pages_magazine", function () {
-             var l = $(this).scrollLeft();
-             this.pages_magazine.timeLineL.style.left = this.pages_magazine.lineNow.style.left = l + 'px';
-             if (this.pages_magazine.viewCnt >= 5 && this.pages_magazine.viewCnt < this.pages_magazine.select.length)
-                this.pages_magazine.timeLineR.style.left = (l + $(window).width() - 52) + 'px';
-             this.pages_magazine.nextMain = parseInt((l + 104) / 208, 10);
-             if (this.pages_magazine.select.selectedIndex != this.pages_magazine.nextMain)
-                 this.pages_magazine.setMain(0, this.pages_magazine.nextMain, true);
-             epgd.$menu.parent().offset({ 'left': l });
-             this.pages_magazine.$nav.offset({ 'left': l });
-             return false;
+            var l = $(this).scrollLeft();
+            this.pages_magazine.timeLineL.style.left = this.pages_magazine.lineNow.style.left = l + 'px';
+            if (this.pages_magazine.viewCnt >= 5 && this.pages_magazine.viewCnt < this.pages_magazine.select.length)
+               this.pages_magazine.timeLineR.style.left = (l + window.innerWidth - 52) + 'px';
+            this.pages_magazine.nextMain = parseInt((l + 104) / 208, 10);
+            if (this.pages_magazine.select.selectedIndex != this.pages_magazine.nextMain)
+               this.pages_magazine.setMain(0, this.pages_magazine.nextMain, true);
+            epgd.$menu.parent().offset({ 'left': l });
+            this.pages_magazine.$nav.offset({ 'left': l });
+            return false;
          })
          .bind("datepicker.pages_magazine", function () {
-             this.pages_magazine.setTime(epgd.utils.unixTime(epgd.$dtPicker.datetimepicker('getDate') || epgd.utils.now()), true);
+            this.pages_magazine.setTime(epgd.utils.unixTime(epgd.$dtPicker.datetimepicker('getDate') || epgd.utils.now()), true);
          })[0].pages_magazine = this;
 
-        this.$con.bind('scrollstop.pages_magazine', function () {
-            var s = $(this).scrollTop();
-            if (s > this.pages_magazine.scrollEnd)
-                this.pages_magazine.setTime(s * 30 + epgd.profile.minEventTime);
-            else if (s < this.pages_magazine.scrollStart)
-                this.pages_magazine.setTime(Math.max(this.pages_magazine.startTime - 43200, epgd.profile.minEventTime));   // 60 * 60 *12
-        });
+      this.$con.bind('scrollstop.pages_magazine', function () {
+         var s = $(this).scrollTop();
+         if (s > this.pages_magazine.scrollEnd)
+            this.pages_magazine.setTime(s * 30 + epgd.profile.minEventTime);
+         else if (s < this.pages_magazine.scrollStart)
+            this.pages_magazine.setTime(Math.max(this.pages_magazine.startTime - 43200, epgd.profile.minEventTime));   // 60 * 60 *12
+      });
 
-        this._setLineNow();
-        this.timeInterval = setInterval(this._setLineNow, 60000);
-      },
+      this._setLineNow();
+      this.timeInterval = setInterval(this._setLineNow, 60000);
+   },
     _setLineNow: function(){
         var m = window.pages_magazine,
             now = new Date().getTime() / 1000;
@@ -234,7 +236,7 @@ epgd.pages.magazine = {
             })
         }
     },
-    setMain: function (delta, baseIndex, dontScroll) {
+   setMain: function (delta, baseIndex, dontScroll) {
         var optList = this.select,
             i = isNaN(baseIndex) ? optList.selectedIndex : baseIndex;
         i += delta;
@@ -246,7 +248,7 @@ epgd.pages.magazine = {
         this.update();
         !dontScroll && $(window).scrollLeft(i * 208);
     },
-    setTime: function (start, doScroll) {
+   setTime: function (start, doScroll) {
         var t, insHtml = '',
             h,
             newEndTime = start + 43200; //86400; //60 * 60 * 24
@@ -317,7 +319,7 @@ epgd.pages.magazine = {
             });
         }
     },
-    update: function () {
+   update: function () {
         var self = this,
             i;
         for (i = 0, j = this.select.selectedIndex; i < this.viewCnt && j < this.select.length; i++)
@@ -344,12 +346,12 @@ epgd.pages.magazine.channel.prototype = {
             this.loadData(epgd.pages.magazine.startTime, epgd.pages.magazine.endTime);
         } else {
             if (epgd.pages.magazine.startTime < this.startTime)
-                this.loadData( epgd.pages.magazine.startTime, this.startTime);
+                this.loadData(epgd.pages.magazine.startTime, this.startTime);
             if (epgd.pages.magazine.endTime > this.endTime)
                 this.loadData(this.endTime, epgd.pages.magazine.endTime);
         }
     },
-    loadData: function (startTime, endTime) {
+   loadData: function (startTime, endTime) {
         var self = this,
             insAfter= (self.endTime < endTime);
         if (insAfter)
