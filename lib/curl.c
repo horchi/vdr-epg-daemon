@@ -249,7 +249,6 @@ int cCurl::post(const char* url, const char* jData, std::string& sOutput)
       curl_easy_getinfo(handle, CURLINFO_RESPONSE_CODE, &httpCode);
       tell(eloWarning, "Warning: HTTP/GET failed '%s'; http code (%ld) [%s]", curl_easy_strerror(res), httpCode, url);
       curl_slist_free_all(headers);
-      curl_slist_free_all(headers);
       sOutput = "";
       return fail;
    }
