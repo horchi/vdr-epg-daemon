@@ -518,13 +518,74 @@ epgd.pages.timerListDone.stateIcons = {
     'C': '<div class="i-buffer">' + epgd.tr.pages.timerList.doneStates.C + '</div>',         // Timer bereits erstellt
     'Q': '<div class="i-clock">' + epgd.tr.pages.timerList.doneStates.Q + '</div>'             // Timer in Vorbereitung
 }
-epgd.pages.timerListDone.update = function () {
+epgd.pages.timerListDone.update = function (loadMore, loadAll) {
     var timerList = this;
+
+    // Initialize pagination with search support
+    if (!timerList.pagination) {
+        timerList.pagination = {
+            offset: 0,
+            limit: parseInt(epgd.profile.timersDonePageSize) || 1000,
+            hasMore: true,
+            searchTerm: ''
+        };
+    }
+
+    // Get search term from input if exists
+    var searchInput = timerList.$con.find('#timersDoneSearch');
+    if (searchInput.length) {
+        timerList.pagination.searchTerm = searchInput.val() || '';
+    }
+
+    // Reset offset if not loading more or if search changed
+    if (!loadMore || loadAll) {
+        timerList.pagination.offset = 0;
+        timerList.pagination.hasMore = true;
+    }
+
+    // Set limit for Load All
+    var requestLimit = loadAll ? 100000 : timerList.pagination.limit;
+
     epgd.utils.loader.process(function () {
-        epgd.ajax({ url: epgd.login.url + timerList.o.updateUrl, async: false, cache: false }, function (data) {
-            timerList.$con.find('tbody').empty();
-            if (!data.donetimers.length) {
+        var url = epgd.login.url + timerList.o.updateUrl
+                  + '?limit=' + requestLimit
+                  + '&offset=' + timerList.pagination.offset;
+
+        if (timerList.pagination.searchTerm) {
+            url += '&search=' + encodeURIComponent(timerList.pagination.searchTerm);
+        }
+
+        epgd.ajax({ url: url, async: false, cache: false }, function (data) {
+            // Clear table if not loading more or loading all
+            if (!loadMore || loadAll) {
+                timerList.$con.find('tbody').empty();
+            }
+
+            // Create or update header controls
+            timerList.$con.find('.timers-done-header').remove();
+            var headerHtml = '<div class="timers-done-header" style="margin-bottom:15px; padding:10px;">'
+                + '<div style="margin-bottom:10px;">'
+                + '<input type="text" id="timersDoneSearch" placeholder="Search in all entries..." '
+                + 'value="' + (timerList.pagination.searchTerm || '') + '" '
+                + 'style="width:300px; padding:5px; margin-right:10px;" />'
+                + '<button class="ui-button ui-widget ui-state-default ui-corner-all" onclick="epgd.pages.timerListDone.update(false, false)" style="margin-right:5px;">Search</button>'
+                + '<button class="ui-button ui-widget ui-state-default ui-corner-all" onclick="epgd.pages.timerListDone.clearSearch()" style="margin-right:15px;">Clear</button>'
+                + '<button class="ui-button ui-widget ui-state-default ui-corner-all" onclick="epgd.pages.timerListDone.update(false, true)">Load All</button>'
+                + '</div>'
+                + '<div id="timersDoneStatus" style="font-size:0.9em;"></div>'
+                + '</div>';
+            timerList.$con.find('table').before(headerHtml);
+
+            // Add Enter key handler for search
+            timerList.$con.find('#timersDoneSearch').on('keypress', function(e) {
+                if (e.which === 13) {
+                    epgd.pages.timerListDone.update(false, false);
+                }
+            });
+
+            if (!data.donetimers.length && !loadMore && !loadAll) {
                 timerList.hideHead();
+                timerList.$con.find('#timersDoneStatus').html('<strong>No entries found</strong>');
             } else {
                 var trs = [],
                     tr, i, t,
@@ -543,13 +604,41 @@ epgd.pages.timerListDone.update = function () {
                     tr.tData = t;
                     trs.push(tr);
                 };
-                timerList.trs = trs;
+
+                // Append to existing trs if loading more (but not Load All)
+                if (loadMore && !loadAll && timerList.trs) {
+                    timerList.trs = timerList.trs.concat(trs);
+                } else {
+                    timerList.trs = trs;
+                }
+
                 timerList.showHead();
+
+                // Update pagination state
+                timerList.pagination.offset += data.count;
+                timerList.pagination.hasMore = !loadAll && (data.count >= timerList.pagination.limit);
+
+                // Update status display
+                var statusText = '<strong>Showing ' + timerList.pagination.offset + ' of ' + (data.total || 0) + ' total entries</strong>';
+                if (timerList.pagination.searchTerm) {
+                    statusText += ' (filtered by: "' + timerList.pagination.searchTerm + '")';
+                }
+                if (timerList.pagination.hasMore) {
+                    statusText += ' - <button class="ui-button ui-widget ui-state-default ui-corner-all" '
+                        + 'onclick="epgd.pages.timerListDone.update(true, false)" style="margin-left:10px;">'
+                        + 'Load More (' + timerList.pagination.limit + ' entries)</button>';
+                }
+                timerList.$con.find('#timersDoneStatus').html(statusText);
             }
             epgd.utils.loader.close();
             $(window).trigger('timerlist_updated', timerList);
         });
     },true);
+}
+epgd.pages.timerListDone.clearSearch = function() {
+    this.$con.find('#timersDoneSearch').val('');
+    this.pagination.searchTerm = '';
+    this.update(false, false);
 }
 // ungesyncte Aufträge
 epgd.pages.timerJobList = new epgd.timerListBase({
