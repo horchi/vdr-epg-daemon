@@ -223,7 +223,13 @@ int Python::initGlobal()
 
 void Python::exitGlobal()
 {
-	Py_Finalize();
+   // Re-acquire GIL before finalization (was released in initGlobal)
+   // but only if Python was actually initialized
+   if (Py_IsInitialized())
+   {
+      PyGILState_Ensure();
+      Py_Finalize();
+   }
 }
 
 //***************************************************************************
