@@ -543,6 +543,9 @@ epgd.pages.timerListDone.update = function (loadMore, loadAll) {
         timerList.pagination.hasMore = true;
     }
 
+    // Always read limit from profile to catch settings changes
+    timerList.pagination.limit = parseInt(epgd.profile.timersDonePageSize) || 1000;
+
     // Set limit for Load All
     var requestLimit = loadAll ? 100000 : timerList.pagination.limit;
 
@@ -640,12 +643,11 @@ epgd.pages.timerListDone.clearSearch = function() {
     this.pagination.searchTerm = '';
     this.update(false, false);
 }
-// Listen for profile updates to refresh page size
+// Listen for profile updates to auto-reload when page size changes
 $(window).bind("profile_updated", function(e, changes) {
-    if (changes["timersDonePageSize"] != undefined && epgd.pages.timerListDone.pagination) {
-        epgd.pages.timerListDone.pagination.limit = parseInt(epgd.profile.timersDonePageSize) || 1000;
-        // Reload the page if it's currently active
-        if ($('#menu_timerListDone').hasClass('menu-active')) {
+    if (changes["timersDonePageSize"] != undefined) {
+        // Auto-reload the page if it's currently active
+        if ($('#menu_timerListDone').hasClass('menu-active') && epgd.pages.timerListDone.pagination) {
             epgd.pages.timerListDone.pagination.offset = 0;
             epgd.pages.timerListDone.update(false, false);
         }
