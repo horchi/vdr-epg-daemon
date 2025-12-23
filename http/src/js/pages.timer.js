@@ -640,6 +640,17 @@ epgd.pages.timerListDone.clearSearch = function() {
     this.pagination.searchTerm = '';
     this.update(false, false);
 }
+// Listen for profile updates to refresh page size
+$(window).bind("profile_updated", function(e, changes) {
+    if (changes["timersDonePageSize"] != undefined && epgd.pages.timerListDone.pagination) {
+        epgd.pages.timerListDone.pagination.limit = parseInt(epgd.profile.timersDonePageSize) || 1000;
+        // Reload the page if it's currently active
+        if ($('#menu_timerListDone').hasClass('menu-active')) {
+            epgd.pages.timerListDone.pagination.offset = 0;
+            epgd.pages.timerListDone.update(false, false);
+        }
+    }
+});
 // ungesyncte Aufträge
 epgd.pages.timerJobList = new epgd.timerListBase({
     updateUrl: "data/timers?notaction=A",
