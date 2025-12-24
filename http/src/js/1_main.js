@@ -37,6 +37,7 @@ epgd.userProfile_defaults = {
     magazinePan: 10,
     magazinePanDelay: 400,
     maxListEntries: 100,
+    timersDonePageSize: 1000,
     ratings: "",
     recordSubFolderSort: 1
 };
