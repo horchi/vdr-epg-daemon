@@ -121,6 +121,7 @@ int cTVDBManager::initDb(cDbConnection* c)
    updateEvent->bind("SCRSERIESEPISODE", cDBS::bndIn | cDBS::bndSet, ", ");
    updateEvent->build(" where ");
    updateEvent->bind("EVENTID", cDBS::bndIn | cDBS::bndSet);
+   updateEvent->bind("CHANNELID", cDBS::bndIn | cDBS::bndSet, " and ");
 
    status += updateEvent->prepare();
 
@@ -476,6 +477,7 @@ bool cTVDBManager::getSeriesWithEpisodesFromEPG(std::vector<SeriesLookupData>& r
 
    selectSeries->build("select ");
    selectSeries->bind("EVENTID", cDBS::bndOut);
+   selectSeries->bind("CHANNELID", cDBS::bndOut, ", ");
    selectSeries->bind("TITLE", cDBS::bndOut, ", ");
    selectSeries->bind("SCRSP", cDBS::bndOut, ", ");
    selectSeries->bind(&season, cDBS::bndOut, ", ");
@@ -494,6 +496,7 @@ bool cTVDBManager::getSeriesWithEpisodesFromEPG(std::vector<SeriesLookupData>& r
    {
       SeriesLookupData lookupData;
       lookupData.eventId = tEvents->getBigintValue("EVENTID");
+      lookupData.channelId = tEvents->getStrValue("CHANNELID");
       lookupData.title = tEvents->getStrValue("TITLE");
       lookupData.lastScraped = tEvents->getIntValue("SCRSP");
       lookupData.season = season.getIntValue();
@@ -562,7 +565,7 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
       if (!seriesID)
       {
          // tell(eloInfo, "series %s already scraped and nothing found in tvdb", lookupData.title.c_str());
-         UpdateEvent(lookupData.eventId, 0, 0);
+         UpdateEvent(lookupData.eventId, lookupData.channelId.c_str(), 0, 0);
          return;
       }
       else
@@ -648,7 +651,7 @@ void cTVDBManager::processSeries(SeriesLookupData lookupData)
 
    // updating event with series data
 
-   UpdateEvent(lookupData.eventId, seriesID, episodeID);
+   UpdateEvent(lookupData.eventId, lookupData.channelId.c_str(), seriesID, episodeID);
 }
 
 void cTVDBManager::checkLoadSeasonPoster(int seriesID, int season)
@@ -707,10 +710,11 @@ int cTVDBManager::lookupEpisodeId(int seriesID, const SeriesLookupData& lookupDa
    return episodeID;
 }
 
-void cTVDBManager::UpdateEvent(tEventId eventID, int seriesID, int episodeID)
+void cTVDBManager::UpdateEvent(tEventId eventID, const char* channelID, int seriesID, int episodeID)
 {
    tEvents->clear();
    tEvents->setBigintValue("EVENTID", eventID);
+   tEvents->setValue("CHANNELID", channelID);
    tEvents->setValue("SCRSP", time(0));
    tEvents->setValue("SCRSERIESID", seriesID);
    tEvents->setValue("SCRSERIESEPISODE", episodeID);
