@@ -506,11 +506,14 @@ int cDbDict::parseIndex(const char* line)
          break;
       }
 
+      // Remove trailing comma from token (field separator)
       if (strchr(token, ','))
-      {
-         done = yes;
          *(strchr(token, ',')) = 0;
-      }
+
+      // Advance past comma in input string to allow parsing next field
+      // (getToken uses comma as default 'end' character and would fail)
+      while (*p && (*p == ',' || *p == ' '))
+         p++;
 
       if (i == idtName)
          index->setName(token);
