@@ -1959,7 +1959,13 @@ xmlDocPtr cEpgd::transformXml(const char* buffer, int size,
    readOptions |=  XML_PARSE_HUGE;
 #endif
 
-      if ((doc = xmlReadMemory(buffer, size, "tmp.xml.gz", 0, readOptions)))
+   // strip trailing zero bytes, since libxml2 >= 2.13 reports
+   //   'Extra content at the end of the document' for them
+
+   while (size > 0 && !buffer[size-1])
+      size--;
+
+   if ((doc = xmlReadMemory(buffer, size, "tmp.xml.gz", 0, readOptions)))
    {
       if ((transformedDoc = xsltApplyStylesheet(stylesheet, doc, 0)) == 0)
          tell(eloWarning, "Error applying XSLT stylesheet");

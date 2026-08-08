@@ -5,13 +5,13 @@ Copyright (C) 2013 Jörg Wendel
 
 Redistribute as you wish, but leave this information intact.
 
-The build process is integrated in epgd's makefile, to build epglv 
+The build process is integrated in epgd's makefile, to build epglv
 separately follow this steps:
 
 Compiling:
 ----------
 
-   Run 
+   Run
    make
    make install
 
@@ -20,6 +20,7 @@ Installing UDFs in MySQL:
 
     Loading UDFs in MySQL, at the mysql prompt call:
 
+     mysql -u root -p
       DROP FUNCTION IF EXISTS epglv;
       DROP FUNCTION IF EXISTS epglvr;
       CREATE FUNCTION epglv RETURNS INT SONAME 'mysqlepglv.so';
@@ -33,6 +34,9 @@ Installing UDFs in MySQL:
       +-----------+-----+-------------------+----------+
       | epglv     |   2 | mysqlepglv.so     | function |
       +-----------+-----+-------------------+----------+
+
+   Get the plugin directory:
+    #> SELECT @@plugin_dir;
 
 Attention:
 ----------
@@ -54,4 +58,3 @@ Using epglv:
        +----------------------------+
        |                          1 |
        +----------------------------+
-
