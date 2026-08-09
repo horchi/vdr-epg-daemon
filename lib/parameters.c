@@ -84,6 +84,7 @@ cParameters::Parameter cParameters::parameters[] =
    { "@",        "namingModeMovieTemplate",        ptAscii,   "",                         "^.{0,150}$",           no,    yes },
    { "@",        "namingModeSearchMovieTemplate",  ptAscii,   "",                         "^.{0,150}$",           no,    yes },
    { "@",        "osdTimerNotify",                 ptBool,    "0",                        "^[01]$",               no,    yes },
+   { "@",        "timersDonePageSize",             ptNum,     "1000",                     "^[1-9][0-9]{2,4}$",    no,    yes },
 
    { 0, 0, 0, 0, 0, 0, 0 }
 };

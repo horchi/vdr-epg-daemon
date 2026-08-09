@@ -1439,11 +1439,76 @@ int cEpgHttpd::doDoneTimers(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oTimer = json_array();
 
+   // Get pagination parameters from URL
+   int limit = getIntParameter(tcp, "limit", 1000);     // default: 1000
+   int offset = getIntParameter(tcp, "offset", 0);      // default: 0
+   const char* search = getStrParameter(tcp, "search", "");
+
+   // Enforce reasonable limits
+   if (limit < 1) limit = 1000;
+   if (limit > 100000) limit = 100000;  // Allow 100k for "Load All"
+   if (offset < 0) offset = 0;
+
    timersDoneDb->clear();
 
-   // query pending and failed timers ...
+   // Build WHERE clause for search
+   char whereClause[1000] = "";
+   if (search && strlen(search) > 0)
+   {
+      // Escape search string for SQL (simple approach - replace ' with '')
+      char escapedSearch[500];
+      const char* src = search;
+      char* dst = escapedSearch;
+      while (*src && (dst - escapedSearch) < 490)
+      {
+         if (*src == '\'')
+            *dst++ = '\'';  // Double single quotes for SQL escaping
+         *dst++ = *src++;
+      }
+      *dst = '\0';
 
-   for (int found = selectDoneTimers->find(); found; found = selectDoneTimers->fetch())
+      snprintf(whereClause, sizeof(whereClause),
+               " where (title like '%%%s%%' or shorttext like '%%%s%%' or "
+               "channelid like '%%%s%%' or autotimername like '%%%s%%' or "
+               "expression like '%%%s%%')",
+               escapedSearch, escapedSearch, escapedSearch, escapedSearch, escapedSearch);
+   }
+
+   // Get total count (for "X of Y" display)
+   int totalCount = 0;
+   cDbValue countValue("cnt", cDBS::ffInt, 10);
+   cDbStatement* countStmt = new cDbStatement(timersDoneDb);
+
+   countStmt->build("select count(*) as ");
+   countStmt->bind(&countValue, cDBS::bndOut);
+   countStmt->build(" from %s%s", timersDoneDb->TableName(), whereClause);
+
+   if (countStmt->prepare() == success && countStmt->find())
+   {
+      totalCount = countValue.getIntValue();
+      countStmt->freeResult();
+   }
+   delete countStmt;
+
+   // Build dynamic query with ORDER BY and LIMIT
+   cDbStatement* stmt = new cDbStatement(timersDoneDb);
+
+   stmt->build("select ");
+   stmt->bindAllOut();
+   stmt->bind("INSSP", cDBS::bndOut, ", ");
+   stmt->bind("UPDSP", cDBS::bndOut, ", ");
+   stmt->build(" from %s%s order by starttime desc limit %d offset %d",
+               timersDoneDb->TableName(), whereClause, limit, offset);
+
+   if (stmt->prepare() != success)
+   {
+      delete stmt;
+      return MHD_HTTP_INTERNAL_SERVER_ERROR;
+   }
+
+   // Execute query and fetch results
+   int count = 0;
+   for (int found = stmt->find(); found; found = stmt->fetch())
    {
       json_t* oData = json_object();
 
@@ -1459,11 +1524,17 @@ int cEpgHttpd::doDoneTimers(MHD_Connection* tcp, json_t* obj)
       addFieldToJson(oData, timersDoneDb, "EXPRESSION");
 
       json_array_append_new(oTimer, oData);
+      count++;
    }
 
-   selectDoneTimers->freeResult();
+   stmt->freeResult();
+   delete stmt;
 
    json_object_set_new(obj, "donetimers", oTimer);
+   json_object_set_new(obj, "count", json_integer(count));
+   json_object_set_new(obj, "limit", json_integer(limit));
+   json_object_set_new(obj, "offset", json_integer(offset));
+   json_object_set_new(obj, "total", json_integer(totalCount));
 
    return MHD_HTTP_OK;
 }

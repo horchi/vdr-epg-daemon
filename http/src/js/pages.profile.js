@@ -20,6 +20,7 @@ epgd.pages.profile = {
                 + '<tr><td>constabel-login</td><td><input type="text" class="full" id="constabelLoginPath" value="' + (epgd.profile.constabelLoginPath || '') + '" />'
                   + '<br />e.g.https://www.eplists.de/eplist.cgi?action=login&login=[username]&secret=[password]</td></tr>'
                 + '<tr><td>' + epgd.tr.pages.profile.maxListEntries + '</td><td><input type="text" id="maxListEntries" value="' + epgd.profile.maxListEntries + '" data-valexp="^[1-9]{0,3}$" /></td></tr>'
+                + '<tr><td>timers history page size</td><td><input type="text" id="timersDonePageSize" value="' + (epgd.profile.timersDonePageSize || 1000) + '" data-valexp="^[1-9][0-9]{0,4}$" /><br /><span style="font-size:0.9em">Number of entries to show per page (100-10000)</span></td></tr>'
                 + '<tr><th colspan="2">' + epgd.tr.menu.magazine + '</th><tr>'
                     + '<tr><td>' + epgd.tr.pages.profile.magazinePan + '</td><td><input type="text" id="magazinePan" value="' + epgd.profile.magazinePan + '" data-valexp="^[0-9]{1,2}$" /></td></tr>'
                     + '<tr><td>' + epgd.tr.pages.profile.magazinePanDelay + '</td><td><input type="text" id="magazinePanDelay" value="' + epgd.profile.magazinePanDelay + '" data-valexp="^[1-9][0-9]{2,3}$" /></td></tr>'
@@ -197,6 +198,7 @@ epgd.pages.profile = {
         checkData({ name: "magazinePan", value: $(form.magazinePan).val() || '', owner: owner });
         checkData({ name: "magazinePanDelay", value: $(form.magazinePanDelay).val() || '', owner: owner });
         checkData({ name: "maxListEntries", value: $(form.maxListEntries).val() || '', owner: owner });
+        checkData({ name: "timersDonePageSize", value: $(form.timersDonePageSize).val() || '1000', owner: owner });
         checkData({ name: "recordSubFolderSort", value: $(form.recordSubFolderSort).val() || '1', owner: owner });
 
        panel = $('#pSystem').parent().parent()[0];

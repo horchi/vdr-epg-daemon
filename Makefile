@@ -198,7 +198,7 @@ install-scripts:
 	install -D ./scripts/epgsearchdone.pl $(_BINDEST)/
 
 install-http:
-	(cd "http/" && make install)
+	(cd "http/" && make fullinstall)
 
 install-config:
 	if ! test -d $(CONFDEST); then \
