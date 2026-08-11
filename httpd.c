@@ -857,7 +857,7 @@ int cEpgHttpd::initDb()
    selectAllTimer->clrBindPrefix();
    selectAllTimer->build(" from %s t left outer join %s e",
                          timerDb->TableName(), "eventsviewplain");
-   selectAllTimer->build(" on (t.eventid = e.cnt_useid) and e.updflg in (%s)", cEventState::getVisible());
+   selectAllTimer->build(" on (t.eventid = e.cnt_useid and t.channelid = e.cnt_channelid) and e.updflg in (%s)", cEventState::getVisible());
    // selectAllTimer->build(" where ");
    // selectAllTimer->bindInChar("t", "STATE", &timerIncState);
    // selectAllTimer->bindInChar("t", "STATE", &timerExcState, " and not ");
