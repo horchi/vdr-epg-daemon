@@ -15,3 +15,7 @@ http/epgd.full.js
 lib/pytst
 /Make.config
 tvdb
+.claude
+CLAUDE.md
+debian/
+build-package.sh

@@ -29,6 +29,7 @@ class cTVDBManager
       struct SeriesLookupData
       {
          tEventId eventId {0};
+         std::string channelId;
          std::string title;
          int lastScraped {0};
          int season {0};
@@ -96,6 +97,6 @@ class cTVDBManager
       int LoadEpisode(const std::string& name, int seriesId);
       int lookupEpisodeId(int seriesID, const SeriesLookupData& lookupData);
 
-      void UpdateEvent(tEventId eventID, int seriesID, int episodeID);
+      void UpdateEvent(tEventId eventID, const char* channelID, int seriesID, int episodeID);
       void DeleteSeries(int seriesId);
 };
