@@ -1658,12 +1658,37 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
             addFieldToJson(oData, timerDb->getValue(def->getField(i)));
       }
 
-      addFieldToJson(oData, useeventsDb, "TITLE");
-      addFieldToJson(oData, useeventsDb, "SHORTTEXT");
-      addFieldToJson(oData, useeventsDb, "SHORTDESCRIPTION");
-      addFieldToJson(oData, useeventsDb, "CATEGORY");
-      addFieldToJson(oData, useeventsDb, "GENRE");
-      addFieldToJson(oData, useeventsDb, "NUMRATING");
+      // If event still exists in useevents, use those values
+      // Otherwise fall back to timersdone (event may have been deleted after recording)
+
+      if (!useeventsDb->getValue("TITLE")->isEmpty())
+      {
+         addFieldToJson(oData, useeventsDb, "TITLE");
+         addFieldToJson(oData, useeventsDb, "SHORTTEXT");
+         addFieldToJson(oData, useeventsDb, "SHORTDESCRIPTION");
+         addFieldToJson(oData, useeventsDb, "CATEGORY");
+         addFieldToJson(oData, useeventsDb, "GENRE");
+         addFieldToJson(oData, useeventsDb, "NUMRATING");
+      }
+      else
+      {
+         // Event no longer exists, get title/shorttext from timersdone
+         long doneid = timerDb->getIntValue("DONEID");
+
+         if (doneid > 0)
+         {
+            timersDoneDb->clear();
+            timersDoneDb->setValue("ID", doneid);
+
+            if (timersDoneDb->find())
+            {
+               addFieldToJson(oData, timersDoneDb, "TITLE");
+               addFieldToJson(oData, timersDoneDb, "SHORTTEXT");
+            }
+
+            timersDoneDb->reset();
+         }
+      }
 
       if (!timerDb->getValue("AUTOTIMERID")->isNull())
       {
