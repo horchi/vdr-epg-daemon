@@ -1,4 +1,4 @@
-epgd.tr = {
+export default {
     oClock: "Uhr",
     minutes: "min",
     save: "speichern",

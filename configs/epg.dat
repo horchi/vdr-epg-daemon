@@ -122,7 +122,7 @@ Table fileref
    SOURCE               ""  source               Ascii       10 Primary,
    INSSP                ""  inssp                Int          0 Meta,
    UPDSP                ""  updsp                Int          0 Meta,
-   EXTERNALID           ""  extid                Ascii       10 Data,
+   EXTERNALID           ""  extid                Ascii       50 Data,
    FILEREF              ""  fileref              Ascii      100 Data,
    TAG                  ""  tag                  Ascii      100 Data,
 }
@@ -222,7 +222,7 @@ Index episodes
 
 Table channelmap
 {
-   EXTERNALID           ""  extid                Ascii       10 Primary,
+   EXTERNALID           ""  extid                Ascii       50 Primary,
    CHANNELID            ""  channelid            Ascii       50 Primary,
    SOURCE               ""  source               Ascii       20 Primary,
 

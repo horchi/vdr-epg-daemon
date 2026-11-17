@@ -1542,13 +1542,26 @@ int cEpgHttpd::performDataRequest(MHD_Connection* tcp, const char* url, MemorySt
 
 int cEpgHttpd::performHttpGet(MHD_Connection* tcp, const char* inurl, MemoryStruct* data)
 {
-   const char* url;
    int statusCode = MHD_HTTP_OK;
+   std::string path = inurl;
 
-   if (strcmp(inurl, "/") == 0)
-      url = "index.html";
-   else
-      url = inurl;
+   if (!path.empty() && path.back() == '/')   // directory -> its index.html (e.g. "/" or "/next/")
+      path += "index.html";
+
+   // directory without trailing '/' (e.g. "/next") -> redirect to "/next/",
+   //   otherwise relative links of its index.html would resolve one level too high
+
+   struct stat sb;
+   std::string fsPath = std::string(EpgdConfig.httpPath) + "/" + path;
+
+   if (stat(fsPath.c_str(), &sb) == 0 && S_ISDIR(sb.st_mode))
+   {
+      sprintf(data->name, "%.*s", (int)sizeof(data->name)-2, path.c_str());
+      strcat(data->name, "/");
+      return MHD_HTTP_FOUND;
+   }
+
+   const char* url = path.c_str();
 
    data->modTime = getModTimeOf(url, "");
 
@@ -1704,6 +1717,8 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
    const char* cacheControl = getStrHeader(tcp, "Cache-Control", "")  ;   // max-age=0
    int checkCache = strstr(cacheControl, "max-age=0") != 0;
 
+   int fileRequest = no;
+
    if (!checkCache)
       data.expireAt = 0;
 
@@ -1714,6 +1729,12 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
       // MHD_get_connection_values(tcp, MHD_GET_ARGUMENT_KIND, debugPrint, 0);
       MHD_get_connection_values(tcp, MHD_HEADER_KIND, debugPrint, 0);
    }
+
+   // the old web interface is installed below /old/ and uses relative urls
+   //    "/old/data/..." or "/old/sid.../data/..." -> strip "/old"
+
+   if (strncmp(url, "/old/data", 9) == 0 || strncmp(url, "/old/sid", 8) == 0)
+      url += 4;
 
    // check session in url
    //    "/sid3cf33d41332e3e2702e7a8e39429f848/data/parameters"
@@ -1797,7 +1818,14 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
       if (strstr(url, "/data") == url)                                // data requested ...
          statusCode = cEpgHttpd::singleton->performDataRequest(tcp, url, &data);
       else                                                            // file request ...
+      {
+         // static files are sent with 'no-cache' -> the browser revalidates each time,
+         //   honour If-Modified-Since always (answer 304 if unchanged)
+
+         fileRequest = yes;
+         data.expireAt = getTimeHeader(tcp, "If-Modified-Since", "");
          statusCode = cEpgHttpd::singleton->performHttpGet(tcp, url, &data);
+      }
 
       if (statusCode == MHD_HTTP_OK)
       {
@@ -1830,6 +1858,8 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
 
    if (strcmp(method, "POST") == 0)
       addHeaderItem(response, "Cache-Control", "max-age=0, must-revalidate");
+   else if (fileRequest)
+      addHeaderItem(response, "Cache-Control", "no-cache");
    else
       addHeaderItem(response, "Cache-Control", "max-age=300, must-revalidate");
 
@@ -1840,6 +1870,9 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
       addHeaderItem(response, "Last-Modified", l2HttpTime(data.modTime).c_str());
       addHeaderItem(response, "Content-Type", data.contentType);
    }
+
+   if (statusCode == MHD_HTTP_FOUND)
+      addHeaderItem(response, "Location", data.name);
 
    if (!isEmpty(data.contentEncoding))
       addHeaderItem(response, "Content-Encoding", data.contentEncoding);

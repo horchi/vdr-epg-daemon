@@ -41,35 +41,35 @@ JQUERY_UI = ./3rdParty/jquery-ui-$(JQUERY_UI_VERSION).custom.$(THEME)
 
 all: theme core common lang style
 
-# baut aus allen JS-Files innerhalb von src/js/ eine gesamt Javascriptdatei -> www/epgd.js
+# baut aus allen JS-Files innerhalb von src/js/ eine gesamt Javascriptdatei -> www-old/epgd.js
 
 core:
 	@echo "var epgd = {};" > ./epgd.full.js
 	@cat ./src/lang/$(DEFAULT_LANG).js >> ./epgd.full.js
 	@cat ./src/js/*.js >> ./epgd.full.js
-	@java -jar tools/yuicompressor-2.4.8.jar ./epgd.full.js -o ./www/epgd.js -v
+	@java -jar tools/yuicompressor-2.4.8.jar ./epgd.full.js -o ./www-old/epgd.js -v
 
-# baut aus allen benötigten 3rdParty-scripten eine gesamt Javascriptdatei -> www/common.js
+# baut aus allen benötigten 3rdParty-scripten eine gesamt Javascriptdatei -> www-old/common.js
 
 common:
-	cat ./3rdParty/jquery-2.2.3.min.js > ./www/common.js
-	cat $(JQUERY_UI)/jquery-ui.min.js >> ./www/common.js
-	cat ./3rdParty/jQuery-Timepicker-Addon-master/dist/jquery-ui-timepicker-addon.min.js >> ./www/common.js
-#  cat ./3rdParty/jQuery-jQuery-UI-Plugin-For-Simle-Tokenized-Autocomplete-Autocomplete-Multiselect/src/jquery.autocomplete.multiselect.js >> ./www/common.js
-	cat ./3rdParty/jquery.ui.touch-punch.min.js >> ./www/common.js
-	cat ./3rdParty/jquery-scrollstop-master/jquery.scrollstop.min.js >> ./www/common.js
-	cat ./3rdParty/yaMD5/yamd5.min.js >> ./www/common.js
-	cp ./3rdParty/fontello/font/* ./www/font/
-	cp ./3rdParty/fontello/LICENSE.txt ./www/font/
+	cat ./3rdParty/jquery-2.2.3.min.js > ./www-old/common.js
+	cat $(JQUERY_UI)/jquery-ui.min.js >> ./www-old/common.js
+	cat ./3rdParty/jQuery-Timepicker-Addon-master/dist/jquery-ui-timepicker-addon.min.js >> ./www-old/common.js
+#  cat ./3rdParty/jQuery-jQuery-UI-Plugin-For-Simle-Tokenized-Autocomplete-Autocomplete-Multiselect/src/jquery.autocomplete.multiselect.js >> ./www-old/common.js
+	cat ./3rdParty/jquery.ui.touch-punch.min.js >> ./www-old/common.js
+	cat ./3rdParty/jquery-scrollstop-master/jquery.scrollstop.min.js >> ./www-old/common.js
+	cat ./3rdParty/yaMD5/yamd5.min.js >> ./www-old/common.js
+	cp ./3rdParty/fontello/font/* ./www-old/font/
+	cp ./3rdParty/fontello/LICENSE.txt ./www-old/font/
 
-# kopiert alle Sprachrelevanten Dateien nach www/lang
+# kopiert alle Sprachrelevanten Dateien nach www-old/lang
 
 lang:
-	cp -ua ./src/lang/* ./www/lang/
+	cp -ua ./src/lang/* ./www-old/lang/
 
 theme:
-	rm -f ./www/images/ui-*
-	cp $(JQUERY_UI)/images/* ./www/images
+	rm -f ./www-old/images/ui-*
+	cp $(JQUERY_UI)/images/* ./www-old/images
 	grep 'To view and modify this theme' $(JQUERY_UI)/jquery-ui.css | \
 		sed s/".*themeroller.."/""/ | \
 		sed -e s/"&"/"\n"/g | \
@@ -83,45 +83,44 @@ theme:
 style:
 	rm -f ./3rdParty/jquery-ui-$(JQUERY_UI_VERSION).custom
 	ln -s `basename $(JQUERY_UI)` ./3rdParty/jquery-ui-$(JQUERY_UI_VERSION).custom
-	$(LESS_Compiler) -f ./tools/less-rhino-1.7.0.js ./tools/lessc-rhino-1.7.0.js --ru ./src/css/theme/default.less ./www/epgd.css
+	$(LESS_Compiler) -f ./tools/less-rhino-1.7.0.js ./tools/lessc-rhino-1.7.0.js --ru ./src/css/theme/default.less ./www-old/epgd.css
 
 fullinstall : all install
 
-install: install-env install-core install-lang install-font install-images
+# Installation:
+#   neues Web-Interface (www, kein Build-Schritt)      -> $(HTTPDEST)/
+#   altes Web-Interface (www-old, jQuery UI)           -> $(HTTPDEST)/old/
+
+OLDDEST = $(HTTPDEST)/old
+
+install: install-new install-old
+
+install-new:
+	mkdir -p $(HTTPDEST)
+	cp -r ./www/. $(HTTPDEST)/
+	cp -u ../HISTORY.h ../TODO $(HTTPDEST)/
+	@if test -f ./custom-next.css; then cp ./custom-next.css $(HTTPDEST)/css/custom.css; fi
+
+install-old: install-env install-core install-lang install-font install-images
 
 install-core:
-	$(shell sed "s/%VERSION%/$(VERSION)/g" ./www/index.html > $(HTTPDEST)/index.html)
-	cp -u ./www/epgd.js ./www/common.js ./www/favicon.ico $(HTTPDEST)/
-	cp ./www/epgd.css $(HTTPDEST)/
+	$(shell sed "s/%VERSION%/$(VERSION)/g" ./www-old/index.html > $(OLDDEST)/index.html)
+	cp -u ./www-old/epgd.js ./www-old/common.js ./www-old/favicon.ico $(OLDDEST)/
+	cp ./www-old/epgd.css $(OLDDEST)/
 	if test -f ./custom.css; then \
-	    cat ./custom.css >> $(HTTPDEST)/epgd.css; \
+	    cat ./custom.css >> $(OLDDEST)/epgd.css; \
 	fi
-	cp -u ../HISTORY.h $(HTTPDEST)/
-	cp -u ../TODO $(HTTPDEST)/
 
 install-lang:
-	cp -ua ./www/lang/* $(HTTPDEST)/lang
+	cp -ua ./www-old/lang/* $(OLDDEST)/lang
 
 install-font:
-	cp -ua ./www/font/* $(HTTPDEST)/font
+	cp -ua ./www-old/font/* $(OLDDEST)/font
 
 install-images:
-	cp -ua ./www/images/* $(HTTPDEST)/images
+	cp -ua ./www-old/images/* $(OLDDEST)/images
 
 install-env:
-	@if ! test -d $(HTTPDEST); then \
-		mkdir -p "$(HTTPDEST)"; \
-		chmod a+rx $(HTTPDEST)/; \
-	fi
-	@if ! test -d $(HTTPDEST)/lang/; then \
-		mkdir -p "$(HTTPDEST)/lang/"; \
-		chmod a+rx $(HTTPDEST)/lang/; \
-	fi
-	@if ! test -d $(HTTPDEST)/font/; then \
-		mkdir -p "$(HTTPDEST)/font/"; \
-		chmod a+rx $(HTTPDEST)/font/; \
-	fi
-	@if ! test -d $(HTTPDEST)/images/; then \
-		mkdir -p "$(HTTPDEST)/images/"; \
-		chmod a+rx $(HTTPDEST)/images/; \
-	fi
+	@for d in $(OLDDEST) $(OLDDEST)/lang $(OLDDEST)/font $(OLDDEST)/images; do \
+		if ! test -d $$d; then mkdir -p "$$d"; chmod a+rx $$d; fi; \
+	done

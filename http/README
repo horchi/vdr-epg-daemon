@@ -29,7 +29,7 @@ http/
 
       js/
          0_translate.js                default-ressourcendatei; diese kann dann mal in mehreren Sprachen übersetzt werden und sollte dann
-                                       unter www/lang abgelegt werden. Zur Zeit aber noch nicht implementiert
+                                       unter www-old/lang abgelegt werden. Zur Zeit aber noch nicht implementiert
          main.js                       Haupdatei, die allgemeine Funktionen bereitstellt und die Seite initialisiert
          pages.editChannels.js         Bearbeiten der Kanallisten usw.
          pages.help.js                 die Hilfeseite
@@ -44,10 +44,10 @@ http/
                                        gewechselt werden kann(noch nicht implementiert).
                                        Zusätzlich gibt es dann noch die Hilfe-Dateien (hilfe.html) pro Sprache.
 
-      build.sh                         baut aus allen Files innerhalb von js/ eine gesamt Javascriptdatei -> www/epgd.js
-      build-common.sh                  baut aus allen benötigten 3rdParty-scripten eine gesamt Javascriptdatei -> www/common.js
+      build.sh                         baut aus allen Files innerhalb von js/ eine gesamt Javascriptdatei -> www-old/epgd.js
+      build-common.sh                  baut aus allen benötigten 3rdParty-scripten eine gesamt Javascriptdatei -> www-old/common.js
 
-   www/                                Diese Verzeichnis wird durch make normalerweise nach /var/epgd/www kopiert
+   www-old/                            Altes WebIf, wird durch make nach /var/epgd/www/old kopiert (erreichbar unter <url>/old/)
       images/                          Bilder, die für das webIf benötigt werden, teilweise auch aus jquery-ui
       font/                            Font-dateien für die Icons
       lang/                            Sprachabhängige Dateien
@@ -63,12 +63,12 @@ http/
    custom.css                          optional, wenn diese Datei existiert, wird sie an die epgd.css angehangen. Darin kann dann css überschrieben werden.
                                        Achtung, bitte darauf achten, dass die Datei UTF OHNE BOM kodiert ist.
    dev-watch.sh                        Kann zum Entwickeln aufgerufen werden. Diese Datei überwacht per inotifywait die sourcen-Dateien auf Änderunegn
-                                       und compiliert/builded bei Änderungen die Dateien und kopiert die Dateien nach /var/epgd/www.
+                                       und compiliert/builded bei Änderungen die Dateien und kopiert die Dateien nach /var/epgd/www/old.
                                        Vorraussetzung dafür ist ein installiertes Rhino.
 
 Entwicklung:
 ============================================================================================================================
 Wenn Änderungen an den src/js Dateien gemacht werden, muss anschliessend immer "make core" aufgerufen werden
-und dann die erstellte Datei www/epgd.js nach /var/epgd/www kopiert werden.
-Bei Änderungen an den less Dateien müssen diese compiliert werden "make style" und die dann die erstellte Datei www/epgd.css nach /var/epgd/www kopiert werden.
+und dann die erstellte Datei www-old/epgd.js nach /var/epgd/www/old kopiert werden.
+Bei Änderungen an den less Dateien müssen diese compiliert werden "make style" und die dann die erstellte Datei www-old/epgd.css nach /var/epgd/www/old kopiert werden.
 Um den Entwicklungsprozess zu erleichtern, gibt es die Datei dev-watch.sh die man in einer Konsole aufrufen kann.

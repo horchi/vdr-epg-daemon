@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.3.29"
-#define VERSION_DATE "13.02.2025"
+#define _VERSION     "1.4.0"
+#define VERSION_DATE "16.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-16: version 1.4.0 (horchi)
+   - Change: rewrite of the web front end
 
 2025-02-13: version 1.3.29 (horchi)
    - Change: downgarded jquery(ui) du to problems

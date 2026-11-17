@@ -1236,6 +1236,19 @@ int cDbTable::createIndices()
 
       if (fCount != index->fieldCount())
       {
+         // index exists but with a different field count (e.g. created by an older
+         //   version which supported only one field per index) -> drop it first
+
+         if (fCount > 0)
+         {
+            tell(eloInfo, "Index '%s' of '%s' has %d instead of %d fields, recreating it",
+                 idxName.c_str(), TableName(), fCount, index->fieldCount());
+
+            if (connection->query("drop index %s on %s;", idxName.c_str(), TableName()))
+               return connection->errorSql(getConnection(), "createIndices()",
+                                           0, ("drop index " + idxName).c_str());
+         }
+
          // create index
 
          statement = "create index " + idxName;

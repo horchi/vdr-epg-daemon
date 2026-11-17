@@ -970,6 +970,12 @@ int loadFromFile(const char* infile, MemoryStruct* data)
       return fail;
    }
 
+   if (!S_ISREG(sb.st_mode))       // e.g. a directory - fopen() would succeed but fread() fails
+   {
+      tell(eloWarning, "'%s' is not a regular file", infile);
+      return fail;
+   }
+
    if ((fin = fopen(infile, "r")))
    {
       const char* sfx = suffixOf(infile);

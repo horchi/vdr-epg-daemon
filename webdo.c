@@ -1730,6 +1730,14 @@ int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
       addFieldToJson(oData, recordingListDb, "DURATION");
       addFieldToJson(oData, recordingListDb, "VDRUUID");
 
+      // scraper ids - image fallback in the web interface
+
+      if (recordingListDb->getIntValue("SCRMOVIEID") > 0)
+         addFieldToJson(oData, recordingListDb, "SCRMOVIEID");
+
+      if (recordingListDb->getIntValue("SCRSERIESID") > 0)
+         addFieldToJson(oData, recordingListDb, "SCRSERIESID");
+
       recordingImageDb->clear();
       recordingImageDb->setValue("IMGID", recordingListDb->getStrValue("IMGID"));
       recordingImageDb->setValue("LFN", 0);
