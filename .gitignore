@@ -2,6 +2,7 @@
 *.a
 *~
 PLUGINS/
+PLUGINS/epgd-plugin-sngtv/
 box/
 lib/demo
 lib/tst

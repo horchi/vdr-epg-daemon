@@ -973,7 +973,7 @@ int cEpgHttpd::initDb()
    selectMapById->bind("ChannelName", cDBS::bndOut);
    selectMapById->build(" from %s where ", mapDb->TableName());
    selectMapById->bind("ChannelId", cDBS::bndIn | cDBS::bndSet);
-   selectMapById->build(" and channelname is not null");
+   selectMapById->build(" and channelname is not null and channelname <> ''");
 
    status += selectMapById->prepare();
 

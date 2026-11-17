@@ -141,6 +141,7 @@ export default {
             eventPrev: "vorher",
             parentalrating: 'ab ',
             mergeSrc: 'Quelle ',
+            imageSrc: 'Bild ',
             genre: 'Genre',
             category: 'Kategorie',
             country: 'Land',

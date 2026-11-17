@@ -623,13 +623,26 @@ int cEpgHttpd::doChannelLogo(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
                tell(eloDebug, "SVG LOGO not found fallback to PNG '%s'", path);
          }
 
+         if (!fileExists(path))
+         {
+            tell(eloDetail, "Logo '%s' not found", path);
+            free(cnlId);
+            free(path);
+            free(cnlName);
+            selectMapById->freeResult();
+            return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Logo for '%s' not found", id);
+         }
+
          data->modTime = fileModTime(path);
 
          tell(eloDetail, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
 
          if (!data->expireAt || data->modTime > data->expireAt)
          {
-            if (strcasecmp(suffixOf(path), "svg") == 0)
+            // svg and png are delivered as they are (scaled by the browser),
+            //  converting png to jpeg would lose the transparency
+
+            if (strcasecmp(suffixOf(path), "svg") == 0 || strcasecmp(suffixOf(path), "png") == 0)
             {
                if (loadFromFile(path, data) == success)
                   sprintf(data->name, "%.*s", (int)sizeof(data->name)-1, path);
@@ -942,6 +955,11 @@ int cEpgHttpd::doChannels(MHD_Connection* tcp, json_t* obj)
          last = id;
       }
 
+      // the first row of a channel may be nameless (e.g. a newly added source)
+
+      if (isEmpty(json_string_value(json_object_get(oChanData, "name"))) && !isEmpty(mapDb->getStrValue("CHANNELNAME")))
+         json_object_set_new(oChanData, "name", json_string(mapDb->getStrValue("CHANNELNAME")));
+
       json_t* oSource = json_object();
 
       addFieldToJson(oSource, mapDb, "ExternalId");
@@ -1162,6 +1180,26 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
 
    data->modTime = eventsUpdSp->getIntValue();
 
+   // the picture may be replaced without changing the event (channelmap merge 3),
+   //  so its reference has to be part of the modification time as well
+
+   std::string imageSource;
+
+   if (useeventsDb->getIntValue("IMAGECOUNT") > 0)
+   {
+      imageRefDb->clear();
+      imageRefDb->setBigintValue("EventId", imageid.getBigintValue());
+      imageRefDb->setValue("Lfn", 0L);
+
+      if (imageRefDb->find())
+      {
+         imageSource = imageRefDb->getStrValue("Source");
+         data->modTime = std::max(data->modTime, (time_t)imageRefDb->getIntValue("UpdSp"));
+      }
+
+      imageRefDb->reset();
+   }
+
    tell(eloDetail, "file: %s; expire: %s", l2pTime(data->modTime).c_str(), l2pTime(data->expireAt).c_str());
 
    if (!data->expireAt || data->modTime > data->expireAt)
@@ -1204,6 +1242,11 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
       addFieldToJson(oEvtData, useeventsDb, "GUEST");
       addFieldToJson(oEvtData, useeventsDb, "CAMERA");
       addFieldToJson(oEvtData, &merge);
+
+      // source of the (first) picture - may differ from the text source (channelmap merge 3)
+
+      if (!imageSource.empty())
+         json_object_set_new(oEvtData, "imagesource", json_string(imageSource.c_str()));
 
       // timer for this Event pending?
 

@@ -158,7 +158,7 @@ function eventCard(e) {
 
    return $('<li class="event-card" tabindex="0">').attr('data-id', e.id).append(
       $('<div class="ev-head">').append(
-         channelBadge(e.channelid),
+         channelBadge(e.channelid, { showName: false }),
          $('<div class="ev-when">').append($time,
             progress !== null
                ? $('<div class="progress">').append($('<div>').css('width', progress + '%'))

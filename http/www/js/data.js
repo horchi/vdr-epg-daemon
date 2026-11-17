@@ -80,7 +80,11 @@ export function channelLogo(id) {
       .on('error', function () { $(this).replaceWith($('<span class="channel-name">').text(name)); });
 }
 
-export function channelBadge(id) {
+// opts.showName: show the name beside the logo (default: profile setting 'logoShowName'),
+//   without a logo (or if it fails to load) the name is shown anyway
+
+export function channelBadge(id, opts = {}) {
+   const showName = opts.showName ?? state.profile.logoShowName == 1;
    const ch = state.channels[id];
    const name = ch?.name || id;
    const logo = mediaUrl(state.profile.channelLogoPath, { maxW: 70, maxH: 50, id });
@@ -91,7 +95,7 @@ export function channelBadge(id) {
          .on('error', function () { $(this).replaceWith($('<span class="channel-name">').text(name)); })
          .appendTo($ch);
 
-      if (state.profile.logoShowName == 1)
+      if (showName)
          $ch.append($('<span class="channel-name">').text(name));
    }
    else

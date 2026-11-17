@@ -225,8 +225,9 @@ img { max-width: 100%; }
 .event-card:hover { border-color: var(--accent); }
 
 .ev-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ev-head .channel { flex-shrink: 0; }   /* logo + zap button keep their width, the time column shrinks */
 .ev-when { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
-.ev-time { display: flex; align-items: center; gap: 6px; font-size: 14px; }
+.ev-time { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 14px; }
 .ev-date { font-size: 12px; color: var(--text-dim); }
 
 .ev-body { display: flow-root; font-size: 14px; }
@@ -238,7 +239,9 @@ img { max-width: 100%; }
 
 /* channel badge */
 .channel { position: relative; display: flex; align-items: center; gap: 6px; min-width: 70px; }
-.channel img { max-width: 70px; max-height: 40px; object-fit: contain; }
+/* fixed box - logos without width/height (svg with a viewBox only) would get a wrong
+   intrinsic size and the logo / zap button would overlap the neighbour column */
+.channel img { width: 70px; height: 40px; max-width: 70px; max-height: 40px; object-fit: contain; flex-shrink: 0; }
 .channel-name { font-weight: 600; font-size: 13px; }
 .ch-switch { width: 28px; height: 28px; color: var(--text-dim); }
 .ch-switch:hover { color: var(--accent); }

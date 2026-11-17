@@ -209,6 +209,15 @@ int cEpgd::updateMapRow(char* extid, const char* source, const char* chan, int m
       selectMaxMapOrd->freeResult();
    }
 
+   // take the channel name from another row of this channel (if one is known),
+   //  otherwise the web interface may pick a nameless row (no name, no logo)
+
+   if (isEmpty(mapDb->getStrValue("CHANNELNAME")))
+   {
+      selectMapNameOf->find();
+      selectMapNameOf->freeResult();
+   }
+
    mapDb->setValue("VPS", vps);
 
    if (!mapDb->hasValue("MERGE", (long)merge))

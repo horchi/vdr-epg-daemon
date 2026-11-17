@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.0"
-#define VERSION_DATE "16.11.2026"
+#define _VERSION     "1.4.1"
+#define VERSION_DATE "17.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,15 @@
 
 /*
  * ------------------------------------
+
+2026-11-17: version 1.4.1 (horchi)
+   - Added: channelmap merge 3, fallback provider (like 2) whose pictures replace the ones of the leading provider
+   - Added: web front end shows the source of the picture in the event details
+   - Bugfix: newly added channelmap rows got no channel name (web front end showed the id and no logo)
+   - Bugfix: missing channel logo file now answered with 404 (was an empty 304)
+   - Change: png channel logos are delivered unscaled to keep their transparency
+   - Change: web front end, channel name on the program tiles only without logo,
+             fixed overlapping of logos without size (svg with viewBox only)
 
 2026-11-16: version 1.4.0 (horchi)
    - Change: rewrite of the web front end

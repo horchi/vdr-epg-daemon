@@ -53,7 +53,9 @@ EPG Merge:
   DVB and merged events, not for events which are only provided by the external source.
   The merge behavior is configured in the channlemap.conf, 0 disables the merge for the corresponding channel,
   1 enables it and with merge 2 the provider ist hold in background and used as fall-back which is used in case
-  the merge 1 provider delivers poor data.
+  the merge 1 provider delivers poor data. Merge 3 works like merge 2, additionally the pictures of this provider
+  replace the pictures of the matching event of the other provider (e.g. to combine the texts of one provider
+  with the better pictures of another one).
 
 
 Get the source from git:

@@ -292,7 +292,8 @@ function renderTop(e, sc, media, ep) {
       e.audio?.includes('DolbyDigital') ? $('<span class="flag">').text('DD') : null,
       e.flags?.includes('Live') ? $('<span class="flag flag-live">').text('Live') : null,
       e.parentalrating ? $('<span class="flag fsk">').addClass('fsk' + e.parentalrating).text('FSK ' + e.parentalrating) : null,
-      e.merge ? $('<span class="flag flag-dim">').text(tre.mergeSrc + e.merge) : null);
+      e.merge ? $('<span class="flag flag-dim">').text(tre.mergeSrc + e.merge) : null,
+      e.imagesource ? $('<span class="flag flag-dim">').text(tre.imageSrc + e.imagesource.toUpperCase()) : null);
 
    const stars = $('<div class="ed-stars">');
 

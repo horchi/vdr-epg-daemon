@@ -182,6 +182,7 @@ class cEpgd : public cFrame, public cSystemNotification
       cDbStatement* updateScrReference {};
       cDbStatement* selectMaxMapOrd {};
       cDbStatement* selectMapOrdOf {};
+      cDbStatement* selectMapNameOf {};
       cDbStatement* countDvbChanges {};
       cDbStatement* selectNewRecordings {};
       cDbStatement* countNewRecordings {};

@@ -114,7 +114,7 @@ where
  AND
  ev.starttime between unix_timestamp() - ev.duration and unix_timestamp() + 259200
  AND
- cm.merge in(1,2);
+ cm.merge in(1,2,3);
 /*
 * do the magic
 */
@@ -245,6 +245,68 @@ SET lastrun = (select value from parameters where owner = 'epgd' and name = 'mer
 */
 IF lastrun = 0 then truncate table useevents;
 END IF;
+/*
+* take over the pictures of picture donor sources (channelmap merge 3)
+*   for each upcoming external event of another source the donor event
+*   with pictures on the same channel starting within +-60 seconds and with
+*   a similar duration is searched (no title check - the stored lvr functions
+*   are far too expensive for all events of all days, and the start times of
+*   the external providers are nearly identical), its picture references
+*   replace the ones of the event - only events changed since the last run
+*   are checked
+*/
+drop temporary table if exists imgdonor;
+create temporary table imgdonor
+(
+ eventid bigint unsigned not null primary key,
+ donorid bigint unsigned not null,
+ imagecount int not null
+) engine = memory;
+insert ignore into imgdonor
+select
+ ev.eventid, dn.eventid, dn.imagecount
+from
+ events ev
+ inner join channelmap cm on (cm.channelid = ev.channelid and cm.merge = 3)
+ inner join events dn on (dn.channelid = ev.channelid and dn.source = cm.source)
+where
+ ev.source not in ('vdr', cm.source) and
+ ifnull(ev.delflg, 'N') != 'Y' and ifnull(dn.delflg, 'N') != 'Y' and
+ dn.imagecount > 0 and
+ ev.starttime + ev.duration > unix_timestamp() and
+ dn.starttime between ev.starttime - 60 and ev.starttime + 60 and
+ (dn.duration+1) / (ev.duration+1) * 100 between 50 and 200 and
+ GREATEST(ev.updsp, dn.updsp) >= lastrun - 5
+order by
+ ev.eventid, abs(dn.starttime - ev.starttime);
+/* drop references which differ from the donor ones */
+delete r from
+ imagerefs r
+ inner join imgdonor d on (d.eventid = r.eventid)
+ left outer join imagerefs dr on (dr.eventid = d.donorid and dr.lfn = r.lfn)
+where
+ dr.imagename is Null or
+ dr.imagename != r.imagename;
+/* add the donor references (unchanged ones are kept by 'ignore') */
+insert ignore into
+ imagerefs(eventid, lfn, inssp, updsp, source, fileref, imagename, imagenamefs)
+select
+ d.eventid, dr.lfn, unix_timestamp(), unix_timestamp(), dr.source, dr.fileref, dr.imagename, dr.imagenamefs
+from
+ imgdonor d
+ inner join imagerefs dr on (dr.eventid = d.donorid)
+where
+ dr.lfn < d.imagecount;
+/* adjust the picture count */
+update
+ events ev
+ inner join imgdonor d on (d.eventid = ev.eventid)
+set
+ ev.imagecount = d.imagecount,
+ ev.updsp = unix_timestamp()
+where
+ ev.imagecount != d.imagecount;
+drop temporary table if exists imgdonor;
 /*
 * update useevents
 */

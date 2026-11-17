@@ -550,6 +550,22 @@ int cEpgd::initDb()
 
    status += selectMapOrdOf->prepare();
 
+   // --------------------
+   // select channelname from channelmap where
+   //  channelid = ? and channelname is not null and channelname <> '' limit 1
+
+   selectMapNameOf = new cDbStatement(mapDb);
+
+   selectMapNameOf->build("select ");
+   selectMapNameOf->bind("CHANNELNAME", cDBS::bndOut);
+   selectMapNameOf->build(" from %s where ", mapDb->TableName());
+   selectMapNameOf->bind("CHANNELID", cDBS::bndIn | cDBS::bndSet);
+   selectMapNameOf->build(" and %s is not null and %s <> '' limit 1",
+                          mapDb->getField("CHANNELNAME")->getDbName(),
+                          mapDb->getField("CHANNELNAME")->getDbName());
+
+   status += selectMapNameOf->prepare();
+
    // ----------
    // select extid, source, updflg
    //   from channelmap
@@ -1064,6 +1080,7 @@ int cEpgd::exitDb()
 
    delete selectMaxMapOrd;           selectMaxMapOrd = nullptr;
    delete selectMapOrdOf;            selectMapOrdOf = nullptr;
+   delete selectMapNameOf;           selectMapNameOf = nullptr;
    delete selectAllMap;              selectAllMap = nullptr;
    delete selectMapByUpdFlg;         selectMapByUpdFlg = nullptr;
    delete selectMapByExt;            selectMapByExt = nullptr;
