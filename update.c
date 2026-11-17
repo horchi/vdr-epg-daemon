@@ -551,13 +551,14 @@ int cEpgd::initDb()
    status += selectMapOrdOf->prepare();
 
    // --------------------
-   // select channelname from channelmap where
+   // select channelname, format from channelmap where
    //  channelid = ? and channelname is not null and channelname <> '' limit 1
 
    selectMapNameOf = new cDbStatement(mapDb);
 
    selectMapNameOf->build("select ");
    selectMapNameOf->bind("CHANNELNAME", cDBS::bndOut);
+   selectMapNameOf->bind("FORMAT", cDBS::bndOut, ", ");
    selectMapNameOf->build(" from %s where ", mapDb->TableName());
    selectMapNameOf->bind("CHANNELID", cDBS::bndIn | cDBS::bndSet);
    selectMapNameOf->build(" and %s is not null and %s <> '' limit 1",

@@ -470,7 +470,7 @@ cDbStatement* cSearchTimer::prepareSearchStatement(cDbRow* searchTimer)
    select->setBindPrefix("c.");
    select->bind(mapDb, "FORMAT", cDBS::bndOut, ", ");
    select->clrBindPrefix();
-   select->build(" from eventsviewplain e, (select distinct channelid,channelname,format,ord,visible from %s) c where ",
+   select->build(" from eventsviewplain e, (select channelid, max(channelname) channelname, max(format) format, min(ord) ord, max(visible) visible from %s group by channelid) c where ",
                  mapDb->TableName());
    select->build("e.%s = c.%s",
                          db->getField("CHANNELID")->getDbName(),

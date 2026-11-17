@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.1"
-#define VERSION_DATE "17.11.2026"
+#define _VERSION     "1.4.2"
+#define VERSION_DATE "18.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,10 @@
 
 /*
  * ------------------------------------
+
+2026-11-18: version 1.4.2 (horchi)
+   - Bugfix: events listed twice (web front end, search) if a channel has channelmap rows
+             of several sources with different name, format, order or visibility
 
 2026-11-17: version 1.4.1 (horchi)
    - Added: channelmap merge 3, fallback provider (like 2) whose pictures replace the ones of the leading provider
