@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.2"
+#define _VERSION     "1.4.3"
 #define VERSION_DATE "18.11.2026"
 #define DB_API       8
 
@@ -17,21 +17,42 @@
 /*
  * ------------------------------------
 
+2026-11-18: version 1.4.3 (horchi)
+   - Added: channelmap column CHANNELGROUP, name and group of the channels are taken from the VDR by the
+            epg2vdr master (>= 1.2.21), web frontend shows them read only (no more manual name editing,
+            the names have to match the channel logos of the VDR OSD)
+   - Added: web frontend, channel settings show the sources of a channel with their merge value
+   - Added: web frontend, channel settings show the channel logo, a click shows how it is looked up
+            (key, directory, file, real path, size; new request data/channellogoinfo)
+   - Added: web frontend, channel group filter on the pages 'Programm', 'Magazin' and 'Zeitleiste',
+            the 'Zeitleiste' shows a heading row per channel group
+   - Change: web frontend, channel settings are ordered by the channel groups, a channel can be moved only within its group
+   - Added: web frontend, new page 'Zeitleiste'
+   - Added: config parameters for the recording complete check (min. percent with/without VPS, check of late started manual timers)
+   - Added: parameter 'messageHistory', messages older than n days are deleted (default 30)
+   - Added: reason of failed ('F') and rejected ('J') timers stored in timersdone (new column INFO), shown in the timer history
+   - Added: web frontend, timer history with status filter in the column header and edit mode
+            (select all, select by status group, delete selection)
+   - Bugfix: search timer created the same timer again and again (rejected every few minutes) if the VDR
+             assigned it to an other event (e.g. of the DVB EIT) with the same start time,
+             now the event is also looked up by channel and start time before the timer is rejected
+   - Change: web frontend, timer page: history and messages are paged, tabs and table headers stay visible
+
 2026-11-18: version 1.4.2 (horchi)
    - Bugfix: events listed twice (web front end, search) if a channel has channelmap rows
              of several sources with different name, format, order or visibility
 
 2026-11-17: version 1.4.1 (horchi)
    - Added: channelmap merge 3, fallback provider (like 2) whose pictures replace the ones of the leading provider
-   - Added: web front end shows the source of the picture in the event details
-   - Bugfix: newly added channelmap rows got no channel name (web front end showed the id and no logo)
+   - Added: web frontend shows the source of the picture in the event details
+   - Bugfix: newly added channelmap rows got no channel name (web frontend showed the id and no logo)
    - Bugfix: missing channel logo file now answered with 404 (was an empty 304)
    - Change: png channel logos are delivered unscaled to keep their transparency
-   - Change: web front end, channel name on the program tiles only without logo,
+   - Change: web frontend, channel name on the program tiles only without logo,
              fixed overlapping of logos without size (svg with viewBox only)
 
 2026-11-16: version 1.4.0 (horchi)
-   - Change: rewrite of the web front end
+   - Change: rewrite of the web frontend
 
 2025-02-13: version 1.3.29 (horchi)
    - Change: downgarded jquery(ui) du to problems

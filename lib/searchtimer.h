@@ -94,6 +94,7 @@ class cSearchTimer
       cDbStatement* selectConflictingTimers {};
       cDbStatement* selectFailedTimerByEvent {};
       cDbStatement* selectEvent {};
+      cDbStatement* selectEventByChannelTime {};
 
       cDbValue startValue;
       cDbValue endValue;

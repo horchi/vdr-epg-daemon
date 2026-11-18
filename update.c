@@ -2339,6 +2339,18 @@ int cEpgd::cleanupEvents()
 
    tell(eloInfo, "Cleanup of timer actions finished");
 
+   // cleanup messages (web front end 'Meldungen')
+
+   long int msgHist {30};
+
+   getParameter("epgd", "messageHistory", msgHist);
+
+   if (msgHist > 0)
+   {
+      tell(eloInfo, "Starting cleanup of messages, older than %ld days", msgHist);
+      messageDb->deleteWhere("updsp < %ld", time(0) - msgHist * tmeSecondsPerDay);
+   }
+
    return dbConnected() ? success : fail;
 }
 

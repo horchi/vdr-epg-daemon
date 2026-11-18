@@ -9,6 +9,7 @@ import { icon } from './icons.js';
 import { apply as applyTheme, getTheme, cycleMode } from './theme.js';
 import * as pageNow from './pages/now.js';
 import * as pageMagazine from './pages/magazine.js';
+import * as pageTimeline from './pages/timeline.js';
 import * as pageTimers from './pages/timers.js';
 import * as pageRecords from './pages/records.js';
 import * as pageSearch from './pages/search.js';
@@ -21,6 +22,7 @@ import tr from '../lang/de.js';
 const pages = {
    now:            { label: tr.menu.now, icon: 'clock', page: pageNow },
    magazine:       { label: tr.menu.magazine, icon: 'now', page: pageMagazine },
+   timeline:       { label: tr.menu.timeline, icon: 'timeline', page: pageTimeline },
    timers:         { label: tr.menu.timer, icon: 'timer', page: pageTimers },
    records:        { label: tr.menu.records, icon: 'film', page: pageRecords, right: rights.recordings },
    search:         { label: tr.menu.search, icon: 'search', page: pageSearch, right: rights.searchTimer },

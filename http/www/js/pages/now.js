@@ -6,11 +6,14 @@ import { busy, toastError } from '../ui.js';
 import { now, nowUnix, unixTime, formatTime, formatDate, progressOf, toLocalInput, fromLocalInput, textToHtml } from '../utils.js';
 import { channelBadge } from '../data.js';
 import { icon } from '../icons.js';
+import { foreignKey, ctrlScroll, tileInNextRow, focusTile } from '../gridtools.js';
 import { showEvent } from '../eventDetail.js';
+import { groupSelect, currentGroup, inGroup } from '../groupfilter.js';
 import tr from '../../lang/de.js';
 
 let current = { type: '@Now', time: 0 };
 let $page = null;
+let lastEvents = [];
 
 // profile.quickTimes: 'Label=!?Value~Label=Value...'; value is 'HH:MM' or '@searchtimer'
 
@@ -73,6 +76,11 @@ export function render($content) {
          .appendTo($bar);
    }
 
+   const $grp = groupSelect('now', () => renderEvents(lastEvents));
+
+   if ($grp)
+      $bar.append($grp);
+
    $bar.on('click', 'button[data-type]', function () { setTime($(this).attr('data-type')); });
    $time.on('change', function () { if (this.value) setTime('@time', fromLocalInput(this.value)); });
 
@@ -88,7 +96,45 @@ export function render($content) {
          .on('keydown', '.event-card', function (ev) { if (ev.key === 'Enter') $(this).trigger('click'); }));
 
    $content.empty().append($page);
+   $(document).on('keydown.nowpage', onKey);
    setTime(current.type, current.time);
+}
+
+export function destroy() {
+   $(document).off('.nowpage');
+   $page = null;
+}
+
+// keyboard: arrows move the focus over the cards, with Ctrl they scroll the page
+
+function onKey(ev) {
+   if (!$page || foreignKey(ev) || ctrlScroll(ev))
+      return;
+
+   const cards = $page.find('.event-card').get();
+   const cur = document.activeElement?.closest?.('.event-card');
+   const i = cards.indexOf(cur);
+   let next = null;
+
+   if (!cards.length || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(ev.key))
+      return;
+
+   if (i < 0)                                     // nothing focused yet -> start with the first card
+      next = ev.key.startsWith('Arrow') ? cards[0] : null;
+   else if (ev.key === 'ArrowLeft')  next = cards[i - 1];
+   else if (ev.key === 'ArrowRight') next = cards[i + 1];
+   else if (ev.key === 'ArrowUp')    next = tileInNextRow(cards, cur, -1);
+   else if (ev.key === 'ArrowDown')  next = tileInNextRow(cards, cur, 1);
+   else if (ev.key === 'Home')       next = cards[0];
+   else if (ev.key === 'End')        next = cards[cards.length - 1];
+
+   if (i >= 0 || next)
+      ev.preventDefault();
+
+   next && focusTile(next);
+
+   if (ev.key === 'Home' && next)
+      window.scrollTo(0, 0);                      // back to the toolbar too
 }
 
 async function setTime(type, time) {
@@ -132,8 +178,14 @@ async function setTime(type, time) {
    }
 }
 
+// the channel group filter applies to the time based lists, not to the search results
+
 function renderEvents(events) {
    const $ul = $page.find('.event-grid').empty();
+   const g = current.type[0] === '@' && !['@Now', '@Next', '@time'].includes(current.type) ? '' : currentGroup('now');
+
+   lastEvents = events;
+   events = events.filter((e) => inGroup(e.channelid, g));
 
    if (!events.length) {
       $ul.append($('<li class="empty">').text(tr.error.noData));

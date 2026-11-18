@@ -1,10 +1,13 @@
 // Generic list: table on desktop, cards on phones (CSS), with filter, sort and selection
 //
 //   const list = dataList({
-//      columns:  [{ key, label, render(row) -> jQuery|string, sort(row) -> value, cls, sortDefault: 1|-1 }],
+//      columns:  [{ key, label, render(row) -> jQuery|string, sort(row) -> value, cls, sortDefault: 1|-1,
+//                   filter: { value(row) -> key, label(key) -> text } }],   // select in the column header
 //      rowCls(row), rowActions(row) -> [jQuery buttons], onRowClick(row, ev),
 //      selectable: true, bulkActions: [{ icon, label, run(rows) }],
-//      tools: [jQuery], empty: 'text', filterText(row) -> string
+//      editMode: true,  // selection only after 'Bearbeiten', with 'select all' and 'select group'
+//      tools: [jQuery], empty: 'text', filterText(row) -> string,
+//      pageSize: n      // render only n rows at once (sort and filter still work on all rows)
 //   });
 //   $parent.append(list.$el); list.setRows(rows);
 
@@ -16,7 +19,12 @@ export function dataList(o) {
    let rows = [];
    let sortCol = cols.findIndex((c) => c.sortDefault);
    let sortDir = sortCol >= 0 ? cols[sortCol].sortDefault : 1;
+   let page = 0;
+   let shown = [];              // rows of the current page
    const selected = new Set();
+   const colFilter = new Map();   // column index -> selected filter key ('' = all)
+   const filterCols = cols.map((c, i) => c.filter ? i : -1).filter((i) => i >= 0);
+   let editing = !o.editMode;
 
    const $filter = $('<input type="search" class="input dl-filter" placeholder="Filter …">');
    const $count = $('<span class="dl-count dim">');
@@ -25,7 +33,86 @@ export function dataList(o) {
    const $thead = $('<thead>');
    const $tbody = $('<tbody>');
    const $table = $('<table class="dl">').append($thead, $tbody);
-   const $el = $('<div class="dl-wrap">').append($tools, $table);
+   const $pagers = [$('<div class="dl-pager">'), $('<div class="dl-pager dl-pager-bottom">')];
+   $tools.find('.dl-count').after($pagers[0]);
+   const $el = $('<div class="dl-wrap">').append($tools, $table, $pagers[1]);
+
+   // column filter selects (in the header, on phones in the toolbar since there is no header)
+
+   const $colSelects = new Map();   // column index -> [$select, ...]
+
+   function filterSelect(i) {
+      const $s = $('<select class="input dl-col-filter">').attr('title', cols[i].label || '')
+         .on('click', (ev) => ev.stopPropagation())
+         .on('change', function () {
+            colFilter.set(i, this.value);
+            $colSelects.get(i).forEach(($o) => $o.val(this.value));
+            page = 0;
+            renderBody();
+         });
+
+      $colSelects.set(i, [...($colSelects.get(i) || []), $s]);
+      return $s;
+   }
+
+   function groupsOf(i, list = rows) {
+      const counts = new Map();
+
+      for (const r of list) {
+         const k = String(cols[i].filter.value(r) ?? '');
+         counts.set(k, (counts.get(k) || 0) + 1);
+      }
+
+      return [...counts].map(([k, n]) => ({ key: k, n, label: cols[i].filter.label?.(k) ?? k }))
+         .sort((a, b) => a.label.localeCompare(b.label));
+   }
+
+   function fillFilterSelects() {
+      for (const i of filterCols) {
+         const groups = groupsOf(i);
+         const cur = colFilter.get(i) || '';
+
+         for (const $s of $colSelects.get(i))
+            $s.empty().append($('<option value="">').text((cols[i].label || '') + ': ' + tr.filterAll),
+               groups.map((g) => $('<option>').val(g.key).text(g.label + ' (' + g.n + ')')))
+               .val(groups.some((g) => g.key === cur) ? cur : '');
+
+         if (!groups.some((g) => g.key === cur))
+            colFilter.set(i, '');
+      }
+   }
+
+   for (const i of filterCols)
+      $('<span class="dl-col-filter-m">').append(filterSelect(i)).insertAfter($filter);
+
+   // edit mode: selection column, select all / select group, bulk actions
+
+   const $groupSel = $('<select class="input dl-group-sel">').on('change', function () {
+      const [i, key] = this.value.split('|');
+
+      if (this.value !== '')
+         textFiltered().filter((r) => String(cols[+i].filter.value(r) ?? '') === key).forEach((r) => selected.add(r));
+
+      this.value = '';
+      renderBody();
+   });
+
+   if (o.editMode) {
+      const $selAll = $('<button type="button" class="btn">').append(icon('check'), $('<span>').text(tr.markAll))
+         .on('click', () => { visibleRows().forEach((r) => selected.add(r)); renderBody(); });
+      const $selNone = $('<button type="button" class="btn">').append(icon('close'), $('<span>').text(tr.markNone))
+         .on('click', () => { selected.clear(); renderBody(); });
+      const $edit = $('<button type="button" class="btn dl-edit-toggle">').append(icon('edit'), $('<span>').text(tr.edit))
+         .on('click', () => {
+            editing = !editing;
+            selected.clear();
+            $edit.toggleClass('active', editing).find('span').text(editing ? tr.editDone : tr.edit);
+            renderBody();
+         });
+
+      $('<div class="dl-edit-tools">').append($selAll, filterCols.length ? $groupSel : null, $selNone).prependTo($bulk);
+      $tools.append($edit);
+   }
 
    if (sortCol < 0 && cols.some((c) => c.sort))
       sortCol = cols.findIndex((c) => c.sort);
@@ -37,17 +124,21 @@ export function dataList(o) {
    if (o.selectable)
       $hr.append($('<th class="dl-sel">').append($('<input type="checkbox" title="' + tr.markAll + '">')
          .on('change', function () {
-            visibleRows().forEach((r) => this.checked ? selected.add(r) : selected.delete(r));
+            shown.forEach((r) => this.checked ? selected.add(r) : selected.delete(r));
             renderBody();
          })));
 
    cols.forEach((c, i) => {
-      const $th = $('<th>').addClass(c.cls || '').text(c.label || '');
+      const $th = $('<th>').addClass(c.cls || '').append($('<span>').text(c.label || ''));
+
+      if (c.filter)
+         $th.addClass('dl-has-filter').append(filterSelect(i));
 
       if (c.sort)
          $th.addClass('dl-sortable').append(icon('chevron', 'dl-sort-icon')).on('click', () => {
             sortDir = sortCol === i ? -sortDir : 1;
             sortCol = i;
+            page = 0;
             renderBody();
          });
 
@@ -67,7 +158,7 @@ export function dataList(o) {
          })
          .appendTo($bulk);
 
-   $filter.on('input', () => renderBody());
+   $filter.on('input', () => { page = 0; renderBody(); });
 
    $tbody.on('click', 'tr', function (ev) {
       if ($(ev.target).closest('button, a, input, label').length)
@@ -88,9 +179,17 @@ export function dataList(o) {
       return cols.map((c) => c.sort ? c.sort(r) : '').join(' ');
    }
 
-   function visibleRows() {
+   function textFiltered() {
       const f = $filter.val().toLowerCase().trim();
-      let list = f ? rows.filter((r) => String(filterText(r)).toLowerCase().includes(f)) : rows.slice();
+      return f ? rows.filter((r) => String(filterText(r)).toLowerCase().includes(f)) : rows.slice();
+   }
+
+   function visibleRows() {
+      let list = textFiltered();
+
+      for (const [i, key] of colFilter)
+         if (key !== '')
+            list = list.filter((r) => String(cols[i].filter.value(r) ?? '') === key);
 
       if (sortCol >= 0 && cols[sortCol].sort) {
          const key = cols[sortCol].sort;
@@ -105,12 +204,56 @@ export function dataList(o) {
 
    function updateBulk() {
       const n = rows.filter((r) => selected.has(r)).length;
-      $bulk.toggleClass('active', n > 0).find('.btn').prop('disabled', n === 0);
-      $bulk.attr('data-count', n || '');
+      $el.toggleClass('dl-editing', editing && !!o.selectable).toggleClass('dl-edit-off', !editing);
+      $bulk.toggleClass('active', n > 0 || (o.editMode && editing)).find('> .btn').prop('disabled', n === 0);
+      $bulk.attr('data-count', n || (o.editMode && editing ? '0' : ''));
+
+      // group selection with the counts of the (text) filtered rows
+
+      if (o.editMode && editing && filterCols.length) {
+         const base = textFiltered();
+         $groupSel.empty().append($('<option value="">').text(tr.markGroup),
+            filterCols.flatMap((i) => groupsOf(i, base).map((g) => $('<option>').val(i + '|' + g.key).text(g.label + ' (' + g.n + ')'))));
+      }
+   }
+
+   function renderPager(total) {
+      const pages = o.pageSize ? Math.ceil(total / o.pageSize) : 1;
+
+      for (const $p of $pagers) {
+         $p.empty().toggle(pages > 1);
+
+         if (pages <= 1)
+            continue;
+
+         const go = (n, $btn) => $btn.prop('disabled', n < 0 || n >= pages || n === page).on('click', () => {
+            page = n;
+            renderBody();
+
+            // keep the list start in view when paging at the bottom
+
+            if ($p.hasClass('dl-pager-bottom'))
+               window.scrollTo({ top: Math.max(0, $el.offset().top - 120) });
+         });
+
+         const btn = (name, title, n, cls = '') => go(n, $('<button type="button" class="btn btn-icon btn-flat">').addClass(cls).attr({ title, 'aria-label': title }).html(icon(name)));
+
+         $p.append(
+            btn('first', tr.pager.first, 0),
+            btn('left', tr.pager.prev, page - 1),
+            $('<span class="dl-pg-info">').text(tr.pager.page + ' ' + (page + 1) + ' / ' + pages),
+            btn('right', tr.pager.next, page + 1),
+            btn('last', tr.pager.last, pages - 1));
+      }
    }
 
    function renderBody() {
-      const list = visibleRows();
+      const all = visibleRows();
+      const pages = o.pageSize ? Math.max(1, Math.ceil(all.length / o.pageSize)) : 1;
+
+      page = Math.min(Math.max(page, 0), pages - 1);
+      const list = o.pageSize ? all.slice(page * o.pageSize, (page + 1) * o.pageSize) : all;
+      shown = list;
 
       $tbody.empty();
       $thead.find('th').removeClass('sorted asc desc');
@@ -122,12 +265,14 @@ export function dataList(o) {
          $tbody.append($('<tr class="dl-empty">').append($('<td>').attr('colspan', cols.length + 2).text(o.empty || tr.error.noData)));
          $count.text('');
          $tools.find('.dl-filter').toggle(false);
+         renderPager(0);
          updateBulk();
          return;
       }
 
       $tools.find('.dl-filter').toggle(true);
-      $count.text(list.length === rows.length ? rows.length + tr.entries : list.length + ' / ' + rows.length);
+      $count.text(all.length === rows.length ? rows.length + tr.entries : all.length + ' / ' + rows.length);
+      renderPager(all.length);
 
       for (const r of list) {
          const $tr = $('<tr>').addClass(o.rowCls?.(r) || '');
@@ -154,6 +299,7 @@ export function dataList(o) {
       setRows(newRows) {
          rows = newRows;
          selected.clear();
+         fillFilterSelects();
          renderBody();
       },
       rows: () => rows

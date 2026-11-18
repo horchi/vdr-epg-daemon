@@ -26,7 +26,6 @@ int cEpgHttpd::storeChannels(json_t* jInData, json_t* response)
    {
       int ord = na;
       int visible = na;
-      const char* name = 0;
       const char* channelid = json_object_iter_key(iter);
 
       for (void* iiter = json_object_iter(json_object_get(channels, channelid)); iiter;
@@ -38,7 +37,7 @@ int cEpgHttpd::storeChannels(json_t* jInData, json_t* response)
          if (strcmp(key, "sources") == 0)
             tell(eloDetail, "  'store ext sources and id' ... to be implemented ...");  // store ext sources and id -> TO BE IMPLEMENTED
          else if (strcmp(key, "name") == 0)
-            name = json_string_value(_val);
+            ;                                  // ignored, the name is taken from the VDR (epg2vdr)
          else if (strcmp(key, "visible") == 0)
             visible = json_integer_value(_val);
          else if (strcmp(key, "order") == 0)
@@ -49,10 +48,9 @@ int cEpgHttpd::storeChannels(json_t* jInData, json_t* response)
 
       if (!isEmpty(channelid) && ord != na && visible != na)
       {
-         tell(eloDetail, "Store: '%s' name=%s; ord=%d; visible=%d", channelid, name, ord, visible);
+         tell(eloDetail, "Store: '%s' ord=%d; visible=%d", channelid, ord, visible);
          mapDb->clear();
          mapDb->setValue("ChannelId", channelid);
-         mapDb->setValue("ChannelName", name);
          mapDb->setValue("Order", ord);
          mapDb->setValue("Visible", visible);
 

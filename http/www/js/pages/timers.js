@@ -57,7 +57,8 @@ const pad4 = (n) => String(10000 + (n || 0)).slice(1);
 const vdrName = (uuid) => state.vdrs[uuid]?.name || '–';
 
 const timerStateIcons = { D: 'trash', E: 'alert', F: 'check', R: 'record', P: 'clock', U: 'help' };
-const doneStateIcons = { D: 'trash', F: 'alert', f: 'alert', R: 'check', C: 'copy', Q: 'clock' };
+const doneStateIcons = { D: 'trash', F: 'alert', f: 'alert', R: 'check', C: 'copy', Q: 'clock', J: 'close' };
+const pageSize = () => +state.profile.maxListEntries || 100;
 
 function stateBadge(name, text, cls = '') {
    return $('<span class="state">').addClass(cls).append(icon(name), $('<span>').text(text));
@@ -252,8 +253,10 @@ function historyTab($body) {
    const list = dataList({
       columns: [
          { key: 'state', label: 'Status', cls: 'col-state',
-           render: (t) => t.state ? stateBadge(doneStateIcons[t.state] || 'help', trt.doneStates[t.state] || t.state, 'done-' + t.state) : '',
-           sort: (t) => t.state || '' },
+           render: (t) => t.state ? $('<div>').append(stateBadge(doneStateIcons[t.state] || 'help', trt.doneStates[t.state] || t.state, 'done-' + t.state),
+              doneInfo(t) ? $('<div class="dim small done-info">').text(doneInfo(t)) : null) : '',
+           sort: (t) => t.state || '',
+           filter: { value: (t) => t.state || '', label: (k) => trt.doneStates[k] || k || '–' } },
          { key: 'start', label: trt.recordTime, cls: 'col-time', sortDefault: -1,
            render: (t) => $('<div>').append($('<div>').text(formatDateTime(t.starttime)), $('<div class="dim small">').text(Math.round(t.duration / 60) + ' ' + tr.minutes)),
            sort: (t) => t.starttime },
@@ -261,7 +264,9 @@ function historyTab($body) {
          { key: 'channel', label: tr.channel, cls: 'col-channel', render: (t) => channelBadge(t.channelid), sort: (t) => channelName(t.channelid) }
       ],
       selectable: canEdit,
+      editMode: canEdit,
       empty: trt.empty,
+      pageSize: pageSize(),
       onRowClick: (t) => showDoneTimer(t.id),
       rowActions: (t) => canEdit ? [rowButton('trash', tr.del, () => deleteTimers([t.id], 'data/store-donetimers'))] : [],
       bulkActions: canEdit ? [{ icon: 'trash', label: tr.del, run: (rows) => deleteTimers(rows.map((r) => r.id), 'data/store-donetimers') }] : [],
@@ -291,6 +296,67 @@ function jobsTab($body) {
    return { reload };
 }
 
+// messages may contain a html mail (timer conflicts) -> parse it (inert, nothing is executed) and render it in our style
+
+const parsedMessages = new WeakMap();
+
+function parseMessage(m) {
+   if (parsedMessages.has(m))
+      return parsedMessages.get(m);
+
+   const txt = m.text || '';
+   let res = { plain: txt };
+
+   if (/^\s*</.test(txt)) {
+      const doc = new DOMParser().parseFromString(txt, 'text/html');
+      const inner = doc.querySelector('table table');
+      const groups = [];
+
+      for (const tr of inner ? inner.querySelectorAll('tbody tr') : []) {
+         const th = tr.querySelector('th[colspan]');
+         const tds = [...tr.querySelectorAll('td')].map((td) => td.textContent.trim());
+
+         if (th)
+            groups.push({ head: th.textContent.trim(), rows: [] });
+         else if (tds.length >= 6 && groups.length)
+            groups.at(-1).rows.push({ transponder: tds[0], channel: tds[1], timer: tds[2], file: tds[3], begin: tds[4], end: tds[5] });
+      }
+
+      const plain = (doc.body?.textContent || '').replace(/\s+/g, ' ').trim();
+      res = groups.length ? { plain, groups } : { plain };
+   }
+
+   parsedMessages.set(m, res);
+   return res;
+}
+
+const messagePlain = (m) => parseMessage(m).plain;
+
+function messageBody(m) {
+   const msg = parseMessage(m);
+
+   if (!msg.groups)
+      return $('<div class="msg-text">').text(msg.plain);
+
+   const $c = $('<div class="msg-conflicts">');
+
+   for (const g of msg.groups)
+      $c.append($('<div class="msg-conf-head">').text(g.head.replace(/^conflict #(\d+) on VDR (.*) at (.*)$/, trt.conflictHead)),
+         $('<div class="msg-conf">').append(g.rows.flatMap((r) => [
+            $('<span class="mc-time">').text(r.begin + ' – ' + r.end),
+            $('<span class="mc-channel">').text(r.channel),
+            $('<span class="mc-file">').text(r.file.replace(/~/g, ' / ')),
+            $('<span class="mc-timer dim">').text('#' + r.timer)])));
+
+   return $c;
+}
+
+// reason of a done entry ('F'ailed / re'J'ected / 'f'ailed to create), stored since 1.4.2
+
+function doneInfo(t) {
+   return t.info || trt.doneInfoDefault[t.state] || '';
+}
+
 function messagesTab($body) {
    const trm = trt;
    const typeIcons = { E: 'alert', F: 'alert', I: 'info', W: 'alert' };
@@ -313,12 +379,13 @@ function messagesTab($body) {
            render: (m) => stateBadge(typeIcons[m.type] || 'info', trm.messageTypes[m.type] || m.type, 'msg-' + m.type), sort: (m) => m.type },
          { key: 'time', label: 'Zeit', cls: 'col-time', sortDefault: -1, render: (m) => formatDateTime(m.updsp), sort: (m) => m.updsp },
          { key: 'title', label: tr.pages.eventDetail.title, cls: 'col-title',
-           render: (m) => $('<div class="cell-title">').append($('<b>').text(m.title || ''), $('<div class="msg-text">').text(m.text || '')),
+           render: (m) => $('<div class="cell-title">').append($('<b>').text(m.title || ''), messageBody(m)),
            sort: (m) => (m.title || '').toLowerCase() },
          { key: 'state', label: 'Status', cls: 'col-num', render: (m) => trm.messageStates[m.state] || m.state, sort: (m) => m.state }
       ],
-      filterText: (m) => [m.title, m.text, m.type].join(' '),
+      filterText: (m) => [m.title, messagePlain(m), m.type].join(' '),
       selectable: true,
+      pageSize: pageSize(),
       rowCls: (m) => m.state === 'N' ? 'unread' : '',
       rowActions: (m) => [
          rowButton(m.state === 'N' ? 'check' : 'mail', m.state === 'N' ? trm.messageStates.R : trm.messageStates.N, () => mark([m], m.state === 'N' ? 'R' : 'N')),

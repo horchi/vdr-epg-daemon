@@ -23,6 +23,10 @@ cParameters::Parameter cParameters::parameters[] =
 
    { "epgd",     "manualTimer2Done",               ptBool,    "1",                        "^[01]$",               no,    yes },
    { "epgd",     "timerJobFailedHistory",          ptNum,     "10",                       "^[0-9]{1,3}$",         no,    yes },
+   { "epgd",     "messageHistory",                 ptNum,     "30",                       "^[0-9]{1,4}$",         no,    yes },
+   { "epgd",     "recCompleteMinPct",              ptNum,     "98",                       "^([0-9]|[1-9][0-9]|100)$", no, yes },
+   { "epgd",     "recCompleteMinPctVps",           ptNum,     "90",                       "^([0-9]|[1-9][0-9]|100)$", no, yes },
+   { "epgd",     "recCheckLateManualTimer",        ptBool,    "1",                        "^[01]$",               no,    yes },
 
    { "epgd",     "logoUpperCase",                  ptBool,    "0",                        "^[01]$",               no,    yes },
    { "epgd",     "logoById",                       ptBool,    "0",                        "^[01]$",               no,    yes },

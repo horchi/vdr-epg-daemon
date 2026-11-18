@@ -338,6 +338,21 @@ int cSearchTimer::initDb()
 
    status += selectEvent->prepare();
 
+   // select * from eventsviewplain
+   //   where cnt_channelid = ?
+   //     and cnt_starttime >= ? and cnt_starttime <= ?
+
+   selectEventByChannelTime = new cDbStatement(useeventsDb);
+
+   selectEventByChannelTime->build("select ");
+   selectEventByChannelTime->bindAllOut();
+   selectEventByChannelTime->build(" from eventsviewplain where ");
+   selectEventByChannelTime->bind("CHANNELID", cDBS::bndIn | cDBS::bndSet);
+   selectEventByChannelTime->bindCmp(0, "STARTTIME", &startValue, ">=", " and ");
+   selectEventByChannelTime->bindCmp(0, "STARTTIME", &endValue, "<=", " and ");
+
+   status += selectEventByChannelTime->prepare();
+
    // ----------
 
    if (status != success)
@@ -365,6 +380,7 @@ int cSearchTimer::exitDb()
       delete selectSearchTimerByName;   selectSearchTimerByName = 0;
       delete selectSearchTimerById;     selectSearchTimerById = 0;
       delete selectEvent;               selectEvent = 0;
+      delete selectEventByChannelTime;  selectEventByChannelTime = 0;
 
       delete mapDb;                     mapDb = 0;
       delete useeventsDb;               useeventsDb = 0;
@@ -728,7 +744,34 @@ int cSearchTimer::checkTimers()
       useeventsDb->clear();
       useeventsDb->setValue("USEID", timerDb->getIntValue("EVENTID"));
 
-      if (!selectEvent->find())
+      int found = selectEvent->find();
+
+      // VDR may have assigned the timer to an other event with the same start time
+      // (e.g. one of the DVB EIT) and reported its event id -> lookup by channel and start time
+
+      if (!found && !timerDb->getValue("EVTSTARTTIME")->isEmpty())
+      {
+         selectEvent->freeResult();
+
+         useeventsDb->clear();
+         useeventsDb->setValue("CHANNELID", timerDb->getStrValue("CHANNELID"));
+         startValue.setValue(timerDb->getIntValue("EVTSTARTTIME") - 5 * tmeSecondsPerMinute);
+         endValue.setValue(timerDb->getIntValue("EVTSTARTTIME") + 5 * tmeSecondsPerMinute);
+
+         if ((found = selectEventByChannelTime->find()))
+         {
+            tell(eloInfo, "Info: Event (%ld) of timer (%ld) not found, using event (%ld) '%s' on same channel and start time",
+                 timerDb->getIntValue("EVENTID"), timerDb->getIntValue("ID"),
+                 useeventsDb->getIntValue("USEID"), useeventsDb->getStrValue("TITLE"));
+
+            timerDb->setValue("EVENTID", useeventsDb->getIntValue("USEID"));
+            timerDb->update();
+         }
+
+         selectEventByChannelTime->freeResult();
+      }
+
+      if (!found)
       {
          if (aid != na)
          {
@@ -736,6 +779,24 @@ int cSearchTimer::checkTimers()
                             "not found; timer rejected!",
                             timerDb->getIntValue("EVENTID"), useeventsDb->getStrValue("TITLE"),
                             timerDb->getIntValue("ID"), timerDb->getStrValue("FILE"), aid);
+
+            // store the reason at the done entry (shown in the web front end)
+
+            if (!timerDb->getValue("DONEID")->isNull())
+            {
+               timersDoneDb->clear();
+               timersDoneDb->setValue("ID", timerDb->getIntValue("DONEID"));
+
+               if (timersDoneDb->find())
+               {
+                  timersDoneDb->getValue("INFO")->sPrintf("Event (%ld) not found in EPG anymore, timer (%ld) of search timer (%ld) rejected",
+                                                          timerDb->getIntValue("EVENTID"), timerDb->getIntValue("ID"), aid);
+                  timersDoneDb->update();
+               }
+
+               timersDoneDb->reset();
+            }
+
             modifyTimer(timerDb, taReject);
             count++;
          }

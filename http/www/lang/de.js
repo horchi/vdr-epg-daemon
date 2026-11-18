@@ -18,6 +18,10 @@ export default {
     markAll: "alle markieren",
     markNone: "keinen markieren",
     markToggle: "Markierung umdrehen",
+    markNone: "Auswahl aufheben",
+    markGroup: "Gruppe auswählen …",
+    filterAll: "alle",
+    editDone: "fertig",
     confirmDelete: "Willst du wirklich löschen?",
     dataSaved: "Daten wurden gespeichert",
     dataDeleted: "Daten wurden gelöscht",
@@ -25,6 +29,13 @@ export default {
     channel: "Kanal",
     date: "Datum",
     entries: " Einträge",
+    pager: {
+        page: "Seite",
+        first: "erste Seite",
+        prev: "vorherige Seite",
+        next: "nächste Seite",
+        last: "letzte Seite"
+    },
     error: {
         error: "Fehler",
         common: "Es ist ein allgemeiner Fehler aufgetreten",
@@ -38,6 +49,7 @@ export default {
     menu: {
         now: "Programm",
         magazine: "Magazin",
+        timeline: "Zeitleiste",
         timer: "Timer",
         records: "Aufnahmen",
         search: "Suche",
@@ -54,7 +66,7 @@ export default {
             timersDone: "kürzliche Aufträge",
             timerListDone: "Auftragshistorie",
             timerJobList: "asynchrone Aufträge",
-            messageList: "Systemmeldungen"
+            messageList: "Meldungen"
         },
         timerList: {
             empty: "Keine Timer vorhanden!",
@@ -117,8 +129,13 @@ export default {
                 'D': 'Timer gelöscht',
                 'F': 'Aufnahme fehlgeschlagen',
                 'Q': 'Timer in Vorbereitung',
-                'R': 'Aufnahme fertig'
+                'R': 'Aufnahme fertig',
+                'J': 'Timer abgelehnt'
             },
+            doneInfoDefault: {
+                'J': 'Sendung nicht mehr im EPG'
+            },
+            conflictHead: 'Konflikt $1 auf VDR $2 am $3',
             messageStates: {
                 'N': 'Neu',
                 'R': 'gelesen'
@@ -262,7 +279,24 @@ export default {
             magazinePanDelay: 'Auslöseverzögerung',
             maxListEntries: 'maximal Anzahl Einträge, die auf einmal vom Server geladen werden sollen, z.B. bei Suchen, Suchtimern usw.',
             system: {
-                label: "epgd Backend"
+                label: "epgd Backend",
+                // titles of the epgd parameters, the order here is the display order
+                params: {
+                    manualTimer2Done: "Manuelle Timer in die Auftragshistorie übernehmen",
+                    timerJobFailedHistory: "Fehlgeschlagene Timeraufträge aufbewahren (Tage)",
+                    messageHistory: "Meldungen aufbewahren (Tage, 0 = unbegrenzt)",
+                    recCompleteMinPct: "Aufnahme gilt als vollständig ab (%)",
+                    recCompleteMinPctVps: "Aufnahme mit VPS gilt als vollständig ab (%)",
+                    recCheckLateManualTimer: "Länge auch bei verspätet gestarteten manuellen Timern ab Timerbeginn prüfen",
+                    logoSuffix: "Dateiendung der Kanallogos",
+                    logoById: "Kanallogos über die Kanal-ID statt den Namen suchen",
+                    logoUpperCase: "Dateinamen der Kanallogos in Großbuchstaben",
+                    logoShowName: "Kanalname neben dem Logo anzeigen",
+                    mailScript: "Skript für den Mailversand",
+                    eloquence: "Log-Ausgaben",
+                    minEventTime: "EPG-Daten vorhanden ab",
+                    maxEventTime: "EPG-Daten vorhanden bis"
+                }
             },
             vdr: {
                 startWithSched:'EPG Menü startet mit Schedule',

@@ -10,12 +10,15 @@ import { get, mediaUrl } from '../api.js';
 import { busy, toastError } from '../ui.js';
 import { nowUnix, unixTime, toDate, formatTime, formatDate, toLocalInput, fromLocalInput, textToHtml } from '../utils.js';
 import { channelBadge } from '../data.js';
+import { quickTimes, timeOnDay } from '../gridtools.js';
 import { icon, iconButton } from '../icons.js';
 import { showEvent } from '../eventDetail.js';
+import { groupSelect, filterChannels } from '../groupfilter.js';
 import tr from '../../lang/de.js';
 
 const SEC_PER_PX = 30;                // 2px per minute (as the old UI)
 const BLOCK = 6 * 3600;               // load granularity
+const LOOKBACK = 6 * 3600;            // events starting up to 6h before a block may still run into it
 
 let m = null;                         // state of the rendered page
 
@@ -36,7 +39,7 @@ export function render($content, params = {}) {
    m = {
       gridStart: unixTime(d),
       gridEnd: p.maxEventTime,
-      channels: state.channelOrder.filter((id) => state.channels[id]?.visible & 1),
+      channels: filterChannels(state.channelOrder.filter((id) => state.channels[id]?.visible & 1), 'magazine'),
       cols: {},                                             // channelid -> { $col, ids:Set, blocks:Set }
       timer: null,
       loadTimer: null,
@@ -60,7 +63,8 @@ export function render($content, params = {}) {
          iconButton('prev', '-1 Tag').on('click', () => scrollToTime(topTime() - 86400 + 1800)),
          $('<button type="button" class="btn">').text(tr.dateTimePicker.currentText).on('click', () => scrollToTime(nowUnix())),
          iconButton('next', '+1 Tag').on('click', () => scrollToTime(topTime() + 86400 + 1800))),
-      $time, $chSel);
+      $time, $chSel,
+      groupSelect('magazine', () => render($content, { time: topTime() + 30 * 60 })));    // keep the time
 
    const qt = quickTimes();
 
@@ -115,7 +119,7 @@ export function render($content, params = {}) {
    m.timer = setInterval(updateNow, 60000);
    $(window).on('resize.magazine', onScroll);
 
-   scrollToTime(nowUnix());
+   scrollToTime(Number(params.time) || nowUnix());
 
    if (params.ch && m.cols[params.ch])
       scrollToChannel(params.ch);
@@ -193,25 +197,7 @@ function updateNow() {
 }
 
 // ---------------------------------------------------------------------------
-// quick times – only 'HH:MM' entries are useful here
-
-function quickTimes() {
-   const list = [];
-
-   (state.profile.quickTimes || '').replace(/([^=~]+)=!?([0-9]{1,2}:[0-9]{2})~?/g, (a, label, value) => {
-      list.push({ label, value });
-   });
-
-   return list;
-}
-
-function timeOnDay(t, hhmm) {
-   const [h, mi] = hhmm.split(':').map(Number);
-   const d = toDate(t);
-
-   d.setHours(h, mi, 0, 0);
-   return unixTime(d);
-}
+// quick times
 
 const timeOnVisibleDay = (hhmm) => timeOnDay(topTime() + 3600, hhmm);
 
@@ -305,13 +291,15 @@ async function loadBlock(channelId, block) {
    col.blocks.add(block);
 
    try {
-      const data = await get('data/events?' + new URLSearchParams({ time: start, endtime: end, channelid: channelId }));
+      // also ask for events which started before the block (e.g. before midnight) and are still running
+
+      const data = await get('data/events?' + new URLSearchParams({ time: start - LOOKBACK, endtime: end, channelid: channelId }));
 
       if (page !== m)            // page left / re-rendered meanwhile
          return;
 
       for (const e of data.events || []) {
-         if (col.ids.has(e.id))
+         if (col.ids.has(e.id) || e.starttime + e.duration <= m.gridStart)
             continue;
 
          col.ids.add(e.id);

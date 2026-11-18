@@ -1,7 +1,7 @@
 // Page "Einstellungen" – tabs: profile, channels, users, system (epgd backend)
 
 import { state, hasRight, rights } from '../state.js';
-import { get, post } from '../api.js';
+import { get, post, mediaUrl } from '../api.js';
 import { busy, toast, toastError, dialog, confirmBox } from '../ui.js';
 import { formatDateTime } from '../utils.js';
 import { icon } from '../icons.js';
@@ -104,7 +104,7 @@ function profileTab($body) {
 
       // start page: keys known by the old and the new UI
 
-      const startPages = ['now', 'magazine', 'timerList', 'records', 'search'].map((k) =>
+      const startPages = ['now', 'magazine', 'timeline', 'timerList', 'records', 'search'].map((k) =>
          ({ value: 'menu_' + k, label: k === 'timerList' ? tr.menu.timer : tr.menu[k] }));
 
       const $start = select(startPages, val('startPage') || 'menu_now');
@@ -241,18 +241,39 @@ function appearanceCard() {
 }
 
 // ---------------------------------------------------------------------------
-// channels: order (drag), visibility, names; reference list (channels.conf) to take names / order from
+// channels: order (drag), visibility; reference list (channels.conf) to take the order from
+//   name and group are maintained by the epg2vdr master from the VDR channels (read only here),
+//   the list is ordered by the groups, a channel can be moved only within its group
+
+// stable sort by group, the groups in the order of their first appearance, channels without group last
+
+function groupSort(list) {
+   const order = [];
+
+   list.forEach((r) => { if (r.group && !order.includes(r.group)) order.push(r.group); });
+
+   const rank = (g) => g ? order.indexOf(g) : order.length;
+   return list.map((r, i) => ({ r, i })).sort((a, b) => rank(a.r.group) - rank(b.r.group) || a.i - b.i).map((x) => x.r);
+}
 
 function channelsTab($body) {
    const trc = tr.pages.editChannels;
    let rows = state.channelOrder.map((id) => {
       const c = state.channels[id];
-      return { id, name: c.name || '', visible: c.visible ?? 1, sources: c.sources || {} };
+      return { id, name: c.name || '', group: c.group || '', visible: c.visible ?? 1, sources: c.sources || {} };
    });
    let ref = null;           // reference list [{ id, name }]
    let dirty = false;
 
-   const $filter = $('<input type="search" class="input" placeholder="Filter (Name oder ID) …">').on('input', renderList);
+   // order not yet grouped (e.g. after the groups were taken from the VDR) -> group and ask to save
+
+   const grouped = groupSort(rows);
+   const regrouped = grouped.some((r, i) => r !== rows[i]);
+
+   rows = grouped;
+   dirty = regrouped;
+
+   const $filter = $('<input type="search" class="input" placeholder="Filter (Name, Gruppe oder ID) …">').on('input', renderList);
    const $count = $('<span class="dim">');
    const $list = $('<ol class="ch-list">');
    const $refBox = $('<div class="ch-ref">').hide();
@@ -263,14 +284,16 @@ function channelsTab($body) {
       $('<button type="button" class="btn">').append(icon('copy'), $('<span>').text(trc.menu.referenceList)).on('click', referenceDialog));
 
    $body.append(
-      $('<p class="dim small">').text('Reihenfolge per Ziehen am Griff ändern (auch per Touch). Der Haken steuert die Anzeige im Web-Interface. Filter und Sichtbar-Aktionen wirken auf die gefilterten Kanäle.'),
+      $('<p class="dim small">').text('Reihenfolge per Ziehen am Griff ändern (auch per Touch), jeweils innerhalb einer Gruppe. Der Haken steuert die Anzeige im Web-Interface. Name und Gruppe kommen aus der Kanalliste des VDR (epg2vdr mit aktivem EPG-Handler) und passen so zu den Kanallogos. Rechts die Quellen des Kanals mit ihrem Merge-Wert aus der channelmap (0 kein Merge, 1 führend, 2 Fallback, 3 Fallback + Bilder). Filter und Sichtbar-Aktionen wirken auf die gefilterten Kanäle.'),
+      regrouped ? $('<p class="ch-regrouped">').append(icon('info'),
+         $('<span>').text('Die Kanäle wurden nach ihren Gruppen geordnet, innerhalb der Gruppen in der bisherigen Reihenfolge. Zum Übernehmen speichern.')) : null,
       $('<div class="toolbar">').append($filter, $count, $menu),
       $('<div class="ch-layout">').append($list, $refBox),
       saveBar(save));
 
    function filtered() {
       const f = $filter.val().toLowerCase().trim();
-      return f ? rows.filter((r) => r.name.toLowerCase().includes(f) || r.id.toLowerCase().includes(f)) : rows;
+      return f ? rows.filter((r) => r.name.toLowerCase().includes(f) || r.group.toLowerCase().includes(f) || r.id.toLowerCase().includes(f)) : rows;
    }
 
    function setVisible(on) {
@@ -286,15 +309,28 @@ function channelsTab($body) {
       $count.text(list.length === rows.length ? rows.length + ' Kanäle' : list.length + ' / ' + rows.length);
       $list.empty().toggleClass('no-sort', !sortable);
 
+      const counts = {};
+      list.forEach((r) => { counts[r.group] = (counts[r.group] || 0) + 1; });
+      let group = null;
+
       for (const r of list) {
+         if (r.group !== group) {
+            group = r.group;
+            $('<li class="ch-group-head">').append($('<span>').text(group || 'Ohne Gruppe'), $('<span class="dim">').text(counts[group]))
+               .appendTo($list);
+         }
+
          const vis = checkbox('', r.visible & 1);
          vis.$cb.attr('title', trc.checkWeb).on('change', function () { r.visible = this.checked ? r.visible | 1 : r.visible & ~1; dirty = true; });
 
          $('<li class="ch-item">').data('row', r).toggleClass('hidden-ch', !(r.visible & 1)).append(
             $('<span class="ch-handle">').attr('title', sortable ? 'Ziehen zum Sortieren' : 'Sortieren nur ohne Filter').html(icon('menu')),
             vis.$el,
-            $('<input class="input ch-name">').val(r.name).attr('placeholder', r.id).on('input', function () { r.name = this.value; dirty = true; }),
-            $('<span class="ch-id dim">').text(r.id))
+            logoButton(r),
+            $('<span class="ch-name">').append(
+               r.name ? $('<span>').text(r.name) : $('<span class="dim">').text('(kein Name)')),
+            $('<span class="ch-id dim">').text(r.id),
+            sourceBadges(r.sources))
             .appendTo($list);
       }
    }
@@ -317,7 +353,9 @@ function channelsTab($body) {
          lastY = e.clientY;
          const el = document.elementFromPoint(e.clientX, e.clientY)?.closest('.ch-item');
 
-         if (el && el !== $item[0]) {
+         // only within the group of the channel
+
+         if (el && el !== $item[0] && $(el).data('row').group === $item.data('row').group) {
             const r = el.getBoundingClientRect();
             e.clientY < r.top + r.height / 2 ? $item.insertBefore(el) : $item.insertAfter(el);
          }
@@ -325,10 +363,72 @@ function channelsTab($body) {
          clearInterval(scroller);
          $(document).off('.chdrag');
          $item.removeClass('dragging');
-         rows = $list.children().toArray().map((li) => $(li).data('row'));
+         rows = $list.children('.ch-item').toArray().map((li) => $(li).data('row'));
          dirty = true;
       });
    });
+
+   // channel logo, click shows how it is looked up (file, path, ...)
+
+   function logoButton(r) {
+      const $btn = $('<button type="button" class="ch-logo-btn">').attr('title', 'Logo-Details')
+         .on('click', () => logoDialog(r));
+      const $none = () => $('<span class="ch-logo-none">').html(icon('alert'));
+
+      if (r.name)
+         $btn.append($('<img loading="lazy" alt="">').attr('src', mediaUrl(state.profile.channelLogoPath, { maxW: 70, maxH: 50, id: r.id }))
+            .on('error', function () { $(this).replaceWith($none()); }));
+      else
+         $btn.append($none());
+
+      return $btn;
+   }
+
+   async function logoDialog(r) {
+      let info;
+
+      try { info = await busy(get('data/channellogoinfo?' + new URLSearchParams({ id: r.id }))); }
+      catch (e) { return toastError(e); }
+
+      const kv = (k, v) => v === undefined || v === null || v === '' ? null : $('<tr>').append($('<th>').text(k), $('<td>').append(v));
+      const mono = (t) => $('<code>').text(t);
+      const size = info.size !== undefined ? (info.size < 10240 ? info.size + ' Byte' : Math.round(info.size / 1024) + ' KB') : null;
+
+      dialog({
+         title: 'Logo: ' + (r.name || r.id), cls: 'dlg-wide',
+         content: $('<div class="logo-info">').append(
+            info.file ? $('<div class="logo-info-img">').append($('<img alt="">').attr('src', mediaUrl(state.profile.channelLogoPath, { maxW: 300, maxH: 200, id: r.id })))
+                      : $('<p class="logo-info-missing">').append(icon('alert'), $('<span>').text(!info.key ? 'Kein Logo – der Kanal hat keinen Namen.' : 'Kein Logo gefunden.')),
+            $('<table class="logo-info-kv">').append(
+               kv('Kanal-ID', mono(info.channelid)),
+               kv('Name', info.name || '–'),
+               kv('Suche nach', (info.byId ? 'Kanal-ID' : 'Name') + (info.upperCase ? ', Großbuchstaben' : ', Kleinbuchstaben')),
+               kv('Schlüssel', info.key !== undefined ? mono(info.key) : null),
+               kv('Verzeichnis', mono(info.dir)),
+               kv('Verweist auf', info.dirTarget && info.dirTarget !== info.dir ? mono(info.dirTarget) : null),
+               kv('Datei', info.file ? mono(info.file) : null),
+               kv('Echter Pfad', info.realpath && info.realpath !== info.file ? mono(info.realpath) : null),
+               kv('Größe', size),
+               kv('Geändert', info.modtime ? formatDateTime(info.modtime) : null),
+               kv('Gesucht', info.tried?.length ? $('<ul class="logo-info-tried">').append(info.tried.map((t) =>
+                  $('<li>').toggleClass('dim', !t.exists).append(t.exists ? icon('check') : icon('close'), mono(t.path)))) : null))),
+         buttons: [{ text: tr.close }]
+      });
+   }
+
+   // sources of the channel (channelmap rows) with their merge role
+
+   function sourceBadges(sources) {
+      const roles = { 0: 'kein Merge', 1: 'führend', 2: 'Fallback', 3: 'Fallback + Bilder' };
+      const rank = (m) => m === 0 ? 9 : m;
+      const list = Object.entries(sources).map(([src, s]) => ({ src, extid: s.externalid ?? s.extid ?? '', merge: Number(s.merge ?? 0) }))
+         .sort((a, b) => rank(a.merge) - rank(b.merge) || a.src.localeCompare(b.src));
+
+      return $('<span class="ch-src">').append(list.map((s) =>
+         $('<span class="badge ch-src-badge">').addClass('merge-' + s.merge)
+            .attr('title', s.src + (s.extid && s.extid !== '000' ? ' (ID ' + s.extid + ')' : '') + ' – Merge ' + s.merge + ': ' + (roles[s.merge] || '?'))
+            .text(s.src + ':' + s.merge)));
+   }
 
    // reference list
 
@@ -346,7 +446,7 @@ function channelsTab($body) {
       dialog({
          title: trc.menu.referenceList, cls: 'dlg-form dlg-wide',
          content: $('<div class="form">').append(
-            $('<p class="dim small">').text('Kanalliste (Format channels.conf) eines VDR laden oder einfügen. Danach lassen sich Namen und Reihenfolge übernehmen.'),
+            $('<p class="dim small">').text('Kanalliste (Format channels.conf) eines VDR laden oder einfügen. Danach lässt sich die Reihenfolge übernehmen.'),
             vdrButtons.length ? field('Von VDR laden', $('<div class="btn-row">').append(vdrButtons)) : null,
             field(trc.menu.insertAsText, $text)),
          buttons: [
@@ -381,31 +481,17 @@ function channelsTab($body) {
       $refBox.show().empty().append(
          $('<h4>').text(trc.menu.referenceList + ' (' + ref.length + ')'),
          $('<div class="btn-row">').append(
-            $('<button type="button" class="btn btn-sm">').text(trc.menu.extentEmptyChannelNames).on('click', () => applyNames(false)),
-            $('<button type="button" class="btn btn-sm">').text(trc.menu.applyAllChannelNames).on('click', () => applyNames(true)),
             $('<button type="button" class="btn btn-sm">').text(trc.menu.applyChannelSort).on('click', applyOrder),
             $('<button type="button" class="btn btn-sm btn-flat">').html(icon('close')).attr('title', tr.close).on('click', () => { ref = null; $refBox.hide(); })),
          $('<ul class="ch-ref-list">').append(ref.map((c) =>
             $('<li>').toggleClass('dim', !known.has(c.id)).append($('<b>').text(c.name), ' ', $('<span class="dim small">').text(c.id)))));
    }
 
-   function applyNames(all) {
-      const names = new Map(ref.map((c) => [c.id, c.name]));
-      let n = 0;
-
-      rows.forEach((r) => {
-         if (names.has(r.id) && (all || !r.name) && r.name !== names.get(r.id)) { r.name = names.get(r.id); n++; }
-      });
-
-      dirty = dirty || n > 0;
-      toast(n + ' Namen übernommen');
-      renderList();
-   }
-
    function applyOrder() {
       const pos = new Map(ref.map((c, i) => [c.id, i]));
       rows = rows.map((r, i) => ({ r, i })).sort((a, b) =>
          (pos.has(a.r.id) ? pos.get(a.r.id) : 1e6 + a.i) - (pos.has(b.r.id) ? pos.get(b.r.id) : 1e6 + b.i)).map((x) => x.r);
+      rows = groupSort(rows);            // keep the groups together, the reference gives the order of the groups too
       dirty = true;
       toast('Reihenfolge übernommen');
       renderList();
@@ -415,7 +501,7 @@ function channelsTab($body) {
       const channels = {};
 
       rows.forEach((r, i) => {
-         channels[r.id] = { name: r.name, visible: r.visible, order: i + 1, sources: r.sources };
+         channels[r.id] = { visible: r.visible, order: i + 1 };
       });
 
       try {
@@ -423,6 +509,7 @@ function channelsTab($body) {
          if (res.result && res.result.state != 200) throw new Error(res.result.message);
          toast(tr.dataSaved);
          dirty = false;
+         $body.find('.ch-regrouped').remove();
          await loadChannels();
       }
       catch (e) { toastError(e); }
@@ -580,7 +667,13 @@ function systemTab($body) {
 
       const $table = $('<div class="sys-params">');
 
-      for (const p of params.filter((x) => x.owner === 'epgd').sort((a, b) => a.name.localeCompare(b.name))) {
+      // order and titles from the language file, unknown parameters at the end (by name)
+
+      const titles = trp.system.params || {};
+      const order = Object.keys(titles);
+      const rank = (p) => { const i = order.indexOf(p.name); return i < 0 ? order.length : i; };
+
+      for (const p of params.filter((x) => x.owner === 'epgd').sort((a, b) => (rank(a) - rank(b)) || a.name.localeCompare(b.name))) {
          const v = p.value ?? p.default ?? '';
          let $ctl;
 
@@ -604,7 +697,8 @@ function systemTab($body) {
             controls.push({ p, get: () => $in.val(), $in });
          }
 
-         $table.append($('<div class="sys-row">').append($('<label class="sys-name">').text(p.name).attr('title', p.valexp ? 'Format: ' + p.valexp : ''), $ctl));
+         $table.append($('<div class="sys-row">').append($('<label class="sys-name">').text(titles[p.name] || p.name)
+            .attr('title', p.name + (p.valexp ? ' – Format: ' + p.valexp : '')), $ctl));
       }
 
       $body.append($('<div class="settings-grid settings-grid-1">').append(
@@ -623,13 +717,13 @@ function systemTab($body) {
 
                if (c.p.valexp && c.$in && !new RegExp(c.p.valexp).test(v)) {
                   c.$in.trigger('focus');
-                  return toast(tr.error.invalid + ': ' + c.p.name, { error: true });
+                  return toast(tr.error.invalid + ': ' + (titles[c.p.name] || c.p.name), { error: true });
                }
 
                list.push({ name: c.p.name, value: v, owner: c.p.owner });
             }
 
-            if (await saveParameters(list)) {
+            if (await saveParameters(list, (p) => titles[p.name] || p.name)) {
                list.forEach((x) => { const p = params.find((q) => q.name === x.name && q.owner === x.owner); if (p) p.value = x.value; });
 
                if (list.some((x) => x.name === 'needLogin'))

@@ -679,6 +679,96 @@ int cEpgHttpd::doChannelLogo(MHD_Connection* tcp, json_t* obj, MemoryStruct* dat
 }
 
 //***************************************************************************
+// Do Channel Logo Info
+//  - how the logo of a channel is looked up (same rules as doChannelLogo)
+//***************************************************************************
+
+int cEpgHttpd::doChannelLogoInfo(MHD_Connection* tcp, json_t* obj)
+{
+   long int logoUpper {0};
+   long int logoById {0};
+   char logoSuffix[sizeMaxParameterValue+TB] {};
+   const char* id = getStrParameter(tcp, "id");
+
+   if (isEmpty(id))
+      return buildResponse(obj, MHD_HTTP_BAD_REQUEST, "Missing channel id in request");
+
+   getParameter("epgd", "logoUpperCase", logoUpper);
+   getParameter("epgd", "logoById", logoById);
+   getParameter("epgd", "logoSuffix", logoSuffix);
+
+   std::string name;
+
+   mapDb->clear();
+   mapDb->setValue("ChannelId", id);
+
+   if (selectMapById->find())
+      name = notNull(mapChannelName->getStrValue(), "");
+
+   selectMapById->freeResult();
+
+   std::string dir = std::string(EpgdConfig.httpPath) + "/channellogos";
+   char real[PATH_MAX+TB] {};
+
+   json_object_set_new(obj, "channelid", json_string(id));
+   json_object_set_new(obj, "name", json_string(name.c_str()));
+   json_object_set_new(obj, "byId", json_boolean(logoById));
+   json_object_set_new(obj, "upperCase", json_boolean(logoUpper));
+   json_object_set_new(obj, "suffix", json_string(logoSuffix));
+   json_object_set_new(obj, "dir", json_string(dir.c_str()));
+
+   if (realpath(dir.c_str(), real))
+      json_object_set_new(obj, "dirTarget", json_string(real));
+
+   if (!logoById && name.empty())
+      return MHD_HTTP_OK;               // no name -> no logo
+
+   char* key = strdup(logoById ? id : name.c_str());
+   toCase(logoUpper ? cUpper : cLower, key);
+   json_object_set_new(obj, "key", json_string(key));
+
+   // the same candidates as doChannelLogo
+
+   json_t* oTried = json_array();
+   std::vector<std::string> suffixes { logoSuffix };
+
+   if (strcmp(logoSuffix, "svg") == 0)
+      suffixes.push_back("png");
+
+   for (const auto& sfx : suffixes)
+   {
+      std::string path = dir + "/" + key + "." + sfx;
+      int exists = fileExists(path.c_str());
+      json_t* oPath = json_object();
+
+      json_object_set_new(oPath, "path", json_string(path.c_str()));
+      json_object_set_new(oPath, "exists", json_boolean(exists));
+      json_array_append_new(oTried, oPath);
+
+      if (exists && !json_object_get(obj, "file"))
+      {
+         struct stat sb;
+
+         json_object_set_new(obj, "file", json_string(path.c_str()));
+
+         if (realpath(path.c_str(), real))
+            json_object_set_new(obj, "realpath", json_string(real));
+
+         if (stat(path.c_str(), &sb) == 0)
+         {
+            json_object_set_new(obj, "size", json_integer(sb.st_size));
+            json_object_set_new(obj, "modtime", json_integer(sb.st_mtime));
+         }
+      }
+   }
+
+   json_object_set_new(obj, "tried", oTried);
+   free(key);
+
+   return MHD_HTTP_OK;
+}
+
+//***************************************************************************
 // Do EPG Image
 //***************************************************************************
 
@@ -949,6 +1039,7 @@ int cEpgHttpd::doChannels(MHD_Connection* tcp, json_t* obj)
 
          addFieldToJson(oChanData, mapDb, "CHANNELID", yes);
          addFieldToJson(oChanData, mapDb, "CHANNELNAME", yes, "name");
+         addFieldToJson(oChanData, mapDb, "CHANNELGROUP", yes, "group");
          addFieldToJson(oChanData, mapDb, "ORDER");
          addFieldToJson(oChanData, mapDb, "VISIBLE");
 
@@ -959,6 +1050,9 @@ int cEpgHttpd::doChannels(MHD_Connection* tcp, json_t* obj)
 
       if (isEmpty(json_string_value(json_object_get(oChanData, "name"))) && !isEmpty(mapDb->getStrValue("CHANNELNAME")))
          json_object_set_new(oChanData, "name", json_string(mapDb->getStrValue("CHANNELNAME")));
+
+      if (isEmpty(json_string_value(json_object_get(oChanData, "group"))) && !isEmpty(mapDb->getStrValue("CHANNELGROUP")))
+         json_object_set_new(oChanData, "group", json_string(mapDb->getStrValue("CHANNELGROUP")));
 
       json_t* oSource = json_object();
 
@@ -1500,6 +1594,7 @@ int cEpgHttpd::doDoneTimers(MHD_Connection* tcp, json_t* obj)
       addFieldToJson(oData, timersDoneDb, "AUTOTIMERID");
       addFieldToJson(oData, timersDoneDb, "AUTOTIMERNAME");
       addFieldToJson(oData, timersDoneDb, "EXPRESSION");
+      addFieldToJson(oData, timersDoneDb, "INFO");
 
       json_array_append_new(oTimer, oData);
    }
@@ -1708,7 +1803,9 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
       addFieldToJson(oData, useeventsDb, "GENRE");
       addFieldToJson(oData, useeventsDb, "NUMRATING");
 
-      if (!timerDb->getValue("AUTOTIMERID")->isNull())
+      // done info of the search timer, only if the event still exists (e.g. not for old finished timers)
+
+      if (!timerDb->getValue("AUTOTIMERID")->isNull() && !useeventsDb->getValue("USEID")->isNull())
       {
          // useeventsDb->find();   // get all fields
 

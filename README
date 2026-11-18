@@ -51,11 +51,25 @@ EPG Merge:
   the DVB event will be placed in your EPG to avoid wrong events.
   Due to the EPG-merge the x-components delivered by DVB are also available. Notice that they can only be handled for
   DVB and merged events, not for events which are only provided by the external source.
-  The merge behavior is configured in the channlemap.conf, 0 disables the merge for the corresponding channel,
-  1 enables it and with merge 2 the provider ist hold in background and used as fall-back which is used in case
-  the merge 1 provider delivers poor data. Merge 3 works like merge 2, additionally the pictures of this provider
-  replace the pictures of the matching event of the other provider (e.g. to combine the texts of one provider
-  with the better pictures of another one).
+  The merge behavior is configured in the channelmap.conf by the <merge> value of each line, it defines the
+  role of the provider on this channel (it is no alias of a provider, each provider can get any role on each channel):
+
+    merge  role
+    -----  ----------------------------------------------------------------------------------------------
+      0    no merge with the DVB events for this channel
+      1    leading provider (default), its events are merged with the DVB events
+      2    fall-back, hold in background and used if the merge 1 provider delivers poor data
+           (no matching event, no picture, ...)
+      3    like 2, additionally the pictures of this provider replace the pictures of the matching event
+           of the leading provider (same channel, start time +-60 seconds, similar duration)
+           - e.g. to combine the texts of one provider with the better pictures of another one
+
+  Example - texts from tvm, pictures from a second provider 'xyz':
+
+    tvm:1     = S19.2E-1-1019-10301   // merge 1 (default)
+    xyz:373:3 = S19.2E-1-1019-10301   // fall-back + picture donor
+
+  Notice: changing the merge value of a line removes and reloads the events of this provider for the channel.
 
 
 Get the source from git:

@@ -45,6 +45,7 @@ cEpgHttpd::UserRight cEpgHttpd::userrights[] =
    { "/data/login",             umAll|umNologin          },
 
    { "/data/channellogo",       umAll|umNologin          },
+   { "/data/channellogoinfo",   umAll                    },
    { "/data/eventimg",          umAll|umNologin          },
    { "/data/moviemedia",        umAll|umNologin          },
    { "/data/seriesmedia",       umAll|umNologin          },
@@ -977,15 +978,15 @@ int cEpgHttpd::initDb()
 
    status += selectMapById->prepare();
 
-   // update channelmap set ord = ?, visible = ?, channelname = ?
+   // update channelmap set ord = ?, visible = ?
    //    where channelid = ?
+   //  (channelname and channelgroup are maintained by the epg2vdr master from the VDR channels)
 
    updateMap = new cDbStatement(mapDb);
 
    updateMap->build("update %s set ", mapDb->TableName());
    updateMap->bind("ORDER", cDBS::bndIn | cDBS::bndSet);
    updateMap->bind("VISIBLE", cDBS::bndIn | cDBS::bndSet, ", ");
-   updateMap->bind("CHANNELNAME", cDBS::bndIn | cDBS::bndSet, ", ");
    updateMap->build(" where ");
    updateMap->bind("CHANNELID", cDBS::bndIn | cDBS::bndSet);
 
@@ -1469,6 +1470,8 @@ int cEpgHttpd::performDataRequest(MHD_Connection* tcp, const char* url, MemorySt
          statusCode = doEvent(tcp, response, data);
       else if (strcmp(method, "channels") == 0)
          statusCode = doChannels(tcp, response);
+      else if (strcmp(method, "channellogoinfo") == 0)
+         statusCode = doChannelLogoInfo(tcp, response);
       else if (strcmp(method, "genres") == 0)
          statusCode = doGenres(tcp, response);
       else if (strcmp(method, "categories") == 0)

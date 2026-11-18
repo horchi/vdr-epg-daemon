@@ -3,7 +3,7 @@
 import { state, hasRight, rights } from './state.js';
 import { get, mediaUrl, fallbackImg } from './api.js';
 import { busy, toast, toastError } from './ui.js';
-import { formatTime, formatDate, formatDateTime, progressOf, textToHtml, pipeList, nowUnix } from './utils.js';
+import { formatTime, formatDate, formatDateTime, progressOf, textToHtml, leadText, pipeList, nowUnix } from './utils.js';
 import { channelBadge, switchChannel, createSwitchTimer } from './data.js';
 import { icon, iconButton } from './icons.js';
 import { openTimerDialog, openSearchTimerDialog, searchEvents, renderResults } from './timerDialog.js';
@@ -41,7 +41,8 @@ export async function showDoneTimer(id) {
          return toast(tr.error.noData, { error: true });
 
       if (t.state)
-         t.cntlongdescription = tr.pages.timerList.doneStates[t.state] || t.state;
+         t.cntlongdescription = (tr.pages.timerList.doneStates[t.state] || t.state)
+            + ((t.info || tr.pages.timerList.doneInfoDefault[t.state]) ? ' – ' + (t.info || tr.pages.timerList.doneInfoDefault[t.state]) : '');
 
       t.episode = { lang: t.episodelang, season: t.episodeseason, part: t.episodepart };
       delete t.timerid;
@@ -346,6 +347,8 @@ function infoList(rows, cls = '') {
 function renderDescription(e, sc, ep) {
    const $desc = $('<div class="ed-desc">');
    const add = (text, cls) => text && $desc.append($('<p>').addClass(cls || '').html(textToHtml(text)));
+
+   add(leadText(e.shortdescription, e.longdescription, e.cntlongdescription), 'ed-lead');
 
    if (sc && e.scraper.movie)
       add(sc.overview, 'ed-overview');

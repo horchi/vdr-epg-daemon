@@ -62,12 +62,21 @@ export function dialog({ title, content, buttons = [], cls = '', closable = true
       .appendTo(document.body);
 
    $dlg[0].showModal();
-   // desktop: focus the first field (on phones this would pop up the keyboard)
 
-   if (matchMedia('(hover: hover)').matches)
-      $dlg.find('.dlg-body').find('input:not([type=checkbox]):not([disabled]), select:not([disabled])').first().trigger('focus');
+   // desktop: focus the first field (on phones this would pop up the keyboard),
+   // without a field the primary button is the default one (Enter / Space)
+
+   const $field = matchMedia('(hover: hover)').matches
+      ? $dlg.find('.dlg-body').find('input:not([type=checkbox]):not([disabled]), select:not([disabled])').first() : $();
+   const $default = $foot.find('.btn-primary').first();
+
+   if ($field.length)
+      $field.trigger('focus');
+   else if ($default.length)
+      $default[0].focus();
    else
       $dlg.attr('tabindex', -1)[0].focus();
+
    return $dlg;
 }
 

@@ -55,6 +55,18 @@ export function textToHtml(s) {
    return $('<div>').text(s || '').html().replace(/\n/g, '<br>');
 }
 
+// short description as lead text, null if it is empty or already the beginning of one of the long texts
+
+export function leadText(short, ...longs) {
+   const norm = (s) => (s || '').replace(/\s+/g, ' ').trim().toLowerCase();
+   const head = norm(short).slice(0, 40);
+
+   if (!head || longs.some((l) => norm(l).includes(head)))
+      return null;
+
+   return short.trim();
+}
+
 // '|a|b | c|' -> 'a, b, c'
 
 export const pipeList = (s, sep = ', ') => (s || '').replace(/^\||\|$/g, '').split(/ ?\| ?/).filter(Boolean).join(sep);

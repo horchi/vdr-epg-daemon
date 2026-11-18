@@ -158,6 +158,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int doEpgImage(MemoryStruct* data, int useId, int lfn = 0);
       int doRecImage(MemoryStruct* data, const char* imgKey, int lfn = 0);
       int doChannelLogo(MHD_Connection* connection, json_t* obj, MemoryStruct* data);
+      int doChannelLogoInfo(MHD_Connection* connection, json_t* obj);
       int doMovieMedia(MHD_Connection* connection, json_t* obj, MemoryStruct* data);
       int doSeriesMedia(MHD_Connection* connection, json_t* obj, MemoryStruct* data);
       int doGenres(MHD_Connection* connection, json_t* obj);
