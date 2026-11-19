@@ -122,7 +122,11 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int doDeleteRecording(MHD_Connection* tcp, json_t* obj);
       int doRecStreamInfo(MHD_Connection* tcp, json_t* obj);
       int recordingFiles(MHD_Connection* tcp, std::vector<std::string>& files, json_t* obj);
-      MHD_Result streamRecording(MHD_Connection* tcp, const char* url);
+      int doRecHlsStart(MHD_Connection* tcp, json_t* obj);
+      int doRecHlsState(MHD_Connection* tcp, json_t* obj);
+      int doRecHlsStop(MHD_Connection* tcp, json_t* obj);
+      MHD_Result serveHls(MHD_Connection* tcp, const char* url);
+      static void hlsHousekeeping(int all = 0);
       int doHitKey(MHD_Connection* tcp, json_t* obj);
 
       // post requests

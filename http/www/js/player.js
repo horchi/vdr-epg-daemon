@@ -1,12 +1,26 @@
-// Play a recording in the browser – data/recstream (ffmpeg on the epgd host remuxes
-//   the TS files to fragmented MP4: H.264 copied, audio to AAC). Interlaced H.264 (1080i)
-//   and MPEG-2 (SD) are deinterlaced and encoded (transcode=1), the browsers can't decode
-//   the field pictures of a copied 1080i stream and no MPEG-2 at all.
+// Play a recording in the browser via HLS – data/rechlsstart lets ffmpeg on the epgd host
+//   write HLS segments (H.264 copied, audio to AAC). Interlaced H.264 (1080i) and MPEG-2 (SD)
+//   are deinterlaced and encoded (transcode=1), the browsers can't decode the field pictures
+//   of a copied 1080i stream and no MPEG-2 at all.
+//   Played with hls.js (loaded on demand) if the browser has Media Source Extensions, else
+//   natively (iPhone without ManagedMediaSource). The native HLS of Chrome (newer versions
+//   report support) failed with DEMUXER_ERROR_COULD_NOT_PARSE, so hls.js is preferred.
+//   A jump inside the already written part seeks in the stream, otherwise a new session
+//   is started at the new position (start=<sec>).
 //   The player window can be moved (header) and resized (lower right corner).
-//   The stream can't be seeked, a jump restarts it at the new position (start=<sec>).
 
 import { apiUrl, get, qs } from './api.js';
 import { busy, dialog, alertBox, makeMovable } from './ui.js';
+
+const nativeHls = () => !!document.createElement('video').canPlayType('application/vnd.apple.mpegurl');
+let HlsLib = null;
+
+async function loadHls() {
+   HlsLib = HlsLib || (await import('./lib/hls.light.min.js')).default;
+   return HlsLib;
+}
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const hms = (s) => {
    s = Math.max(0, Math.floor(s));
@@ -44,55 +58,153 @@ export async function playRecording(r) {
    }
 
    const duration = r.duration || 0;
-   let offset = 0;                 // start position of the current stream
+   let useNative = false;
+   let offset = 0;                 // start position of the current session
    let dragging = false;
+   let session = null;             // HLS session id
+   let hls = null;                 // hls.js instance
+   let gen = 0;                    // start counter, a newer start cancels an older one
+   let closed = false;
+
+   try {
+      const Hls = await busy(loadHls());
+      useNative = !Hls.isSupported();
+   }
+   catch (e) {
+      useNative = true;
+   }
+
+   if (useNative && !nativeHls())
+      return alertBox('Dieser Browser kann HLS-Streams nicht abspielen (weder Media Source Extensions noch natives HLS).', 'Abspielen nicht möglich');
 
    const $video = $('<video class="player-video" controls autoplay playsinline>');
    const video = $video[0];
    const $pos = $('<input type="range" class="player-seek" min="0" step="1">').attr('max', duration || 1).val(0);
    const $time = $('<span class="player-time">');
-   const $err = $('<div class="player-error" hidden>');
+   const $msg = $('<div class="player-msg" hidden>');
 
    const position = () => offset + (video.currentTime || 0);
+   const message = (text, error = false) => $msg.text(text || '').toggleClass('error', error).prop('hidden', !text);
 
    function showTime(t) {
       $time.text(hms(t) + (duration ? ' / ' + hms(duration) : ''));
    }
 
-   function start(t) {
-      offset = Math.max(0, Math.min(Math.floor(t), duration ? duration - 5 : t));
-      $err.prop('hidden', true);
-      video.src = apiUrl('data/recstream?' + qs({ ...ref, start: offset, transcode: info.transcode ? 1 : 0 }));
-      video.play().catch(() => {});
-      $pos.val(offset);
-      showTime(offset);
+   function detach() {
+      hls?.destroy();
+      hls = null;
+      video.pause();
+      video.removeAttribute('src');
+      video.load();
+
+      if (session)
+         get('data/rechlsstop?id=' + session).catch(() => {});
+
+      session = null;
    }
 
-   const jump = (d) => start(position() + d);
+   // already written part of the current session?
+
+   function seekable(t) {
+      if (!session || t < offset || !video.seekable.length)
+         return false;
+
+      return t - offset <= video.seekable.end(video.seekable.length - 1) - 2;
+   }
+
+   function goto(t) {
+      t = Math.max(0, Math.min(Math.floor(t), duration ? duration - 5 : t));
+
+      if (seekable(t)) {
+         video.currentTime = t - offset;
+         return;
+      }
+
+      start(t);
+   }
+
+   async function start(t) {
+      const my = ++gen;
+
+      detach();
+      offset = t;
+      $pos.val(offset);
+      showTime(offset);
+      message('Stream wird vorbereitet …');
+
+      try {
+         const res = await get('data/rechlsstart?' + qs({ ...ref, start: offset, transcode: info.transcode ? 1 : 0 }));
+
+         if (my !== gen || closed)
+            return get('data/rechlsstop?id=' + res.id).catch(() => {});
+
+         session = res.id;
+
+         // wait for the first segments (max. 30 seconds)
+
+         for (let i = 0; i < 60; i++) {
+            const st = await get('data/rechlsstate?id=' + session);
+
+            if (my !== gen || closed)
+               return;
+
+            if (st.ready)
+               break;
+
+            await sleep(500);
+         }
+
+         const url = apiUrl(res.url);
+
+         if (useNative)
+            video.src = url;
+         else {
+            hls = new HlsLib({ startPosition: 0, maxBufferLength: 60, liveDurationInfinity: false });
+            hls.on(HlsLib.Events.ERROR, (ev, d) => {
+               if (d.fatal)
+                  message('Fehler beim Abspielen (' + (d.details || d.type) + ')', true);
+            });
+            hls.loadSource(url);
+            hls.attachMedia(video);
+         }
+
+         message('');
+         video.play().catch(() => {});
+      }
+      catch (e) {
+         if (my === gen && !closed)
+            message(missingText(e.data) || e.message || String(e), true);
+      }
+   }
+
    const jumpBtn = (d, label) => $('<button type="button" class="btn btn-flat">').text(label)
-      .attr('title', (d < 0 ? 'zurück ' : 'vor ') + Math.abs(d / 60) + ' min').on('click', () => jump(d));
+      .attr('title', (d < 0 ? 'zurück ' : 'vor ') + Math.abs(d / 60) + ' min').on('click', () => goto(position() + d));
 
    $video
       .on('timeupdate', () => { if (!dragging) { $pos.val(position()); showTime(position()); } })
-      .on('error', () => $err.text('Fehler beim Abspielen (' + (video.error?.message || video.error?.code || '?') + ')').prop('hidden', false));
+      .on('error', () => { if (video.error && session) message('Fehler beim Abspielen (' + (video.error.message || video.error.code) + ')', true); });
 
    $pos
       .on('input', () => { dragging = true; showTime(+$pos.val()); })
-      .on('change', () => { dragging = false; start(+$pos.val()); });
+      .on('change', () => { dragging = false; goto(+$pos.val()); });
 
    const $dlg = dialog({
       title: r.title || r.name || 'Aufnahme',
       cls: 'dlg-player',
       content: $('<div class="player">').append(
          $video,
-         $err,
+         $msg,
          $('<div class="player-bar">').append(
             jumpBtn(-600, '« 10'), jumpBtn(-60, '‹ 1'),
             $pos,
             jumpBtn(60, '1 ›'), jumpBtn(600, '10 »'),
             $time)),
-      onClose: () => { video.pause(); video.removeAttribute('src'); video.load(); }   // ends the stream -> ffmpeg
+      onClose: () => { closed = true; gen++; clearInterval(keepAlive); detach(); }      // stops the session -> ffmpeg
    });
+
+   // keep the session alive while paused (the server removes it after 60 seconds without request)
+
+   const keepAlive = setInterval(() => { if (session) get('data/rechlsstate?id=' + session).catch(() => {}); }, 20000);
 
    makeMovable($dlg);
    $dlg.find('.player-video').trigger('focus');

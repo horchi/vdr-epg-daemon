@@ -67,7 +67,10 @@ cEpgHttpd::UserRight cEpgHttpd::userrights[] =
    { "/data/updaterecordings",  umAll                    },
    { "/data/replayrecording",   umRecordings             },
    { "/data/recstreaminfo",     umRecordings             },
-   { "/data/recstream",         umRecordings             },
+   { "/data/rechlsstart",       umRecordings             },
+   { "/data/rechlsstate",       umRecordings             },
+   { "/data/rechlsstop",        umRecordings             },
+   { "/data/rechls",            umRecordings             },     // playlist and segments (prefix)
    { "/data/channelswitch",     umAll                    },
    { "/data/hitkey",            umAll                    },
    { "/data/log",               umAll|umNologin          },
@@ -1300,8 +1303,11 @@ int cEpgHttpd::loop()
    while (!doShutDown())
    {
       cSystemNotification::check();
+      hlsHousekeeping();
       sleep(1);
    }
+
+   hlsHousekeeping(yes);          // stop all ffmpeg
 
    return done;
 }
@@ -1547,6 +1553,12 @@ int cEpgHttpd::performDataRequest(MHD_Connection* tcp, const char* url, MemorySt
          statusCode = doDeleteRecording(tcp, response);
       else if (strcmp(method, "recstreaminfo") == 0)
          statusCode = doRecStreamInfo(tcp, response);
+      else if (strcmp(method, "rechlsstart") == 0)
+         statusCode = doRecHlsStart(tcp, response);
+      else if (strcmp(method, "rechlsstate") == 0)
+         statusCode = doRecHlsState(tcp, response);
+      else if (strcmp(method, "rechlsstop") == 0)
+         statusCode = doRecHlsStop(tcp, response);
       else if (strcmp(method, "channelswitch") == 0)
          statusCode = doChannelSwitch(tcp, response);
       else if (strcmp(method, "hitkey") == 0)
@@ -1875,8 +1887,8 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
          tell(eloDebug, "data: %s; expire: %s", l2pTime(data.modTime).c_str(), l2pTime(data.expireAt).c_str());
       }
 
-      if (strcmp(url, "/data/recstream") == 0)                        // recording stream (ffmpeg)
-         return cEpgHttpd::singleton->streamRecording(tcp, url);
+      if (strncmp(url, "/data/rechls/", 13) == 0)                     // HLS playlist / segments of a recording
+         return cEpgHttpd::singleton->serveHls(tcp, url);
 
       if (strstr(url, "/data") == url)                                // data requested ...
          statusCode = cEpgHttpd::singleton->performDataRequest(tcp, url, &data);

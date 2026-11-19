@@ -28,7 +28,7 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
 =+ am Suchtimer im WEB die erledigten Timer aus timersdone anzeigen (ist schon über 'testen' erledigt?)
    dabei die Option zum  einzeln oder komplett löschen lassen anbieten
 -- Channel/Aufnahme im Browser abspielen (ggf. auch streamen)
-   (Aufnahme H.264 und SD/MPEG-2 erledigt; offen: UHD/H.265, natives Spulen per HLS, Live-TV)
+   (Aufnahme H.264 und SD/MPEG-2 per HLS erledigt; offen: UHD/H.265, Spulen über den erzeugten Bereich hinaus, Live-TV)
 
 ++ WEBIF Seite zum bearbeiten def Aufnahmen (Genre, Category, Serien-Titel, User-ScrapIDs)
    Bearbeitung in in Gruppen also mit einem Click für alle ausgewählten, für ganze Folgen einer Serie oder Staffel

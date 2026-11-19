@@ -1,9 +1,14 @@
 /*
  * webstream.c
  *
- * Play recordings in the browser: the TS files of a recording are remuxed by
- * ffmpeg to fragmented MP4 (video copied, audio to AAC) and streamed to the browser.
- * For now only H.264 recordings (HD) are supported.
+ * Play recordings in the browser via HLS: ffmpeg writes the recording (TS files) as
+ * HLS segments of 4 seconds and a playlist to a session directory below /var/tmp,
+ * epghttpd serves them (data/rechls/<id>/...). Video is copied (progressive H.264)
+ * or deinterlaced and encoded with libx264 (interlaced H.264, MPEG-2), audio to AAC.
+ *
+ * ffmpeg is paused (SIGSTOP) if it is more than hlsAhead segments ahead of the last
+ * one requested by the browser, segments far behind are deleted and sessions without
+ * request for hlsIdleTimeout seconds are removed (housekeeping of the main loop).
  *
  * See the README file for copyright information and how to reach the author.
  *
@@ -20,6 +25,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <mutex>
 
 #include "httpd.h"
 
@@ -270,107 +276,222 @@ int cEpgHttpd::doRecStreamInfo(MHD_Connection* tcp, json_t* obj)
 }
 
 //***************************************************************************
-// Stream Context
+// HLS Sessions
 //***************************************************************************
 
-struct RecStream
+#define HLS_BASE "/var/tmp/epghttpd-hls"
+
+static const int hlsSegDuration {4};         // seconds per segment
+static const int hlsAhead {30};              // max segments ahead of the last requested one (2 minutes)
+static const int hlsKeepBehind {450};        // keep segments up to 30 minutes behind
+static const int hlsIdleTimeout {60};        // seconds without request -> remove session
+static const size_t hlsMaxSessions {4};
+
+struct HlsSession
 {
+   std::string id;
+   std::string dir;
+   std::string name;                         // recording (for the log)
    pid_t pid {0};
-   int fd {-1};
+   time_t lastAccess {0};
+   int lastSegment {0};                      // last segment requested by the browser
+   int deletedBelow {0};                     // segments below are deleted
+   int segments {0};                         // segments in the playlist
+   bool paused {false};
+   bool done {false};                        // playlist complete (#EXT-X-ENDLIST)
 };
 
-static ssize_t recStreamRead(void* cls, uint64_t pos, char* buf, size_t max)
+static std::map<std::string,HlsSession> hlsSessions;
+static std::mutex hlsMutex;
+
+static std::string hlsNewId()
 {
-   RecStream* s = (RecStream*)cls;
+   unsigned char rnd[12] {};
+   char id[2*sizeof(rnd)+TB] {};
+   int fd = open("/dev/urandom", O_RDONLY);
 
-   // don't block the (single threaded) http server for long, if ffmpeg has
-   //   nothing for us yet MHD calls again
+   if (fd < 0 || read(fd, rnd, sizeof(rnd)) != (ssize_t)sizeof(rnd))
+   {
+      for (auto& c : rnd)
+         c = rand() & 0xff;
+   }
 
-   pollfd pfd { s->fd, POLLIN, 0 };
+   if (fd >= 0)
+      close(fd);
 
-   if (poll(&pfd, 1, 100) == 0)
-      return 0;
+   for (size_t i = 0; i < sizeof(rnd); i++)
+      sprintf(id + 2*i, "%02x", rnd[i]);
 
-   ssize_t n = read(s->fd, buf, max);
-
-   if (n > 0)
-      return n;
-
-   if (n < 0 && (errno == EAGAIN || errno == EINTR))
-      return 0;
-
-   return MHD_CONTENT_READER_END_OF_STREAM;
+   return id;
 }
 
-static void recStreamFree(void* cls)
+static void hlsRemoveDir(const std::string& dir)
 {
-   RecStream* s = (RecStream*)cls;
-
-   if (s->fd >= 0)
-      close(s->fd);
-
-   if (s->pid > 0)
+   if (DIR* d = opendir(dir.c_str()))
    {
-      kill(s->pid, SIGTERM);
-
-      for (int i = 0; i < 20 && waitpid(s->pid, 0, WNOHANG) == 0; i++)
-         usleep(50000);
-
-      if (waitpid(s->pid, 0, WNOHANG) == 0)
+      while (dirent* e = readdir(d))
       {
-         kill(s->pid, SIGKILL);
-         waitpid(s->pid, 0, 0);
+         if (strcmp(e->d_name, ".") && strcmp(e->d_name, ".."))
+            unlink((dir + "/" + e->d_name).c_str());
+      }
+
+      closedir(d);
+   }
+
+   rmdir(dir.c_str());
+}
+
+static void hlsKill(HlsSession& s)
+{
+   if (s.pid > 0)
+   {
+      kill(s.pid, SIGCONT);
+      kill(s.pid, SIGTERM);
+
+      for (int i = 0; i < 20 && waitpid(s.pid, 0, WNOHANG) == 0; i++)
+         usleep(25000);
+
+      if (waitpid(s.pid, 0, WNOHANG) == 0)
+      {
+         kill(s.pid, SIGKILL);
+         waitpid(s.pid, 0, 0);
+      }
+
+      s.pid = 0;
+   }
+
+   hlsRemoveDir(s.dir);
+   tell(eloInfo, "HLS session '%s' of '%s' removed", s.id.c_str(), s.name.c_str());
+}
+
+// segments of the playlist and end flag
+
+static void hlsReadPlaylist(HlsSession& s)
+{
+   FILE* fp = fopen((s.dir + "/index.m3u8").c_str(), "r");
+
+   if (!fp)
+      return;
+
+   char line[200+TB];
+   int count {0};
+
+   while (fgets(line, sizeof(line), fp))
+   {
+      if (strncmp(line, "#EXTINF", 7) == 0)
+         count++;
+      else if (strncmp(line, "#EXT-X-ENDLIST", 14) == 0)
+         s.done = true;
+   }
+
+   fclose(fp);
+   s.segments = count;
+}
+
+//***************************************************************************
+// HLS Housekeeping (called by the main loop every second)
+//***************************************************************************
+
+void cEpgHttpd::hlsHousekeeping(int all)
+{
+   std::lock_guard<std::mutex> lock(hlsMutex);
+   time_t now = time(0);
+   static bool initialized {false};
+
+   // remove left overs of a former run
+
+   if (!initialized)
+   {
+      initialized = true;
+
+      if (DIR* d = opendir(HLS_BASE))
+      {
+         while (dirent* e = readdir(d))
+         {
+            if (e->d_name[0] != '.')
+               hlsRemoveDir(std::string(HLS_BASE) + "/" + e->d_name);
+         }
+
+         closedir(d);
       }
    }
 
-   tell(eloDetail, "Recording stream (ffmpeg pid %d) closed", s->pid);
-   delete s;
+   for (auto it = hlsSessions.begin(); it != hlsSessions.end(); )
+   {
+      HlsSession& s = it->second;
+
+      if (all || now - s.lastAccess > hlsIdleTimeout)
+      {
+         hlsKill(s);
+         it = hlsSessions.erase(it);
+         continue;
+      }
+
+      // ffmpeg finished?
+
+      if (s.pid > 0 && waitpid(s.pid, 0, WNOHANG) == s.pid)
+         s.pid = 0;
+
+      hlsReadPlaylist(s);
+
+      // throttle ffmpeg
+
+      if (s.pid > 0)
+      {
+         int ahead = s.segments - s.lastSegment;
+
+         if (!s.paused && ahead > hlsAhead)
+         {
+            kill(s.pid, SIGSTOP);
+            s.paused = true;
+         }
+         else if (s.paused && ahead < hlsAhead - 10)
+         {
+            kill(s.pid, SIGCONT);
+            s.paused = false;
+         }
+      }
+
+      // delete segments far behind
+
+      for (; s.deletedBelow < s.lastSegment - hlsKeepBehind; s.deletedBelow++)
+      {
+         char file[50+TB];
+         sprintf(file, "/seg%05d.ts", s.deletedBelow);
+         unlink((s.dir + file).c_str());
+      }
+
+      ++it;
+   }
 }
 
 //***************************************************************************
-// Stream Recording
-//   GET data/recstream?md5path=..&starttime=..&owner=..&start=<seconds>
+// Do HLS Start
+//   data/rechlsstart?md5path=..&starttime=..&owner=..&start=<sec>&transcode=0|1
+//   -> { id, url }
 //***************************************************************************
 
-MHD_Result cEpgHttpd::streamRecording(MHD_Connection* tcp, const char* url)
+int cEpgHttpd::doRecHlsStart(MHD_Connection* tcp, json_t* obj)
 {
-   json_t* obj = json_object();
-   int statusCode {MHD_HTTP_OK};
    std::vector<std::string> files;
 
-   if (checkConnection() != success)
-      statusCode = buildResponse(obj, MHD_HTTP_SERVICE_UNAVAILABLE, "Lost database connection, retry later");
-   else if (!hasRights(url, obj, statusCode))
-      ;
-   else if (recordingFiles(tcp, files, obj) != success)
-      statusCode = MHD_HTTP_NOT_FOUND;
-
-   if (statusCode != MHD_HTTP_OK)
-   {
-      char* text = json_dumps(obj, 0);
-      MHD_Response* response = MHD_create_response_from_buffer(strlen(text), text, MHD_RESPMEM_MUST_FREE);
-      MHD_add_response_header(response, "Content-Type", "application/json; charset=utf-8");
-      MHD_Result res = MHD_queue_response(tcp, statusCode, response);
-      MHD_destroy_response(response);
-      json_decref(obj);
-      return res;
-   }
-
-   json_decref(obj);
+   if (recordingFiles(tcp, files, obj) != success)
+      return MHD_HTTP_NOT_FOUND;
 
    int start = std::max(0, getIntParameter(tcp, "start", 0));
+   int transcode = getIntParameter(tcp, "transcode", 0);
+
    std::string input = "concat:";
 
    for (size_t i = 0; i < files.size(); i++)
       input += (i ? "|" : "") + files[i];
 
    std::string ss = std::to_string(start);
+   std::string hlsTime = std::to_string(hlsSegDuration);
 
    // transcode=0: copy the video (progressive H.264)
    // transcode=1: deinterlace (yadif, one frame per frame, only frames flagged as interlaced)
-   //              and encode (libx264, a key frame every 2 seconds -> short fragments)
-
-   int transcode = getIntParameter(tcp, "transcode", 0);
+   //              and encode (libx264, a key frame every 2 seconds)
 
    std::vector<const char*> argv =
    {
@@ -388,54 +509,228 @@ MHD_Result cEpgHttpd::streamRecording(MHD_Connection* tcp, const char* url)
 
    argv.insert(argv.end(), { "-c:a", "aac", "-b:a", "192k", "-ac", "2",
                              "-sn", "-dn",
-                             "-f", "mp4", "-movflags", "frag_keyframe+empty_moov+default_base_moof",
-                             "pipe:1", nullptr });
+                             "-f", "hls", "-hls_time", hlsTime.c_str(), "-hls_list_size", "0",
+                             "-hls_playlist_type", "event", "-hls_flags", "independent_segments+temp_file",
+                             "-hls_segment_filename", "seg%05d.ts",
+                             "index.m3u8", nullptr });
 
-   int pfd[2];
+   std::lock_guard<std::mutex> lock(hlsMutex);
 
-   if (pipe2(pfd, O_CLOEXEC) < 0)
+   // limit the number of sessions, remove the oldest
+
+   while (hlsSessions.size() >= hlsMaxSessions)
    {
-      tell(0, "Error: Can't create pipe for recording stream, %s", strerror(errno));
-      return MHD_NO;
+      auto oldest = std::min_element(hlsSessions.begin(), hlsSessions.end(),
+                                     [](const auto& a, const auto& b) { return a.second.lastAccess < b.second.lastAccess; });
+      hlsKill(oldest->second);
+      hlsSessions.erase(oldest);
    }
+
+   HlsSession s;
+   s.id = hlsNewId();
+   s.dir = std::string(HLS_BASE) + "/" + s.id;
+   s.name = files[0];
+   s.lastAccess = time(0);
+
+   mkdir(HLS_BASE, 0700);
+
+   if (mkdir(s.dir.c_str(), 0700) != 0)
+      return buildResponse(obj, MHD_HTTP_INTERNAL_SERVER_ERROR, "Can't create directory '%s', %s", s.dir.c_str(), strerror(errno));
 
    pid_t pid = fork();
 
    if (pid < 0)
    {
-      tell(0, "Error: Can't fork ffmpeg, %s", strerror(errno));
-      close(pfd[0]);
-      close(pfd[1]);
-      return MHD_NO;
+      hlsRemoveDir(s.dir);
+      return buildResponse(obj, MHD_HTTP_INTERNAL_SERVER_ERROR, "Can't fork ffmpeg, %s", strerror(errno));
    }
 
    if (pid == 0)
    {
-      // child: stdout -> pipe, close all other descriptors (sockets of epghttpd)
+      // child: work in the session directory, close all descriptors of epghttpd (sockets)
 
-      dup2(pfd[1], STDOUT_FILENO);
-      int devNull = open("/dev/null", O_RDONLY);
+      if (chdir(s.dir.c_str()) != 0)
+         _exit(126);
+
+      int devNull = open("/dev/null", O_RDWR);
       dup2(devNull, STDIN_FILENO);
+      dup2(devNull, STDOUT_FILENO);
       close_range(3, ~0U, 0);
       execvp("ffmpeg", (char* const*)argv.data());
       _exit(127);
    }
 
-   close(pfd[1]);
-   fcntl(pfd[0], F_SETPIPE_SZ, 1024*1024);
+   s.pid = pid;
+   hlsSessions[s.id] = s;
 
-   tell(eloInfo, "Streaming recording '%s' from %d seconds (ffmpeg pid %d, %zu files, %s)",
-        files[0].c_str(), start, pid, files.size(), transcode ? "deinterlace + encode" : "copy");
+   tell(eloInfo, "HLS session '%s': recording '%s' from %d seconds (ffmpeg pid %d, %zu files, %s)",
+        s.id.c_str(), files[0].c_str(), start, pid, files.size(), transcode ? "deinterlace + encode" : "copy");
 
-   RecStream* s = new RecStream;
-   s->pid = pid;
-   s->fd = pfd[0];
+   json_object_set_new(obj, "id", json_string(s.id.c_str()));
+   json_object_set_new(obj, "url", json_string(("data/rechls/" + s.id + "/index.m3u8").c_str()));
 
-   MHD_Response* response = MHD_create_response_from_callback(MHD_SIZE_UNKNOWN, 64*1024,
-                                                              &recStreamRead, s, &recStreamFree);
-   MHD_add_response_header(response, "Content-Type", "video/mp4");
+   return MHD_HTTP_OK;
+}
+
+//***************************************************************************
+// Do HLS State / Stop
+//   data/rechlsstate?id=..  -> { segments, done, ready, running }
+//   data/rechlsstop?id=..
+//***************************************************************************
+
+int cEpgHttpd::doRecHlsState(MHD_Connection* tcp, json_t* obj)
+{
+   std::lock_guard<std::mutex> lock(hlsMutex);
+   auto it = hlsSessions.find(getStrParameter(tcp, "id", ""));
+
+   if (it == hlsSessions.end())
+      return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Unknown stream session");
+
+   HlsSession& s = it->second;
+
+   s.lastAccess = time(0);
+
+   if (s.pid > 0 && waitpid(s.pid, 0, WNOHANG) == s.pid)
+      s.pid = 0;
+
+   hlsReadPlaylist(s);
+
+   json_object_set_new(obj, "segments", json_integer(s.segments));
+   json_object_set_new(obj, "done", json_boolean(s.done));
+   json_object_set_new(obj, "running", json_boolean(s.pid > 0));
+   json_object_set_new(obj, "ready", json_boolean(s.segments >= 2 || s.done));
+
+   if (!s.pid && !s.segments)
+      return buildResponse(obj, MHD_HTTP_INTERNAL_SERVER_ERROR, "ffmpeg stopped without output");
+
+   return MHD_HTTP_OK;
+}
+
+int cEpgHttpd::doRecHlsStop(MHD_Connection* tcp, json_t* obj)
+{
+   std::lock_guard<std::mutex> lock(hlsMutex);
+   auto it = hlsSessions.find(getStrParameter(tcp, "id", ""));
+
+   if (it != hlsSessions.end())
+   {
+      hlsKill(it->second);
+      hlsSessions.erase(it);
+   }
+
+   return buildResponse(obj, MHD_HTTP_OK, "done");
+}
+
+//***************************************************************************
+// Serve HLS
+//   GET data/rechls/<id>/index.m3u8 | data/rechls/<id>/seg00000.ts
+//***************************************************************************
+
+static MHD_Result hlsAnswer(MHD_Connection* tcp, int status, const char* text)
+{
+   MHD_Response* response = MHD_create_response_from_buffer(strlen(text), (void*)text, MHD_RESPMEM_MUST_COPY);
+   MHD_add_response_header(response, "Content-Type", "application/json; charset=utf-8");
+   MHD_Result res = MHD_queue_response(tcp, status, response);
+   MHD_destroy_response(response);
+   return res;
+}
+
+MHD_Result cEpgHttpd::serveHls(MHD_Connection* tcp, const char* url)
+{
+   // rights (the session id is random, so the segments are protected by it too)
+
+   {
+      json_t* obj = json_object();
+      int statusCode {MHD_HTTP_OK};
+
+      if (!hasRights("/data/rechls", obj, statusCode))
+      {
+         char* text = json_dumps(obj, 0);
+         MHD_Result res = hlsAnswer(tcp, statusCode, text);
+         free(text);
+         json_decref(obj);
+         return res;
+      }
+
+      json_decref(obj);
+   }
+
+   // "/data/rechls/<id>/<file>"
+
+   std::string rest = url + strlen("/data/rechls/");
+   size_t slash = rest.find('/');
+
+   if (slash == std::string::npos)
+      return hlsAnswer(tcp, MHD_HTTP_NOT_FOUND, "{}");
+
+   std::string id = rest.substr(0, slash);
+   std::string file = rest.substr(slash + 1);
+   int segment {-1};
+
+   if (file != "index.m3u8")
+   {
+      if (file.size() != 11 || file.compare(0, 3, "seg") || file.compare(8, 3, ".ts")
+          || strspn(file.c_str() + 3, "0123456789") != 5)
+         return hlsAnswer(tcp, MHD_HTTP_NOT_FOUND, "{}");
+
+      segment = atoi(file.c_str() + 3);
+   }
+
+   std::string path;
+
+   {
+      std::lock_guard<std::mutex> lock(hlsMutex);
+      auto it = hlsSessions.find(id);
+
+      if (it == hlsSessions.end())
+         return hlsAnswer(tcp, MHD_HTTP_NOT_FOUND, "{\"result\": {\"state\": 404, \"message\": \"Unknown stream session\"}}");
+
+      it->second.lastAccess = time(0);
+
+      if (segment >= 0)
+         it->second.lastSegment = segment;
+
+      path = it->second.dir + "/" + file;
+   }
+
+   MHD_Response* response {};
+
+   if (segment < 0)
+   {
+      // playlist: start at the beginning (it is an EVENT playlist which grows while playing,
+      //   without EXT-X-START the players would start at its end)
+
+      MemoryStruct data;
+
+      if (loadFromFile(path.c_str(), &data) != success)
+         return hlsAnswer(tcp, MHD_HTTP_NOT_FOUND, "{}");
+
+      std::string m3u(data.memory, data.size);
+      size_t eol = m3u.find('\n');
+
+      if (eol != std::string::npos)
+         m3u.insert(eol + 1, "#EXT-X-START:TIME-OFFSET=0,PRECISE=YES\n");
+
+      response = MHD_create_response_from_buffer(m3u.size(), (void*)m3u.c_str(), MHD_RESPMEM_MUST_COPY);
+      MHD_add_response_header(response, "Content-Type", "application/vnd.apple.mpegurl");
+   }
+   else
+   {
+      int fd = open(path.c_str(), O_RDONLY);
+      struct stat st;
+
+      if (fd < 0 || fstat(fd, &st) != 0)
+      {
+         if (fd >= 0)
+            close(fd);
+
+         return hlsAnswer(tcp, MHD_HTTP_NOT_FOUND, "{}");
+      }
+
+      response = MHD_create_response_from_fd(st.st_size, fd);    // MHD closes fd
+      MHD_add_response_header(response, "Content-Type", "video/mp2t");
+   }
+
    MHD_add_response_header(response, "Cache-Control", "no-store");
-
    MHD_Result res = MHD_queue_response(tcp, MHD_HTTP_OK, response);
    MHD_destroy_response(response);
 
