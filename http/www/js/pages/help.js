@@ -44,22 +44,28 @@ export function render($content, params = {}) {
 
 export function helpButton(topic) {
    return $('<button type="button" class="btn btn-icon btn-flat help-btn">').attr('title', tr.menu.help).html(icon('help'))
-      .on('click', (ev) => {
-         ev.preventDefault();
-         ev.stopPropagation();
+      .on('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); showHelp(topic); });
+}
 
-         const $all = $('<div>').append(sections.map((s) => s.html));
-         const $topic = $all.find('#h_' + topic);
-         const section = sections.find((s) => s.id === topic);
+// text link showing a help topic in a dialog (instead of a long hint text on a page)
 
-         dialog({
-            title: tr.menu.help, cls: 'dlg-help',
-            content: $('<div class="help-popup">').append(
-               $topic.length ? $topic.children().clone() : section ? $(section.html) : $('<p>').text('Keine Hilfe vorhanden.'),
-               $('<p class="small">').append($('<a>').attr('href', '#help?t=' + (section ? topic : sectionOf(topic))).text('Ganze Hilfe öffnen …')
-                  .on('click', function () { $(this).closest('dialog')[0].close(); })))
-         });
-      });
+export function helpLink(topic, text = 'Hilfe zu dieser Seite') {
+   return $('<p class="help-link small">').append($('<a href="#">').append(icon('help'), $('<span>').text(text))
+      .on('click', (ev) => { ev.preventDefault(); showHelp(topic); }));
+}
+
+export function showHelp(topic) {
+   const $all = $('<div>').append(sections.map((s) => s.html));
+   const $topic = $all.find('#h_' + topic);
+   const section = sections.find((s) => s.id === topic);
+
+   dialog({
+      title: tr.menu.help, cls: 'dlg-help',
+      content: $('<div class="help-popup">').append(
+         $topic.length ? $topic.children().clone() : section ? $(section.html) : $('<p>').text('Keine Hilfe vorhanden.'),
+         $('<p class="small">').append($('<a>').attr('href', '#help?t=' + (section ? topic : sectionOf(topic))).text('Ganze Hilfe öffnen …')
+            .on('click', function () { $(this).closest('dialog')[0].close(); })))
+   });
 }
 
 function sectionOf(topic) {

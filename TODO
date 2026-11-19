@@ -14,24 +14,21 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
 
 += bei Nachrichten messages Tabelle optional, konfigurierbar zusätzlich Email Notifications versenden
 += Timer Job Check im epg2vdr geht nicht wenn epgd busy
-+= Format Erkennung (HD,SD) für Autotimer entspr. der konfigurierten Reihenfolge priorisieren
-+= im Programm OSD Menü nach dones suchen
 += am OSD Sendung als „bereits aufgezeichnet“ markieren
 += am OSD aus Event einen Suchtimer erstellen lassen
 += auf events Tabelle scrap stamp mit constable stamp vergleichen und durch setzen von scrnew neu scrapen lassen
 += 'nach'-scrapen der Aufnahmen verbessern (auf neue Daten der recordinglist stützen) view von Christian
 
-=+ Anzeige des verbleibenden Platzes für Aufnahmen in HH:MM
-=+ Timerliste nach VDR's gruppieren
 =+ Kanallisten verwalten und bei Timern usw. als Auswahl anbieten
 =+ Zeit/Pixelverhältnis in Magazinansicht einstellbar machen
 =+ Suchtimer löschen als eigenen Dialog anzeigen und alle zugeordneten Timer anzeigen, damit die auch in einem
    Rutsch mitgelöscht werden können.
+++ SSH-Shell zu einem VDR in einem Dialog der VDRs-Seite
+   In epghttpd per WebSocket (MHD upgrade) + forkpty(ssh) + xterm.js nur mit Login und eigenem Benutzerrecht, möglichst HTTPS
 =+ am Suchtimer im WEB die erledigten Timer aus timersdone anzeigen (ist schon über 'testen' erledigt?)
-   dabie die Option zum  einzeln oder komplett löschen lassen anbieten
-=+ Channel/Aufnahme im Browser abspielen (ggf. auch streamen)
-=+ Magazineansicht: rechte Scrollbar sichtbar machen.
-=+ Hilfe Seiten fürs Web
+   dabei die Option zum  einzeln oder komplett löschen lassen anbieten
+-- Channel/Aufnahme im Browser abspielen (ggf. auch streamen)
+   (Aufnahme H.264 und SD/MPEG-2 erledigt; offen: UHD/H.265, natives Spulen per HLS, Live-TV)
 
 ++ WEBIF Seite zum bearbeiten def Aufnahmen (Genre, Category, Serien-Titel, User-ScrapIDs)
    Bearbeitung in in Gruppen also mit einem Click für alle ausgewählten, für ganze Folgen einer Serie oder Staffel
@@ -39,7 +36,7 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
 ++ Button zum aktualisieren der bestehenden Timer nach Anpassung der recordings.py
 ++ im WebIf Sendung als „bereits aufgezeichnet“ markieren
 ++ channlemap im web bearbeiten (Auswahl pro User ermöglichen)
-++ data/status zur Anzeige von Version und Status des epgd im webif
+++ Halbautomatischer Abgleich mit yavdr channel Quelle
 ++ Beim löschen eines Timers fragen ob die passenden Einträge aus der timersdone mit gelöscht werden sollen
 
 --------------------------------------------------------
@@ -49,11 +46,7 @@ Braucht man dass wirklich?
 ++ Suchtimer: Checkbox für "Neu" bzw. "Erstausstrahlung"
 ++ Titel (Namen des Aufzeichnung) im Timer-Dialog bearbeitbar machen
    -> http://www.vdr-portal.de/board1-news/board2-vdr-news/p1269286-announce-easteregg-epgd-epghttpd-1-0-0-beta1-jetzt-mit-web-serientimer-unterst%C3%BCtzung/#post1269286
-+= Suchtimer am OSD anlegen und bearbeiten -> ist das wirklich nötig?
 ++ hits bei Suchtimern aufteilen nach total und aktiven Timern
-++ Suchtimer auf einzelne VDR begrenzen, dies soll Suchtimer mit retundanten Aufnahmen (eine je VDR) ermöglichen,
-   dazu muss je VDR ein separater Suchtimer angelegt werden.
-    - Flag 'LOCAL' am Suchtimer und VDRUUID in die TIMERSDONE aufnehmen
 ++ Wie erkennen wir sofortaufnahmen und timeshifting? Anderen Status geben und dann im Web nicht anzeigen
    oder sollen wir dise gar nicht erst in die DB schreiben?
     -> wo/warum würden diese in der Anzeige stören
@@ -62,6 +55,7 @@ Braucht man dass wirklich?
  Fertig:
 -----------------------------------
 
+== Anzeige des verbleibenden Platzes für Aufnahmen in HH:MM
 == Nachrichten Tabelle die im WEB angezeigt wird
 == bei entfernten (gelöschten) events
      -> bei manuellen Timern per email warnen (aktuell per message ans WEBIF)

@@ -66,6 +66,8 @@ cEpgHttpd::UserRight cEpgHttpd::userrights[] =
    { "/data/updatesearchtimer", umAll                    },
    { "/data/updaterecordings",  umAll                    },
    { "/data/replayrecording",   umRecordings             },
+   { "/data/recstreaminfo",     umRecordings             },
+   { "/data/recstream",         umRecordings             },
    { "/data/channelswitch",     umAll                    },
    { "/data/hitkey",            umAll                    },
    { "/data/log",               umAll|umNologin          },
@@ -92,6 +94,7 @@ cEpgHttpd::UserRight cEpgHttpd::userrights[] =
    { "/data/save-searchtimer",  umSearchTimerEdit        },
    { "/data/search",            umSearchTimer            },
    { "/data/save-users",        umConfigEdit             },
+   { "/data/delete-vdrs",       umConfigEdit             },
    { "/data/renamerecording",   umRecordingsEdit         },
    { "/data/deleterecording",   umRecordingsEdit         },
    { "/data/markmessages",      umAll                    },
@@ -1057,12 +1060,55 @@ int cEpgHttpd::initDb()
 
    status += selectAllRecordings->prepare();
 
+   // ----------
+   // duplicate recordings - same title and short text (like the epg2vdr menu 'Duplicate recordings'),
+   //   the same recording may be listed by several VDRs -> count distinct md5path
+   //
+   // select r.*, v.shareinweb
+   //   from recordinglist r
+   //     join (select title dbl_t, ifnull(shorttext,'') dbl_s from recordinglist
+   //             where (state <> 'D' or state is null)
+   //             group by dbl_t, dbl_s having count(distinct md5path) > 1) d
+   //       on r.title = d.dbl_t and ifnull(r.shorttext,'') = d.dbl_s,
+   //     vdrs v
+   //   where r.vdruuid = v.uuid and (r.state <> 'D' or r.state is null)
+   //   order by r.title, r.shorttext, r.starttime
+
+   selectDoubleRecordings = new cDbStatement(recordingListDb);
+
+   selectDoubleRecordings->build("select ");
+   selectDoubleRecordings->setBindPrefix("r.");
+   selectDoubleRecordings->bindAllOut();
+   selectDoubleRecordings->setBindPrefix("v.");
+   selectDoubleRecordings->bind(vdrDb, "SHAREINWEB", cDBS::bndOut, ", ");
+   selectDoubleRecordings->clrBindPrefix();
+   selectDoubleRecordings->build(" from %s r join (select title dbl_t, ifnull(shorttext,'') dbl_s from %s"
+                                 " where (state <> 'D' or state is null)"
+                                 " group by dbl_t, dbl_s having count(distinct md5path) > 1) d"
+                                 " on r.title = d.dbl_t and ifnull(r.shorttext,'') = d.dbl_s, %s v"
+                                 " where r.vdruuid = v.uuid and (r.state <> 'D' or r.state is null)"
+                                 " order by r.title, r.shorttext, r.starttime",
+                                 recordingListDb->TableName(), recordingListDb->TableName(), vdrDb->TableName());
+
+   status += selectDoubleRecordings->prepare();
+
+   // recordings matching an event, compared normalized (lower case, without blanks and punctuation):
+   //   same title, title starting with the one of the event (e.g. '<title> - Der Film', at least 6 chars)
+   //   or a levenshtein distance of the title <= 15%, best matches (title, then shorttext) first
+   //
    // select *,
-   //    epglvr(title, ?)
-   //    epglvr(shorttext, ?)
-   //   from recordinglist where
-   //      (state <> 'D' or state is null)
-   //   and epglvr(title, ?) < 50
+   //    100 - ifNull(epglvr(norm(title), p.nt), 100),
+   //    100 - ifNull(epglvr(norm(shorttext), p.ns), 100)
+   //   from recordinglist, (select norm(?) nt, norm(?) ns) p
+   //   where (state <> 'D' or state is null)
+   //     and (norm(title) = p.nt
+   //          or (char_length(p.nt) >= 6 and norm(title) like concat(p.nt, '%'))
+   //          or epglvr(norm(title), p.nt) <= 15)
+   //   order by <title match> desc, <shorttext match> desc
+
+   const char* normTitle = "regexp_replace(lower(title), '[[:space:][:punct:]]', '')";
+   const char* densTitle = "100 - ifNull(epglvr(regexp_replace(lower(title), '[[:space:][:punct:]]', ''), p.nt), 100)";
+   const char* densShorttext = "100 - ifNull(epglvr(regexp_replace(lower(shorttext), '[[:space:][:punct:]]', ''), p.ns), 100)";
 
    matchDensityTitle.setField(&matchDensityTitleDef);
    matchDensityShorttext.setField(&matchDensityShorttextDef);
@@ -1071,15 +1117,21 @@ int cEpgHttpd::initDb()
 
    selectRecordingForEventByLv->build("select ");
    selectRecordingForEventByLv->bindAllOut();
-   selectRecordingForEventByLv->bindTextFree(", 100 - ifNull(epglvr(title, ?), 100)", &matchDensityTitle, cDBS::bndOut);
-   selectRecordingForEventByLv->appendBinding(recordingListDb->getValue("TITLE"), cDBS::bndIn);
-   selectRecordingForEventByLv->bindTextFree(", 100 - ifNull(epglvr(shorttext, ?), 100)", &matchDensityShorttext, cDBS::bndOut);
-   selectRecordingForEventByLv->appendBinding(recordingListDb->getValue("SHORTTEXT"), cDBS::bndIn);
-   selectRecordingForEventByLv->build(" from %s where ", recordingListDb->TableName());
-   selectRecordingForEventByLv->build(" (%s <> 'D' or %s is null)",
+   selectRecordingForEventByLv->bindTextFree(", ", &matchDensityTitle, cDBS::bndOut);
+   selectRecordingForEventByLv->build("%s", densTitle);
+   selectRecordingForEventByLv->bindTextFree(", ", &matchDensityShorttext, cDBS::bndOut);
+   selectRecordingForEventByLv->build("%s", densShorttext);
+   selectRecordingForEventByLv->build(" from %s,", recordingListDb->TableName());
+   selectRecordingForEventByLv->bindTextFree(" (select regexp_replace(lower(?), '[[:space:][:punct:]]', '') nt,",
+                                             recordingListDb->getValue("TITLE"), cDBS::bndIn);
+   selectRecordingForEventByLv->bindTextFree(" regexp_replace(lower(?), '[[:space:][:punct:]]', '') ns) p",
+                                             recordingListDb->getValue("SHORTTEXT"), cDBS::bndIn);
+   selectRecordingForEventByLv->build(" where (%s <> 'D' or %s is null)",
                                   recordingListDb->getField("STATE")->getDbName(),
                                   recordingListDb->getField("STATE")->getDbName());
-   selectRecordingForEventByLv->bindTextFree("and epglvr(title, ?) < 47", recordingListDb->getValue("TITLE"), cDBS::bndIn);
+   selectRecordingForEventByLv->build(" and (%s = p.nt or (char_length(p.nt) >= 6 and %s like concat(p.nt, '%%'))"
+                                      " or epglvr(%s, p.nt) <= 15)", normTitle, normTitle, normTitle);
+   selectRecordingForEventByLv->build(" order by %s desc, %s desc", densTitle, densShorttext);
 
    status += selectRecordingForEventByLv->prepare();
 
@@ -1207,6 +1259,7 @@ int cEpgHttpd::exitDb()
    delete selectRecordingDirs;       selectRecordingDirs = 0;
    delete selectRecordingByPath;     selectRecordingByPath = 0;
    delete selectRecordingForEventByLv; selectRecordingForEventByLv = 0;
+   delete selectDoubleRecordings;      selectDoubleRecordings = 0;
    delete selectChannelFromMap;      selectChannelFromMap = 0;
    delete selectPendingMessages;     selectPendingMessages = 0;
    delete selectWebUsers;            selectWebUsers = 0;
@@ -1492,6 +1545,8 @@ int cEpgHttpd::performDataRequest(MHD_Connection* tcp, const char* url, MemorySt
          statusCode = doReplayRecording(tcp, response);
       else if (strcmp(method, "deleterecording") == 0)
          statusCode = doDeleteRecording(tcp, response);
+      else if (strcmp(method, "recstreaminfo") == 0)
+         statusCode = doRecStreamInfo(tcp, response);
       else if (strcmp(method, "channelswitch") == 0)
          statusCode = doChannelSwitch(tcp, response);
       else if (strcmp(method, "hitkey") == 0)
@@ -1647,6 +1702,8 @@ int cEpgHttpd::performPostData(const char* url, MemoryStruct* data)
          statusCode = doSendMail(jInData, response);
       else if (strcmp(url, "/data/save-users") == 0)
          statusCode = storeUsers(jInData, response);
+      else if (strcmp(url, "/data/delete-vdrs") == 0)
+         statusCode = deleteVdrs(jInData, response);
       else if (strcmp(url, "/data/login") == 0)
          statusCode = doLogin(jInData, response);
       else if (strcmp(url, "/data/markmessages") == 0)
@@ -1817,6 +1874,9 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
          tell(eloDetail, "<- %s with [%s] (expire at %s)", url, parmDebug, l2pTime(data.expireAt).c_str());
          tell(eloDebug, "data: %s; expire: %s", l2pTime(data.modTime).c_str(), l2pTime(data.expireAt).c_str());
       }
+
+      if (strcmp(url, "/data/recstream") == 0)                        // recording stream (ffmpeg)
+         return cEpgHttpd::singleton->streamRecording(tcp, url);
 
       if (strstr(url, "/data") == url)                                // data requested ...
          statusCode = cEpgHttpd::singleton->performDataRequest(tcp, url, &data);

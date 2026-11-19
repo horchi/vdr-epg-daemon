@@ -229,15 +229,48 @@ export const sections = [
          <ul>
             <li><b>Profil</b> – persönliche Einstellungen: Startseite, Schnellzeiten, Standardwerte für Timer, E-Mail-Benachrichtigungen u.a.
                 Gespeichert werden nur geänderte Werte.</li>
-            <li><b>Kanäle</b> – Reihenfolge (am Griff ziehen, auch per Touch) und Sichtbarkeit in der Weboberfläche. Die Liste ist nach den
-                Kanalgruppen geordnet, ein Kanal lässt sich nur innerhalb seiner Gruppe verschieben.
-                Name und Gruppe der Kanäle übernimmt das epg2vdr-Plugin mit aktivem EPG-Handler aus der Kanalliste seines VDR
-                (so passen sie zu den Kanallogos des OSD), daneben stehen die Quellen der channelmap mit ihrem Merge-Wert.
-                Über die <i>Referenzliste</i> (channels.conf eines VDR oder eingefügter Text) kann die Reihenfolge übernommen werden.</li>
+            <li><b>Kanäle</b> – Reihenfolge und Sichtbarkeit der Kanäle in der Weboberfläche (Details unten).</li>
             <li><b>Benutzer</b> – Benutzer der Weboberfläche mit ihren Rechten. Ein Recht schließt seine Unterrechte ein.</li>
             <li><b>System</b> – Login-Pflicht und alle Parameter des epgd-Backends.
                 Die Login-Pflicht lässt sich nur einschalten, wenn es einen aktiven Benutzer gibt.</li>
-         </ul>`
+            <li><b>VDRs</b> – die VDRs mit epg2vdr und der epgd selbst.</li>
+         </ul>
+         <div id="h_optChannels">
+            <h4>Kanäle</h4>
+            <ul>
+               <li>Reihenfolge per Ziehen am Griff ändern (auch per Touch), jeweils innerhalb einer Gruppe –
+                   die Liste ist nach den Kanalgruppen geordnet.</li>
+               <li>Der Haken steuert die Anzeige im Web-Interface.</li>
+               <li>Name und Gruppe kommen aus der Kanalliste des VDR (epg2vdr mit aktivem EPG-Handler) und passen so
+                   zu den Kanallogos des OSD; sie werden hier nur angezeigt.</li>
+               <li>Rechts stehen die Quellen des Kanals mit ihrem Merge-Wert aus der channelmap
+                   (0 kein Merge, 1 führend, 2 Fallback, 3 Fallback + Bilder, siehe <i>EPG Merge</i>).</li>
+               <li>Ein Klick auf das Logo zeigt, wie es gesucht wird (Schlüssel, Verzeichnis, Datei).</li>
+               <li>Filter und die Aktionen <i>Alle sichtbar</i> / <i>Alle ausblenden</i> wirken auf die gefilterten Kanäle.</li>
+               <li>Über die <i>Referenzliste</i> (channels.conf eines VDR oder eingefügter Text) kann die Reihenfolge
+                   übernommen werden.</li>
+            </ul>
+         </div>
+         <div id="h_optVdrs">
+            <h4>VDRs</h4>
+            <ul>
+               <li>Alle Einträge der Tabelle vdrs: die VDRs mit epg2vdr und der epgd selbst.</li>
+               <li>Ein gelöschter VDR trägt sich beim nächsten Start bzw. Update von epg2vdr wieder ein.</li>
+               <li>Wecken per Wake-on-LAN geht nur mit bekannter MAC-Adresse.</li>
+               <li><b>Fernbedienung</b> öffnet die Fernbedienung des osd2web-Plugins (<code>http://&lt;IP&gt;:&lt;osd2web-Port&gt;/fb.html</code>)
+                   in einem Dialog. Der Knopf ist nur aktiv, wenn
+                  <ul>
+                     <li>der VDR verbunden ist (Status <i>attached</i>),</li>
+                     <li>das osd2web-Plugin ab Version 0.3.7 geladen ist – epg2vdr trägt dann beim Verbinden den
+                         osd2web-Port in die Tabelle vdrs ein (Feld <i>osd2web-Port</i>; nach einem Update des Plugins
+                         den VDR neu starten),</li>
+                     <li>und der Browser den osd2web-Port des VDR direkt erreicht (Antwort innerhalb von 4 Sekunden).
+                         Wird das Webinterface per HTTPS aufgerufen, blockiert der Browser den Zugriff auf das per HTTP
+                         angebotene osd2web.</li>
+                  </ul>
+                  Der Tooltip des ausgegrauten Knopfs nennt den Grund.</li>
+            </ul>
+         </div>`
    },
    {
       id: 'merge', title: 'EPG Merge',

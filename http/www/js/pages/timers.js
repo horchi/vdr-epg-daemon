@@ -26,11 +26,25 @@ const tabs = {
 
 let current = null;          // { id, reload() }
 
+// selected tab, kept while visiting other pages and in the browser (localStorage,
+//   a convenience only - works without it too)
+
+const TAB_KEY = 'epgd.tab.timers';
+let lastTab = null;
+
+try { lastTab = localStorage.getItem(TAB_KEY); }
+catch (e) { /* no storage */ }
+
 export function render($content, params = {}) {
    destroy();
 
    const avail = Object.keys(tabs).filter((k) => !tabs[k].right || hasRight(tabs[k].right));
-   const id = avail.includes(params.tab) ? params.tab : avail[0];
+   const id = [params.tab, lastTab].find((t) => avail.includes(t)) || avail[0];
+
+   lastTab = id;            // the menu link has no tab -> back to the last selected one
+
+   try { localStorage.setItem(TAB_KEY, id); }
+   catch (e) { /* no storage */ }
 
    const $tabs = $('<nav class="tabs" role="tablist">').append(avail.map((k) =>
       $('<a role="tab">').attr('href', '#timers?tab=' + k).text(tabs[k].label).toggleClass('active', k === id)));

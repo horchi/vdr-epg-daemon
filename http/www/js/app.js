@@ -4,7 +4,7 @@ import { state, rights, hasRight } from './state.js';
 import { log } from './api.js';
 import { loadProfile, loadChannels, loadVdrs, selectVdr } from './data.js';
 import { ensureLogin, logout, showLoginForm } from './session.js';
-import { busy, toastError } from './ui.js';
+import { busy, toastError, confirmBox } from './ui.js';
 import { icon } from './icons.js';
 import { apply as applyTheme, getTheme, cycleMode } from './theme.js';
 import * as pageNow from './pages/now.js';
@@ -82,7 +82,7 @@ function renderMenu() {
    if (state.profile.needLogin == 1 && state.login.session)
       $user.append($('<button type="button" class="btn btn-flat">').attr('title', tr.pages.login.logout)
          .append(icon('user'), $('<span>').text(state.login.user), icon('logout'))
-         .on('click', logout));
+         .on('click', async () => { if (await confirmBox('Wirklich abmelden?', tr.pages.login.logout)) logout(); }));
    else if (state.profile.needLogin == 1)
       $user.append($('<button type="button" class="btn btn-flat">').append(icon('user'), $('<span>').text(tr.pages.login.label))
          .on('click', () => showLoginForm()));

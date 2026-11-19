@@ -5,7 +5,7 @@
 
 import { state, hasRight, rights } from '../state.js';
 import { get, post } from '../api.js';
-import { busy, toast, toastError, dialog } from '../ui.js';
+import { busy, toast, toastError, dialog, stickyBar } from '../ui.js';
 import { icon } from '../icons.js';
 import { field } from '../forms.js';
 import { searchForm, searchEvents, renderResults, openSearchTimerDialog, deleteTimers } from '../timerDialog.js';
@@ -48,7 +48,7 @@ export async function render($content, params = {}) {
    pg.$input = $input;
    pg.$savedSel = $savedSel;
 
-   $content.empty().append($('<section class="page page-search">').append($head, pg.$opts, pg.$actions, pg.$results));
+   $content.empty().append($('<section class="page page-search">').append(stickyBar($head), pg.$opts, pg.$actions, pg.$results));
 
    loadSavedList();
 

@@ -10,7 +10,7 @@ import { get, mediaUrl } from '../api.js';
 import { busy, toastError } from '../ui.js';
 import { nowUnix, unixTime, toDate, formatTime, formatDate, toLocalInput, fromLocalInput, progressOf, leadText } from '../utils.js';
 import { channelBadge } from '../data.js';
-import { quickTimes, timeOnDay, foreignKey, ctrlScroll } from '../gridtools.js';
+import { quickTimes, quickTimeAt, timeOnDay, foreignKey, ctrlScroll } from '../gridtools.js';
 import { icon, iconButton } from '../icons.js';
 import { showEvent } from '../eventDetail.js';
 import { groupSelect, filterChannels, currentGroup } from '../groupfilter.js';
@@ -71,16 +71,16 @@ export function render($content, params = {}) {
       groupSelect('timeline', () => render($content, { time: leftTime() + 30 * 60 })),    // keep the time
       infoToggle());
 
-   const qt = quickTimes();
+   const qt = m.qt = quickTimes();
 
    if (qt.length) {
       $('<div class="seg seg-wrap">').append(qt.map((q) =>
-         $('<button type="button" class="btn">').append(icon('clock'), $('<span>').text(q.label))
+         $('<button type="button" class="btn">').attr('data-qt', q.value).append(icon('clock'), $('<span>').text(q.label))
             .on('click', () => scrollToTime(timeOnVisibleDay(q.value))))).appendTo($bar);
 
       $('<select class="input qt-select">').attr('title', 'Schnellwahl')
          .append($('<option value="">').text('Schnellwahl …'), qt.map((q) => $('<option>').val(q.value).text(q.label)))
-         .on('change', function () { if (this.value) scrollToTime(timeOnVisibleDay(this.value)); this.value = ''; })
+         .on('change', function () { if (this.value) scrollToTime(timeOnVisibleDay(this.value)); })
          .appendTo($bar);
    }
 
@@ -127,6 +127,7 @@ export function render($content, params = {}) {
    m.$info = $('<div class="tl-info">').hide();
 
    m.$time = $time;
+   m.$bar = $bar;
    m.$chSel = $chSel;
 
    $content.empty().append($('<section class="page page-timeline">').append($bar, m.$info, m.$scroll));
@@ -254,6 +255,12 @@ function onScroll() {
 
       const t = leftTime() + 1800;
       m.$time.val(toLocalInput(Math.min(t, m.gridEnd)));
+
+      // show the quick time we are at (select on phones, buttons else)
+
+      const q = quickTimeAt(m.qt, t);
+      m.$bar.find('.qt-select').val(q).toggleClass('active', !!q);
+      m.$bar.find('[data-qt]').each((i, b) => $(b).toggleClass('active', $(b).attr('data-qt') === q));
 
       const first = visibleChannels()[0];
       first && m.$chSel.val(first);

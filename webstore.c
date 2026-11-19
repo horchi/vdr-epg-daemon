@@ -124,6 +124,43 @@ int cEpgHttpd::deleteTimerJobs(json_t* jInData, json_t* response)
 }
 
 //***************************************************************************
+// Delete VDRs
+//  -> remove rows of the vdrs table, { "delete": [ "uuid", ... ] }
+//     the row of the epgd itself is kept, an attached VDR registers again
+//***************************************************************************
+
+int cEpgHttpd::deleteVdrs(json_t* jInData, json_t* response)
+{
+   json_t* uuidArray = json_object_get(jInData, "delete");
+   int count {0};
+
+   if (!uuidArray || !json_is_array(uuidArray))
+      return buildResponse(response, MHD_HTTP_BAD_REQUEST, "Error: Got unexpected json object");
+
+   for (size_t i = 0; i < json_array_size(uuidArray); ++i)
+   {
+      const char* uuid = json_string_value(json_array_get(uuidArray, i));
+
+      if (isEmpty(uuid) || strcmp(uuid, "epgd") == 0)
+         continue;
+
+      vdrDb->clear();
+      vdrDb->setValue("UUID", uuid);
+
+      if (vdrDb->find())
+      {
+         tell(eloInfo, "Deleting VDR '%s' (%s) from vdrs table", vdrDb->getStrValue("NAME"), uuid);
+         vdrDb->deleteWhere("uuid = '%s'", connection->escapeSqlString(uuid).c_str());
+         count++;
+      }
+
+      vdrDb->reset();
+   }
+
+   return buildResponse(response, MHD_HTTP_OK, "%d VDR(s) deleted", count);
+}
+
+//***************************************************************************
 // Store Timer Job
 //  -> store timer job for distribution to the VDR(s)
 //     even 'delete-jobs' to distribution the delete request to the VDR(s)

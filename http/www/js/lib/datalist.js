@@ -12,6 +12,7 @@
 //   $parent.append(list.$el); list.setRows(rows);
 
 import { icon } from '../icons.js';
+import { stickyBar } from '../ui.js';
 import tr from '../../lang/de.js';
 
 export function dataList(o) {
@@ -29,7 +30,7 @@ export function dataList(o) {
    const $filter = $('<input type="search" class="input dl-filter" placeholder="Filter …">');
    const $count = $('<span class="dl-count dim">');
    const $bulk = $('<div class="dl-bulk">');
-   const $tools = $('<div class="toolbar dl-tools">').append($filter, $count, $('<div class="dl-spacer">'), $bulk, ...(o.tools || []));
+   const $tools = stickyBar($('<div class="toolbar dl-tools">')).append($filter, $count, $('<div class="dl-spacer">'), $bulk, ...(o.tools || []));
    const $thead = $('<thead>');
    const $tbody = $('<tbody>');
    const $table = $('<table class="dl">').append($thead, $tbody);

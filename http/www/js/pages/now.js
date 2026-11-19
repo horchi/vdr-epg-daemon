@@ -2,7 +2,7 @@
 
 import { state } from '../state.js';
 import { get, post } from '../api.js';
-import { busy, toastError } from '../ui.js';
+import { busy, toastError, stickyBar } from '../ui.js';
 import { now, nowUnix, unixTime, formatTime, formatDate, progressOf, toLocalInput, fromLocalInput, textToHtml } from '../utils.js';
 import { channelBadge } from '../data.js';
 import { icon } from '../icons.js';
@@ -71,7 +71,6 @@ export function render($content) {
          .on('change', function () {
             if (this.value)
                setTime(this.value);
-            this.value = '';
          })
          .appendTo($bar);
    }
@@ -85,7 +84,7 @@ export function render($content) {
    $time.on('change', function () { if (this.value) setTime('@time', fromLocalInput(this.value)); });
 
    $page = $('<section class="page page-now">').append(
-      $bar,
+      stickyBar($bar),
       $('<p class="page-info">'),
       $('<ul class="event-grid">')
          .on('click', '.event-card .channel', function (ev) {      // channel logo -> magazine at this channel
@@ -162,7 +161,14 @@ async function setTime(type, time) {
       return;
 
    $page.find('input[type=datetime-local]').val(toLocalInput(current.time));
-   $page.find('button[data-type]').removeClass('active').filter((i, b) => $(b).attr('data-type') === (type === '@time' ? '' : type)).addClass('active');
+   // mark the current selection: @Now/@Next, a quick search or a quick time matching the time
+
+   const sel = type !== '@time' ? type
+      : quickTimes().find((q) => q.value[0] !== '@' && timeOfToday(q.value) === current.time)?.value || '';
+   const qtSel = quickTimes().some((q) => q.value === sel) ? sel : '';
+
+   $page.find('button[data-type]').removeClass('active').filter((i, b) => $(b).attr('data-type') === sel).addClass('active');
+   $page.find('.qt-select').val(qtSel).toggleClass('active', !!qtSel);
    $page.find('.page-info').text(
       type === '@Now'  ? tr.dateTimePicker.currentText + ', ' + formatDate(current.time, 'long') + ' ' + formatTime(current.time) + ' ' + tr.oClock
     : type === '@Next' ? tr.pages.eventDetail.eventNext + ' ' + formatTime(current.time) + ' ' + tr.oClock

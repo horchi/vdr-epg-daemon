@@ -109,6 +109,9 @@ Requirements:
   - mailutils (deinstall heirloom-mailx) !!
   - libsystemd-daemon-dev (if you like to use the systemd status interface)
         -> debian previous to 'sid' maybe libsystemd-dev?
+  - ffmpeg (incl. ffprobe, with libx264)    (epghttpd, optional, only at runtime)
+        -> needed to play recordings in the browser, the recordings (video directory)
+           must be accessible on the epgd host
 
  Example for Ubuntu (21.10):
 
@@ -127,6 +130,7 @@ Requirements:
   - python libpython libpython-dev python-dev
   - mailutils  (deinstall heirloom-mailx) !!
   - libsystemd-daemon-dev (if you like to use the systemd status interface)
+  - ffmpeg                             (epghttpd, optional, play recordings in the browser)
 
 My-SQL Setup:
 -------------

@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.3"
-#define VERSION_DATE "18.11.2026"
+#define _VERSION     "1.4.4"
+#define VERSION_DATE "19.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,21 @@
 
 /*
  * ------------------------------------
+
+2026-11-19: version 1.4.4 (horchi)
+   - Added:  web frontend, settings page 'VDRs' with all VDRs and their details, delete and wake on LAN
+   - Added:  web frontend, recordings: remaining recording time (HH:MM) of the free disk space, sizes in GB/TB
+   - Added:  web frontend, play recordings in the browser (event details of a recording), H.264 and MPEG-2 (SD):
+             new requests data/recstreaminfo and data/recstream (ffmpeg on the epgd host remuxes the TS files to
+             fragmented MP4, video copied, audio to AAC; interlaced recordings (1080i) and MPEG-2 are
+             deinterlaced and encoded with libx264; jumping restarts the stream at the new position)
+   - Added:  web frontend, VDRs: button 'Fernbedienung' opens the remote control of the osd2web plugin in a dialog
+             (enabled if the VDR is attached and its osd2web listener answers)
+   - Added:  web frontend, recordings: list of duplicate recordings (same title and short text, like epg2vdr)
+   - Change: matching recordings in event details, less wrong hits
+   - Change: web frontend, tab bars and tool bars fixed at scrolling
+   - Change: web frontend, logout asks for confirmation
+   - Change: web frontend, mionot update of search results design
 
 2026-11-18: version 1.4.3 (horchi)
    - Added: channelmap column CHANNELGROUP, name and group of the channels are taken from the VDR by the

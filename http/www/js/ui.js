@@ -5,6 +5,25 @@ import tr from '../lang/de.js';
 import { icon } from './icons.js';
 
 // ---------------------------------------------------------------------------
+// button / filter bar at the top of a page that stays visible while scrolling (below the
+//   top bar and the tabs), its height goes to --bar-h of the page for the elements stuck below it
+
+export function stickyBar($bar) {
+   let seen = false;
+
+   const ro = new ResizeObserver(() => {
+      if (!$bar[0].isConnected)                   // removed from the page -> done
+         return seen && ro.disconnect();
+
+      seen = true;
+      $bar.closest('.page')[0]?.style.setProperty('--bar-h', $bar.outerHeight() + 'px');
+   });
+
+   ro.observe($bar.addClass('sticky-bar')[0]);
+   return $bar;
+}
+
+// ---------------------------------------------------------------------------
 // toast (old: epgd.utils.topInfo)
 
 let $toasts = null;
@@ -76,6 +95,36 @@ export function dialog({ title, content, buttons = [], cls = '', closable = true
       $default[0].focus();
    else
       $dlg.attr('tabindex', -1)[0].focus();
+
+   return $dlg;
+}
+
+// move a dialog by dragging its header (not on its buttons), it stays inside the window
+
+export function makeMovable($dlg) {
+   const dlg = $dlg[0];
+
+   $dlg.addClass('dlg-movable').find('.dlg-head').on('pointerdown', (ev) => {
+      if (ev.button !== 0 || $(ev.target).closest('button, a, input, select').length)
+         return;
+
+      const r = dlg.getBoundingClientRect();
+      const dx = ev.clientX - r.left, dy = ev.clientY - r.top;
+      const head = ev.currentTarget;
+
+      head.setPointerCapture(ev.pointerId);
+      ev.preventDefault();
+
+      const move = (e) => {
+         const x = Math.min(Math.max(0, e.clientX - dx), innerWidth - Math.min(r.width, 80));
+         const y = Math.min(Math.max(0, e.clientY - dy), innerHeight - 40);
+         $dlg.css({ margin: 0, left: x + 'px', top: y + 'px', right: 'auto', bottom: 'auto' });
+      };
+
+      const up = () => $(head).off('pointermove', move).off('pointerup pointercancel', up);
+
+      $(head).on('pointermove', move).on('pointerup pointercancel', up);
+   });
 
    return $dlg;
 }

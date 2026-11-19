@@ -53,7 +53,7 @@ OBJS += scraper/tvdbscraper/tvdbseries.o
 OBJS += scraper/moviedbscraper/themoviedbscraper.o scraper/moviedbscraper/moviedbmovie.o
 OBJS += scraper/moviedbscraper/moviedbactor.o
 
-HTTPOBJS += epgdconfig.o webstore.o webdo.o webauth.o webtools.o httpd.o svdrpclient.o
+HTTPOBJS += epgdconfig.o webstore.o webdo.o webstream.o webauth.o webtools.o httpd.o svdrpclient.o
 
 # rules:
 
@@ -137,7 +137,7 @@ cppcd:
 # dependencies
 #--------------------------------------------------------
 
-HEADER = lib/db.h lib/common.h lib/config.h epgd.h series.h svdrpclient.h lib/curl.h
+HEADER = lib/db.h lib/common.h lib/config.h epgd.h series.h svdrpclient.h lib/curl.h HISTORY.h
 
 channelmap.o	 :  channelmap.c  	 $(HEADER)
 episode.o		 :  episode.c     	 $(HEADER)
@@ -151,6 +151,7 @@ httpd.o         :  httpd.c       	 $(HEADER) httpd.h
 webdo.o         :  webdo.c       	 $(HEADER) httpd.h
 webauth.o       :  webauth.c       	 $(HEADER) httpd.h
 webtools.o      :  webtools.c    	 $(HEADER) httpd.h
+webstream.o     :  webstream.c   	 $(HEADER) httpd.h
 
 SCRHEADER = lib/curl.h
 

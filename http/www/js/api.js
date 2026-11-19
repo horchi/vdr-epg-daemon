@@ -4,9 +4,10 @@ import { state } from './state.js';
 import tr from '../lang/de.js';
 
 export class ApiError extends Error {
-   constructor(status, message) {
+   constructor(status, message, data = null) {
       super(message);
       this.status = status;
+      this.data = data;             // json answer of the server (if any)
    }
 }
 
@@ -86,7 +87,7 @@ export async function request(path, { method = 'GET', body, as = 'json', retry =
       const msg = res.status === 403 ? tr.error.forbidden
                 : res.status === 501 ? tr.error.notImplemented
                 : data?.result?.message || text || tr.error.serverNotResponse;
-      throw new ApiError(res.status, msg);
+      throw new ApiError(res.status, msg, data);
    }
 
    if (as === 'json' && data === null)

@@ -120,12 +120,16 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int doRenameRecording(MHD_Connection* tcp, json_t* obj);
       int doReplayRecording(MHD_Connection* tcp, json_t* obj);
       int doDeleteRecording(MHD_Connection* tcp, json_t* obj);
+      int doRecStreamInfo(MHD_Connection* tcp, json_t* obj);
+      int recordingFiles(MHD_Connection* tcp, std::vector<std::string>& files, json_t* obj);
+      MHD_Result streamRecording(MHD_Connection* tcp, const char* url);
       int doHitKey(MHD_Connection* tcp, json_t* obj);
 
       // post requests
 
       int storeChannels(json_t* jobj, json_t* obj);
       int deleteTimerJobs(json_t* jInData, json_t* response);
+      int deleteVdrs(json_t* jInData, json_t* response);
       int deleteDoneTimers(json_t* jInData, json_t* response);
       int storeTimerJob(json_t* jobj, json_t* obj);
       int storeSearchTimer(json_t* jobj, json_t* obj);
@@ -267,6 +271,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       cDbStatement* selectChannelFromMap {};
       cDbStatement* selectUserByMd5 {};
       cDbStatement* selectAllRecordings {};
+      cDbStatement* selectDoubleRecordings {};
       cDbStatement* selectRecordingForEventByLv {};
       cDbStatement* selectPendingMessages {};
       cDbStatement* selectWebUsers {};

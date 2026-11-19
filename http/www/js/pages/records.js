@@ -6,11 +6,12 @@
 
 import { state, hasRight, rights } from '../state.js';
 import { get, mediaUrl, qs, fallbackImg } from '../api.js';
-import { busy, toast, toastError, dialog, confirmBox } from '../ui.js';
-import { formatDate, formatTime, formatDateTime } from '../utils.js';
-import { icon } from '../icons.js';
+import { busy, toast, toastError, dialog, confirmBox, stickyBar } from '../ui.js';
+import { formatDate, formatTime, formatDateTime, sizeText } from '../utils.js';
+import { icon, iconButton } from '../icons.js';
 import { field } from '../forms.js';
 import { showRecording, closeDetail } from '../eventDetail.js';
+import { playRecording } from '../player.js';
 import tr from '../../lang/de.js';
 
 const trr = tr.pages.records;
@@ -39,7 +40,7 @@ const profileSort = () => ({ 1: 'titleAsc', 2: 'titleDesc', 3: 'titleAsc', 4: 't
 let pg = null;        // page state
 
 export function render($content, params = {}) {
-   pg ??= { recs: null, sort: null, select: false, selected: new Set(), query: '' };
+   pg ??= { recs: null, sort: null, select: false, selected: new Set(), query: '', doubles: false, dbl: null };
    pg.sort ??= loadPref('recSort') || profileSort();
    pg.path = params.p ? params.p.split('/').filter(Boolean) : [];
 
@@ -57,17 +58,26 @@ export function render($content, params = {}) {
       canEdit ? $('<button type="button" class="btn rec-select-btn">').attr('title', 'Auswählen').append(icon('select'), $('<span>').text('Auswählen'))
          .toggleClass('active', pg.select)
          .on('click', function () { pg.select = !pg.select; pg.selected.clear(); $(this).toggleClass('active', pg.select); renderList(); }) : null,
+      $('<button type="button" class="btn rec-dbl-btn">').attr('title', 'Doppelte Aufnahmen (gleicher Titel und Untertitel)')
+         .append(icon('copy'), $('<span>').text('Doppelte'))
+         .toggleClass('active', pg.doubles)
+         .on('click', function () {
+            pg.doubles = !pg.doubles;
+            pg.selected.clear();
+            $(this).toggleClass('active', pg.doubles);
+            pg.doubles && pg.recs ? loadDoubles() : renderList();
+         }),
       $('<button type="button" class="btn">').attr('title', tr.reload).append(icon('refresh'), $('<span>').text(tr.reload)).on('click', refreshFromVdr));
 
    pg.$page = $('<section class="page page-records">').append(
-      renderDisks(), $bar, $('<nav class="crumbs">'), $('<div class="rec-selbar">'), $('<div class="rec-list">'));
+      renderDisks(), stickyBar($bar), $('<nav class="crumbs">'), $('<div class="rec-selbar">'), $('<div class="rec-list">'));
 
    $content.empty().append(pg.$page);
 
-   if (pg.recs)
-      renderList();
-   else
-      load();
+   const loaded = pg.recs ? (renderList(), updateDiskTimes(), Promise.resolve()) : load();
+
+   if (pg.doubles)
+      loaded.then(loadDoubles);
 }
 
 export function destroy() {
@@ -84,9 +94,79 @@ async function load() {
       pg.recs = (data.recordings || []).map(prepare);
       buildTree();
       pg.$page && renderList();
+      pg.$page && updateDiskTimes();
    }
    catch (e) {
       toastError(e);
+   }
+}
+
+// duplicate recordings – same title and short text, selected by the epghttpd like the
+//   epg2vdr menu 'Duplicate recordings' (ordered by title, short text, start time)
+
+async function loadDoubles() {
+   try {
+      const data = await busy(get('data/recordings?doubles=1'));
+      const byKey = new Map((pg.recs || []).map((r) => [r.key, r]));
+
+      pg.dbl = (data.recordings || []).map((d) => { const r = prepare(d); return byKey.get(r.key) || r; });
+   }
+   catch (e) {
+      toastError(e);
+      pg.dbl = [];
+   }
+
+   renderList();
+}
+
+// groups of the (still) duplicate recordings, compared case insensitive like the database does,
+//   a recording listed by several VDRs counts once
+
+function doubleGroups() {
+   const groups = [];
+   let last = null, md5s = null;
+
+   for (const r of pg.dbl || []) {
+      const k = (r.title || '').toLowerCase() + '\n' + (r.shorttext || '').toLowerCase();
+
+      if (k !== last) {
+         groups.push([]);
+         last = k;
+         md5s = new Set();
+      }
+
+      if (!md5s.has(r.md5path)) {
+         md5s.add(r.md5path);
+         groups[groups.length - 1].push(r);
+      }
+   }
+
+   return groups.filter((g) => g.length > 1);
+}
+
+function renderDoubles($list, words) {
+   let groups = doubleGroups();
+
+   if (words)
+      groups = groups.filter((g) => g.some((r) => words.every((w) => r.search.includes(w))));
+
+   pg.visible = groups.flat();
+
+   if (!pg.dbl)
+      return;
+
+   if (!groups.length) {
+      $list.append($('<p class="empty">').text(words ? tr.pages.search.empty : 'Keine doppelten Aufnahmen gefunden.'));
+      return;
+   }
+
+   $list.append($('<p class="dim rec-info">').text(groups.length + (groups.length === 1 ? ' Gruppe' : ' Gruppen') + ' · ' + pg.visible.length + ' Aufnahmen'));
+
+   for (const g of groups) {
+      $list.append(
+         $('<h3 class="dbl-head">').append($('<span>').text(g[0].title + (g[0].shorttext ? ' – ' + g[0].shorttext : '')),
+            $('<span class="dim">').text(g.length)),
+         $('<ul class="rec-rows">').append(g.map((r) => recRow(r, true))));
    }
 }
 
@@ -161,14 +241,53 @@ function renderDisks() {
    for (const v of disks.values()) {
       const used = 100 - v.videofree / v.videototal * 100;
 
-      $('<div class="disk">').attr('title', v.names.join(', ') + ': ' + (v.videodir || '')).append(
+      $('<div class="disk">').attr('title', v.names.join(', ') + ': ' + (v.videodir || '')).data('free', v.videofree).append(
          $('<div class="disk-head">').append(icon('disk'), $('<b>').text(v.names.join(', ')),
-            $('<span class="dim">').append(Math.round(v.videofree / 1000) + ' GB frei', $('<span class="disk-total">').text(' / ' + Math.round(v.videototal / 1000) + ' GB'))),
-         $('<div class="progress disk-bar">').toggleClass('full', used > 90).append($('<div>').css('width', used + '%')))
+            $('<span class="dim">').append(sizeText(v.videofree) + ' frei', $('<span class="disk-total">').text(' / ' + sizeText(v.videototal)))),
+         $('<div class="progress disk-bar">').toggleClass('full', used > 90).append($('<div>').css('width', used + '%')),
+         $('<div class="disk-time dim">'))
          .appendTo($d);
    }
 
    return $d;
+}
+
+// remaining recording time (HH:MM) of the free space, like VDR from the space used by
+//   the recordings and their length (MB per minute); VDRs sharing one disk (same size)
+//   are counted once (the one with the latest update), unknown -> VDR's default of 25.75 MB/min
+
+function mbPerMinute() {
+   const disks = new Map();
+
+   for (const v of Object.values(state.vdrs)) {
+      if (!v.videototal)
+         continue;
+
+      const key = Math.round(v.videototal / 1000);
+      const d = disks.get(key);
+
+      if (!d || (v.lastupdate || 0) > (d.lastupdate || 0))
+         disks.set(key, v);
+   }
+
+   const usedMb = [...disks.values()].reduce((s, v) => s + v.videototal - (v.videofree || 0), 0);
+   const minutes = (pg.recs || []).reduce((s, r) => s + (r.duration || 0), 0) / 60;
+   const mbpm = minutes > 0 ? usedMb / minutes : 0;
+
+   return mbpm >= 5 && mbpm <= 500 ? mbpm : 25.75;
+}
+
+function updateDiskTimes() {
+   if (!pg.$page || !pg.recs)
+      return;
+
+   const mbpm = mbPerMinute();
+
+   pg.$page.find('.disk').each((i, el) => {
+      const min = Math.floor(($(el).data('free') || 0) / mbpm);
+      $(el).find('.disk-time').text('ca. ' + Math.floor(min / 60) + ':' + String(min % 60).padStart(2, '0') + ' h Aufnahmezeit')
+         .attr('title', 'verbleibende Aufnahmezeit, geschätzt mit ' + Math.round(mbpm) + ' MB pro Minute');
+   });
 }
 
 function hashFor(path) {
@@ -180,8 +299,8 @@ function renderCrumbs(searching) {
 
    $('<a>').attr('href', hashFor([])).append(icon('home'), $('<span>').text(tr.menu.records)).appendTo($c);
 
-   if (searching) {
-      $c.append(icon('chevron', 'crumb-sep'), $('<span>').text('Suche'));
+   if (pg.doubles || searching) {
+      $c.append(icon('chevron', 'crumb-sep'), $('<span>').text(pg.doubles ? 'Doppelte Aufnahmen' : 'Suche'));
       return;
    }
 
@@ -204,6 +323,9 @@ function renderList() {
 
    renderCrumbs(searching);
    renderSelBar();
+
+   if (pg.doubles)
+      return renderDoubles($list, searching ? q.split(/\s+/) : null);
 
    let recs, folders = [];
 
@@ -273,7 +395,13 @@ function recRow(r, showPath) {
             showPath && r.folderPath ? $('<div class="rec-path dim">').append(icon('folder'), $('<span>').text(r.folderPath)) : null),
          $('<div class="rec-meta">').append(
             $('<div>').text(formatDate(r.starttime, 'medium')),
-            $('<div class="dim">').text(formatTime(r.starttime) + ' · ' + Math.round((r.duration || 0) / 60) + ' ' + tr.minutes)));
+            $('<div class="dim">').text(formatTime(r.starttime) + ' · ' + Math.round((r.duration || 0) / 60) + ' ' + tr.minutes)),
+         !pg.select && hasRight(rights.recordings)
+            ? iconButton('film', 'Im Browser abspielen').addClass('btn-flat rec-play').on('click', (ev) => {
+               ev.stopPropagation();
+               if (!r.pending)
+                  playRecording(r);
+            }) : null);
 
    $li.on('click', (ev) => {
       if (r.pending)
@@ -362,6 +490,7 @@ async function removeRecs(recs) {
             throw new Error(res.result.message);
 
          pg.recs = pg.recs.filter((x) => x !== r);
+         pg.dbl = pg.dbl?.filter((x) => x !== r) ?? null;
          pg.selected.delete(r.key);
          ok++;
       }
@@ -497,7 +626,7 @@ async function refreshFromVdr() {
    try {
       await busy(get('data/updaterecordings'));
       toast(trr.refreshMessage.replace('$sec$', 5), { timeout: 5000 });
-      setTimeout(() => { pg.recs = null; pg.$page && load(); }, 5000);
+      setTimeout(async () => { pg.recs = null; pg.$page && await load(); pg.$page && pg.doubles && loadDoubles(); }, 5000);
    }
    catch (e) { toastError(e); }
 }

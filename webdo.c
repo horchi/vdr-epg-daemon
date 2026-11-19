@@ -1121,6 +1121,7 @@ int cEpgHttpd::doCategories(MHD_Connection* tcp, json_t* obj)
 int cEpgHttpd::doVdrs(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oVdrs = json_object();
+   int all = getIntParameter(tcp, "all", 0);   // 1 -> all rows of the table (not only the ones shared in web)
 
    vdrDb->clear();
 
@@ -1130,7 +1131,7 @@ int cEpgHttpd::doVdrs(MHD_Connection* tcp, json_t* obj)
       int share = vdrDb->getIntValue("SHAREINWEB");
       int svdrp = vdrSvdrp->getIntValue();
 
-      if (share && svdrp && !isEmpty(uuid) && strcmp(uuid, "epgd") != 0)
+      if (!isEmpty(uuid) && (all || (share && svdrp && strcmp(uuid, "epgd") != 0)))
       {
          json_t* o = json_object();
          cDbTableDef* def = vdrDb->getTableDef();
@@ -1835,11 +1836,12 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
 int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oRecording = json_array();
+   cDbStatement* select = getIntParameter(tcp, "doubles", 0) ? selectDoubleRecordings : selectAllRecordings;
 
    vdrDb->clear();
    recordingListDb->clear();
 
-   for (int found = selectAllRecordings->find(); found; found = selectAllRecordings->fetch())
+   for (int found = select->find(); found; found = select->fetch())
    {
       json_t* oData = json_object();
 
@@ -1888,7 +1890,7 @@ int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
       json_array_append_new(oRecording, oData);
    }
 
-   selectAllRecordings->freeResult();
+   select->freeResult();
 
    json_object_set_new(obj, "recordings", oRecording);
 

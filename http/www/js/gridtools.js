@@ -15,6 +15,18 @@ export function quickTimes() {
    return list;
 }
 
+// value of the quick time matching the time of day of t (±1 minute), '' if none
+
+export function quickTimeAt(qt, t) {
+   const d = toDate(t);
+   const min = d.getHours() * 60 + d.getMinutes();
+
+   return qt.find((q) => {
+      const [h, mi] = q.value.split(':').map(Number);
+      return Math.abs(h * 60 + mi - min) <= 1;
+   })?.value || '';
+}
+
 // unix time of 'HH:MM' on the day of t
 
 export function timeOnDay(t, hhmm) {

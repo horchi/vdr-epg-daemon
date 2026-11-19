@@ -5,6 +5,20 @@ import { state } from './state.js';
 
 const pad = (n) => String(n).padStart(2, '0');
 
+// disk size of VDR (MB = MiB, 1024*1024 bytes, like VDR and 'df -h') -> '3,5 TB', '512 GB', '800 MB'
+
+export function sizeText(mb) {
+   const fmt = (v, d) => v.toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+   if (mb >= 1024 * 1024)
+      return fmt(mb / 1024 / 1024, 1) + ' TB';
+
+   if (mb >= 1024)
+      return fmt(mb / 1024, mb >= 100 * 1024 ? 0 : 1) + ' GB';
+
+   return fmt(mb || 0, 0) + ' MB';
+}
+
 export const now = () => new Date(Date.now() - (state.timeOffset || 0));
 export const nowUnix = () => unixTime(now());
 export const toDate = (t) => new Date(t * 1000 - (state.timeOffset || 0));

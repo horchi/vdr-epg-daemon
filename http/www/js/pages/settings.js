@@ -2,14 +2,15 @@
 
 import { state, hasRight, rights } from '../state.js';
 import { get, post, mediaUrl } from '../api.js';
-import { busy, toast, toastError, dialog, confirmBox } from '../ui.js';
-import { formatDateTime } from '../utils.js';
+import { busy, toast, toastError, dialog, confirmBox, stickyBar } from '../ui.js';
+import { formatDateTime, nowUnix, sizeText } from '../utils.js';
 import { icon } from '../icons.js';
 import { field, checkbox, select } from '../forms.js';
-import { loadProfile, loadChannels } from '../data.js';
+import { loadProfile, loadChannels, loadVdrs } from '../data.js';
 import { md5 } from '../lib/md5.js';
 import { getTheme, setTheme, accents } from '../theme.js';
 import tr from '../../lang/de.js';
+import { helpLink } from './help.js';
 
 const trp = tr.pages.profile;
 const trt = tr.pages.timerList;
@@ -17,6 +18,7 @@ const tre = tr.pages.eventDetail;
 
 const tabs = {
    profile:  { label: 'Profil', build: profileTab },
+   vdrs:     { label: 'VDRs', right: rights.configEdit, build: vdrsTab },
    channels: { label: tr.pages.options.editChannels.replace(' bearbeiten', ''), right: rights.configEdit, build: channelsTab },
    users:    { label: tr.pages.editUser.user, right: rights.configUsers, build: usersTab },
    system:   { label: 'System', right: rights.configEdit, build: systemTab }
@@ -24,11 +26,25 @@ const tabs = {
 
 let cleanup = null;
 
+// selected tab, kept while visiting other pages and in the browser (localStorage,
+//   a convenience only - works without it too)
+
+const TAB_KEY = 'epgd.tab.settings';
+let lastTab = null;
+
+try { lastTab = localStorage.getItem(TAB_KEY); }
+catch (e) { /* no storage */ }
+
 export function render($content, params = {}) {
    destroy();
 
    const avail = Object.keys(tabs).filter((k) => !tabs[k].right || hasRight(tabs[k].right));
-   const id = avail.includes(params.tab) ? params.tab : avail[0];
+   const id = [params.tab, lastTab].find((t) => avail.includes(t)) || avail[0];
+
+   lastTab = id;            // the menu link has no tab -> back to the last selected one
+
+   try { localStorage.setItem(TAB_KEY, id); }
+   catch (e) { /* no storage */ }
    const $body = $('<div class="tab-body">');
 
    $content.empty().append($('<section class="page page-settings">').append(
@@ -284,10 +300,10 @@ function channelsTab($body) {
       $('<button type="button" class="btn">').append(icon('copy'), $('<span>').text(trc.menu.referenceList)).on('click', referenceDialog));
 
    $body.append(
-      $('<p class="dim small">').text('Reihenfolge per Ziehen am Griff ändern (auch per Touch), jeweils innerhalb einer Gruppe. Der Haken steuert die Anzeige im Web-Interface. Name und Gruppe kommen aus der Kanalliste des VDR (epg2vdr mit aktivem EPG-Handler) und passen so zu den Kanallogos. Rechts die Quellen des Kanals mit ihrem Merge-Wert aus der channelmap (0 kein Merge, 1 führend, 2 Fallback, 3 Fallback + Bilder). Filter und Sichtbar-Aktionen wirken auf die gefilterten Kanäle.'),
+      helpLink('optChannels'),
       regrouped ? $('<p class="ch-regrouped">').append(icon('info'),
          $('<span>').text('Die Kanäle wurden nach ihren Gruppen geordnet, innerhalb der Gruppen in der bisherigen Reihenfolge. Zum Übernehmen speichern.')) : null,
-      $('<div class="toolbar">').append($filter, $count, $menu),
+      stickyBar($('<div class="toolbar">').append($filter, $count, $menu)),
       $('<div class="ch-layout">').append($list, $refBox),
       saveBar(save));
 
@@ -625,6 +641,138 @@ function usersTab($body) {
          }
          catch (e) { toastError(e); }
       }
+   }
+
+   load();
+}
+
+// ---------------------------------------------------------------------------
+// VDRs: all rows of the vdrs table with details, delete a row, wake on lan
+
+// 'vor 5 Minuten', 'vor 3 Stunden', 'vor 12 Tagen' (rounded)
+
+function agoText(t) {
+   const s = Math.max(0, nowUnix() - t);
+   const [n, one, many] = s < 90 ? [0] : s < 5400 ? [Math.round(s / 60), 'Minute', 'Minuten']
+      : s < 129600 ? [Math.round(s / 3600), 'Stunde', 'Stunden'] : [Math.round(s / 86400), 'Tag', 'Tagen'];
+
+   return !n ? 'gerade eben' : 'vor ' + n + ' ' + (n === 1 ? one : many);
+}
+
+function vdrsTab($body) {
+   const $grid = $('<div class="settings-grid vdr-grid">');
+
+   $body.append(
+      helpLink('optVdrs'),
+      $grid);
+
+   async function load() {
+      try {
+         const data = await busy(get('data/vdrs?all=1'));
+         const vdrs = Object.entries(data.vdrs || {}).map(([uuid, v]) => ({ uuid, ...v }))
+            .sort((a, b) => (a.uuid === 'epgd' ? -1 : b.uuid === 'epgd' ? 1 : 0)
+               || (a.state === 'attached' ? 0 : 1) - (b.state === 'attached' ? 0 : 1)
+               || (a.name || '').localeCompare(b.name || ''));
+
+         $grid.empty().append(vdrs.map(vdrCard));
+
+         if (!vdrs.length)
+            $grid.append($('<p class="dim">').text(tr.error.noData));
+      }
+      catch (e) { toastError(e); }
+   }
+
+   function vdrCard(v) {
+      const isEpgd = v.uuid === 'epgd';
+      const kv = [];
+      const add = (label, value) => value !== undefined && value !== null && value !== '' && kv.push($('<dt>').text(label), $('<dd>').append(value));
+
+      add('UUID', $('<code class="small">').text(v.uuid));
+      add('Version', v.version);
+      add('Status', v.state);
+      add('Master', v.master === 'Y' ? 'ja' : v.master === 'n' ? 'nein' : null);
+      add('Aktiv', v.lastupdate ? $('<span>').attr('title', formatDateTime(v.lastupdate)).text(agoText(v.lastupdate)) : null);
+      add('IP', v.ip);
+      add('MAC', v.mac);
+      add('SVDRP-Port', v.svdrp);
+      add('osd2web-Port', isEpgd ? null : v.osd2webp > 0 ? $('<a target="_blank" rel="noopener">').attr('href', 'http://' + v.ip + ':' + v.osd2webp).text(v.osd2webp)
+         : $('<span class="dim">').text('<unknown>'));
+      add('PID', v.pid);
+      add('DB-API', v.dbapi);
+      add('Tuner', v.tunercount);
+      add('Im Web freigegeben', isEpgd ? null : v.shareinweb ? 'ja' : 'nein');
+      add('Gemeinsame Aufnahmen', isEpgd ? null : v.usecommonrecfolder ? 'ja' : 'nein');
+      add('Videoverzeichnis', v.videodir);
+
+      if (v.videototal) {
+         const used = v.videototal - (v.videofree || 0);
+         add('Belegung', $('<div class="vdr-disk">').append(
+            $('<div class="progress">').append($('<div>').css('width', Math.round(used * 100 / v.videototal) + '%')),
+            $('<span class="dim small">').text(sizeText(used) + ' von ' + sizeText(v.videototal) + ', frei ' + sizeText(v.videofree || 0))));
+      }
+
+      return $('<section class="card settings-card vdr-card">').toggleClass('attached', v.state === 'attached').append(
+         $('<h3 class="vdr-head">').append(icon(isEpgd ? 'disk' : 'tv'), $('<span>').text(v.name || v.uuid),
+            $('<span class="badge vdr-state">').text(isEpgd ? 'epgd' : v.state || '?')),
+         $('<dl class="kv">').append(kv),
+         isEpgd ? null : $('<div class="btn-row">').append(
+            remoteButton(v),
+            v.mac ? $('<button type="button" class="btn btn-ok">').append(icon('play'), $('<span>').text('Wecken (WOL)')).on('click', () => wol(v)) : null,
+            $('<span class="dl-spacer">'),
+            $('<button type="button" class="btn btn-danger">').append(icon('trash'), $('<span>').text(tr.del)).on('click', () => remove(v))));
+   }
+
+   // remote control of the osd2web plugin (<ip>:<port>/fb.html), enabled if the VDR
+   //   is attached and the osd2web listener answers
+
+   function remoteButton(v) {
+      const $btn = $('<button type="button" class="btn" disabled>').append(icon('remote'), $('<span>').text('Fernbedienung'))
+         .attr('title', 'osd2web nicht verfügbar');
+
+      if (v.state !== 'attached' || !(v.osd2webp > 0) || !v.ip)
+         return $btn;
+
+      const url = 'http://' + v.ip + ':' + v.osd2webp + '/fb.html';
+
+      $btn.attr('title', 'Prüfe osd2web …');
+
+      fetch(url, { mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(4000) })
+         .then(() => $btn.prop('disabled', false).attr('title', 'Fernbedienung von ' + (v.name || v.ip) + ' öffnen')
+            .on('click', () => openRemote(v, url)))
+         .catch(() => $btn.attr('title', 'osd2web auf ' + v.ip + ':' + v.osd2webp + ' nicht erreichbar'));
+
+      return $btn;
+   }
+
+   function openRemote(v, url) {
+      dialog({
+         title: 'Fernbedienung – ' + (v.name || v.ip),
+         cls: 'dlg-remote',
+         content: $('<iframe class="remote-frame" allow="fullscreen">').attr('src', url).attr('title', 'Fernbedienung')
+      });
+   }
+
+   async function wol(v) {
+      try {
+         const res = await busy(get('data/wakeupvdr?uuid=' + encodeURIComponent(v.uuid)));
+         toast('VDR ' + v.name + ': ' + (res.result?.message || 'done'));
+      }
+      catch (e) { toastError(e); }
+   }
+
+   async function remove(v) {
+      const warn = v.state === 'attached' ? '\nDer VDR ist verbunden und trägt sich wieder ein!' : '';
+
+      if (!await confirmBox(tr.confirmDelete + ' (VDR ' + v.name + ', ' + v.ip + ')' + warn))
+         return;
+
+      try {
+         const res = await busy(post('data/delete-vdrs', { delete: [v.uuid] }));
+         toast(res.result?.message || tr.dataDeleted);
+         await loadVdrs().catch(() => {});      // VDR selection of the top bar
+         load();
+      }
+      catch (e) { toastError(e); }
    }
 
    load();

@@ -6,6 +6,7 @@ import { busy, toast, toastError } from './ui.js';
 import { formatTime, formatDate, formatDateTime, progressOf, textToHtml, leadText, pipeList, nowUnix } from './utils.js';
 import { channelBadge, switchChannel, createSwitchTimer } from './data.js';
 import { icon, iconButton } from './icons.js';
+import { playRecording } from './player.js';
 import { openTimerDialog, openSearchTimerDialog, searchEvents, renderResults } from './timerDialog.js';
 import tr from '../lang/de.js';
 
@@ -126,6 +127,7 @@ function frame() {
    const $tools = $('<header class="dlg-head ed-toolbar">').append(
       iconButton('record', tre.record).addClass('ed-record').on('click', doRecord),
       iconButton('tv', tre.ch_switch).addClass('ed-play').on('click', doPlay),
+      iconButton('film', 'Im Browser abspielen').addClass('ed-stream').on('click', () => playRecording(event)),
       iconButton('repeat', tre.repeat).addClass('ed-repeat').on('click', () => {
          repeats = true;
          repeatsCache = null;
@@ -137,7 +139,8 @@ function frame() {
       iconButton('next', tre.eventNext).addClass('ed-next').on('click', () => doStep(1)),
       iconButton('edit', 'Umbenennen / Verschieben').addClass('ed-rec-edit').on('click', () => ctx.rename?.(ctx.rec)),
       iconButton('trash', tr.del).addClass('ed-rec-del btn-danger').on('click', () => ctx.remove?.(ctx.rec)),
-      iconButton('close', tr.close).on('click', () => $dlg[0].close()));
+      iconButton('close', tr.close).addClass('ed-close').attr('autofocus', '')    // default button (Enter / Esc)
+         .on('click', () => $dlg[0].close()));
 
    $dlg.append($tools, $('<nav class="ed-tabs" role="tablist">'), $('<div class="dlg-body ed-body">'))
       .on('click', (ev) => { if (ev.target === $dlg[0]) $dlg[0].close(); })    // click on backdrop
@@ -214,7 +217,8 @@ function render() {
    $d.find('.ed-record').toggleClass('has-timer', !!e.timerid).toggle(hasRight(rights.timer))
       .attr('title', kind === 'event' ? tre.record : tr.pages.records.similarTimer);
    $d.find('.ed-play').toggle(!!playable).html(icon(isRec ? 'play' : 'tv'))
-      .attr('title', isRec ? tre.play : (isFuture ? tr.pages.timerList.newTimer + ': ' : '') + tre.ch_switch);
+      .attr('title', isRec ? tre.play + ' (VDR)' : (isFuture ? tr.pages.timerList.newTimer + ': ' : '') + tre.ch_switch);
+   $d.find('.ed-stream').toggle(isRec && hasRight(rights.recordings));
    $d.find('.ed-prev').toggle(isRec ? !!ctx.prev : kind === 'event' && e.starttime - 500 >= p.minEventTime);
    $d.find('.ed-next').toggle(isRec ? !!ctx.next : kind === 'event' && e.starttime + e.duration + 500 <= p.maxEventTime);
    $d.find('.ed-rec-edit').toggle(canEditRec && !!ctx.rename);
@@ -268,8 +272,10 @@ function render() {
 
    activate(tabs.find((t) => t.id === lastTab) || tabs[0]);
 
-   if (!$d[0].open)
+   if (!$d[0].open) {
       $d[0].showModal();
+      $d.find('.ed-close')[0].focus();
+   }
 }
 
 function renderTop(e, sc, media, ep) {
