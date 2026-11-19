@@ -561,7 +561,7 @@ export function renderResults($target, res, opts = {}) {
             if (opts.onClick)
                return opts.onClick(e);
             const { showEvent } = await import('./eventDetail.js');
-            showEvent(e.id);
+            showEvent(e.id, { list: events.map((x) => x.id) });      // prev / next steps through the results
          })
          .on('keydown', (ev) => ev.key === 'Enter' && $(ev.currentTarget).trigger('click'))
          .appendTo($ul);

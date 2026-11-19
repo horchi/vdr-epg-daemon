@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.4"
+#define _VERSION     "1.4.5"
 #define VERSION_DATE "19.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-19: version 1.4.5 (horchi)
+   - Added:  web frontend, event details: swipe on touch devices to step to the previous / next event
 
 2026-11-19: version 1.4.4 (horchi)
    - Added:  web frontend, settings page 'VDRs' with all VDRs and their details, delete and wake on LAN

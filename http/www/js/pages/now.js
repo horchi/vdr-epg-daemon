@@ -91,7 +91,9 @@ export function render($content) {
             ev.stopPropagation();
             location.hash = '#magazine?ch=' + encodeURIComponent($(this).attr('data-channel'));
          })
-         .on('click', '.event-card', function () { showEvent($(this).attr('data-id')); })
+         .on('click', '.event-card', function () {        // prev / next in the dialog: the events of this page
+            showEvent($(this).attr('data-id'), { list: $page.find('.event-card:visible').get().map((c) => c.dataset.id) });
+         })
          .on('keydown', '.event-card', function (ev) { if (ev.key === 'Enter') $(this).trigger('click'); }));
 
    $content.empty().append($page);

@@ -459,7 +459,9 @@ function openDetail(r) {
    const i = list.indexOf(r);
    const canEdit = hasRight(rights.recordingsEdit);
 
-   showRecording(r, {
+   return showRecording(r, {
+      prevRec: i > 0 ? list[i - 1] : null,
+      nextRec: i >= 0 && i < list.length - 1 ? list[i + 1] : null,
       prev: i > 0 ? () => openDetail(list[i - 1]) : null,
       next: i >= 0 && i < list.length - 1 ? () => openDetail(list[i + 1]) : null,
       rename: canEdit ? () => renameDialog(r) : null,

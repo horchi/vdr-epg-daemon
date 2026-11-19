@@ -1077,7 +1077,7 @@ html:has(dialog[open]) { overflow: hidden; }
 
 /* ------------------------------------------------------------------------ event detail */
 
-.dlg-event { width: min(900px, calc(100vw - 24px)); max-width: none; height: calc(100dvh - 48px); }
+.dlg-event { width: min(900px, calc(100vw - 24px)); max-width: none; height: calc(100dvh - 48px); overflow-x: clip; }
 .ed-toolbar { padding-left: 10px; }
 .ed-toolbar .ed-record.has-timer { color: var(--danger); }
 .ed-tabs { display: flex; gap: 2px; padding: 0 12px; border-bottom: 1px solid var(--border); overflow-x: auto; scrollbar-width: none; flex: none; }
@@ -1094,6 +1094,8 @@ html:has(dialog[open]) { overflow: hidden; }
 .ed-overview-tab { display: flex; flex-direction: column; gap: 16px; }
 .ed-subhead { margin: 12px 0 4px; }
 .ed-body { flex: 1; display: flex; flex-direction: column; gap: 16px; min-width: 0; overflow-x: hidden; overflow-wrap: anywhere; }
+.ed-page { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--bg-elev); will-change: transform; }
+.ed-peek { position: absolute; visibility: hidden; overflow: hidden; pointer-events: none; }
 
 .ed-top { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 18px; }
 .ed-top:not(:has(.ed-img)) { grid-template-columns: minmax(0, 1fr); }

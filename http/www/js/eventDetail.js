@@ -19,15 +19,45 @@ let ctx = {};                  // recording: { prev(), next(), rename(rec), remo
 let lastTab = 'overview';      // keep the selected tab while stepping through events
 let repeats = false;           // show the 'Wiederholungen' tab (on demand via toolbar button)
 let repeatsCache = null;       // { title, res } – avoid searching again while browsing the repeats
+let peeks = {};                // touch: prefetched neighbors { '-1'|'1': { url, data, $pane } }
+let peekGen = 0;
+let adoptPage = null;          // prefetched page of the neighbor which is taken over by the next render()
 
-export async function showEvent(id) {
+// data of a prefetched neighbor (swipe) or load it
+
+function fetchData(url) {
+   const dir = [-1, 1].find((d) => peeks[d]?.url === url);
+
+   if (!dir)
+      return busy(get(url));
+
+   adoptPage = peeks[dir].$page;                     // its rendered page is reused, no flicker
+   delete peeks[dir];
+   return Promise.resolve(adoptPage.data('data'));
+}
+
+const eventAtUrl = (channelId, time) => 'data/event?' + new URLSearchParams({ channelid: channelId, time });
+const recordingUrl = (rec) => 'data/recording?' + new URLSearchParams({ starttime: rec.starttime, md5path: rec.md5path, owner: rec.owner || '' });
+
+// opts.list: event ids of the calling page, prev / next steps through them instead of the channel
+
+export async function showEvent(id, opts = {}) {
    repeats = false;
-   return open('data/event?id=' + encodeURIComponent(id));
+   return open(eventUrl(id), opts.list ? { list: opts.list.map(String) } : {});
+}
+
+const eventUrl = (id) => 'data/event?id=' + encodeURIComponent(id);
+
+// neighbor id in the list of the calling page (ctx.list)
+
+function listNeighbor(dir) {
+   const i = ctx.list.indexOf(String(event.id));
+   return i < 0 ? null : ctx.list[i + dir] ?? null;
 }
 
 export async function showEventAt(channelId, time) {
    repeats = false;
-   return open('data/event?' + new URLSearchParams({ channelid: channelId, time }));
+   return open(eventAtUrl(channelId, time));
 }
 
 // done timer (history) – shown like an event
@@ -59,16 +89,16 @@ export async function showDoneTimer(id) {
    }
 }
 
-async function open(url) {
+async function open(url, c = {}) {
    try {
-      const data = await busy(get(url));
+      const data = await fetchData(url);
 
       if (!data.event)
          return toast(tr.error.noData, { error: true });
 
       event = data.event;
       kind = 'event';
-      ctx = {};
+      ctx = c;
       render();
    }
    catch (e) {
@@ -81,20 +111,11 @@ async function open(url) {
 export async function showRecording(rec, opts = {}) {
    repeats = false;
    try {
-      const data = await busy(get('data/recording?' + new URLSearchParams({ starttime: rec.starttime, md5path: rec.md5path, owner: rec.owner || '' })));
-      const r = data.recording;
+      const data = await fetchData(recordingUrl(rec));
+      const r = prepRecording(data.recording, rec);
 
       if (!r)
          return toast(tr.error.noData, { error: true });
-
-      r.longdescription ||= r.description;
-      r.episode = { lang: r.episodelang, partname: r.episodecomppartname };
-      r.duration ||= rec.duration;
-      r.path = rec.folderPath || r.path;            // readable folder for display
-      r.vdruuid ||= rec.vdruuid;
-      r.imgid = rec.imgid;                          // only set by data/recordings if the image exists
-      delete r.id;
-      delete r.timerid;
 
       event = r;
       kind = 'rec';
@@ -104,6 +125,22 @@ export async function showRecording(rec, opts = {}) {
    catch (e) {
       toastError(e);
    }
+}
+
+function prepRecording(r, rec) {
+   if (!r)
+      return null;
+
+   r.longdescription ||= r.description;
+   r.episode = { lang: r.episodelang, partname: r.episodecomppartname };
+   r.duration ||= rec.duration;
+   r.path = rec.folderPath || r.path;            // readable folder for display
+   r.vdruuid ||= rec.vdruuid;
+   r.imgid = rec.imgid;                          // only set by data/recordings if the image exists
+   delete r.id;
+   delete r.timerid;
+
+   return r;
 }
 
 export const closeDetail = () => $dlg?.[0].open && $dlg[0].close();
@@ -142,7 +179,7 @@ function frame() {
       iconButton('close', tr.close).addClass('ed-close').attr('autofocus', '')    // default button (Enter / Esc)
          .on('click', () => $dlg[0].close()));
 
-   $dlg.append($tools, $('<nav class="ed-tabs" role="tablist">'), $('<div class="dlg-body ed-body">'))
+   $dlg.append($tools, $('<div class="ed-page ed-main">'))
       .on('click', (ev) => { if (ev.target === $dlg[0]) $dlg[0].close(); })    // click on backdrop
       .on('close', () => $dlg.find('.toasts, .busy').appendTo(document.body))
       .on('keydown', (ev) => {
@@ -152,7 +189,171 @@ function frame() {
          if (ev.key === 'ArrowRight' && $dlg.find('.ed-next').is(':visible')) doStep(1);
       });
 
+   initSwipe();
+
    return $dlg;
+}
+
+// touch: swipe left / right steps to the next / previous event (like the arrow keys)
+//  like the iPhone home screens: the prefetched neighbor (peek pane) moves in together with the content,
+//  if it is not loaded (yet) the content slides out and the new event slides in after loading
+
+function initSwipe() {
+   const ease = 'cubic-bezier(.2, .7, .3, 1)';      // starts with 3.5 x the average speed
+   let sw = null;               // { x, y, t, dx, dir, hist }  dir: null (undecided), 'h' or 'v'
+   let busyStep = false;        // slide animation / loading running
+   let raf = 0;
+
+   const page = () => $dlg.find('.ed-main')[0];
+
+   // horizontally scrollable element below the finger (tab bar, tables) -> leave the gesture to it
+
+   const hScrollable = (el) => {
+      for (; el && el !== $dlg[0]; el = el.parentElement)
+         if (el.scrollWidth > el.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(el).overflowX))
+            return true;
+      return false;
+   };
+
+   const canStep = (dir) => $dlg.find(dir < 0 ? '.ed-prev' : '.ed-next').is(':visible');
+   const place = (el, x, ms) => { el.style.transition = ms ? `transform ${ms}ms ${ease}` : 'none'; el.style.transform = x ? `translateX(${x}px)` : ''; };
+
+   // move the page to x, the neighbor pages move along at the left / right of it
+
+   const move = (x, ms) => {
+      const pg = page();
+      const w = pg.offsetWidth;
+
+      place(pg, x, ms);
+
+      for (const dir of [-1, 1]) {
+         const pane = peeks[dir]?.$page?.[0];
+
+         if (!pane)
+            continue;
+
+         Object.assign(pane.style, { top: pg.offsetTop + 'px', left: pg.offsetLeft + 'px', width: w + 'px', height: pg.offsetHeight + 'px' });
+
+         if (x !== 0)                                     // at 0 (snap back) it stays visible while moving out
+            pane.style.visibility = Math.sign(-x) === dir ? 'visible' : 'hidden';
+
+         place(pane, x + dir * w, ms);
+      }
+   };
+
+   const transitionEnd = (el, ms) => new Promise((res) => {
+      const done = () => { el.removeEventListener('transitionend', done); clearTimeout(tm); res(); };
+      const tm = setTimeout(done, ms + 50);
+      el.addEventListener('transitionend', done);
+   });
+
+   // duration to cover dist with the ease curve starting at the finger speed v (px/ms)
+
+   const duration = (dist, v) => Math.round(Math.min(380, Math.max(160, 3.5 * Math.abs(dist) / Math.max(Math.abs(v), 0.4))));
+
+   const step = async (dir, x, v) => {
+      const pg = page();
+      const w = pg.offsetWidth;
+
+      busyStep = true;
+
+      try {
+         if (peeks[dir]?.$page) {                         // neighbor is visible -> it slides in and is taken over
+            const ms = duration(w - Math.abs(x), v);
+            move(-dir * w, ms);
+            await transitionEnd(pg, ms);
+            await doStep(dir);
+            return;
+         }
+
+         const ms = duration(w - Math.abs(x), v);         // not loaded yet: slide out, load, slide in
+         move(-dir * w, ms);
+         await transitionEnd(pg, ms);
+         pg.style.visibility = 'hidden';
+
+         await doStep(dir);
+
+         const np = page();
+         place(np, dir * w * 0.4, 0);
+         np.getBoundingClientRect();                      // commit the start position
+         place(np, 0, 240);
+         await transitionEnd(np, 240);
+         np.style.transition = '';
+         pg.style.visibility = '';                        // load failed -> old page is still there
+         place(pg, 0, 0);
+      }
+      catch (e) { /* reported by doStep */ }
+      finally {
+         busyStep = false;
+      }
+   };
+
+   $dlg[0].addEventListener('touchstart', (ev) => {
+      sw = null;
+
+      if (busyStep || ev.touches.length !== 1 || $(ev.target).closest('input, textarea, select, video').length || hScrollable(ev.target))
+         return;
+
+      const t = ev.touches[0];
+      sw = { x: t.clientX, y: t.clientY, dx: 0, dir: null, hist: [] };
+   }, { passive: true });
+
+   $dlg[0].addEventListener('touchmove', (ev) => {
+      if (!sw || sw.dir === 'v')
+         return;
+
+      const t = ev.touches[0];
+      const dx = t.clientX - sw.x;
+      const dy = t.clientY - sw.y;
+
+      if (!sw.dir) {
+         if (Math.max(Math.abs(dx), Math.abs(dy)) < 8)
+            return;
+         sw.dir = Math.abs(dx) > Math.abs(dy) * 1.2 ? 'h' : 'v';
+         if (sw.dir === 'v')
+            return;
+         sw.x = t.clientX;                                // start following without a jump
+      }
+
+      ev.cancelable && ev.preventDefault();               // no vertical scrolling while swiping sideways
+
+      const now = performance.now();
+      sw.dx = t.clientX - sw.x;
+      sw.hist.push({ x: sw.dx, t: now });
+      while (sw.hist.length > 2 && now - sw.hist[0].t > 100)
+         sw.hist.shift();
+
+      if (!raf)
+         raf = requestAnimationFrame(() => {
+            raf = 0;
+            if (sw?.dir === 'h')
+               move(canStep(sw.dx < 0 ? 1 : -1) ? sw.dx : sw.dx * 0.2, 0);    // resistance if there is nothing to step to
+         });
+   }, { passive: false });
+
+   const end = () => {
+      const s = sw;
+      sw = null;
+
+      if (!s || s.dir !== 'h')
+         return;
+
+      cancelAnimationFrame(raf);
+      raf = 0;
+
+      const h = s.hist;
+      const v = h.length > 1 ? (h[h.length - 1].x - h[0].x) / Math.max(1, h[h.length - 1].t - h[0].t) : 0;   // px/ms of the last 100 ms
+      const dir = s.dx < 0 ? 1 : -1;
+      const flick = Math.abs(v) > 0.3 && Math.sign(v) === Math.sign(s.dx);
+
+      if (canStep(dir) && (flick || (Math.abs(s.dx) > page().offsetWidth / 3 && Math.sign(v) !== -Math.sign(s.dx))))
+         step(dir, s.dx, Math.sign(v) === Math.sign(s.dx) ? v : 0);
+      else
+         move(0, 220);                                    // snap back
+   };
+
+   $dlg[0].addEventListener('touchend', end);
+   $dlg[0].addEventListener('touchcancel', () => { sw = null; move(0, 220); });
 }
 
 // ---------------------------------------------------------------------------
@@ -190,12 +391,65 @@ async function replayRecording(r) {
    toast((state.vdrs[uuid]?.name || 'VDR') + ': ' + (res.result?.message || 'OK'));
 }
 
+// url of the previous / next event or recording
+
+function stepUrl(dir) {
+   if (kind === 'rec') {
+      const rec = dir < 0 ? ctx.prevRec : ctx.nextRec;
+      return rec ? recordingUrl(rec) : null;
+   }
+
+   if (kind === 'event' && ctx.list) {
+      const id = listNeighbor(dir);
+      return id ? eventUrl(id) : null;
+   }
+
+   return kind === 'event' ? eventAtUrl(event.channelid, dir < 0 ? event.starttime - 500 : event.starttime + event.duration + 500) : null;
+}
+
+// touch devices: load the neighbors in the background and render them as hidden peek panes for swiping
+
+function prefetchNeighbors() {
+   const gen = ++peekGen;
+
+   Object.values(peeks).forEach((p) => p?.$page?.remove());
+   peeks = {};
+
+   if (!navigator.maxTouchPoints)
+      return;
+
+   for (const dir of [-1, 1]) {
+      const url = $dlg.find(dir < 0 ? '.ed-prev' : '.ed-next').is(':visible') && stepUrl(dir);
+      const rec = dir < 0 ? ctx.prevRec : ctx.nextRec;
+      const k = kind;
+
+      url && get(url).then((data) => {
+         if (gen !== peekGen)
+            return;
+
+         const e = k === 'rec' ? prepRecording(data.recording, rec) : data.event;
+
+         if (!e)
+            return;
+
+         const $page = buildPage(e, repeats && !!ctx.keepRepeats).addClass('ed-peek').attr('aria-hidden', 'true').data('data', data).appendTo($dlg);
+         peeks[dir] = { url, $page };
+      }).catch(() => {});
+   }
+}
+
 function doStep(dir) {
    if (kind === 'rec')
       return dir < 0 ? ctx.prev?.() : ctx.next?.();
 
+   if (ctx.list) {
+      const id = listNeighbor(dir);
+      repeats &&= !!ctx.keepRepeats;
+      return id && open(eventUrl(id), ctx);
+   }
+
    const t = dir < 0 ? event.starttime - 500 : event.starttime + event.duration + 500;
-   showEventAt(event.channelid, t);
+   return showEventAt(event.channelid, t);
 }
 
 // ---------------------------------------------------------------------------
@@ -219,18 +473,65 @@ function render() {
    $d.find('.ed-play').toggle(!!playable).html(icon(isRec ? 'play' : 'tv'))
       .attr('title', isRec ? tre.play + ' (VDR)' : (isFuture ? tr.pages.timerList.newTimer + ': ' : '') + tre.ch_switch);
    $d.find('.ed-stream').toggle(isRec && hasRight(rights.recordings));
-   $d.find('.ed-prev').toggle(isRec ? !!ctx.prev : kind === 'event' && e.starttime - 500 >= p.minEventTime);
-   $d.find('.ed-next').toggle(isRec ? !!ctx.next : kind === 'event' && e.starttime + e.duration + 500 <= p.maxEventTime);
+   $d.find('.ed-prev').toggle(isRec ? !!ctx.prev : ctx.list ? !!listNeighbor(-1) : kind === 'event' && e.starttime - 500 >= p.minEventTime);
+   $d.find('.ed-next').toggle(isRec ? !!ctx.next : ctx.list ? !!listNeighbor(1) : kind === 'event' && e.starttime + e.duration + 500 <= p.maxEventTime);
    $d.find('.ed-rec-edit').toggle(canEditRec && !!ctx.rename);
    $d.find('.ed-repeat').toggle(hasRight(rights.searchTimer) && !!e.title);
    $d.find('.ed-rec-del').toggle(canEditRec && !!ctx.remove);
 
-   const $body = $d.find('.ed-body').empty().scrollTop(0);
+   // page (tab bar + tab panels), a prefetched page of a neighbor (swipe) is taken over
+
+   const $page = adoptPage || buildPage(e, repeats);
+
+   adoptPage = null;
+   $page.removeClass('ed-peek').removeAttr('aria-hidden style');
+   $d.find('.ed-main').not($page).replaceWith($page);
+   $page.addClass('ed-main');
+   $page.data('activate')(lastTab, true);
+
+   if (!$d[0].open) {
+      $d[0].showModal();
+      $d.find('.ed-close')[0].focus();
+   }
+
+   prefetchNeighbors();
+}
+
+// page of an event: tab bar and tab panels; $page.data('activate')(tabId, load)
+
+function buildPage(e, withRepeats) {
+   const tabs = buildTabs(e, withRepeats);
+   const $tabs = $('<nav class="ed-tabs" role="tablist">').toggle(tabs.length > 1);
+   const $body = $('<div class="dlg-body ed-body">');
+   const $page = $('<div class="ed-page">').append($tabs, $body);
+
+   for (const t of tabs) {
+      t.$btn = $('<button type="button" class="ed-tab" role="tab">').text(t.label).on('click', () => activate(t, true)).appendTo($tabs);
+      t.$panel = $('<div class="ed-panel" role="tabpanel">').append(t.$c).appendTo($body);
+   }
+
+   function activate(t, load) {
+      load && (lastTab = t.id);                   // not for the hidden pages of the neighbors
+      tabs.forEach((x) => { x.$btn.toggleClass('active', x === t).attr('aria-selected', x === t); x.$panel.toggle(x === t); });
+      $body.scrollTop(0);
+      load && t.$btn[0].isConnected && t.$btn[0].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
+      load && t.onShow?.();
+   }
+
+   const select = (id) => tabs.find((t) => t.id === id) || tabs[0];
+
+   activate(select(lastTab), false);
+   $page.data('activate', (id, load) => activate(select(id), load));
+
+   return $page;
+}
+
+// tabs of an event: [{ id, label, $c, onShow }]
+
+function buildTabs(e, withRepeats) {
    const sc = e.scraper?.movie || e.scraper?.serie || null;
    const media = sc?.media || {};
    const ep = e.episode || {};
-
-   // tabs: [{ id, label, $c, onShow }]
 
    const tabs = [{ id: 'overview', label: 'Übersicht', $c: $('<div class="ed-overview-tab">').append(renderTop(e, sc, media, ep), renderDescription(e, sc, ep)) }];
 
@@ -249,33 +550,13 @@ function render() {
    if (e.category === 'Serie' || (sc && !e.scraper.movie) || ep.episodename)
       tabs.push({ id: 'episodes', label: 'Episoden', ...renderConstabel(ep.episodename || e.title) });
 
-   if (repeats && hasRight(rights.searchTimer) && e.title)
+   if (withRepeats && hasRight(rights.searchTimer) && e.title)
       tabs.push({ id: 'repeats', label: tre.repeat, ...renderRepeats(e) });
 
    if (e.recordings?.length)
       tabs.push({ id: 'recs', label: tr.menu.records + ' (' + e.recordings.length + ')', $c: renderRecordings(e.recordings) });
 
-   const $tabs = $d.find('.ed-tabs').empty().toggle(tabs.length > 1);
-
-   for (const t of tabs) {
-      t.$btn = $('<button type="button" class="ed-tab" role="tab">').text(t.label).on('click', () => activate(t)).appendTo($tabs);
-      t.$panel = $('<div class="ed-panel" role="tabpanel">').append(t.$c).appendTo($body);
-   }
-
-   function activate(t) {
-      lastTab = t.id;
-      tabs.forEach((x) => { x.$btn.toggleClass('active', x === t).attr('aria-selected', x === t); x.$panel.toggle(x === t); });
-      $body.scrollTop(0);
-      t.$btn[0].scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
-      t.onShow?.();
-   }
-
-   activate(tabs.find((t) => t.id === lastTab) || tabs[0]);
-
-   if (!$d[0].open) {
-      $d[0].showModal();
-      $d.find('.ed-close')[0].focus();
-   }
+   return tabs;
 }
 
 function renderTop(e, sc, media, ep) {
@@ -548,8 +829,8 @@ function renderRepeats(e) {
             currentId: kind === 'event' ? e.id : undefined,
             onClick: (r) => {               // keep the tab, but show the overview of the selected repeat
                if (r.id != e.id || kind !== 'event') {
-                  lastTab = 'overview';
-                  open('data/event?id=' + encodeURIComponent(r.id));
+                  lastTab = 'overview';      // prev / next steps through the repeats, the tab stays
+                  open(eventUrl(r.id), { list: (res.events || []).map((x) => String(x.id)), keepRepeats: true });
                }
             }
          });
