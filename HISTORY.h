@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.5"
-#define VERSION_DATE "19.11.2026"
+#define _VERSION     "1.4.6"
+#define VERSION_DATE "20.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-20: version 1.4.6 (horchi)
+   - Bugfix: build on older systems (e.g. Ubuntu 20.04, glibc < 2.34), close_range() replaced by a fallback
 
 2026-11-19: version 1.4.5 (horchi)
    - Added:  web frontend, event details: swipe on touch devices to step to the previous / next event

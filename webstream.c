@@ -20,6 +20,8 @@
 #include <dirent.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <sys/syscall.h>
+#include <unistd.h>
 
 #include <string>
 #include <vector>
@@ -28,6 +30,28 @@
 #include <mutex>
 
 #include "httpd.h"
+
+//***************************************************************************
+// Close all file descriptors >= 'first' (in the child after fork)
+//   close_range() needs glibc >= 2.34 and kernel >= 5.9 (not on e.g. Ubuntu 20.04),
+//   fallback: close them one by one
+//***************************************************************************
+
+static void closeFdsFrom(int first)
+{
+#ifdef SYS_close_range
+   if (syscall(SYS_close_range, first, ~0U, 0) == 0)
+      return;
+#endif
+
+   long maxFd = sysconf(_SC_OPEN_MAX);
+
+   if (maxFd < 0 || maxFd > 65536)
+      maxFd = 65536;
+
+   for (int fd = first; fd < maxFd; fd++)
+      close(fd);
+}
 
 //***************************************************************************
 // Find program in PATH
@@ -555,7 +579,7 @@ int cEpgHttpd::doRecHlsStart(MHD_Connection* tcp, json_t* obj)
       int devNull = open("/dev/null", O_RDWR);
       dup2(devNull, STDIN_FILENO);
       dup2(devNull, STDOUT_FILENO);
-      close_range(3, ~0U, 0);
+      closeFdsFrom(3);
       execvp("ffmpeg", (char* const*)argv.data());
       _exit(127);
    }
