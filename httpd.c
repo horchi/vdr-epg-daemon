@@ -1862,9 +1862,12 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
          postData->memory[postData->size] = 0;
          postData->size++;
 
+         // the body is json as it is - no url unescaping, its path normalization
+         //   would e.g. turn 'http://' into 'http:/'
+
          data.size = postData->size;
          data.memory = (char*)malloc(data.size);
-         urlUnescape(data.memory, postData->memory);
+         memcpy(data.memory, postData->memory, data.size);
          delete postData;
 
          statusCode = singleton->performPostData(url, &data);

@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.10"
+#define _VERSION     "1.4.11"
 #define VERSION_DATE "21.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-21: version 1.4.11 (horchi)
+   - Bugfix: fixed store of '//' in config parameter
 
 2026-11-21: version 1.4.10 (horchi)
    - Added:  web frontend, EPG views refresh every minute (position and open dialogs are kept)
