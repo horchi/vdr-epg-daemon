@@ -890,7 +890,8 @@ int cEpgHttpd::initDb()
 
    // select *
    //   from timers where
-   //     state not in ('D','E')
+   //     state not in ('D','E','-')
+   //     and ifnull(action, '') <> 'D'     -- delete requested, not yet done by the vdr
    //     eventid = ? and channelid = ?
 
    selectTimerByEventId = new cDbStatement(timerDb);
@@ -899,6 +900,7 @@ int cEpgHttpd::initDb()
    selectTimerByEventId->bindAllOut();
    selectTimerByEventId->build(" from %s where ", timerDb->TableName());
    selectTimerByEventId->build(" %s not in ('D', 'E', '-')", timerDb->getField("STATE")->getDbName());
+   selectTimerByEventId->build(" and ifnull(%s, '') <> 'D'", timerDb->getField("ACTION")->getDbName());
    selectTimerByEventId->bind("EVENTID", cDBS::bndIn | cDBS::bndSet, " and ");
    selectTimerByEventId->bind("CHANNELID", cDBS::bndIn | cDBS::bndSet, " and ");
 

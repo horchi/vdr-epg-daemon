@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.11"
+#define _VERSION     "1.4.12"
 #define VERSION_DATE "21.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-21: version 1.4.12 (horchi)
+   - Added:  timer: hours before start the WOL to take over the timer now configurable (default 48, 0 off)
 
 2026-11-21: version 1.4.11 (horchi)
    - Bugfix: fixed store of '//' in config parameter

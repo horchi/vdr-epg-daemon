@@ -399,6 +399,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
       getFieldFromJson(jInData, &timerRow, "PRIORITY");
       getFieldFromJson(jInData, &timerRow, "LIFETIME");
       getFieldFromJson(jInData, &timerRow, "CHILDLOCK");
+      getFieldFromJson(jInData, &timerRow, "WAKEUPHOURS");
       getFieldFromJson(jInData, &timerRow, "CHANNELID");
       getFieldFromJson(jInData, &timerRow, "DIRECTORY");
       getFieldFromJson(jInData, &timerRow, "TYPE");

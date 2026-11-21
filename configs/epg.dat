@@ -645,6 +645,7 @@ Table timers
    LIFETIME             ""                                       lifetime             Int          0 Data,
    VPS                  ""                                       vps                  Int          0 Data,
    CHILDLOCK            ""                                       childlock            Int          0 Data,
+   WAKEUPHOURS          "WOL hours before start, NULL 48, 0 off" wakeuphours          Int          0 Data,
    AUX                  ""                                       aux                  Ascii     1000 Data,
 
    AUTOTIMERNAME        "Bezeichung des Suchtimers"              autotimername        Ascii      100 Data,

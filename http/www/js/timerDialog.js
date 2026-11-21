@@ -204,6 +204,8 @@ export async function openTimerDialog(t = {}) {
    const $name = $('<input class="input">').val(t.name || '');
    const inactive = checkbox(trt.inactive, t.active === 0);
    const $vdr = vdrSelect(t.vdruuid ?? p.timerDefaultVDRuuid);
+   const $wakeup = $('<input type="number" class="input input-num" min="0" max="999" placeholder="48">').val(t.wakeuphours ?? '');
+   const $wakeupField = field('Wecken (Std. vorher)', $('<div class="row row-tight">').append($wakeup, helpButton('sTWakeup')));
    const isSerie = t.category === 'Serie';
    const rec = recordingOptions(t, {
       mode: isSerie ? p.namingModeSerie : p.namingModeMovie,
@@ -216,14 +218,18 @@ export async function openTimerDialog(t = {}) {
       field(tr.channel, $channel),
       isEvent ? null : $('<div class="row">').append(field(trt.recordTime, $start, 'grow'), field(trt.endTime, $end)),
       isEvent ? null : field('Wiederholen an', week.$el),
-      $('<div class="row">').append(field('VDR', $vdr, 'grow'), inactive.$el),
+      $('<div class="row">').append(field('VDR', $vdr, 'grow'), $wakeupField, inactive.$el),
       rec.$el,
       field(trs.searchName, $name));
 
+   // WOL only for recordings on a fixed VDR
+
    function sync() {
       $form.find('.only-rec').toggle(type === 'R');
+      $wakeupField.toggle(type === 'R' && !!$vdr.val());
    }
 
+   $vdr.on('change', sync);
    sync();
 
    function getData(validate = true) {
@@ -258,8 +264,11 @@ export async function openTimerDialog(t = {}) {
       else if (validate && type === 'V')
          return validationError(emptyField('VDR'), $vdr);
 
-      if (type === 'R')
+      if (type === 'R') {
          rec.get(data);
+         data.wakeuphours = $wakeup.val() !== '' ? parseInt($wakeup.val(), 10) : 48;
+         if (validate && !(data.wakeuphours >= 0)) return validationError(tr.error.invalid + ' (Wecken)', $wakeup);
+      }
 
       return data;
    }

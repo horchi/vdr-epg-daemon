@@ -249,6 +249,13 @@ export const sections = [
             <h5>bevorzugtes Sendeformat</h5>
             <p>Läuft eine Sendung auf einem SD- und einem HD-Sender, bestimmt die Reihenfolge (z.B. <i>HD,SD</i>), welche aufgenommen wird.</p>
          </div>
+         <div id="h_sTWakeup">
+            <h5>Wecken (Std. vorher)</h5>
+            <p>Nur bei einem festen VDR (nicht <i>Auto</i>) und Aufnahme: solange der VDR den Timer noch nicht übernommen hat,
+            weckt epgd ihn per Wake-on-LAN, sobald der Timer in weniger als dieser Anzahl Stunden beginnt.
+            Leer bedeutet 48, <i>0</i> schaltet das Wecken für diesen Timer ab.</p>
+            <p>Der VDR wird nur zur Übernahme geweckt; zur Aufnahme selbst muss er sich über seinen eigenen Wakeup-Mechanismus wecken.</p>
+         </div>
          <div id="h_sTNameMode">
             <h5>Ermittlung des Dateinamens</h5>
             <p>Der Dateiname wird – außer im Modus <i>VDR</i> – vom Python-Skript <code>/etc/epgd/recording.py</code> ermittelt und kann bereits Ordner enthalten.</p>

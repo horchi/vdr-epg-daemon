@@ -1898,16 +1898,18 @@ int cEpgd::updateSearchTimers(int force, const char* reason)
 
    for (int f = selectNotAssumedTimers->find(); f; f = selectNotAssumedTimers->fetch())
    {
-      // timer should start in the next
+      // timer should start in the next 'WAKEUPHOURS' hours (not set -> 48, 0 -> no wakeup)
 
-      if (timerDb->getIntValue("_STARTTIME") < time(0) + 2*tmeSecondsPerDay)
+      int hours = timerDb->getValue("WAKEUPHOURS")->isNull() ? 48 : timerDb->getIntValue("WAKEUPHOURS");
+
+      if (hours > 0 && timerDb->getIntValue("_STARTTIME") < time(0) + hours*tmeSecondsPerHour)
       {
          if (!timerDb->hasValue("VDRUUID", "any") && !timerDb->hasCharValue("TYPE", ttView))
          {
-            tell(eloInfo, "Info: Timer (%ld) for '%s' start in the next 48 hours, "
+            tell(eloInfo, "Info: Timer (%ld) for '%s' start in the next %d hours, "
                  "try to wakeup VDR to permit takeover",
                  timerDb->getIntValue("ID"),
-                 timerDb->getStrValue("FILE"));
+                 timerDb->getStrValue("FILE"), hours);
 
             wakeupVdr(timerDb->getStrValue("VDRUUID"));
          }
