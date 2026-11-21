@@ -6,7 +6,7 @@ import { busy, toastError, stickyBar } from '../ui.js';
 import { now, nowUnix, unixTime, formatTime, formatDate, progressOf, toLocalInput, fromLocalInput, textToHtml } from '../utils.js';
 import { channelBadge } from '../data.js';
 import { icon } from '../icons.js';
-import { foreignKey, ctrlScroll, tileInNextRow, focusTile } from '../gridtools.js';
+import { foreignKey, ctrlScroll, tileInNextRow, focusTile, autoRefresh, replaceBox } from '../gridtools.js';
 import { showEvent } from '../eventDetail.js';
 import { liveButton } from '../player.js';
 import { groupSelect, currentGroup, inGroup } from '../groupfilter.js';
@@ -15,6 +15,8 @@ import tr from '../../lang/de.js';
 let current = { type: '@Now', time: 0 };
 let $page = null;
 let lastEvents = [];
+let loadSeq = 0;                      // only the answer of the last request is shown
+let stopRefresh = null;
 
 // profile.quickTimes: 'Label=!?Value~Label=Value...'; value is 'HH:MM' or '@searchtimer'
 
@@ -99,11 +101,14 @@ export function render($content) {
 
    $content.empty().append($page);
    $(document).on('keydown.nowpage', onKey);
+   stopRefresh = autoRefresh(() => setTime(current.type, current.time, true));
    setTime(current.type, current.time);
 }
 
 export function destroy() {
    $(document).off('.nowpage');
+   stopRefresh?.();
+   stopRefresh = null;
    $page = null;
 }
 
@@ -139,7 +144,9 @@ function onKey(ev) {
       window.scrollTo(0, 0);                      // back to the toolbar too
 }
 
-async function setTime(type, time) {
+// silent: periodic refresh – no busy indicator and error toasts, unchanged cards stay
+
+async function setTime(type, time, silent = false) {
    let url, body;
 
    if (type === '@Now' || type === '@time') {
@@ -163,7 +170,11 @@ async function setTime(type, time) {
    if (!$page)
       return;
 
-   $page.find('input[type=datetime-local]').val(toLocalInput(current.time));
+   const $time = $page.find('input[type=datetime-local]');
+
+   if (!silent || !$time.is(':focus'))                // don't disturb typing
+      $time.val(toLocalInput(current.time));
+
    // mark the current selection: @Now/@Next, a quick search or a quick time matching the time
 
    const sel = type !== '@time' ? type
@@ -178,31 +189,76 @@ async function setTime(type, time) {
     : type === '@time' ? formatDate(current.time, 'long') + ' ' + formatTime(current.time) + ' ' + tr.oClock
     : tr.menu.search + ': ' + $page.find('button[data-type="' + type + '"]').text());
 
+   const seq = ++loadSeq;
+
    try {
-      const data = await busy(body ? post(url, body) : get(url));
-      renderEvents(data.events || []);
+      const req = body ? post(url, body) : get(url);
+      const data = await (silent ? req : busy(req));
+
+      if ($page && seq === loadSeq)
+         renderEvents(data.events || []);
    }
    catch (e) {
-      toastError(e);
+      if (!silent)
+         toastError(e);
    }
 }
 
 // the channel group filter applies to the time based lists, not to the search results
 
+//   unchanged cards are kept (no flicker of the images, focus and scroll position stay),
+//   only new / changed ones are inserted, the ones which are gone removed
+
 function renderEvents(events) {
-   const $ul = $page.find('.event-grid').empty();
+   const $ul = $page.find('.event-grid');
+   const ul = $ul[0];
    const g = current.type[0] === '@' && !['@Now', '@Next', '@time'].includes(current.type) ? '' : currentGroup('now');
+   const old = new Map($ul.children('.event-card').get().map((c) => [c.dataset.id, c]));
 
    lastEvents = events;
    events = events.filter((e) => inGroup(e.channelid, g));
+   $ul.children(':not(.event-card)').remove();
 
    if (!events.length) {
-      $ul.append($('<li class="empty">').text(tr.error.noData));
+      $ul.empty().append($('<li class="empty">').text(tr.error.noData));
       return;
    }
 
-   for (const e of events)
-      $ul.append(eventCard(e));
+   const ids = new Set(events.map((e) => String(e.id)));
+
+   for (const [id, c] of old)
+      if (!ids.has(id))
+         $(c).remove();
+
+   const focused = document.activeElement;
+   let pos = ul.firstElementChild;
+
+   for (const e of events) {
+      const sig = JSON.stringify(e) + (progressOf(e.starttime, e.duration) !== null);
+      let card = old.get(String(e.id));
+
+      if (card && $(card).data('sig') !== sig)
+         card = replaceBox(card, eventCard(e).data('sig', sig));
+      else if (!card)
+         card = eventCard(e).data('sig', sig)[0];
+      else
+         updateProgress(card, e);
+
+      if (card !== pos)
+         ul.insertBefore(card, pos);       // only moved if the order changed
+
+      pos = card.nextElementSibling;
+   }
+
+   if (focused?.isConnected && document.activeElement !== focused)
+      focused.focus({ preventScroll: true });
+}
+
+function updateProgress(card, e) {
+   const p = progressOf(e.starttime, e.duration);
+
+   if (p !== null)
+      $(card).find('.progress > div').css('width', p + '%');
 }
 
 function eventCard(e) {

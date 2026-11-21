@@ -10,7 +10,7 @@ import { get, mediaUrl } from '../api.js';
 import { busy, toastError } from '../ui.js';
 import { nowUnix, unixTime, toDate, formatTime, formatDate, toLocalInput, fromLocalInput, progressOf, leadText } from '../utils.js';
 import { channelBadge } from '../data.js';
-import { quickTimes, quickTimeAt, timeOnDay, foreignKey, ctrlScroll } from '../gridtools.js';
+import { quickTimes, quickTimeAt, timeOnDay, foreignKey, ctrlScroll, autoRefresh, mergeEvents } from '../gridtools.js';
 import { icon, iconButton } from '../icons.js';
 import { showEvent } from '../eventDetail.js';
 import { liveButton } from '../player.js';
@@ -44,9 +44,9 @@ export function render($content, params = {}) {
       gridStart: unixTime(d),
       gridEnd: p.maxEventTime,
       channels: filterChannels(state.channelOrder.filter((id) => state.channels[id]?.visible & 1), 'timeline'),
-      rows: {},                                             // channelid -> { $lane, $row, ids:Set, blocks:Map(block -> load promise) }
+      rows: {},                                             // channelid -> { $lane, $head, els:Map(id -> element), blocks:Map(block -> load promise) }
       navTime: null,                                        // keyboard: time column kept while moving up / down
-      timer: null,
+      stopRefresh: null,
       loadTimer: null,
       raf: 0
    };
@@ -110,7 +110,7 @@ export function render($content, params = {}) {
       const $head = $('<div class="tl-head">').css('grid-row', row).append(channelBadge(id, { showName: false }));
       const $lane = $('<div class="tl-lane">').attr('data-channel', id).css('grid-row', row);
 
-      m.rows[id] = { $head, $lane, ids: new Set(), blocks: new Map() };
+      m.rows[id] = { $head, $lane, els: new Map(), blocks: new Map() };
       $grid.append($head, $lane);
    }
 
@@ -137,7 +137,7 @@ export function render($content, params = {}) {
       return m.$scroll.empty().append($('<p class="empty">').text(tr.error.noData));
 
    updateNow();
-   m.timer = setInterval(updateNow, 60000);
+   m.stopRefresh = autoRefresh(refresh);
    $(window).on('resize.timeline', () => { onScroll(); if (!infoFits()) closeInfo(); });
    $(document).on('keydown.timeline', onKey);
 
@@ -151,7 +151,7 @@ export function destroy() {
    if (!m)
       return;
 
-   clearInterval(m.timer);
+   m.stopRefresh?.();
    clearTimeout(m.loadTimer);
    clearTimeout(m.selTimer);
    cancelAnimationFrame(m.raf);
@@ -290,24 +290,57 @@ function visibleChannels() {
 // ---------------------------------------------------------------------------
 // data
 
+// visible channels and the range of the visible blocks (with one hour around)
+
+function visibleRange() {
+   const s = m.$scroll[0];
+   const from = tOf(s.scrollLeft) - 3600;
+   const to = tOf(s.scrollLeft + s.clientWidth) + 3600;
+
+   return {
+      channels: visibleChannels(),
+      first: Math.floor((Math.max(from, m.gridStart) - m.gridStart) / BLOCK),
+      last: Math.floor((Math.min(to, m.gridEnd) - m.gridStart) / BLOCK)
+   };
+}
+
 function loadVisible() {
    if (!m)
       return;
 
-   const s = m.$scroll[0];
-   const from = tOf(s.scrollLeft) - 3600;
-   const to = tOf(s.scrollLeft + s.clientWidth) + 3600;
-   const firstBlock = Math.floor((Math.max(from, m.gridStart) - m.gridStart) / BLOCK);
-   const lastBlock = Math.floor((Math.min(to, m.gridEnd) - m.gridStart) / BLOCK);
+   const { channels, first, last } = visibleRange();
    const jobs = [];
 
-   for (const id of visibleChannels())
-      for (let b = firstBlock; b <= lastBlock; b++)
+   for (const id of channels)
+      for (let b = first; b <= last; b++)
          if (!m.rows[id].blocks.has(b))
             jobs.push(loadBlock(id, b));
 
    if (jobs.length)
       busy(Promise.all(jobs));
+}
+
+// periodic refresh: the visible blocks are reloaded silently (scroll position, focus,
+//   info panel and dialogs stay), the others are marked to be reloaded when they get visible
+
+function refresh() {
+   if (!m)
+      return;
+
+   updateNow();
+
+   const { channels, first, last } = visibleRange();
+
+   for (const id of m.channels) {
+      const row = m.rows[id];
+
+      for (const b of [...row.blocks.keys()]) {
+         if (channels.includes(id) && b >= first && b <= last)
+            row.blocks.set(b, fetchBlock(row, id, b, true));
+         else
+            row.blocks.delete(b);
+      }
+   }
 }
 
 // load the block (once), the promise resolves when its events are in the lane
@@ -326,7 +359,7 @@ function loadBlockAt(channelId, t) {
       ? loadBlock(channelId, Math.floor((t - m.gridStart) / BLOCK)) : Promise.resolve();
 }
 
-async function fetchBlock(row, channelId, block) {
+async function fetchBlock(row, channelId, block, silent = false) {
    const start = m.gridStart + block * BLOCK;
    const end = Math.min(start + BLOCK, m.gridEnd);
    const page = m;
@@ -339,17 +372,16 @@ async function fetchBlock(row, channelId, block) {
       if (page !== m)            // page left / re-rendered meanwhile
          return;
 
-      for (const e of data.events || []) {
-         if (row.ids.has(e.id) || e.starttime + e.duration <= m.gridStart)
-            continue;
-
-         row.ids.add(e.id);
-         row.$lane.append(eventBox(e));
-      }
+      const events = (data.events || []).filter((e) => e.starttime + e.duration > m.gridStart);
+      mergeEvents(row.$lane, row.els, events, start, end, eventBox);
    }
    catch (e) {
-      page === m && row.blocks.delete(block);
-      if (e.status !== 404)
+      if (page !== m)
+         return;
+
+      row.blocks.delete(block);
+
+      if (!silent && e.status !== 404)
          toastError(e);
    }
 }

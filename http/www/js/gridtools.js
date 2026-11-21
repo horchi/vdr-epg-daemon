@@ -92,3 +92,75 @@ export function focusTile(el) {
    el.focus({ preventScroll: true });
    el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
+
+// ---------------------------------------------------------------------------
+// periodic refresh of the EPG pages (Programm, Magazin, Zeitleiste)
+//   fn runs every REFRESH seconds while the tab is visible, at once when the tab gets visible
+//   again after a longer time and after a timer was changed; returns the stop function
+
+export const REFRESH = 60;                   // [s]
+
+export function autoRefresh(fn) {
+   let last = Date.now();
+   const ns = '.autorefresh';
+   const run = () => { last = Date.now(); fn(); };
+   const timer = setInterval(() => { if (!document.hidden) run(); }, REFRESH * 1000);
+
+   $(document).on('visibilitychange' + ns, () => {
+      if (!document.hidden && Date.now() - last >= REFRESH * 1000)
+         run();
+   });
+
+   $(window).on('timers:changed' + ns, run);
+
+   return () => {
+      clearInterval(timer);
+      $(document).off(ns);
+      $(window).off(ns);
+   };
+}
+
+// replace the element by $new if it changed, keeps the keyboard focus
+
+export function replaceBox(el, $new) {
+   const focused = document.activeElement === el;
+
+   $(el).replaceWith($new);
+
+   if (focused)
+      $new[0].focus({ preventScroll: true });
+
+   return $new[0];
+}
+
+// merge the events of a loaded time slice [from, to) into a lane / column of a grid page:
+//   new ones are added, changed ones replaced, the ones which are gone removed
+//   els: Map event id -> element, box(e): builds the element
+
+export function mergeEvents($lane, els, events, from, to, box) {
+   const seen = new Set();
+
+   for (const e of events) {
+      const sig = JSON.stringify(e);
+      const el = els.get(e.id);
+
+      seen.add(e.id);
+
+      if (el && $(el).data('sig') === sig)
+         continue;
+
+      const $box = box(e).data('sig', sig);
+
+      if (el)
+         els.set(e.id, replaceBox(el, $box));
+      else
+         els.set(e.id, $box.appendTo($lane)[0]);
+   }
+
+   for (const [id, el] of els) {
+      if (!seen.has(id) && +el.dataset.start >= from && +el.dataset.start < to) {
+         $(el).remove();
+         els.delete(id);
+      }
+   }
+}

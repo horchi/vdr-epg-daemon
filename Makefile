@@ -65,13 +65,22 @@ tvdb: hlib tvdb.c
 eptest: eptest.c episode.c
 	$(CC) $(DEFINES) eptest.c episode.c svdrpclient.c -L./lib -lhorchi $(DLIBS) -o $@
 
-hlib:
+hlib: $(HLIBDEP)
+
+# the lib is always checked by its own Makefile, the binaries are only linked
+#   again if it (or an object) really changed - not with every make / make install
+
+$(HLIBDEP): FORCE
 	(cd lib && $(MAKE) lib)
 
-$(TARGET) : hlib $(OBJS)
+FORCE:
+
+.PHONY: hlib FORCE
+
+$(TARGET) : $(HLIBDEP) $(OBJS)
 	$(CC) -rdynamic $(OBJS) $(DLIBS) -o $@
 
-$(HTTPTARGET) : hlib $(HTTPOBJS)
+$(HTTPTARGET) : $(HLIBDEP) $(HTTPOBJS)
 	$(CC) -rdynamic $(HTTPOBJS) $(HTTPLIBS) -o $@
 
 lv:
@@ -107,7 +116,7 @@ restart: install
 install-epgd: hlib $(TARGET) $(HTTPTARGET) install-scripts install-config install-plugins
 	install -D $(TARGET) $(_BINDEST)/
 
-install-epghttpd: install-http
+install-epghttpd: $(HTTPTARGET) install-http
 	install -D $(HTTPTARGET) $(_BINDEST)/
 
 install-epglv:

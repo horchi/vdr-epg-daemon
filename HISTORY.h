@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.9"
+#define _VERSION     "1.4.10"
 #define VERSION_DATE "21.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2026-11-21: version 1.4.10 (horchi)
+   - Added:  web frontend, EPG views refresh every minute (position and open dialogs are kept)
+   - Added:  web frontend, settings: invalid values are marked while typing, with a hint to the format
+   - Bugfix: 'make install' linked epgd and epghttpd again
 
 2026-11-21: version 1.4.9 (horchi)
    - Added:  web frontend, settings: '?' buttons with an explanation of each setting

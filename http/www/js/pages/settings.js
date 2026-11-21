@@ -801,6 +801,12 @@ const helpAlias = {
    logoSuffix: 'logo', logoById: 'logo', logoUpperCase: 'logo', logoShowName: 'logo'
 };
 
+// what a valid value of the parameter looks like
+
+function formatHint(p) {
+   return trp.system.paramFormats?.[p.name] || 'Format: ' + p.valexp;
+}
+
 function systemTab($body) {
    (async () => {
       let params;
@@ -876,6 +882,22 @@ function systemTab($body) {
             if (p.type === ptNum) $in.addClass('input-num').attr('inputmode', 'numeric');
             $ctl = $in;
             controls.push({ p, get: () => $in.val(), $in });
+
+            // check while typing, an invalid value is marked with a hint to the format
+
+            if (p.valexp) {
+               const re = new RegExp(p.valexp);
+               const $hint = $('<div class="field-error">').text(formatHint(p)).hide();
+               const check = () => {
+                  const ok = re.test($in.val());
+                  $in.toggleClass('invalid', !ok).attr('aria-invalid', ok ? null : 'true');
+                  $hint.toggle(!ok);
+               };
+
+               $in.on('input', check);
+               $ctl = $('<div class="field-check">').append($in, $hint);
+               check();
+            }
          }
 
          const topic = 'p_' + (helpAlias[p.name] || p.name);
@@ -900,7 +922,7 @@ function systemTab($body) {
 
                if (c.p.valexp && c.$in && !new RegExp(c.p.valexp).test(v)) {
                   c.$in.trigger('focus');
-                  return toast(tr.error.invalid + ': ' + (titles[c.p.name] || c.p.name), { error: true });
+                  return toast('Ungültiger Wert bei „' + (titles[c.p.name] || c.p.name) + '“: ' + formatHint(c.p), { error: true });
                }
 
                list.push({ name: c.p.name, value: v, owner: c.p.owner });

@@ -270,6 +270,16 @@ export default {
                     minEventTime: "EPG-Daten vorhanden ab",
                     maxEventTime: "EPG-Daten vorhanden bis"
                 },
+                // shown below a field with an invalid value (else the expression of the backend)
+                paramFormats: {
+                    liveStreamUrl: "muss mit http:// oder https:// beginnen, z.B. http://vdr:3000/TS/ (leer = aus)",
+                    logoSuffix: "1 bis 5 Zeichen, z.B. png",
+                    timerJobFailedHistory: "eine Zahl von 0 bis 999",
+                    messageHistory: "eine Zahl von 0 bis 9999",
+                    recCompleteMinPct: "eine Zahl von 0 bis 100",
+                    recCompleteMinPctVps: "eine Zahl von 0 bis 100",
+                    mailScript: "höchstens 150 Zeichen"
+                },
                 // labels of the select boxes (values from the backend: data/parameters -> options)
                 paramOptions: {
                     streamEncoder: (o, all) => ({

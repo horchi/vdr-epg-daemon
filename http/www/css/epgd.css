@@ -961,6 +961,9 @@ img { max-width: 100%; }
 .sys-name { font-size: 13.5px; overflow-wrap: anywhere; }
 .sys-row .input { width: 100%; }
 .sys-row .input-num { width: 120px !important; }
+.input.invalid { border-color: var(--danger); }
+.input.invalid:focus-visible { outline-color: var(--danger); }
+.field-error { margin-top: 3px; font-size: 12px; color: var(--danger); }
 @media (max-width: 640px) {
    .sys-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
 }

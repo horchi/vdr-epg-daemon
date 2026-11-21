@@ -10,7 +10,7 @@ import { get, mediaUrl } from '../api.js';
 import { busy, toastError } from '../ui.js';
 import { nowUnix, unixTime, toDate, formatTime, formatDate, toLocalInput, fromLocalInput, textToHtml } from '../utils.js';
 import { channelBadge } from '../data.js';
-import { quickTimes, quickTimeAt, timeOnDay } from '../gridtools.js';
+import { quickTimes, quickTimeAt, timeOnDay, autoRefresh, mergeEvents } from '../gridtools.js';
 import { icon, iconButton } from '../icons.js';
 import { showEvent } from '../eventDetail.js';
 import { groupSelect, filterChannels } from '../groupfilter.js';
@@ -40,8 +40,8 @@ export function render($content, params = {}) {
       gridStart: unixTime(d),
       gridEnd: p.maxEventTime,
       channels: filterChannels(state.channelOrder.filter((id) => state.channels[id]?.visible & 1), 'magazine'),
-      cols: {},                                             // channelid -> { $col, ids:Set, blocks:Set }
-      timer: null,
+      cols: {},                                             // channelid -> { $col, els:Map(id -> element), blocks:Set }
+      stopRefresh: null,
       loadTimer: null,
       raf: 0
    };
@@ -95,7 +95,7 @@ export function render($content, params = {}) {
 
    for (const [i, id] of m.channels.entries()) {
       const $col = $('<div class="mag-col">').attr('data-channel', id).css('grid-column', i + 2);
-      m.cols[id] = { $col, ids: new Set(), blocks: new Set() };
+      m.cols[id] = { $col, els: new Map(), blocks: new Set() };
       $grid.append($col);
    }
 
@@ -117,7 +117,7 @@ export function render($content, params = {}) {
       return m.$scroll.empty().append($('<p class="empty">').text(tr.error.noData));
 
    updateNow();
-   m.timer = setInterval(updateNow, 60000);
+   m.stopRefresh = autoRefresh(refresh);
    $(window).on('resize.magazine', onScroll);
 
    scrollToTime(Number(params.time) || nowUnix());
@@ -130,7 +130,7 @@ export function destroy() {
    if (!m)
       return;
 
-   clearInterval(m.timer);
+   m.stopRefresh?.();
    clearTimeout(m.loadTimer);
    cancelAnimationFrame(m.raf);
    $(window).off('.magazine');
@@ -269,19 +269,29 @@ function visibleChannels() {
 // ---------------------------------------------------------------------------
 // data
 
+// visible channels and the range of the visible blocks (with one hour around)
+
+function visibleRange() {
+   const s = m.$scroll[0];
+   const from = tOf(s.scrollTop) - 3600;
+   const to = tOf(s.scrollTop + s.clientHeight) + 3600;
+
+   return {
+      channels: visibleChannels(),
+      first: Math.floor((Math.max(from, m.gridStart) - m.gridStart) / BLOCK),
+      last: Math.floor((Math.min(to, m.gridEnd) - m.gridStart) / BLOCK)
+   };
+}
+
 function loadVisible() {
    if (!m)
       return;
 
-   const s = m.$scroll[0];
-   const from = tOf(s.scrollTop) - 3600;
-   const to = tOf(s.scrollTop + s.clientHeight) + 3600;
-   const firstBlock = Math.floor((Math.max(from, m.gridStart) - m.gridStart) / BLOCK);
-   const lastBlock = Math.floor((Math.min(to, m.gridEnd) - m.gridStart) / BLOCK);
+   const { channels, first, last } = visibleRange();
    const jobs = [];
 
-   for (const id of visibleChannels())
-      for (let b = firstBlock; b <= lastBlock; b++)
+   for (const id of channels)
+      for (let b = first; b <= last; b++)
          if (!m.cols[id].blocks.has(b))
             jobs.push(loadBlock(id, b));
 
@@ -289,7 +299,30 @@ function loadVisible() {
       busy(Promise.all(jobs));
 }
 
-async function loadBlock(channelId, block) {
+// periodic refresh: the visible blocks are reloaded silently (scroll position and
+//   dialogs stay), the others are marked to be reloaded when they get visible
+
+function refresh() {
+   if (!m)
+      return;
+
+   updateNow();
+
+   const { channels, first, last } = visibleRange();
+
+   for (const id of m.channels) {
+      const col = m.cols[id];
+
+      for (const b of [...col.blocks]) {
+         if (channels.includes(id) && b >= first && b <= last)
+            loadBlock(id, b, true);
+         else
+            col.blocks.delete(b);
+      }
+   }
+}
+
+async function loadBlock(channelId, block, silent = false) {
    const col = m.cols[channelId];
    const start = m.gridStart + block * BLOCK;
    const end = Math.min(start + BLOCK, m.gridEnd);
@@ -305,17 +338,16 @@ async function loadBlock(channelId, block) {
       if (page !== m)            // page left / re-rendered meanwhile
          return;
 
-      for (const e of data.events || []) {
-         if (col.ids.has(e.id) || e.starttime + e.duration <= m.gridStart)
-            continue;
-
-         col.ids.add(e.id);
-         col.$col.append(eventBox(e));
-      }
+      const events = (data.events || []).filter((e) => e.starttime + e.duration > m.gridStart);
+      mergeEvents(col.$col, col.els, events, start, end, eventBox);
    }
    catch (e) {
+      if (page !== m)
+         return;
+
       col.blocks.delete(block);
-      if (e.status !== 404)
+
+      if (!silent && e.status !== 404)
          toastError(e);
    }
 }
