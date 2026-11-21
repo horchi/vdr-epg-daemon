@@ -59,13 +59,37 @@ export function showHelp(topic) {
    const $topic = $all.find('#h_' + topic);
    const section = sections.find((s) => s.id === topic);
 
-   dialog({
+   // a table row (e.g. one parameter in a table of settings) -> heading + text
+
+   const $text = $topic.is('tr') ? [$('<h5>').html($topic.children('th').html()), $('<p>').html($topic.children('td').html())]
+      : $topic.length ? $topic.children().clone() : section ? $(section.html) : $('<p>').text('Keine Hilfe vorhanden.');
+
+   const $dlg = dialog({
       title: tr.menu.help, cls: 'dlg-help',
-      content: $('<div class="help-popup">').append(
-         $topic.length ? $topic.children().clone() : section ? $(section.html) : $('<p>').text('Keine Hilfe vorhanden.'),
-         $('<p class="small">').append($('<a>').attr('href', '#help?t=' + (section ? topic : sectionOf(topic))).text('Ganze Hilfe öffnen …')
-            .on('click', function () { $(this).closest('dialog')[0].close(); })))
+      content: $('<div class="help-popup">').append($text,
+         $('<p class="small">').append($('<a class="help-full">').attr('href', '#help?t=' + (section ? topic : sectionOf(topic))).text('Ganze Hilfe öffnen …')))
    });
+
+   // links to other help topics open them in the dialog (the page behind, e.g. a form, stays as it is),
+   //   other links inside the app close the dialog
+
+   $dlg.on('click', 'a[href^="#"]', function (ev) {
+      const href = $(this).attr('href');
+      const m = !$(this).hasClass('help-full') && href.match(/^#help\?t=([\w-]+)$/);
+
+      $dlg[0].close();
+
+      if (m) {
+         ev.preventDefault();
+         showHelp(m[1]);
+      }
+   });
+}
+
+// is there a help text for topic?
+
+export function hasHelp(topic) {
+   return sections.some((s) => s.id === topic || s.html.includes('id="h_' + topic + '"'));
 }
 
 function sectionOf(topic) {

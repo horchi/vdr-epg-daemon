@@ -44,17 +44,8 @@ Apr 06 08:35:23 fc24 systemd[1]: Started MariaDB 10.1 database server.
 
 [root@fc23 tmp]# dnf install vdr-scraper2vdr vdr-epg2vdr vdr-epg-daemon
 
-- create mysql root password for epgd-tool and save it in the root folder
-
-[root@fc23 tmp]# mysqladmin -u root -p password "password"
-[root@fc23 tmp]# mkdir -p ~/.ssh
-[root@fc23 tmp]# echo 'export PASSWORD="password"' > ~/.ssh/mysqlpasswd
-
-- create new mysql database and user with the helper script epgd-tool
-
-[root@fc23 tmp]# epgd-tool -fix-cnf
-[root@fc23 tmp]# epgd-tool -new-db
-[root@fc23 tmp]# epgd-tool -new-u
+- create the database and the user epg2vdr and adjust the bind address
+  as described in the README.md, section 'MariaDB Setup'
 
 - customize the channelmap.conf
 

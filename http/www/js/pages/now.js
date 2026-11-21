@@ -29,7 +29,7 @@ function quickTimes() {
    return list;
 }
 
-// 'HH:MM' -> unix time; if more than one hour in the past -> tomorrow (as the old UI)
+// 'HH:MM' -> unix time; if more than one hour in the past -> tomorrow
 
 function timeOfToday(hhmm) {
    const [h, m] = hhmm.split(':').map(Number);

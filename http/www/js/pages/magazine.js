@@ -16,7 +16,7 @@ import { showEvent } from '../eventDetail.js';
 import { groupSelect, filterChannels } from '../groupfilter.js';
 import tr from '../../lang/de.js';
 
-const SEC_PER_PX = 30;                // 2px per minute (as the old UI)
+const SEC_PER_PX = 30;                // 2px per minute
 const BLOCK = 6 * 3600;               // load granularity
 const LOOKBACK = 6 * 3600;            // events starting up to 6h before a block may still run into it
 

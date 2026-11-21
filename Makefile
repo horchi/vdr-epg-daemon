@@ -97,6 +97,13 @@ dist: clean
 install: install-epgd install-epglv install-epghttpd
 	make install-$(INIT_SYSTEM)
 
+restart: install
+   ifeq ($(INIT_SYSTEM), systemd)
+		systemctl restart epgd epghttpd
+   else
+		@echo "INIT_SYSTEM is '$(INIT_SYSTEM)', restart epgd and epghttpd yourself"
+   endif
+
 install-epgd: hlib $(TARGET) $(HTTPTARGET) install-scripts install-config install-plugins
 	install -D $(TARGET) $(_BINDEST)/
 
@@ -107,12 +114,6 @@ install-epglv:
 	(cd epglv; $(MAKE) install)
 
 install-none:
-
-install-upstart:
-	cat contrib/epgd.conf | sed s:"<BINDEST>":"$(BINDEST)":g | sed s:"<PLGDEST>":"$(PLGDEST)":g | install -C -D /dev/stdin $(UPSTARTDEST)/epgd.conf
-	chmod a+r $(UPSTARTDEST)/epgd.conf
-	cat contrib/epghttpd.conf | sed s:"<BINDEST>":"$(BINDEST)":g | install -C -D /dev/stdin $(UPSTARTDEST)/epghttpd.conf
-	chmod a+r $(UPSTARTDEST)/epghttpd.conf
 
 install-systemd:
 	cat contrib/epgd.service | sed s:"<BINDEST>":"$(BINDEST)":g | sed s:"<AFTER>":"$(INIT_AFTER)":g | sed s:"<PLGDEST>":"$(PLGDEST)":g | install --mode=644 -C -D /dev/stdin $(SYSTEMDDEST)/epgd.service

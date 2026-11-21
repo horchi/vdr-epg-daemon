@@ -1,4 +1,4 @@
-// Small inline SVG icon set (24x24, stroke based) – replaces the fontello font
+// Small inline SVG icon set (24x24, stroke based)
 
 const paths = {
    record:  '<circle cx="12" cy="12" r="6" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="9.5"/>',

@@ -10,9 +10,7 @@ epglv/mysqlepglv.so
 epgd
 epghttpd
 PLUGINS/epgdata/libepgd-epgdata.so
-http/3rdParty/jquery-ui-1.11.4.custom
 eptst
-http/epgd.full.js
 lib/pytst
 /Make.config
 tvdb

@@ -11,12 +11,11 @@ const trl = tr.pages.login;
 const noLogin = { user: '', session: '', rights: 0 };
 
 // key storage: sessionStorage for this tab, localStorage if "always logged in"
-// (the old UI stored the persistent key in the 'login' cookie – still read as fallback)
 
 const store = {
    get() {
-      try { return sessionStorage.getItem('login') || localStorage.getItem('login') || cookieKey(); }
-      catch (e) { return cookieKey(); }
+      try { return sessionStorage.getItem('login') || localStorage.getItem('login'); }
+      catch (e) { return null; }
    },
    set(key, persistent) {
       try {
@@ -27,13 +26,8 @@ const store = {
    },
    clear() {
       try { sessionStorage.removeItem('login'); localStorage.removeItem('login'); } catch (e) { }
-      document.cookie = 'login=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
    }
 };
-
-function cookieKey() {
-   return document.cookie.match(/(?:^|;\s*)login=([^;]+)/)?.[1] || null;
-}
 
 function setLogin(login) {
    const old = state.login;

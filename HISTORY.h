@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.8"
+#define _VERSION     "1.4.9"
 #define VERSION_DATE "21.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,12 @@
 
 /*
  * ------------------------------------
+
+2026-11-21: version 1.4.9 (horchi)
+   - Added:  web frontend, settings: '?' buttons with an explanation of each setting
+   - Change: old web interface (/old/) removed
+   - Added:  make target 'restart' (install and restart of epgd and epghttpd)
+   - Change: upstart support removed
 
 2026-11-21: version 1.4.8 (horchi)
    - Bugfix: improved EPG merge speed (the picture merge mode 3 had high database load)

@@ -1,5 +1,4 @@
 // Generic UI helpers: toasts, modal dialogs, busy indicator
-// Replaces jQuery UI dialog / topInfo / loader
 
 import tr from '../lang/de.js';
 import { icon } from './icons.js';
@@ -24,7 +23,7 @@ export function stickyBar($bar) {
 }
 
 // ---------------------------------------------------------------------------
-// toast (old: epgd.utils.topInfo)
+// toast
 
 let $toasts = null;
 

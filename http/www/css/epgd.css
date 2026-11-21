@@ -159,7 +159,6 @@ img { max-width: 100%; }
 }
 .nav a:hover { background: var(--bg-hover); color: var(--text); text-decoration: none; }
 .nav a.active { background: var(--bg-hover); color: var(--accent); }
-.nav a.legacy { opacity: .65; }
 
 .topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .vdr-select { display: flex; align-items: center; gap: 6px; color: var(--text-dim); font-size: 13px; }
@@ -202,8 +201,6 @@ img { max-width: 100%; }
 }
 .page-info { color: var(--text-dim); margin: 4px 0 14px; }
 
-.page-legacy .card { max-width: 520px; margin: 40px auto; text-align: center; }
-.page-legacy h2 { display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 10px; }
 
 /* ------------------------------------------------------------------------ "Programm" grid */
 
@@ -1002,6 +999,10 @@ img { max-width: 100%; }
 .help-link .icon { width: 15px; height: 15px; }
 .help-btn .icon { width: 16px; height: 16px; }
 .form-section > summary .help-btn { margin-left: auto; }
+.has-help .help-btn { width: 22px; height: 22px; min-height: 0; padding: 0; margin: -4px 0 -4px 2px; vertical-align: middle; display: inline-flex; }
+.has-help .help-btn .icon { width: 15px; height: 15px; }
+.help-param h5 { margin: 12px 0 2px; }
+.help-param p { margin: 0 0 4px; }
 .form-section > summary .help-btn .icon { transform: none !important; }
 .dlg.dlg-help { width: min(560px, calc(100vw - 24px)); }
 .help-popup { line-height: 1.55; }

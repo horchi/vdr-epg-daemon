@@ -10,7 +10,7 @@ import { loadProfile, loadChannels, loadVdrs } from '../data.js';
 import { md5 } from '../lib/md5.js';
 import { getTheme, setTheme, accents } from '../theme.js';
 import tr from '../../lang/de.js';
-import { helpLink } from './help.js';
+import { helpLink, helpButton, hasHelp } from './help.js';
 
 const trp = tr.pages.profile;
 const trt = tr.pages.timerList;
@@ -93,6 +93,20 @@ async function saveParameters(list, labelOf = (p) => p.name) {
    }
 }
 
+// '?' button with the help of a setting (topic 'p_<name>' in the help section 'Einstellungen')
+//   behind the label of a field, a checkbox or a parameter row
+
+function withHelp($el, topic) {
+   if (!hasHelp(topic))
+      return $el;
+
+   const $label = $el.children('.field-label, span, .sys-name').first();
+   ($label.length ? $label : $el).append(helpButton(topic));
+   return $el.addClass('has-help');
+}
+
+const hfield = (label, $input, topic, cls) => withHelp(field(label, $input, cls), topic);
+
 const card = (title, ...content) => $('<section class="card settings-card">').append($('<h3>').text(title), ...content);
 const stripHtml = (s) => $('<div>').html(s).text();
 
@@ -118,21 +132,19 @@ function profileTab($body) {
       const vdrOpts = (auto) => (auto ? [{ value: '', label: 'Auto' }] : [])
          .concat(Object.values(state.vdrs).map((v) => ({ value: v.uuid, label: v.name })));
 
-      // start page: keys known by the old and the new UI
+      // start page (stored as 'menu_<page>')
 
       const startPages = ['now', 'magazine', 'timeline', 'timerList', 'records', 'search'].map((k) =>
          ({ value: 'menu_' + k, label: k === 'timerList' ? tr.menu.timer : tr.menu[k] }));
 
       const $start = select(startPages, val('startPage') || 'menu_now');
       const $defVdr = select([{ value: '', label: '(erster VDR)' }, ...vdrOpts(false)], val('defaultVDRuuid'));
-      const $firstDay = select(tr.dateTimePicker.dayNames, val('pickerFirstDay') || 1);
       const $quick = $('<textarea class="input" rows="5">').val(String(val('quickTimes')).replace(/~/g, '\n'));
       const $maxList = $('<input type="number" class="input input-num" min="1" max="999">').val(val('maxListEntries'));
       const $constabel = $('<input class="input" placeholder="https://www.eplists.de/eplist.cgi?action=login&login=…&secret=…">').val(val('constabelLoginPath'));
 
       controls.startPage = () => $start.val();
       controls.defaultVDRuuid = () => $defVdr.val() || '';
-      controls.pickerFirstDay = () => String($firstDay.val());
       controls.quickTimes = () => $quick.val().split('\n').map((l) => l.trim()).filter(Boolean).join('~');
       controls.maxListEntries = () => $maxList.val();
       controls.constabelLoginPath = () => $constabel.val();
@@ -152,7 +164,7 @@ function profileTab($body) {
          sync();
          controls[name] = () => String($mode.val());
          controls[name + 'Template'] = () => $tpl.val();
-         return field(label, $('<div class="stack">').append($mode, $tpl));
+         return hfield(label, $('<div class="stack">').append($mode, $tpl), 'p_namingMode');
       });
 
       const $chFormat = $('<input class="input" placeholder="z.B. HD,SD">').val(val('chFormat'));
@@ -195,24 +207,23 @@ function profileTab($body) {
       $body.append($('<div class="settings-grid">').append(
          appearanceCard(),
          card('Oberfläche',
-            field('Startseite', $start),
-            field('Standard-VDR', $defVdr),
-            field('Erster Wochentag', $firstDay),
-            field('Schnellzeiten (eine pro Zeile)', $('<div class="stack">').append($quick,
+            hfield('Startseite', $start, 'p_startPage'),
+            hfield('Standard-VDR', $defVdr, 'p_defaultVDRuuid'),
+            hfield('Schnellzeiten (eine pro Zeile)', $('<div class="stack">').append($quick,
                $('<p class="dim small">').text('Bezeichnung=hh:mm, z.B. Primetime=20:15 – mit „!“ (Primetime=!20:15) keine Linie im Magazin. '
-                  + 'Jetzt=@Now, Danach=@Next, gespeicherte Suche=@Name'))),
-            field(stripHtml(trp.maxListEntries), $maxList),
-            field('Constabel-Login', $constabel)),
+                  + 'Jetzt=@Now, Danach=@Next, gespeicherte Suche=@Name')), 'p_quickTimes'),
+            hfield(stripHtml(trp.maxListEntries), $maxList, 'p_maxListEntries'),
+            hfield('Constabel-Login', $constabel, 'p_constabelLoginPath')),
          card(tr.pages.timer.timerList,
             ...naming,
-            $('<div class="row">').append(field(trt.chFormat, $chFormat, 'grow'), field('VDR', $timerVdr, 'grow'))),
+            $('<div class="row">').append(hfield(trt.chFormat, $chFormat, 'p_chFormat', 'grow'), hfield('VDR', $timerVdr, 'p_timerDefaultVDRuuid', 'grow'))),
          card('Benachrichtigungen',
-            field(trp.mailReceiver, $('<div class="row row-tight">').append($mail, $mailTest)),
+            hfield(trp.mailReceiver, $('<div class="row row-tight">').append($mail, $mailTest), 'p_mailReceiver'),
             field(trp.sendMessages, $('<div class="check-row">').append(mailTypes.map((m) => m.cb.$el)))),
          card('Suche, Aufnahmen & VDR',
-            searchAdv.$el,
-            field(trp.record.subFolderSort, $recSort),
-            sched.$el, notify.$el)),
+            withHelp(searchAdv.$el, 'p_searchAdv'),
+            hfield(trp.record.subFolderSort, $recSort, 'p_recordSubFolderSort'),
+            withHelp(sched.$el, 'p_startWithSched'), withHelp(notify.$el, 'p_osdTimerNotify'))),
          saveBar(async () => {
             const lines = $quick.val().split('\n').map((l) => l.trim()).filter(Boolean);
             const bad = lines.find((l) => !/^[^=]+=!?((([0-1]?[0-9]|2[0-4]):[0-5]?[0-9])|@\S*)$/.test(l));
@@ -783,6 +794,13 @@ function vdrsTab($body) {
 
 const ptNum = 0, ptTime = 1, ptBool = 2, ptAscii = 3, ptBitMask = 4;
 
+// parameters sharing one help text
+
+const helpAlias = {
+   recCompleteMinPctVps: 'recCompleteMinPct',
+   logoSuffix: 'logo', logoById: 'logo', logoUpperCase: 'logo', logoShowName: 'logo'
+};
+
 function systemTab($body) {
    (async () => {
       let params;
@@ -860,12 +878,14 @@ function systemTab($body) {
             controls.push({ p, get: () => $in.val(), $in });
          }
 
-         $table.append($('<div class="sys-row">').append($('<label class="sys-name">').text(titles[p.name] || p.name)
-            .attr('title', p.name + (p.valexp ? ' – Format: ' + p.valexp : '')), $ctl));
+         const topic = 'p_' + (helpAlias[p.name] || p.name);
+
+         $table.append($('<div class="sys-row">').append(withHelp($('<label class="sys-name">').append($('<span>').text(titles[p.name] || p.name))
+            .attr('title', p.name + (p.valexp ? ' – Format: ' + p.valexp : '')), topic), $ctl));
       }
 
       $body.append($('<div class="settings-grid settings-grid-1">').append(
-         card(tr.pages.login.label, nl.$el),
+         card(tr.pages.login.label, withHelp(nl.$el, 'p_needLogin')),
          card(trp.system.label, $table)),
          saveBar(async () => {
             const list = [];

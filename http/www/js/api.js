@@ -103,7 +103,7 @@ export const get = (path, opts) => request(path, opts);
 export const qs = (params) => Object.entries(params).map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v ?? '')).join('&');
 export const post = (path, body, opts) => request(path, { ...opts, method: 'POST', body });
 
-// fire & forget server side logging (like the old UI)
+// fire & forget server side logging
 
 export function log(message, level = 0) {
    console.error(message);

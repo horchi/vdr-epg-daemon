@@ -41,22 +41,7 @@ rc-update add mysql default
 
 
 
-Falls noch nicht geschehen, das root Passwort f?r MySQL vergeben:
-
-mysqladmin -u root -p password "WUNSCHPASSWORT"  
-
-
-
-Man kann es dann, der Einfachheit halber, im root Verzeichnis speichern:
-
-mkdir -p /root/.ssh
-echo 'export PASSWORD="WUNSCHPASSWORT"' > /root/.ssh/mysqlpasswd 
-
-
-
-Datenbank erstellen lassen: 
-
-epgd-tool -new 
+Datenbank und User epg2vdr anlegen, siehe README.md, Abschnitt 'MariaDB Setup'
 
 
 

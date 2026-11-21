@@ -17,7 +17,7 @@ import * as pageSettings from './pages/settings.js';
 import * as pageHelp from './pages/help.js';
 import tr from '../lang/de.js';
 
-// pages; 'legacy' = not yet ported, links to the old UI
+// pages
 
 const pages = {
    now:            { label: tr.menu.now, icon: 'clock', page: pageNow },
@@ -72,7 +72,6 @@ function renderMenu() {
          continue;
 
       $('<a>').attr({ href: '#' + id, 'data-page': id })
-         .toggleClass('legacy', !!p.legacy)
          .append(icon(p.icon), $('<span>').text(p.label))
          .appendTo($nav);
    }
@@ -110,7 +109,7 @@ function route() {
    start = startAlias[start] || start;
    const [hashId, query] = location.hash.slice(1).split('?');
    const params = Object.fromEntries(new URLSearchParams(query || ''));
-   let id = hashId || (pages[start]?.page ? start : 'now');
+   let id = hashId || (pages[start] ? start : 'now');
 
    if (!pages[id] || (pages[id].right && !hasRight(pages[id].right)))
       id = 'now';
@@ -122,27 +121,15 @@ function route() {
 
    $('dialog[open]').each(function () { this.close(); });     // a link inside a dialog navigated away
    currentPage?.destroy?.();
-   currentPage = p.page || null;
+   currentPage = p.page;
 
-   if (p.page) {
-      try {
-         p.page.render($content, params);
-      }
-      catch (e) {
-         log((e.message || 'common error') + '\n' + (e.stack || ''), 2);
-         toastError(e);
-      }
+   try {
+      p.page.render($content, params);
    }
-   else
-      renderLegacy(p);
-}
-
-function renderLegacy(p) {
-   $content.empty().append($('<section class="page page-legacy">').append(
-      $('<div class="card">').append(
-         $('<h2>').append(icon(p.icon), $('<span>').text(p.label)),
-         $('<p>').text('Diese Seite ist im neuen Web-Interface noch nicht portiert.'),
-         $('<a class="btn btn-primary">').attr('href', '/#' + p.legacy).text('Im alten Web-Interface öffnen'))));
+   catch (e) {
+      log((e.message || 'common error') + '\n' + (e.stack || ''), 2);
+      toastError(e);
+   }
 }
 
 // ---------------------------------------------------------------------------

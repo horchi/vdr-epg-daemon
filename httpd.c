@@ -1809,12 +1809,6 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
       MHD_get_connection_values(tcp, MHD_HEADER_KIND, debugPrint, 0);
    }
 
-   // the old web interface is installed below /old/ and uses relative urls
-   //    "/old/data/..." or "/old/sid.../data/..." -> strip "/old"
-
-   if (strncmp(url, "/old/data", 9) == 0 || strncmp(url, "/old/sid", 8) == 0)
-      url += 4;
-
    // check session in url
    //    "/sid3cf33d41332e3e2702e7a8e39429f848/data/parameters"
 

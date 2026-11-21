@@ -1,5 +1,5 @@
 // Help content (German). Static, trusted HTML.
-//   sections: shown on the help page; topics: small help texts used by the '?' buttons (ids as in the old UI)
+//   sections: shown on the help page; elements with id 'h_<topic>' are shown by the '?' buttons
 
 export const sections = [
    {
@@ -175,16 +175,16 @@ export const sections = [
             <h4>Einstellungen</h4>
             <p>Unter <a href="#settings?tab=system">Einstellungen › System</a>:</p>
             <table class="help-table">
-               <tr><th>Stream-URL von streamdev-server</th><td>wo der VDR für Live-TV erreicht wird, z.B. <code>http://vdr:3000/TS/</code> –
+               <tr id="h_p_liveStreamUrl"><th>Stream-URL von streamdev-server</th><td>wo der VDR für Live-TV erreicht wird, z.B. <code>http://vdr:3000/TS/</code> –
                   die Kanal-ID wird angehängt, alternativ setzt der Platzhalter <code>{channelid}</code> sie an beliebiger Stelle ein.
                   Leer = Live-TV aus (kein Knopf <b>Live</b>).<br>
                   <b>Vorbelegung:</b> solange der Wert nie gespeichert wurde, prüft epghttpd beim Start (und danach alle
                   5 Minuten) die angemeldeten VDRs der Reihe nach auf Port 3000 und trägt den ersten, der antwortet, ein.
                   Ein selbst gespeicherter Wert – auch ein leerer – wird nie überschrieben.</td></tr>
-               <tr><th>Browser-Streams umkodieren mit</th><td><i>automatisch</i> nimmt die GPU per VAAPI, wenn ein kurzer Test klappt,
+               <tr id="h_p_streamEncoder"><th>Browser-Streams umkodieren mit</th><td><i>automatisch</i> nimmt die GPU per VAAPI, wenn ein kurzer Test klappt,
                   sonst die CPU per x264. Zur Auswahl stehen nur die Verfahren, die auf dem epgd-Host funktionieren.</td></tr>
-               <tr><th>x264-Preset</th><td>nur für x264: schnellere Presets brauchen weniger CPU, dafür steigt die Bitrate.</td></tr>
-               <tr><th>Browser-Streams verkleinern auf</th><td>umkodierte Streams auf diese Höhe verkleinern (spart CPU und Bandbreite,
+               <tr id="h_p_streamX264Preset"><th>x264-Preset</th><td>nur für x264: schnellere Presets brauchen weniger CPU, dafür steigt die Bitrate.</td></tr>
+               <tr id="h_p_streamMaxHeight"><th>Browser-Streams verkleinern auf</th><td>umkodierte Streams auf diese Höhe verkleinern (spart CPU und Bandbreite,
                   z.B. unterwegs); bei einer kleineren Höhe als die des Senders wird auch sonst nur kopiertes Video umkodiert.</td></tr>
             </table>
          </div>
@@ -351,7 +351,136 @@ export const sections = [
                   </ul>
                   Der Tooltip des ausgegrauten Knopfs nennt den Grund.</li>
             </ul>
-         </div>`
+         </div>
+         <h4>Profil im Einzelnen</h4>
+         <p>Die <b>?</b>-Knöpfe auf der Einstellungsseite zeigen den jeweiligen Abschnitt.</p>
+         <div id="h_p_startPage" class="help-param">
+            <h5>Startseite</h5>
+            <p>Die Seite, die beim Aufruf der Weboberfläche ohne Seitenadresse (z.B. über ein Lesezeichen auf die
+            Startadresse) geöffnet wird.</p>
+         </div>
+         <div id="h_p_defaultVDRuuid" class="help-param">
+            <h5>Standard-VDR</h5>
+            <p>Der VDR, der beim Öffnen der Weboberfläche oben rechts ausgewählt ist – auf ihm wird umgeschaltet und
+            abgespielt. Ohne Angabe ist es der erste VDR der Liste. Die Auswahl oben rechts kann jederzeit geändert werden.</p>
+         </div>
+         <div id="h_p_quickTimes" class="help-param">
+            <h5>Schnellzeiten</h5>
+            <p>Eigene Zeitpunkte und Suchen für die Knöpfe in <a href="#help?t=now">Programm</a>, Magazin und Zeitleiste,
+            eine pro Zeile im Format <code>Bezeichnung=Wert</code>:</p>
+            <ul>
+               <li><code>Primetime=20:15</code> – eine Uhrzeit; im Magazin und in der Zeitleiste wird sie als Linie
+                   eingezeichnet, mit <code>!</code> davor (<code>Spät=!23:00</code>) ohne Linie.</li>
+               <li><code>Jetzt=@Now</code>, <code>Danach=@Next</code> – die laufenden bzw. nachfolgenden Sendungen.</li>
+               <li><code>Tipps=@Name</code> – das Ergebnis der gespeicherten Suche <i>Name</i>.</li>
+            </ul>
+         </div>
+         <div id="h_p_maxListEntries" class="help-param">
+            <h5>Max. Einträge</h5>
+            <p>Wie viele Einträge höchstens auf einmal vom Server geladen werden, z.B. bei der Suche, der Trefferliste eines
+            Suchtimers, den Wiederholungen einer Sendung und in den Timerlisten. Standard: 100.</p>
+         </div>
+         <div id="h_p_constabelLoginPath" class="help-param">
+            <h5>Constabel-Login</h5>
+            <p>Der persönliche Login-Link von <a href="https://www.eplists.de" target="_blank" rel="noopener">eplists.de</a>
+            (zu finden im eigenen Konto dort). Damit kann die Episodenliste einer Serie aus der Detailansicht heraus direkt bei
+            eplists.de bearbeitet werden, siehe <a href="#help?t=constabel">Constabel Episodenliste</a>.</p>
+         </div>
+         <div id="h_p_namingMode" class="help-param">
+            <h5>Dateinamen von Timern und Suchtimern</h5>
+            <p>Die Vorgabe für die Ermittlung des Dateinamens neuer Timer bzw. Suchtimer, getrennt nach Serien und
+            Filmen / sonstigen Sendungen. Beim Anlegen eines Timers kann der Modus geändert werden. Die Modi sind unter
+            <a href="#help?t=sTNameMode">Ermittlung des Dateinamens</a> beschrieben; beim Modus <i>Template</i> erscheint
+            ein Feld für das Template.</p>
+         </div>
+         <div id="h_p_chFormat" class="help-param">
+            <h5>bevorzugtes Sendeformat</h5>
+            <p>Vorgabe für neue Suchtimer: läuft eine Sendung auf einem SD- und einem HD-Sender, bestimmt die Reihenfolge
+            (z.B. <i>HD,SD</i>), welche aufgenommen wird.</p>
+         </div>
+         <div id="h_p_timerDefaultVDRuuid" class="help-param">
+            <h5>VDR für neue Timer</h5>
+            <p>Der VDR, der neue Timer aufnimmt. Bei <i>Auto</i> beauftragt epgd einen gerade freien VDR.</p>
+         </div>
+         <div id="h_p_mailReceiver" class="help-param">
+            <h5>E-Mail und Benachrichtigungen</h5>
+            <p>An diese Adresse schickt epgd Mails zu den Meldungen der gewählten Arten (Information, Warnung, Fehler,
+            fataler Fehler) – z.B. zu Suchtimer-Aktionen und Timerkonflikten. Gesendet wird über das unter
+            <i>System</i> eingestellte Mail-Skript. <i>Test</i> schickt eine Testmail an die eingegebene Adresse.</p>
+         </div>
+         <div id="h_p_searchAdv" class="help-param">
+            <h5>Suchoptionen standardmäßig anzeigen</h5>
+            <p>Die erweiterten Optionen der <a href="#help?t=search">Suche</a> sind beim ersten Aufruf aufgeklappt.
+            Danach merkt sich der Browser, ob sie zuletzt auf- oder zugeklappt waren.</p>
+         </div>
+         <div id="h_p_recordSubFolderSort" class="help-param">
+            <h5>Sortierung der Unterordner</h5>
+            <p>Vorgabe für die Sortierung der <a href="#help?t=records">Aufnahmen</a>, solange im Browser keine andere
+            Sortierung gewählt wurde.</p>
+         </div>
+         <div id="h_p_startWithSched" class="help-param">
+            <h5>EPG Menü startet mit Schedule</h5>
+            <p>Das Programm-Menü von epg2vdr am OSD des VDR startet mit dem Programm des aktuellen Kanals statt mit
+            der Übersicht <i>Was läuft jetzt</i>.</p>
+         </div>
+         <div id="h_p_osdTimerNotify" class="help-param">
+            <h5>Info bei Timer-Übernahme</h5>
+            <p>Der VDR zeigt am OSD eine kurze Meldung, wenn er einen Timer-Auftrag aus der Weboberfläche bzw. von einem
+            Suchtimer ausgeführt hat (Timer angelegt, geändert oder gelöscht). Ist der Login eingeschaltet, gilt die
+            Einstellung des Benutzers, mit dem epg2vdr angemeldet ist.</p>
+         </div>
+         <h4>System im Einzelnen</h4>
+         <div id="h_p_needLogin" class="help-param">
+            <h5>Login erforderlich</h5>
+            <p>Die Weboberfläche ist nur nach Anmeldung nutzbar, jeder Benutzer hat dann eigene Profil-Einstellungen und die
+            im Tab <i>Benutzer</i> vergebenen Rechte. Einschalten lässt sich der Login nur, wenn es einen aktiven Benutzer
+            gibt – sonst würde man sich aussperren. Nach dem Speichern lädt die Seite neu.</p>
+         </div>
+         <div id="h_p_manualTimer2Done" class="help-param">
+            <h5>Manuelle Timer in die Auftragshistorie übernehmen</h5>
+            <p>In der Weboberfläche zu einer Sendung angelegte Timer werden in die <i>Auftragshistorie</i> eingetragen.
+            Suchtimer, die Wiederholungen vermeiden, erkennen die Sendung damit als bereits aufgenommen.</p>
+         </div>
+         <div id="h_p_timerJobFailedHistory" class="help-param">
+            <h5>Fehlgeschlagene Timeraufträge aufbewahren</h5>
+            <p>Nach wie vielen Tagen epgd fehlgeschlagene Timeraufträge (z.B. ein VDR war nicht erreichbar) löscht.</p>
+         </div>
+         <div id="h_p_messageHistory" class="help-param">
+            <h5>Meldungen aufbewahren</h5>
+            <p>Nach wie vielen Tagen epgd die Meldungen (Timer › Meldungen) löscht; 0 behält sie unbegrenzt.</p>
+         </div>
+         <div id="h_p_recCompleteMinPct" class="help-param">
+            <h5>Aufnahme gilt als vollständig ab (%)</h5>
+            <p>Am Ende einer Aufnahme vergleicht epg2vdr die aufgenommene Länge mit der Länge des Timers. Ist weniger als
+            dieser Anteil aufgenommen (z.B. nach einem Empfangsabbruch), gilt die Aufnahme als fehlgeschlagen und wird in der
+            Auftragshistorie so markiert – Suchtimer können die Sendung dann erneut aufnehmen. Für Timer mit VPS gilt der
+            eigene, meist niedrigere Wert, da VPS-Aufnahmen oft kürzer als der Timer sind. Standard: 98 bzw. 90 %.</p>
+         </div>
+         <div id="h_p_recCheckLateManualTimer" class="help-param">
+            <h5>Länge verspätet gestarteter manueller Timer</h5>
+            <p>Eingeschaltet (Standard) wird auch bei einem manuellen Timer, der erst nach seinem Beginn angelegt wurde (die
+            Sendung lief schon), die Länge ab Timerbeginn geprüft – die Aufnahme gilt dann meist als unvollständig.
+            Ausgeschaltet zählt bei solchen Timern nur die Zeit ab dem Aufnahmestart.</p>
+         </div>
+         <div id="h_p_logo" class="help-param">
+            <h5>Kanallogos</h5>
+            <p>Die Logos liegen im Verzeichnis <code>channellogos</code> der Weboberfläche. Der Dateiname ist der
+            Kanalname, bzw. mit <i>über die Kanal-ID</i> die Kanal-ID (z.B. <code>s19.2e-1-1019-10301.png</code>), in Klein-
+            oder – eingeschaltet – Großbuchstaben, dazu die <i>Dateiendung</i> (Standard <code>png</code>; bei <code>svg</code>
+            wird ersatzweise auch <code>png</code> gesucht). <i>Kanalname neben dem Logo</i> zeigt zusätzlich den Namen an.
+            Unter <i>Kanäle</i> zeigt ein Klick auf ein Logo, wie es gesucht wird.</p>
+         </div>
+         <div id="h_p_mailScript" class="help-param">
+            <h5>Skript für den Mailversand</h5>
+            <p>Das Programm, über das epgd Mails verschickt (Standard: <code>epgd-sendmail</code> im bin-Verzeichnis
+            des epgd). Es muss auf dem epgd-Host den Mailversand erledigen können.</p>
+         </div>
+         <div id="h_p_eloquence" class="help-param">
+            <h5>Log-Ausgaben</h5>
+            <p>Welche Arten von Meldungen epgd und epghttpd ins Log (syslog/journal) schreiben. Für die Fehlersuche
+            können weitere Stufen zugeschaltet werden, im Normalbetrieb genügen <i>Error</i>, <i>Warning</i> und <i>Info</i>.</p>
+         </div>
+         <p>Die Einstellungen für Live-TV und Aufnahmen im Browser stehen unter <a href="#help?t=streamSettings">Streaming im Browser › Einstellungen</a>.</p>`
    },
    {
       id: 'merge', title: 'EPG Merge',
@@ -409,7 +538,3 @@ xyz:373:3 = S19.2E-1-1019-10301   // Rückfall + Bilder</pre>
          <details class="help-file" data-src="/TODO"><summary>ToDo's</summary><pre></pre></details>`
    }
 ];
-
-// '?' button topics -> element id inside the sections
-
-export const topics = ['constabel', 'recRefresh', 'recMove', 'sTRepeat', 'sTChFormat', 'sTNameMode', 'sExpr', 'sTAdv', 'sTChannels', 'sTime'];

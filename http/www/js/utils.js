@@ -1,5 +1,5 @@
 // Time helpers – all times from the API are unix timestamps in the *server* time zone.
-// state.timeOffset maps them to browser Date objects (same logic as the old UI).
+// state.timeOffset maps them to browser Date objects.
 
 import { state } from './state.js';
 

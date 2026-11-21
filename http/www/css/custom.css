@@ -1,1 +1,2 @@
-/* local overrides – e.g. :root { --accent: #e67e22; } */
+/* local overrides – e.g. :root { --accent: #e67e22; }
+   own css: put it into http/custom.css, 'make install' installs it here (it is not overwritten by updates) */

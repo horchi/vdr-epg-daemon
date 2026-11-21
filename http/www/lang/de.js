@@ -5,7 +5,6 @@ export default {
     copy: "kopieren",
     apply: "übernehmen",
     close: "schließen",
-    clear: "löschen",
     yes: "ja",
     no: "nein",
     //open: 'öffnen',
@@ -17,7 +16,6 @@ export default {
     advanced: "erweitert",
     markAll: "alle markieren",
     markNone: "keinen markieren",
-    markToggle: "Markierung umdrehen",
     markNone: "Auswahl aufheben",
     markGroup: "Gruppe auswählen …",
     filterAll: "alle",
@@ -37,7 +35,6 @@ export default {
         last: "letzte Seite"
     },
     error: {
-        error: "Fehler",
         common: "Es ist ein allgemeiner Fehler aufgetreten",
         serverNotResponse: "Der Server konnte nicht erreicht werden!",
         notImplemented: "Dieses Feature ist zur Zeit noch nicht implementiert",
@@ -57,9 +54,6 @@ export default {
         help: "Hilfe"
     },
     pages: {
-        now: {
-            at:'am'
-        },
         timer: {
             timerList: "Timer",
             searchTimerList: "Suchtimer",
@@ -156,7 +150,6 @@ export default {
             play: "abspielen",
             eventNext: "nachfolgend",
             eventPrev: "vorher",
-            parentalrating: 'ab ',
             mergeSrc: 'Quelle ',
             imageSrc: 'Bild ',
             genre: 'Genre',
@@ -166,10 +159,7 @@ export default {
             season: 'Staffel',
             part: 'Folgen Nummer',
             number: 'Folge Insgesamt',
-            extentedInfo: 'weitere Informationen',
-            scrapperMovieInfo: 'Filminformation',
             scrapperSerieInfo: 'Serieninformation',
-            constabelInfo: 'Constabel Episodenliste',
             addConstableLink: 'Link erzeugen',
             loginConstable: 'Login',
             title: 'Titel',
@@ -177,7 +167,6 @@ export default {
             runtime: 'Laufzeit',
             lang: 'Sprache',
             release_date: 'Erscheinungsdatum',
-            actors: 'Schauspieler',
             network: 'Netzwerk',
             seriesstatus: 'Status',
             gueststars: 'Gäste',
@@ -198,27 +187,18 @@ export default {
             }
         },
         options:{
-            profile: "allgemein",
-            editChannels: "Kanäle bearbeiten",
-            editUser: "Benutzer bearbeiten"
+            editChannels: "Kanäle bearbeiten"
         },
         editChannels: {
             menu: {
-                channelList: "Kanalliste",
                 referenceList: "Referenzliste",
                 insertAsText: "als Text einfügen",
-                extentEmptyChannelNames: "leere Kanalnamen ergänzen",
-                applyAllChannelNames: "Alle Kanalnamen übernehmen",
                 applyChannelSort: "Kanalsortierung übernehmen"
             },
-            headline: "Sortierung der Kanäle durch drag und drop, Blockmarkierung durch zus. gedrückter shift-Taste",     // und der Merge-prioritäten
-            checkWeb: "Kanal in Webansicht anzeigen",
-            checkVDR: "Kanal zum VDR übertragen",
-            desc_insertList: "Kopiere den Inhalt einer channels.conf in das Textfeld unten. Eine vollständige Liste gibt es beispielsweise hier:"
+            checkWeb: "Kanal in Webansicht anzeigen"
         },
         editUser: {
             user: "Benutzer",
-            sel: "auswählen",
             add: "neu anlegen",
             active: "Aktiv",
             inActive: "Inaktiv",
@@ -235,10 +215,6 @@ export default {
                 umRecordings: "Aufnahmen lesen",
                 umRecordingsEdit: "Aufnahmen editieren"
             }
-        },
-        help: {
-            url: "lang/hilfe.html",
-            noHelp: "Hierzu konnte kein Hilfstext gefunden werden"
         },
         search: {
             search: 'suchen',
@@ -262,21 +238,14 @@ export default {
             needLogin: 'Login erforderlich'
         },
         records: {
-            ddLabel: "Drag und Drop",
             refreshMessage: "Aufnahmelisten werden neu geladen, Seite lädt in $sec$ Sekunden neu",
-            moveMessage: "Aufnahme verschieben von \n$src$\nnach",
             notFoundMessage: "Aufnahme nicht gefunden, ggf einmal aktualisieren",
             deleteMessage: "Soll die Aufnahme $src$ wirklich gelöscht werden?",
-            available: "Verfügbar",
-            commonRecFolder: "gemeinsame Aufnahmen",
             similarTimer: "ähnliche Sendung aufnehmen"
         },
         profile: {
             mailReceiver: "eMail",
-            sendTCC: "sende Mail bei Timerkonflikten",
             sendMessages: "sende Mail bei Systemmeldungen",
-            magazinePan: 'Scrollgeschwindigkeit in Minuten<br />(0 = aus)',
-            magazinePanDelay: 'Auslöseverzögerung',
             maxListEntries: 'maximal Anzahl Einträge, die auf einmal vom Server geladen werden sollen, z.B. bei Suchen, Suchtimern usw.',
             system: {
                 label: "epgd Backend",
@@ -333,33 +302,9 @@ export default {
         }
     },
     dateTimePicker: {
-        monthNames: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-        'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
-        monthNamesShort: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez'],
-        dayNames: ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'],
         dayNamesShort: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
-        dayNamesMin: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'],
-        weekHeader: 'KW',
-        timeOnlyTitle: 'Zeit wählen',
         timeText: 'Sendungsbeginn',
         timeTextBetween: 'zwischen',
-        prevText: '&#x3C;Zurück',
-        nextText: 'Vor&#x3E;',
-        currentText: 'Jetzt',
-        closeText: 'Fertig',
-        hourText: 'Stunde',
-        minuteText: 'Minute',
-        secondText: 'Sekunde',
-        millisecText: 'Millisekunde',
-        microsecText: 'Mikrosekunde',
-        timezoneText: 'Zeitzone',
-        timeFormat: 'HH:mm',
-        dateFormat: 'D, dd.mm.yy',
-        amNames: ['vorm.', 'AM', 'A'],
-        pmNames: ['nachm.', 'PM', 'P'],
-        isRTL: false,
-        showMonthAfterYear: false,
-        yearSuffix: ''
+        currentText: 'Jetzt'
     }
 };
