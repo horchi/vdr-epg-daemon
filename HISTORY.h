@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.6"
-#define VERSION_DATE "20.11.2026"
+#define _VERSION     "1.4.7"
+#define VERSION_DATE "21.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2026-11-21: version 1.4.7 (horchi)
+   - Added:  live TV in the browser
+   - Bugfix: cleanup of imagerefs locked the events table (deadlocks with the epg2vdr handler)
+   - Change: deprecated libxml2 globals replaced by parser options
 
 2026-11-20: version 1.4.6 (horchi)
    - Bugfix: build on older systems (e.g. Ubuntu 20.04, glibc < 2.34), close_range() replaced by a fallback

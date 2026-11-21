@@ -6,7 +6,7 @@ import { busy, toast, toastError } from './ui.js';
 import { formatTime, formatDate, formatDateTime, progressOf, textToHtml, leadText, pipeList, nowUnix } from './utils.js';
 import { channelBadge, switchChannel, createSwitchTimer } from './data.js';
 import { icon, iconButton } from './icons.js';
-import { playRecording } from './player.js';
+import { playRecording, playLiveEvent, canLive } from './player.js';
 import { openTimerDialog, openSearchTimerDialog, searchEvents, renderResults } from './timerDialog.js';
 import tr from '../lang/de.js';
 
@@ -165,6 +165,8 @@ function frame() {
       iconButton('record', tre.record).addClass('ed-record').on('click', doRecord),
       iconButton('tv', tre.ch_switch).addClass('ed-play').on('click', doPlay),
       iconButton('film', 'Im Browser abspielen').addClass('ed-stream').on('click', () => playRecording(event)),
+      iconButton('live', 'Live im Browser ansehen').addClass('ed-live')
+         .on('click', () => playLiveEvent(event)),
       iconButton('repeat', tre.repeat).addClass('ed-repeat').on('click', () => {
          repeats = true;
          repeatsCache = null;
@@ -473,6 +475,7 @@ function render() {
    $d.find('.ed-play').toggle(!!playable).html(icon(isRec ? 'play' : 'tv'))
       .attr('title', isRec ? tre.play + ' (VDR)' : (isFuture ? tr.pages.timerList.newTimer + ': ' : '') + tre.ch_switch);
    $d.find('.ed-stream').toggle(isRec && hasRight(rights.recordings));
+   $d.find('.ed-live').toggle(kind === 'event' && canLive(e));
    $d.find('.ed-prev').toggle(isRec ? !!ctx.prev : ctx.list ? !!listNeighbor(-1) : kind === 'event' && e.starttime - 500 >= p.minEventTime);
    $d.find('.ed-next').toggle(isRec ? !!ctx.next : ctx.list ? !!listNeighbor(1) : kind === 'event' && e.starttime + e.duration + 500 <= p.maxEventTime);
    $d.find('.ed-rec-edit').toggle(canEditRec && !!ctx.rename);

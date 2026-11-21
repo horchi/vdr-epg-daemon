@@ -13,6 +13,7 @@ import { channelBadge } from '../data.js';
 import { quickTimes, quickTimeAt, timeOnDay, foreignKey, ctrlScroll } from '../gridtools.js';
 import { icon, iconButton } from '../icons.js';
 import { showEvent } from '../eventDetail.js';
+import { liveButton } from '../player.js';
 import { groupSelect, filterChannels, currentGroup } from '../groupfilter.js';
 import tr from '../../lang/de.js';
 
@@ -618,6 +619,7 @@ function renderInfo(e) {
             e.tipp ? $('<span class="badge badge-tipp">').text(e.tipp) : null,
             e.numrating ? $('<span class="rate">').addClass('rate' + e.numrating) : null,
             $('<span class="tl-info-actions">').append(
+               liveButton(e),
                $('<button type="button" class="btn tl-info-details">').attr('title', 'Details')
                   .append(icon('info'), $('<span>').text('Details')).on('click', () => showEvent(e.id)),
                iconButton('close', 'Schließen').on('click', closeInfo))),

@@ -293,9 +293,34 @@ export default {
                     logoUpperCase: "Dateinamen der Kanallogos in Großbuchstaben",
                     logoShowName: "Kanalname neben dem Logo anzeigen",
                     mailScript: "Skript für den Mailversand",
+                    liveStreamUrl: "Live-TV im Browser: Stream-URL von streamdev-server (z.B. http://vdr:3000/TS/, leer = aus)",
+                    streamEncoder: "Browser-Streams umkodieren mit",
+                    streamX264Preset: "x264-Preset (schneller = weniger CPU-Last, höhere Bitrate)",
+                    streamMaxHeight: "Browser-Streams verkleinern auf",
                     eloquence: "Log-Ausgaben",
                     minEventTime: "EPG-Daten vorhanden ab",
                     maxEventTime: "EPG-Daten vorhanden bis"
+                },
+                // labels of the select boxes (values from the backend: data/parameters -> options)
+                paramOptions: {
+                    streamEncoder: (o, all) => ({
+                        auto: 'automatisch (' + (all.includes('vaapi') ? 'GPU per VAAPI' : 'CPU per x264') + ')',
+                        vaapi: 'GPU (VAAPI)',
+                        x264: 'CPU (x264)'
+                    })[o] ?? o,
+                    streamX264Preset: {
+                        ultrafast: 'ultrafast (am schnellsten)',
+                        superfast: 'superfast',
+                        veryfast: 'veryfast (Standard)',
+                        faster: 'faster',
+                        fast: 'fast',
+                        medium: 'medium (beste Qualität)'
+                    },
+                    streamMaxHeight: {
+                        0: 'Originalgröße',
+                        1080: '1080 Zeilen', 720: '720 Zeilen', 576: '576 Zeilen (SD)',
+                        540: '540 Zeilen', 480: '480 Zeilen', 360: '360 Zeilen'
+                    }
                 }
             },
             vdr: {

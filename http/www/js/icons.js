@@ -39,6 +39,7 @@ const paths = {
    down:    '<path d="m6 9 6 6 6-6"/>',
    remote:  '<rect x="7" y="2" width="10" height="20" rx="3"/><circle cx="12" cy="8" r="2"/><path d="M10 13.5h.01M14 13.5h.01M10 17h.01M14 17h.01"/>',
    play:    '<path d="M7 4v16l13-8z"/>',
+   live:    '<circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/>',
    disk:    '<ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/>',
    home:    '<path d="M3 11 12 3l9 8M5 9.5V20h5v-6h4v6h5V9.5"/>',
    select:  '<rect x="3" y="3" width="18" height="18" rx="3"/><path d="m8 12 3 3 5-6"/>',

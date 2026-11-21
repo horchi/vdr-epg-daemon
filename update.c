@@ -54,11 +54,6 @@ cEpgd::cEpgd()
    nextUpdateAt = time(0) + 10;
    search = new cSearchTimer((cFrame*)this);
 
-   // setup xml lib
-
-   xmlSubstituteEntitiesDefault(1);
-   xmlLoadExtDtdDefaultValue = 1;
-
    // create global cCurl instance
 
    cCurl::create();
@@ -1971,7 +1966,10 @@ xmlDocPtr cEpgd::transformXml(const char* buffer, int size,
                               const char* fileRef)
 {
    xmlDocPtr doc {}, transformedDoc {};
-   int readOptions {0};
+   // substitute entities and load the external DTD (e.g. the entities of the epgdata files),
+   //   formerly done by the deprecated globals xmlSubstituteEntitiesDefault() / xmlLoadExtDtdDefaultValue
+
+   int readOptions {XML_PARSE_NOENT | XML_PARSE_DTDLOAD};
 
 #if LIBXML_VERSION >= 20900
    readOptions |=  XML_PARSE_HUGE;
@@ -2366,7 +2364,7 @@ int cEpgd::cleanupPictures()
 
       cSystemNotification::check();
       tell(eloInfo, "Starting cleanup of imagerefs");
-      imageRefDb->deleteWhere("eventid not in (select eventid from events)");
+      cleanupImageRefs();     // errors are reported there, continue as before
 
       cSystemNotification::check(yes);
       tell(eloInfo, "Starting cleanup of images");
@@ -2376,6 +2374,75 @@ int cEpgd::cleanupPictures()
    }
 
    return dbConnected() ? success : fail;
+}
+
+//***************************************************************************
+// Cleanup Image References
+//   Don't use 'delete from imagerefs where eventid not in (select eventid from events)',
+//   the subquery of a DML statement is a locking read, it holds shared locks on
+//   (nearly) all rows of the events table for seconds -> deadlocks with the epg handler
+//   of the VDRs, which is already active again at this point (state 'busy (images)').
+//   Instead: determine the orphaned event ids by a consistent (non locking) read
+//   and delete them in chunks, this locks only rows of imagerefs.
+//***************************************************************************
+
+int cEpgd::cleanupImageRefs()
+{
+   const size_t chunkSize {500};
+   std::vector<uint64_t> orphans;
+
+   // select distinct eventid from imagerefs
+   //   where eventid not in (select eventid from events)
+
+   cDbStatement* select = new cDbStatement(imageRefDb);
+
+   select->build("select distinct ");
+   select->bind("EVENTID", cDBS::bndOut);
+   select->build(" from %s where %s not in (select %s from %s)",
+                 imageRefDb->TableName(),
+                 imageRefDb->getField("EVENTID")->getDbName(),
+                 eventsDb->getField("EVENTID")->getDbName(),
+                 eventsDb->TableName());
+
+   if (select->prepare() != success)
+   {
+      delete select;
+      return fail;
+   }
+
+   imageRefDb->clear();
+
+   for (int f = select->find(); f && !doShutDown(); f = select->fetch())
+      orphans.push_back(imageRefDb->getBigintValue("EVENTID"));
+
+   select->freeResult();
+   delete select;
+
+   size_t deleted {0};
+
+   for (size_t i = 0; i < orphans.size() && !doShutDown(); i += chunkSize)
+   {
+      std::string ids;
+
+      cSystemNotification::check();
+
+      for (size_t n = i; n < orphans.size() && n < i + chunkSize; n++)
+      {
+         if (!ids.empty())
+            ids += ",";
+
+         ids += std::to_string(orphans[n]);
+      }
+
+      if (imageRefDb->deleteWhere("%s in (%s)", imageRefDb->getField("EVENTID")->getDbName(), ids.c_str()) != success)
+         return fail;
+
+      deleted += std::min(chunkSize, orphans.size() - i);
+   }
+
+   tell(eloInfo, "Removed imagerefs of %zu obsolete events", deleted);
+
+   return success;
 }
 
 //***************************************************************************

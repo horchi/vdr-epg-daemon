@@ -35,6 +35,11 @@ cParameters::Parameter cParameters::parameters[] =
 
    { "epgd",     "mailScript",                     ptAscii,   BINDEST"/epgd-sendmail",    "^.{0,150}$",           no,    yes },
 
+   { "epgd",     "liveStreamUrl",                  ptAscii,   "",                         "^(https?://.{1,140})?$", no,  yes },
+   { "epgd",     "streamEncoder",                  ptAscii,   "auto",                     "^(auto|vaapi|x264)$",  no,    yes },
+   { "epgd",     "streamX264Preset",               ptAscii,   "veryfast",                 "^(ultrafast|superfast|veryfast|faster|fast|medium)$", no, yes },
+   { "epgd",     "streamMaxHeight",                ptNum,     "0",                        "^(0|360|480|540|576|720|1080)$", no, yes },
+
    { "epgd",     "mergeStart",                     ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   no  },
    { "epgd",     "lastMergeAt",                    ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   no  },
    { "epgd",     "lastScrRefUpdate",               ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   no  },

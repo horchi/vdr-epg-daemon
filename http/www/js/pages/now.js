@@ -8,6 +8,7 @@ import { channelBadge } from '../data.js';
 import { icon } from '../icons.js';
 import { foreignKey, ctrlScroll, tileInNextRow, focusTile } from '../gridtools.js';
 import { showEvent } from '../eventDetail.js';
+import { liveButton } from '../player.js';
 import { groupSelect, currentGroup, inGroup } from '../groupfilter.js';
 import tr from '../../lang/de.js';
 
@@ -222,7 +223,8 @@ function eventCard(e) {
          $('<div class="ev-when">').append($time,
             progress !== null
                ? $('<div class="progress">').append($('<div>').css('width', progress + '%'))
-               : $('<div class="ev-date">').text(formatDate(e.starttime)))),
+               : $('<div class="ev-date">').text(formatDate(e.starttime))),
+         liveButton(e)),
       $('<div class="ev-body">').append(
          img ? $('<img class="ev-img" loading="lazy" alt="">').attr('src', img) : null,
          $('<div class="ev-title">').text(e.title).append(

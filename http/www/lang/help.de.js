@@ -34,6 +34,8 @@ export const sections = [
             <li><b>Schnellzeiten</b> – eigene Zeiten (z.B. Primetime=20:15) oder gespeicherte Suchen (z.B. Tipps=@Tipps),
                 festgelegt unter <a href="#settings?tab=profile">Einstellungen › Profil</a>. Auf dem Handy erscheinen sie als Auswahlliste.</li>
             <li><b>Kanalgruppe</b> – zeigt nur die Sendungen einer Gruppe (z.B. HD+, ORF), gilt nicht für die Schnellwahl-Suchen. Die Auswahl bleibt im Browser gespeichert. Die Gruppen kommen aus der channels.conf des VDR.</li>
+            <li><b>Live</b> – der Knopf auf den Kacheln laufender Sendungen spielt den Sender im Browser ab
+                (siehe <a href="#help?t=streaming">Streaming im Browser</a>).</li>
          </ul>
          <h4>Tastatur</h4>
          <table class="help-table">
@@ -72,7 +74,8 @@ export const sections = [
          </ul>
          <h4>Infofeld</h4>
          <p>Ein Klick auf eine Sendung zeigt ihre wichtigsten Daten in einem Feld über dem Raster – Bild, Zeit, Titel,
-         Kurztext, Genre und den Anfang der Beschreibung. <b>Details</b> bzw. ein Doppelklick öffnet die Detailansicht.
+         Kurztext, Genre und den Anfang der Beschreibung. <b>Details</b> bzw. ein Doppelklick öffnet die Detailansicht,
+         <b>Live</b> (bei laufenden Sendungen) spielt den Sender im Browser ab (siehe <a href="#help?t=streaming">Streaming im Browser</a>).
          Der Schalter <span class="kbd"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9.5"/><path d="M12 11v6M12 7.5v.01"/></svg> Auto/Ein/Aus</span> in der Werkzeugleiste legt fest, wann das Feld verwendet wird
          (gespeichert je Gerät):</p>
          <table class="help-table">
@@ -100,9 +103,15 @@ export const sections = [
          <ul>
             <li><b>Aufnehmen</b> – öffnet den Timer-Dialog (rot, wenn bereits ein Timer existiert).</li>
             <li><b>Umschalten</b> – schaltet den gewählten VDR um; bei künftigen Sendungen wird ein Umschalt-Timer angelegt.</li>
+            <li><b>Live</b> – zeigt den Sender im Browser (bei laufenden Sendungen, siehe unten).</li>
             <li><b>Wiederholungen</b> – sucht weitere Ausstrahlungen mit exakt diesem Titel.</li>
             <li><b>« / »</b> – vorherige / nächste Sendung auf diesem Kanal (auch mit den Pfeiltasten).</li>
          </ul>
+         <div id="h_live">
+            <h4>Live-TV im Browser</h4>
+            <p>Der Knopf <b>Live</b> erscheint bei laufenden Sendungen und spielt den Sender im Browser ab (auch iPhone/iPad) –
+            Voraussetzungen und Einstellungen unter <a href="#help?t=streaming">Streaming im Browser</a>.</p>
+         </div>
          <div id="h_constabel">
             <h4>Constabel Episodenliste</h4>
             <p>Bei Serien werden die bei <a href="https://www.eplists.de" target="_blank" rel="noopener">eplists.de (Constabel)</a> gepflegten Episoden angezeigt.
@@ -119,7 +128,8 @@ export const sections = [
             <li><b>Suche</b> – ab zwei Zeichen werden alle Ordner durchsucht (Name, Titel, Untertitel, Ordner).
                 Mehrere Wörter müssen alle vorkommen, z.B. <i>tatort borowski</i>.</li>
             <li><b>Sortierung</b> – nach Datum oder Titel; die Auswahl wird im Browser gespeichert.</li>
-            <li>Ein Klick auf eine Aufnahme öffnet die Detailansicht mit <b>Abspielen</b>, <b>Umbenennen/Verschieben</b> und <b>Löschen</b>.</li>
+            <li>Ein Klick auf eine Aufnahme öffnet die Detailansicht mit <b>Abspielen</b> (auf dem VDR), <b>Im Browser abspielen</b>
+                (siehe <a href="#help?t=streaming">Streaming im Browser</a>), <b>Umbenennen/Verschieben</b> und <b>Löschen</b>.</li>
             <li><b>Auswählen</b> schaltet in den Auswahlmodus: mehrere Aufnahmen auf einmal verschieben oder löschen.</li>
          </ul>
          <div id="h_recRefresh">
@@ -131,6 +141,76 @@ export const sections = [
             <h4>Umbenennen / Verschieben</h4>
             <p>Ordner werden mit „/“ getrennt; nicht vorhandene Ordner werden angelegt. Die Umbenennung führt der VDR aus –
             bis sie dort erledigt ist, ist die Aufnahme kurz ausgegraut.</p>
+         </div>`
+   },
+   {
+      id: 'streaming', title: 'Streaming im Browser',
+      html: `
+         <p>Aufnahmen und laufende Sendungen lassen sich direkt im Browser ansehen – am PC, Tablet und auf dem Handy,
+         auch auf iPhone und iPad. Dafür setzt ffmpeg auf dem epgd-Host das Video in einen HLS-Stream um, den alle
+         aktuellen Browser abspielen.</p>
+         <ul>
+            <li><b>Aufnahmen</b>: Knopf <b>Im Browser abspielen</b> in der Detailansicht einer Aufnahme. Springen mit dem
+                Schieberegler und den Knöpfen (±1 / ±10 Minuten).</li>
+            <li><b>Live-TV</b>: Knopf <b>Live</b> bei laufenden Sendungen – in der Detailansicht, auf den Kacheln der
+                Programm-Ansicht und im Infofeld der Zeitleiste. Bis zu 30 Minuten zurückspulen (Timeshift),
+                <b>● Live</b> springt wieder zum aktuellen Bild bzw. startet einen beendeten Stream neu. Das Bild läuft
+                etwa 6 bis 15 Sekunden hinter dem Fernseher.</li>
+            <li>Beides braucht das Benutzerrecht <i>Aufnahmen</i>.</li>
+         </ul>
+         <div id="h_streamReq">
+            <h4>Voraussetzungen</h4>
+            <ul>
+               <li><b>ffmpeg</b> (mit ffprobe) auf dem epgd-Host – fehlt es, sagt der Player, welches Paket nötig ist.</li>
+               <li>Aufnahmen: das Videoverzeichnis des VDR muss auf dem epgd-Host erreichbar sein (lokal oder per NFS).</li>
+               <li>Live-TV: auf einem VDR läuft das Plugin <b>streamdev-server</b> mit eingeschaltetem <b>HTTP-Server</b>
+                   (Standard-Port 3000) und der epgd-Host ist in <code>streamdevhosts.conf</code> freigegeben.
+                   Das VTP-Protokoll (Port 2004) der streamdev-clients kann ffmpeg nicht lesen.
+                   Den HTTP-Server schaltet man im Plugin-Setup am OSD ein (wirkt sofort) oder bei gestopptem VDR in der
+                   <code>setup.conf</code> (<code>streamdev-server.StartHTTPServer = 1</code>) – der VDR schreibt die
+                   setup.conf beim Beenden zurück.</li>
+            </ul>
+         </div>
+         <div id="h_streamSettings">
+            <h4>Einstellungen</h4>
+            <p>Unter <a href="#settings?tab=system">Einstellungen › System</a>:</p>
+            <table class="help-table">
+               <tr><th>Stream-URL von streamdev-server</th><td>wo der VDR für Live-TV erreicht wird, z.B. <code>http://vdr:3000/TS/</code> –
+                  die Kanal-ID wird angehängt, alternativ setzt der Platzhalter <code>{channelid}</code> sie an beliebiger Stelle ein.
+                  Leer = Live-TV aus (kein Knopf <b>Live</b>).<br>
+                  <b>Vorbelegung:</b> solange der Wert nie gespeichert wurde, prüft epghttpd beim Start (und danach alle
+                  5 Minuten) die angemeldeten VDRs der Reihe nach auf Port 3000 und trägt den ersten, der antwortet, ein.
+                  Ein selbst gespeicherter Wert – auch ein leerer – wird nie überschrieben.</td></tr>
+               <tr><th>Browser-Streams umkodieren mit</th><td><i>automatisch</i> nimmt die GPU per VAAPI, wenn ein kurzer Test klappt,
+                  sonst die CPU per x264. Zur Auswahl stehen nur die Verfahren, die auf dem epgd-Host funktionieren.</td></tr>
+               <tr><th>x264-Preset</th><td>nur für x264: schnellere Presets brauchen weniger CPU, dafür steigt die Bitrate.</td></tr>
+               <tr><th>Browser-Streams verkleinern auf</th><td>umkodierte Streams auf diese Höhe verkleinern (spart CPU und Bandbreite,
+                  z.B. unterwegs); bei einer kleineren Höhe als die des Senders wird auch sonst nur kopiertes Video umkodiert.</td></tr>
+            </table>
+         </div>
+         <div id="h_streamEncode">
+            <h4>Kopieren oder umkodieren</h4>
+            <ul>
+               <li><b>Kopiert</b> wird progressives H.264 mit IDR-Frames (z.B. ZDF HD, 720p) – das kostet fast keine CPU.</li>
+               <li><b>Umkodiert</b> werden 1080i (deinterlaced), SD in MPEG-2 und Sender ohne IDR-Frames (z.B. Das Erste HD,
+                   phoenix HD) – deren Segmente kann der Browser sonst nicht dekodieren (<i>bufferAppendError</i>).
+                   Das Ergebnis der Prüfung eines Senders merkt sich epghttpd einen Tag lang, dadurch startet der Stream beim
+                   nächsten Mal schneller.</li>
+               <li>Mit <b>VAAPI</b> (z.B. Intel-Grafik, Treiber <code>i965-va-driver</code> für ältere bzw.
+                   <code>intel-media-va-driver</code> für neuere CPUs) dekodiert, deinterlaced und kodiert die GPU – ein 1080i-Stream
+                   braucht dann nur wenige Prozent eines CPU-Kerns. Mit <b>x264</b> sind es ein bis zwei Kerne.</li>
+               <li>Der Player zeigt unten das Format und das Verfahren an, z.B. <i>H264 720p, umkodiert (GPU)</i>.</li>
+               <li>UHD (H.265) wird nicht unterstützt.</li>
+            </ul>
+         </div>
+         <div id="h_streamTuner">
+            <h4>Tuner und Sitzungen</h4>
+            <ul>
+               <li>Jeder Live-Stream belegt einen Tuner des VDR (wie ein streamdev-client). Wird er für eine Aufnahme gebraucht,
+                   endet der Stream und der Player meldet das.</li>
+               <li>Beim Schließen des Players endet der Stream sofort, nach einem Verbindungsabbruch nach 30 Sekunden
+                   (Aufnahmen: 60 Sekunden). Höchstens 4 Streams laufen gleichzeitig, ein weiterer beendet den ältesten.</li>
+            </ul>
          </div>`
    },
    {
@@ -231,7 +311,8 @@ export const sections = [
                 Gespeichert werden nur geänderte Werte.</li>
             <li><b>Kanäle</b> – Reihenfolge und Sichtbarkeit der Kanäle in der Weboberfläche (Details unten).</li>
             <li><b>Benutzer</b> – Benutzer der Weboberfläche mit ihren Rechten. Ein Recht schließt seine Unterrechte ein.</li>
-            <li><b>System</b> – Login-Pflicht und alle Parameter des epgd-Backends.
+            <li><b>System</b> – Login-Pflicht und alle Parameter des epgd-Backends, darunter die Einstellungen für das
+                <a href="#help?t=streaming">Streaming im Browser</a>.
                 Die Login-Pflicht lässt sich nur einschalten, wenn es einen aktiven Benutzer gibt.</li>
             <li><b>VDRs</b> – die VDRs mit epg2vdr und der epgd selbst.</li>
          </ul>

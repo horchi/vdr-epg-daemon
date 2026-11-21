@@ -1702,6 +1702,8 @@ int cEpgHttpd::doParameters(MHD_Connection* tcp, json_t* obj)
             json_array_append_new(oArray, json_string(Elo::eloquences[i]));
          json_object_set_new(oData, "options", oArray);
       }
+      else if (json_t* oArray = streamParameterOptions(definition->name))
+         json_object_set_new(oData, "options", oArray);
 
       json_array_append_new(oParameters, oData);
    }

@@ -71,6 +71,7 @@ cEpgHttpd::UserRight cEpgHttpd::userrights[] =
    { "/data/rechlsstate",       umRecordings             },
    { "/data/rechlsstop",        umRecordings             },
    { "/data/rechls",            umRecordings             },     // playlist and segments (prefix)
+   { "/data/livehlsstart",      umRecordings             },     // live TV via streamdev (state/stop/segments as rechls*)
    { "/data/channelswitch",     umAll                    },
    { "/data/hitkey",            umAll                    },
    { "/data/log",               umAll|umNologin          },
@@ -201,6 +202,7 @@ int cEpgHttpd::init()
    cDbConnection::setConfPath(confDir);
 
    initDb();
+   initLiveStreamUrl();             // preset of the live TV stream URL (streamdev-server of an attached VDR)
 
    if (EpgdConfig.httpUseTls)
    {
@@ -1512,7 +1514,10 @@ int cEpgHttpd::performDataRequest(MHD_Connection* tcp, const char* url, MemorySt
       else if (strcmp(method, "recording") == 0)
          statusCode = doRecording(tcp, response);
       else if (strcmp(method, "parameters") == 0)
+      {
+         initLiveStreamUrl();       // preset not done yet -> check again (at most every 5 minutes)
          statusCode = doParameters(tcp, response);
+      }
       else if (strcmp(method, "recordingdirs") == 0)
          statusCode = doRecDirs(tcp, response);
       else if (strcmp(method, "pendingtimerjobs") == 0)
@@ -1555,6 +1560,8 @@ int cEpgHttpd::performDataRequest(MHD_Connection* tcp, const char* url, MemorySt
          statusCode = doRecStreamInfo(tcp, response);
       else if (strcmp(method, "rechlsstart") == 0)
          statusCode = doRecHlsStart(tcp, response);
+      else if (strcmp(method, "livehlsstart") == 0)
+         statusCode = doLiveHlsStart(tcp, response);
       else if (strcmp(method, "rechlsstate") == 0)
          statusCode = doRecHlsState(tcp, response);
       else if (strcmp(method, "rechlsstop") == 0)

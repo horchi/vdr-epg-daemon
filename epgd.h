@@ -230,6 +230,7 @@ class cEpgd : public cFrame, public cSystemNotification
       int update();
       int cleanupEvents();
       int cleanupPictures();
+      int cleanupImageRefs();
       int updateSearchTimers(int force = yes, const char* reason = "");
       int getPictures();
       int storeImageRefs(tEventId evtId, const char* source, const char* images, const char* ext, const char* fileref);

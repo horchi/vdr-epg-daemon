@@ -838,6 +838,21 @@ function systemTab($body) {
             $ctl = $('<div class="check-row">').append(cbs.map((x) => x.cb.$el));
             controls.push({ p, get: () => cbs.filter((x) => x.cb.$cb.prop('checked')).map((x) => x.o + ',').join(''), bitmask: true });
          }
+         else if (p.options?.length) {
+            // fixed values (e.g. the encoders available on the epgd host), labels from the language file,
+            //   a stored value which isn't possible (any more) is kept and marked
+
+            const labels = trp.system.paramOptions?.[p.name] || {};
+            const label = (o) => typeof labels === 'function' ? labels(o, p.options) : labels[o] ?? o;
+            const opts = p.options.map((o) => ({ value: o, label: label(o) }));
+
+            if (!p.options.includes(String(v)))
+               opts.push({ value: String(v), label: label(String(v)) + ' (nicht verfügbar)' });
+
+            const $sel = select(opts, v);
+            $ctl = $sel;
+            controls.push({ p, get: () => $sel.val(), $in: $sel });
+         }
          else {
             const $in = $('<input class="input">').val(v).attr('placeholder', p.default || '');
             if (p.type === ptNum) $in.addClass('input-num').attr('inputmode', 'numeric');
