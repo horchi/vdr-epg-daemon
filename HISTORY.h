@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.12"
+#define _VERSION     "1.4.13"
 #define VERSION_DATE "21.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2026-11-21: version 1.4.13 (horchi)
+   - Added:  new overview page (running recordings, next timers, latest recordings, notes, VDRs, disk space)
+   - Bugfix: recordings of common folder were missing in web if listed by a VDR not shared in web
+   - Added:  VDRs: state of the host (host off / host up, VDR off), wake on lan only if the host is off
+   - Added:  start of a VDR on a running host by a configurable script (parameter vdrStartScript, sample epgd-startvdr)
+   - Added:  'last visited page' to start page selection
 
 2026-11-21: version 1.4.12 (horchi)
    - Added:  timer: hours before start the WOL to take over the timer now configurable (default 48, 0 off)

@@ -7,7 +7,8 @@
 import { state, hasRight, rights } from '../state.js';
 import { get, mediaUrl, qs, fallbackImg } from '../api.js';
 import { busy, toast, toastError, dialog, confirmBox, stickyBar } from '../ui.js';
-import { formatDate, formatTime, formatDateTime, sizeText } from '../utils.js';
+import { formatDate, formatTime, formatDateTime } from '../utils.js';
+import { renderDisks, updateDiskTimes } from '../disks.js';
 import { icon, iconButton } from '../icons.js';
 import { field } from '../forms.js';
 import { showRecording, closeDetail } from '../eventDetail.js';
@@ -74,7 +75,7 @@ export function render($content, params = {}) {
 
    $content.empty().append(pg.$page);
 
-   const loaded = pg.recs ? (renderList(), updateDiskTimes(), Promise.resolve()) : load();
+   const loaded = pg.recs ? (renderList(), updateDiskTimes(pg.$page, pg.recs), Promise.resolve()) : load();
 
    if (pg.doubles)
       loaded.then(loadDoubles);
@@ -94,7 +95,7 @@ async function load() {
       pg.recs = (data.recordings || []).map(prepare);
       buildTree();
       pg.$page && renderList();
-      pg.$page && updateDiskTimes();
+      pg.$page && updateDiskTimes(pg.$page, pg.recs);
    }
    catch (e) {
       toastError(e);
@@ -170,7 +171,7 @@ function renderDoubles($list, words) {
    }
 }
 
-function prepare(r) {
+export function prepare(r) {
    const segs = (r.path || '').split('/');
    segs.pop();                                   // xxx.rec
    const name = decodeName(segs.pop() || r.name || '');
@@ -225,70 +226,6 @@ function nodeAt(path) {
 
 // ---------------------------------------------------------------------------
 // render
-
-function renderDisks() {
-   const $d = $('<div class="disks">');
-   const disks = new Map();           // VDRs sharing one video directory are shown once
-
-   for (const v of Object.values(state.vdrs)) {
-      if (!v.videototal)
-         continue;
-
-      const key = (v.videodir || v.uuid) + '/' + v.videototal;
-      disks.has(key) ? disks.get(key).names.push(v.name) : disks.set(key, { ...v, names: [v.name] });
-   }
-
-   for (const v of disks.values()) {
-      const used = 100 - v.videofree / v.videototal * 100;
-
-      $('<div class="disk">').attr('title', v.names.join(', ') + ': ' + (v.videodir || '')).data('free', v.videofree).append(
-         $('<div class="disk-head">').append(icon('disk'), $('<b>').text(v.names.join(', ')),
-            $('<span class="dim">').append(sizeText(v.videofree) + ' frei', $('<span class="disk-total">').text(' / ' + sizeText(v.videototal)))),
-         $('<div class="progress disk-bar">').toggleClass('full', used > 90).append($('<div>').css('width', used + '%')),
-         $('<div class="disk-time dim">'))
-         .appendTo($d);
-   }
-
-   return $d;
-}
-
-// remaining recording time (HH:MM) of the free space, like VDR from the space used by
-//   the recordings and their length (MB per minute); VDRs sharing one disk (same size)
-//   are counted once (the one with the latest update), unknown -> VDR's default of 25.75 MB/min
-
-function mbPerMinute() {
-   const disks = new Map();
-
-   for (const v of Object.values(state.vdrs)) {
-      if (!v.videototal)
-         continue;
-
-      const key = Math.round(v.videototal / 1000);
-      const d = disks.get(key);
-
-      if (!d || (v.lastupdate || 0) > (d.lastupdate || 0))
-         disks.set(key, v);
-   }
-
-   const usedMb = [...disks.values()].reduce((s, v) => s + v.videototal - (v.videofree || 0), 0);
-   const minutes = (pg.recs || []).reduce((s, r) => s + (r.duration || 0), 0) / 60;
-   const mbpm = minutes > 0 ? usedMb / minutes : 0;
-
-   return mbpm >= 5 && mbpm <= 500 ? mbpm : 25.75;
-}
-
-function updateDiskTimes() {
-   if (!pg.$page || !pg.recs)
-      return;
-
-   const mbpm = mbPerMinute();
-
-   pg.$page.find('.disk').each((i, el) => {
-      const min = Math.floor(($(el).data('free') || 0) / mbpm);
-      $(el).find('.disk-time').text('ca. ' + Math.floor(min / 60) + ':' + String(min % 60).padStart(2, '0') + ' h Aufnahmezeit')
-         .attr('title', 'verbleibende Aufnahmezeit, geschätzt mit ' + Math.round(mbpm) + ' MB pro Minute');
-   });
-}
 
 function hashFor(path) {
    return '#records' + (path.length ? '?p=' + encodeURIComponent(path.join('/')) : '');

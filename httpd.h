@@ -24,6 +24,28 @@
 #include "lib/configuration.h"
 #include "lib/searchtimer.h"
 
+#include <string>
+#include <vector>
+
+//***************************************************************************
+// Host Probe
+//   state of a VDR host by a connect to its SVDRP port:
+//     "vdr"  - the port answers (VDR is running)
+//     "up"   - connection refused (host is up, VDR not running)
+//     "down" - no answer in time / unreachable (host is off)
+//***************************************************************************
+
+struct HostProbe
+{
+   std::string ip;
+   int port {0};
+   json_t* obj {};            // json object to add 'hoststate' to (optional)
+   int fd {-1};
+   const char* state {"down"};
+};
+
+void probeHosts(std::vector<HostProbe>& probes, int timeoutMs = 800);
+
 #include "epgdconfig.h"
 
 #include "HISTORY.h"
@@ -188,6 +210,8 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
 
       const char* methodOf(const char* url);
       int ipOfVdr(const char* uuid, const char*& ip, int& port);
+      int startVdr(const char* uuid, std::string& result);
+      int vdrOfRecording(const char* uuid, int common, std::string& ip, int& port, std::string& videoDir);
       int triggerVdrs(const char* trg, const char* plug = 0, const char* options = 0);
       int triggerVdr(const char* ip, unsigned int port, const char* trg,
                      const char* plug = 0, const char* options = 0, char* res = 0);

@@ -44,6 +44,7 @@ export default {
         invalid: "Der eingegebene Wert ist ungültig!"
     },
     menu: {
+        overview: "Übersicht",
         now: "Programm",
         magazine: "Magazin",
         timeline: "Zeitleiste",
@@ -262,6 +263,7 @@ export default {
                     logoUpperCase: "Dateinamen der Kanallogos in Großbuchstaben",
                     logoShowName: "Kanalname neben dem Logo anzeigen",
                     mailScript: "Skript für den Mailversand",
+                    vdrStartScript: "Skript zum Starten eines VDR bei laufendem Host (leer = aus)",
                     liveStreamUrl: "Live-TV im Browser: Stream-URL von streamdev-server (z.B. http://vdr:3000/TS/, leer = aus)",
                     streamEncoder: "Browser-Streams umkodieren mit",
                     streamX264Preset: "x264-Preset (schneller = weniger CPU-Last, höhere Bitrate)",
@@ -278,7 +280,8 @@ export default {
                     messageHistory: "eine Zahl von 0 bis 9999",
                     recCompleteMinPct: "eine Zahl von 0 bis 100",
                     recCompleteMinPctVps: "eine Zahl von 0 bis 100",
-                    mailScript: "höchstens 150 Zeichen"
+                    mailScript: "höchstens 150 Zeichen",
+                    vdrStartScript: "höchstens 150 Zeichen, z.B. /usr/local/bin/epgd-startvdr"
                 },
                 // labels of the select boxes (values from the backend: data/parameters -> options)
                 paramOptions: {

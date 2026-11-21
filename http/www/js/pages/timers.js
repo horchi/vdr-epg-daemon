@@ -344,7 +344,7 @@ function parseMessage(m) {
    return res;
 }
 
-const messagePlain = (m) => parseMessage(m).plain;
+export const messagePlain = (m) => parseMessage(m).plain;
 
 function messageBody(m) {
    const msg = parseMessage(m);

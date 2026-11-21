@@ -1,0 +1,43 @@
+#!/bin/bash
+#
+# epgd-startvdr <name> <ip> <uuid>
+#
+#   Called by epghttpd ('Wecken' in the web frontend) for a VDR whose host is running
+#   but the VDR is not (SVDRP port refuses the connection), e.g. a VDR started on demand.
+#   Configure it as epgd parameter 'vdrStartScript' (web frontend: Einstellungen > System).
+#
+#   Default: starts the systemd unit 'vdr' on the host via ssh as root - the user running
+#   epghttpd needs a key based login there (ssh-copy-id root@<ip>).
+#   The output is shown in the web frontend, exit code != 0 means failed.
+
+name="$1"
+ip="$2"
+uuid="$3"
+
+if [ -z "$ip" ]; then
+   echo "usage: $0 <name> <ip> <uuid>"
+   exit 1
+fi
+
+# per VDR handling, e.g.:
+#
+# case "$name" in
+#    pool) ssh ... ;;
+# esac
+
+# ssh to the VDR name if it resolves to its ip (known_hosts often lists the name), else to the ip
+
+host="$ip"
+
+if [ -n "$name" ] && getent hosts "$name" | grep -qw "$ip"; then
+   host="$name"
+fi
+
+if ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=accept-new "root@$host" \
+       'systemctl start vdr' 2>&1; then
+   echo "VDR $name wird gestartet"
+   exit 0
+fi
+
+echo "Starten von VDR $name ($ip) fehlgeschlagen"
+exit 1

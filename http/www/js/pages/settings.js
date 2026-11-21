@@ -3,8 +3,9 @@
 import { state, hasRight, rights } from '../state.js';
 import { get, post, mediaUrl } from '../api.js';
 import { busy, toast, toastError, dialog, confirmBox, stickyBar } from '../ui.js';
-import { formatDateTime, nowUnix, sizeText } from '../utils.js';
+import { formatDateTime, sizeText, agoText } from '../utils.js';
 import { icon } from '../icons.js';
+import { vdrState, startButton } from '../vdrstate.js';
 import { field, checkbox, select } from '../forms.js';
 import { loadProfile, loadChannels, loadVdrs } from '../data.js';
 import { md5 } from '../lib/md5.js';
@@ -134,8 +135,9 @@ function profileTab($body) {
 
       // start page (stored as 'menu_<page>')
 
-      const startPages = ['now', 'magazine', 'timeline', 'timerList', 'records', 'search'].map((k) =>
-         ({ value: 'menu_' + k, label: k === 'timerList' ? tr.menu.timer : tr.menu[k] }));
+      const startPages = ['overview', 'now', 'magazine', 'timeline', 'timerList', 'records', 'search'].map((k) =>
+         ({ value: 'menu_' + k, label: k === 'timerList' ? tr.menu.timer : tr.menu[k] }))
+         .concat({ value: 'menu_last', label: 'zuletzt besuchte Seite' });
 
       const $start = select(startPages, val('startPage') || 'menu_now');
       const $defVdr = select([{ value: '', label: '(erster VDR)' }, ...vdrOpts(false)], val('defaultVDRuuid'));
@@ -660,16 +662,6 @@ function usersTab($body) {
 // ---------------------------------------------------------------------------
 // VDRs: all rows of the vdrs table with details, delete a row, wake on lan
 
-// 'vor 5 Minuten', 'vor 3 Stunden', 'vor 12 Tagen' (rounded)
-
-function agoText(t) {
-   const s = Math.max(0, nowUnix() - t);
-   const [n, one, many] = s < 90 ? [0] : s < 5400 ? [Math.round(s / 60), 'Minute', 'Minuten']
-      : s < 129600 ? [Math.round(s / 3600), 'Stunde', 'Stunden'] : [Math.round(s / 86400), 'Tag', 'Tagen'];
-
-   return !n ? 'gerade eben' : 'vor ' + n + ' ' + (n === 1 ? one : many);
-}
-
 function vdrsTab($body) {
    const $grid = $('<div class="settings-grid vdr-grid">');
 
@@ -677,9 +669,12 @@ function vdrsTab($body) {
       helpLink('optVdrs'),
       $grid);
 
+   let canStart = false;          // start script configured
+
    async function load() {
       try {
-         const data = await busy(get('data/vdrs?all=1'));
+         const data = await busy(get('data/vdrs?all=1&probe=1'));
+         canStart = !!data.vdrstart;
          const vdrs = Object.entries(data.vdrs || {}).map(([uuid, v]) => ({ uuid, ...v }))
             .sort((a, b) => (a.uuid === 'epgd' ? -1 : b.uuid === 'epgd' ? 1 : 0)
                || (a.state === 'attached' ? 0 : 1) - (b.state === 'attached' ? 0 : 1)
@@ -695,12 +690,13 @@ function vdrsTab($body) {
 
    function vdrCard(v) {
       const isEpgd = v.uuid === 'epgd';
+      const st = isEpgd ? null : vdrState(v, canStart);
       const kv = [];
       const add = (label, value) => value !== undefined && value !== null && value !== '' && kv.push($('<dt>').text(label), $('<dd>').append(value));
 
       add('UUID', $('<code class="small">').text(v.uuid));
       add('Version', v.version);
-      add('Status', v.state);
+      add('Status', isEpgd ? v.state : st.text + (v.state && v.state !== 'attached' ? ' (' + v.state + ')' : ''));
       add('Master', v.master === 'Y' ? 'ja' : v.master === 'n' ? 'nein' : null);
       add('Aktiv', v.lastupdate ? $('<span>').attr('title', formatDateTime(v.lastupdate)).text(agoText(v.lastupdate)) : null);
       add('IP', v.ip);
@@ -728,7 +724,7 @@ function vdrsTab($body) {
          $('<dl class="kv">').append(kv),
          isEpgd ? null : $('<div class="btn-row">').append(
             remoteButton(v),
-            v.mac ? $('<button type="button" class="btn btn-ok">').append(icon('play'), $('<span>').text('Wecken (WOL)')).on('click', () => wol(v)) : null,
+            startButton(v, st, 'btn-ok'),
             $('<span class="dl-spacer">'),
             $('<button type="button" class="btn btn-danger">').append(icon('trash'), $('<span>').text(tr.del)).on('click', () => remove(v))));
    }
@@ -761,14 +757,6 @@ function vdrsTab($body) {
          cls: 'dlg-remote',
          content: $('<iframe class="remote-frame" allow="fullscreen">').attr('src', url).attr('title', 'Fernbedienung')
       });
-   }
-
-   async function wol(v) {
-      try {
-         const res = await busy(get('data/wakeupvdr?uuid=' + encodeURIComponent(v.uuid)));
-         toast('VDR ' + v.name + ': ' + (res.result?.message || 'done'));
-      }
-      catch (e) { toastError(e); }
    }
 
    async function remove(v) {

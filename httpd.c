@@ -9,8 +9,14 @@
 
 #include <sys/signal.h>
 #include <sys/select.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <poll.h>
+#include <fcntl.h>
+#include <chrono>
 
 #include <vector>
+#include <algorithm>
 
 #include "lib/common.h"
 #include "lib/epgservice.h"
@@ -2129,6 +2135,59 @@ int cEpgHttpd::ipOfVdr(const char* uuid, const char*& ip, int& port)
 }
 
 //***************************************************************************
+// VDR of Recording
+//   the VDR to rename/delete a recording: the one which listed it, for a recording of the
+//   common recording folder (common) any other attached VDR using the common folder if
+//   it is not alive; returns yes if one was found
+//***************************************************************************
+
+int cEpgHttpd::vdrOfRecording(const char* uuid, int common, std::string& ip, int& port, std::string& videoDir)
+{
+   int found {no};
+
+   port = 0;
+   ip = "";
+   videoDir = "";
+
+   vdrDb->clear();
+   vdrDb->setValue("UUID", uuid);
+
+   if (vdrDb->find() && vdrDb->hasValue("STATE", "attached") && vdrDb->getIntValue("SVDRP"))
+   {
+      ip = vdrDb->getStrValue("IP");
+      port = vdrDb->getIntValue("SVDRP");
+      videoDir = vdrDb->getStrValue("VIDEODIR");
+      found = yes;
+   }
+
+   vdrDb->reset();
+
+   if (found || !common)
+      return found;
+
+   vdrDb->clear();
+
+   for (int f = selectVdrs->find(); f && !found; f = selectVdrs->fetch())
+   {
+      if (strcmp(vdrDb->getStrValue("UUID"), "epgd") != 0 && vdrDb->hasValue("STATE", "attached")
+          && vdrDb->getIntValue("SVDRP") > 0 && vdrDb->getIntValue("USECOMMONRECFOLDER"))
+      {
+         ip = vdrDb->getStrValue("IP");
+         port = vdrDb->getIntValue("SVDRP");
+         videoDir = vdrDb->getStrValue("VIDEODIR");
+         found = !ip.empty();
+
+         if (found)
+            tell(eloInfo, "Recording of not alive VDR '%s', using '%s' (common recording folder)", uuid, vdrDb->getStrValue("NAME"));
+      }
+   }
+
+   selectVdrs->freeResult();
+
+   return found;
+}
+
+//***************************************************************************
 // Wakekup VDR
 //***************************************************************************
 
@@ -2150,6 +2209,180 @@ int cEpgHttpd::wakeupVdr(const char* uuid)
    vdrDb->reset();
 
    return status;
+}
+
+//***************************************************************************
+// Start VDR
+//   for a VDR started on demand on an always running host: call the
+//   configured 'vdrStartScript' with name, ip and uuid of the VDR
+//***************************************************************************
+
+int cEpgHttpd::startVdr(const char* uuid, std::string& result)
+{
+   char script[255+TB] {};
+   std::string name, ip;
+   char* command {};
+   char buf[256] {};
+
+   getParameter("epgd", "vdrStartScript", script);
+
+   if (isEmpty(script))
+   {
+      result = "Host läuft, VDR ist nicht gestartet - kein Start-Skript konfiguriert";
+      return fail;
+   }
+
+   if (!fileExists(script))
+   {
+      result = std::string("Start-Skript '") + script + "' nicht gefunden";
+      return fail;
+   }
+
+   vdrDb->clear();
+   vdrDb->setValue("UUID", uuid);
+
+   if (vdrDb->find())
+   {
+      name = vdrDb->getStrValue("NAME");
+      ip = vdrDb->getStrValue("IP");
+   }
+
+   vdrDb->reset();
+
+   if (ip.empty())
+   {
+      result = "IP des VDR unbekannt";
+      return fail;
+   }
+
+   // the values come from the database -> no quotes inside
+
+   for (auto* v : { &name, &ip })
+      v->erase(std::remove(v->begin(), v->end(), '\''), v->end());
+
+   asprintf(&command, "%s '%s' '%s' '%s' 2>&1", script, name.c_str(), ip.c_str(), uuid);
+   tell(eloInfo, "Starting VDR '%s' by '%s'", name.c_str(), command);
+
+   FILE* fp = popen(command, "r");
+   free(command);
+
+   if (!fp)
+   {
+      result = "Start-Skript konnte nicht ausgeführt werden";
+      return fail;
+   }
+
+   result = "";
+
+   while (fgets(buf, sizeof(buf), fp))
+      result += buf;
+
+   int rc = pclose(fp);
+
+   while (!result.empty() && isspace((unsigned char)result.back()))
+      result.pop_back();
+
+   if (rc != 0)
+   {
+      tell(eloError, "Error: Starting VDR '%s' failed (%d): %s", name.c_str(), rc, result.c_str());
+
+      if (result.empty())
+         result = "Start-Skript fehlgeschlagen";
+
+      return fail;
+   }
+
+   if (result.empty())
+      result = "VDR wird gestartet";
+
+   return success;
+}
+
+//***************************************************************************
+// Probe Hosts
+//***************************************************************************
+
+static const char* probeResult(int err)
+{
+   return err == 0 ? "vdr" : err == ECONNREFUSED ? "up" : "down";
+}
+
+void probeHosts(std::vector<HostProbe>& probes, int timeoutMs)
+{
+   using namespace std::chrono;
+   auto end = steady_clock::now() + milliseconds(timeoutMs);
+
+   for (auto& p : probes)
+   {
+      sockaddr_in addr {};
+
+      addr.sin_family = AF_INET;
+      addr.sin_port = htons(p.port);
+
+      if (p.port <= 0 || inet_pton(AF_INET, p.ip.c_str(), &addr.sin_addr) != 1)
+         continue;
+
+      if ((p.fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0)) < 0)
+         continue;
+
+      int rc = connect(p.fd, (sockaddr*)&addr, sizeof(addr));
+
+      if (rc == 0 || errno != EINPROGRESS)
+      {
+         p.state = probeResult(rc == 0 ? 0 : errno);
+         close(p.fd);
+         p.fd = -1;
+      }
+   }
+
+   while (true)
+   {
+      std::vector<pollfd> fds;
+      std::vector<HostProbe*> open;
+
+      for (auto& p : probes)
+      {
+         if (p.fd >= 0)
+         {
+            fds.push_back({ p.fd, POLLOUT, 0 });
+            open.push_back(&p);
+         }
+      }
+
+      int left = duration_cast<milliseconds>(end - steady_clock::now()).count();
+
+      if (fds.empty() || left <= 0)
+         break;
+
+      if (poll(fds.data(), fds.size(), left) <= 0)
+         break;
+
+      for (size_t i = 0; i < fds.size(); i++)
+      {
+         if (!fds[i].revents)
+            continue;
+
+         int err {0};
+         socklen_t len = sizeof(err);
+
+         getsockopt(fds[i].fd, SOL_SOCKET, SO_ERROR, &err, &len);
+         open[i]->state = probeResult(err);
+         close(open[i]->fd);
+         open[i]->fd = -1;
+      }
+   }
+
+   for (auto& p : probes)       // no answer in time -> down
+   {
+      if (p.fd >= 0)
+      {
+         close(p.fd);
+         p.fd = -1;
+      }
+
+      if (p.obj)
+         json_object_set_new(p.obj, "hoststate", json_string(p.state));
+   }
 }
 
 //***************************************************************************

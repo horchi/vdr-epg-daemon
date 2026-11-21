@@ -7,6 +7,7 @@ import { ensureLogin, logout, showLoginForm } from './session.js';
 import { busy, toastError, confirmBox } from './ui.js';
 import { icon } from './icons.js';
 import { apply as applyTheme, getTheme, cycleMode } from './theme.js';
+import * as pageOverview from './pages/overview.js';
 import * as pageNow from './pages/now.js';
 import * as pageMagazine from './pages/magazine.js';
 import * as pageTimeline from './pages/timeline.js';
@@ -20,6 +21,7 @@ import tr from '../lang/de.js';
 // pages
 
 const pages = {
+   overview:       { label: tr.menu.overview, icon: 'home', page: pageOverview },
    now:            { label: tr.menu.now, icon: 'clock', page: pageNow },
    magazine:       { label: tr.menu.magazine, icon: 'now', page: pageMagazine },
    timeline:       { label: tr.menu.timeline, icon: 'timeline', page: pageTimeline },
@@ -51,6 +53,11 @@ function buildLayout() {
    $content = $('<main class="content" id="content">').appendTo(document.body);
 
    $(document).on('click', '.nav a', () => $('body').removeClass('nav-open'));
+
+   // phone menu: a tap beside it (on the backdrop, see body.nav-open::after) or Escape closes it
+
+   $(document.body).on('click', (ev) => { if (ev.target === document.body) $('body').removeClass('nav-open'); });
+   $(document).on('keydown', (ev) => { if (ev.key === 'Escape' && $('body').hasClass('nav-open')) $('body').removeClass('nav-open'); });
 }
 
 const themeLabels = { auto: 'Theme: automatisch (System)', light: 'Theme: hell', dark: 'Theme: dunkel' };
@@ -100,6 +107,12 @@ function renderVdrs() {
 // ---------------------------------------------------------------------------
 // routing (#page)
 
+const LAST_PAGE_KEY = 'epgd.lastPage';
+let lastPage = null;
+
+try { lastPage = localStorage.getItem(LAST_PAGE_KEY); }
+catch (e) { /* no storage */ }
+
 function route() {
    if (!state.login.rights)
       return $content.empty();
@@ -107,6 +120,12 @@ function route() {
    const startAlias = { timerList: 'timers', searchTimerList: 'timers', profile: 'settings' };
    let start = String(state.profile.startPage || '').replace(/^menu_/, '');
    start = startAlias[start] || start;
+
+   // start page 'last': the page visited last in this browser (incl. tab etc.)
+
+   if (!location.hash && start === 'last' && lastPage)
+      history.replaceState(null, '', '#' + lastPage);
+
    const [hashId, query] = location.hash.slice(1).split('?');
    const params = Object.fromEntries(new URLSearchParams(query || ''));
    let id = hashId || (pages[start] ? start : 'now');
@@ -116,6 +135,11 @@ function route() {
 
    const p = pages[id];
 
+   lastPage = id === hashId ? location.hash.slice(1) : id;      // with tab etc., an unknown page counts as 'now'
+
+   try { localStorage.setItem(LAST_PAGE_KEY, lastPage); }
+   catch (e) { /* no storage */ }
+
    $('#nav a').removeClass('active').filter('[data-page="' + id + '"]').addClass('active');
    document.title = p.label + ' – EPGd';
 
@@ -123,8 +147,20 @@ function route() {
    currentPage?.destroy?.();
    currentPage = p.page;
 
+   // back link to the page we came from (set by e.g. the overview), kept while staying on this page
+
+   const back = state.backTo;
+
+   if (back && !back.page)
+      back.page = id;
+   else if (back && back.page !== id)
+      state.backTo = null;
+
    try {
       p.page.render($content, params);
+
+      if (state.backTo)
+         $content.prepend($('<a class="back-link">').attr('href', back.hash).append(icon('left'), $('<span>').text('Zurück zur ' + back.label)));
    }
    catch (e) {
       log((e.message || 'common error') + '\n' + (e.stack || ''), 2);

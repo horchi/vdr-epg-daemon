@@ -34,6 +34,7 @@ cParameters::Parameter cParameters::parameters[] =
    { "epgd",     "logoShowName",                   ptBool,    "1",                        "^[01]$",               no,    yes },
 
    { "epgd",     "mailScript",                     ptAscii,   BINDEST"/epgd-sendmail",    "^.{0,150}$",           no,    yes },
+   { "epgd",     "vdrStartScript",                 ptAscii,   "",                         "^.{0,150}$",           no,    yes },
 
    { "epgd",     "liveStreamUrl",                  ptAscii,   "",                         "^(https?://.{1,140})?$", no,  yes },
    { "epgd",     "streamEncoder",                  ptAscii,   "auto",                     "^(auto|vaapi|x264)$",  no,    yes },

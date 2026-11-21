@@ -14,7 +14,7 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
 
 =+ webif EPG Ansichbt jede Minute aktualisieren
 ++ VDR crashed beim löschen einer aktiven sofort Aufnahme ab und zu?
-++ Overview Seite (nächste Timer, letzte Aufnahmen, VDRs, Platz, ...)
+== Overview Seite (nächste Timer, letzte Aufnahmen, VDRs, Platz, ...)
 += bei Nachrichten messages Tabelle optional, konfigurierbar zusätzlich Email Notifications versenden
 += Timer Job Check im epg2vdr geht nicht wenn epgd busy
 += am OSD Option um eine Sendung als „bereits aufgezeichnet“ markieren

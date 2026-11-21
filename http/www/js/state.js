@@ -40,7 +40,8 @@ export const state = {
    channels: {},                   // channelid -> channel
    channelOrder: [],
    vdrs: {},                       // uuid -> vdr
-   currentVdr: null
+   currentVdr: null,
+   backTo: null                    // { hash, label, page } – link back to the page we came from (e.g. overview)
 };
 
 export const hasRight = (mask) => (state.login.rights & mask) === mask;

@@ -84,3 +84,19 @@ export function leadText(short, ...longs) {
 // '|a|b | c|' -> 'a, b, c'
 
 export const pipeList = (s, sep = ', ') => (s || '').replace(/^\||\|$/g, '').split(/ ?\| ?/).filter(Boolean).join(sep);
+
+// 'vor 5 Minuten' / 'in 3 Stunden' / 'vor 12 Tagen' (rounded), 'gerade eben' / 'gleich'
+
+export function agoText(t) {
+   const d = nowUnix() - t;
+   const s = Math.abs(d);
+   const [n, one, many] = s < 90 ? [0] : s < 5400 ? [Math.round(s / 60), 'Minute', 'Minuten']
+      : s < 129600 ? [Math.round(s / 3600), 'Stunde', 'Stunden'] : [Math.round(s / 86400), 'Tag', 'Tage'];
+
+   if (!n)
+      return d >= 0 ? 'gerade eben' : 'gleich';
+
+   // dative after 'vor' (Minuten, Stunden, Tagen), accusative after 'in' (Tage)
+
+   return (d >= 0 ? 'vor ' : 'in ') + n + ' ' + (n === 1 ? one : d >= 0 && many === 'Tage' ? 'Tagen' : many);
+}

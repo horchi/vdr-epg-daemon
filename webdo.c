@@ -238,16 +238,44 @@ int cEpgHttpd::doUpdateRecordingTable(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doWakeupVdr(MHD_Connection* tcp, json_t* obj)
 {
-   int status {MHD_HTTP_OK};
    const char* uuid = getStrParameter(tcp, "uuid");
+   std::vector<HostProbe> probe(1);
+   std::string result;
 
    if (isEmpty(uuid))
-      status = MHD_HTTP_INTERNAL_SERVER_ERROR;
+      return buildResponse(obj, MHD_HTTP_BAD_REQUEST, "Missing uuid");
+
+   vdrDb->clear();
+   vdrDb->setValue("UUID", uuid);
+
+   if (!vdrDb->find())
+   {
+      vdrDb->reset();
+      return buildResponse(obj, MHD_HTTP_NOT_FOUND, "VDR '%s' not found", uuid);
+   }
+
+   probe[0].ip = vdrDb->getStrValue("IP");
+   probe[0].port = vdrDb->getIntValue("SVDRP");
+   vdrDb->reset();
+
+   // host running -> start the VDR by the start script, host off -> wake on lan
+
+   if (probe[0].port > 0 && !probe[0].ip.empty())
+      probeHosts(probe);
+
+   if (strcmp(probe[0].state, "vdr") == 0)
+      return buildResponse(obj, MHD_HTTP_OK, "VDR läuft bereits");
+
+   if (strcmp(probe[0].state, "up") == 0)
+   {
+      int status = startVdr(uuid, result);
+      return buildResponse(obj, status == success ? MHD_HTTP_OK : MHD_HTTP_INTERNAL_SERVER_ERROR, "%s", result.c_str());
+   }
 
    if (wakeupVdr(uuid) != success)
-       status = MHD_HTTP_INTERNAL_SERVER_ERROR;
+      return buildResponse(obj, MHD_HTTP_INTERNAL_SERVER_ERROR, "wakeup failed");
 
-   return buildResponse(obj, status, status == MHD_HTTP_OK ? "done" : "wakeup failed");
+   return buildResponse(obj, MHD_HTTP_OK, "WOL gesendet");
 }
 
 //***************************************************************************
@@ -258,10 +286,9 @@ int cEpgHttpd::doRenameRecording(MHD_Connection* tcp, json_t* obj)
 {
    int status {success};
    int alive {no};
-   const char* ip {};
+   std::string ip;
    int port {0};
-   const char* vUuid {};
-   const char* videoBasePath {""};
+   std::string videoBasePath;
    char* opt {};
    char result[512+TB] {};
 
@@ -281,24 +308,16 @@ int cEpgHttpd::doRenameRecording(MHD_Connection* tcp, json_t* obj)
    if (!recordingListDb->find())
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Recording '%s' not found", md5path);
 
-   vUuid = recordingListDb->getStrValue("VDRUUID");
-   alive = ipOfVdr(recordingListDb->getStrValue("VDRUUID"), ip, port);
+   alive = vdrOfRecording(recordingListDb->getStrValue("VDRUUID"), isEmpty(recordingListDb->getStrValue("OWNER")),
+                          ip, port, videoBasePath);
 
    recordingListDb->reset();
 
-   if (!alive || isEmpty(ip) || !port)
+   if (!alive || ip.empty() || !port)
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Can't rename recording, VDR is not alive");
 
-   vdrDb->clear();
-   vdrDb->setValue("UUID", vUuid);
-
-   if (vdrDb->find())
-      videoBasePath = vdrDb->getStrValue("VIDEODIR");
-
-   vdrDb->reset();
-
-   asprintf(&opt, "%s/%s %s", videoBasePath, recordingListDb->getStrValue("PATH"), newName);
-   status = triggerVdr(ip, port, "RENREC", "epg2vdr", opt, result);
+   asprintf(&opt, "%s/%s %s", videoBasePath.c_str(), recordingListDb->getStrValue("PATH"), newName);
+   status = triggerVdr(ip.c_str(), port, "RENREC", "epg2vdr", opt, result);
    free(opt);
 
    if (status != success)
@@ -315,12 +334,11 @@ int cEpgHttpd::doDeleteRecording(MHD_Connection* tcp, json_t* obj)
 {
    int status {success};
    int alive {no};
-   const char* ip {};
+   std::string ip;
    int port {0};
    char* name {};
    char result[512+TB] {};
-   const char* vUuid {};
-   const char* videoBasePath {""};
+   std::string videoBasePath;
 
    const char* md5path = getStrParameter(tcp, "md5path");
    time_t starttime = getIntParameter(tcp, "starttime");
@@ -337,25 +355,16 @@ int cEpgHttpd::doDeleteRecording(MHD_Connection* tcp, json_t* obj)
    if (!recordingListDb->find())
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Recording '%s' not found", md5path);
 
-   vUuid = recordingListDb->getStrValue("VDRUUID");
-   alive = ipOfVdr(vUuid, ip, port);
+   alive = vdrOfRecording(recordingListDb->getStrValue("VDRUUID"), isEmpty(recordingListDb->getStrValue("OWNER")),
+                          ip, port, videoBasePath);
 
    recordingListDb->reset();
 
-   if (!alive || isEmpty(ip) || !port)
+   if (!alive || ip.empty() || !port)
       return buildResponse(obj, MHD_HTTP_NOT_FOUND, "Can't delete recording, VDR is not alive");
 
-   vdrDb->clear();
-   vdrDb->setValue("Uuid", vUuid);
-   vdrDb->reset();
-
-   if (vdrDb->find())
-      videoBasePath = vdrDb->getStrValue("VIDEODIR");
-
-   vdrDb->reset();
-
-   asprintf(&name, "%s/%s", videoBasePath, recordingListDb->getStrValue("PATH"));
-   status = triggerVdr(ip, port, "DELREC", "epg2vdr", name, result);
+   asprintf(&name, "%s/%s", videoBasePath.c_str(), recordingListDb->getStrValue("PATH"));
+   status = triggerVdr(ip.c_str(), port, "DELREC", "epg2vdr", name, result);
    free(name);
 
    if (status != success)
@@ -1121,7 +1130,10 @@ int cEpgHttpd::doCategories(MHD_Connection* tcp, json_t* obj)
 int cEpgHttpd::doVdrs(MHD_Connection* tcp, json_t* obj)
 {
    json_t* oVdrs = json_object();
-   int all = getIntParameter(tcp, "all", 0);   // 1 -> all rows of the table (not only the ones shared in web)
+   int all = getIntParameter(tcp, "all", 0);       // 1 -> all rows of the table (not only the ones shared in web)
+   int probe = getIntParameter(tcp, "probe", 0);   // 1 -> 'hoststate' of the not attached VDRs
+   std::vector<HostProbe> probes;
+   char script[255+TB] {};
 
    vdrDb->clear();
 
@@ -1144,11 +1156,26 @@ int cEpgHttpd::doVdrs(MHD_Connection* tcp, json_t* obj)
                 addFieldToJson(o, vdrDb->getValue(def->getField(i)));
          }
 
+         if (probe && strcmp(uuid, "epgd") != 0 && !vdrDb->hasValue("STATE", "attached") && svdrp > 0
+             && !isEmpty(vdrDb->getStrValue("IP")))
+         {
+            probes.emplace_back();
+            probes.back().ip = vdrDb->getStrValue("IP");
+            probes.back().port = svdrp;
+            probes.back().obj = o;
+         }
+
          json_object_set_new(oVdrs, uuid, o);
       }
    }
 
    selectVdrs->freeResult();
+
+   if (!probes.empty())
+      probeHosts(probes);
+
+   getParameter("epgd", "vdrStartScript", script);
+   json_object_set_new(obj, "vdrstart", json_integer(!isEmpty(script)));
    json_object_set_new(obj, "vdrs", oVdrs);
 
    return MHD_HTTP_OK;
@@ -1840,16 +1867,32 @@ int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
    json_t* oRecording = json_array();
    cDbStatement* select = getIntParameter(tcp, "doubles", 0) ? selectDoubleRecordings : selectAllRecordings;
 
+   // a recording of the common recording folder (empty owner) is listed only once, by the VDR
+   //   which found it first -> show it if any VDR using the common folder is shared in web
+
+   int commonShared = no;
+
+   vdrDb->clear();
+
+   for (int found = selectVdrs->find(); found; found = selectVdrs->fetch())
+   {
+      if (strcmp(vdrDb->getStrValue("UUID"), "epgd") != 0 &&
+          vdrDb->getIntValue("SHAREINWEB") && vdrDb->getIntValue("USECOMMONRECFOLDER"))
+         commonShared = yes;
+   }
+
+   selectVdrs->freeResult();
+
    vdrDb->clear();
    recordingListDb->clear();
 
    for (int found = select->find(); found; found = select->fetch())
    {
-      json_t* oData = json_object();
+      int common = isEmpty(recordingListDb->getStrValue("OWNER"));
 
-      if (!vdrDb->getIntValue("SHAREINWEB"))  // via join
+      if (!vdrDb->getIntValue("SHAREINWEB") && !(common && commonShared))  // via join
       {
-         tell(eloInfo, "Skipping recording '%s' due to not shareinweb flag", recordingListDb->getStrValue("TITLE"));
+         tell(eloDetail, "Skipping recording '%s' due to not shareinweb flag", recordingListDb->getStrValue("TITLE"));
          continue;
       }
 
@@ -1863,6 +1906,8 @@ int cEpgHttpd::doRecordings(MHD_Connection* tcp, json_t* obj)
             continue;
          }
       }
+
+      json_t* oData = json_object();
 
       addFieldToJson(oData, recordingListDb, "NAME");
       addFieldToJson(oData, recordingListDb, "TITLE");

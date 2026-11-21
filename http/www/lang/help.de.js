@@ -23,6 +23,25 @@ export const sections = [
          </ul>`
    },
    {
+      id: 'overview', title: 'Übersicht',
+      html: `
+         <p>Der Stand auf einen Blick, wird jede Minute aktualisiert. Die Kacheln oben führen zur jeweiligen Seite.</p>
+         <ul>
+            <li><b>Kacheln</b> – laufende Aufnahmen, geplante Timer (und wie viele davon in den nächsten 24 Stunden),
+                Anzahl und Gesamtlänge der Aufnahmen, freier Platz mit geschätzter Aufnahmezeit, aktive Suchtimer,
+                neue Nachrichten und das letzte bzw. nächste EPG-Update des epgd.</li>
+            <li><b>Laufende Aufnahmen</b> – mit Fortschritt und Restzeit, nur wenn gerade aufgenommen wird.</li>
+            <li><b>Nächste Timer</b> – nach Tagen gruppiert; ein Klick öffnet die Sendung.</li>
+            <li><b>Letzte Aufnahmen</b> – die neuesten Aufnahmen, mit Knopf zum Abspielen im Browser.</li>
+            <li><b>Hinweise</b> – Timer-Fehler der letzten 7 Tage, Aufträge, die noch auf einen VDR warten,
+                knapper Platz (unter 10&nbsp;%) und ungelesene Nachrichten.</li>
+            <li><b>VDRs</b> – epgd und bis zu 9 VDRs mit Status (verbundene zuerst, nicht im Web freigegebene sind markiert); ein getrennter VDR mit bekannter
+                MAC-Adresse kann per <i>Wecken</i> (Wake on LAN) gestartet werden.</li>
+            <li><b>Speicherplatz</b> – je Videoverzeichnis; VDRs mit gemeinsamem Verzeichnis werden einmal gezeigt.</li>
+         </ul>
+         <p>Unter <a href="#settings?tab=profile">Einstellungen › Profil</a> lässt sich die Übersicht als Startseite wählen.</p>`
+   },
+   {
       id: 'now', title: 'Programm',
       html: `
          <p>Zeigt für alle in der Weboberfläche sichtbaren Kanäle die Sendung zu einem Zeitpunkt – standardmäßig <b>jetzt</b>.
@@ -344,7 +363,11 @@ export const sections = [
             <ul>
                <li>Alle Einträge der Tabelle vdrs: die VDRs mit epg2vdr und der epgd selbst.</li>
                <li>Ein gelöschter VDR trägt sich beim nächsten Start bzw. Update von epg2vdr wieder ein.</li>
-               <li>Wecken per Wake-on-LAN geht nur mit bekannter MAC-Adresse.</li>
+               <li>Bei nicht verbundenen VDRs prüft epghttpd den SVDRP-Port: <i>Host aus</i> (keine Antwort),
+                   <i>Host an, VDR aus</i> (Verbindung abgelehnt) oder <i>VDR läuft, nicht verbunden</i>.</li>
+               <li><b>Wecken</b> schickt bei ausgeschaltetem Host ein Wake-on-LAN (nur mit bekannter MAC-Adresse).
+                   Läuft der Host und nur VDR nicht (z.B. ein VDR, der nur bei Bedarf gestartet wird), heißt der Knopf
+                   <b>VDR starten</b> und ruft das <a href="#help?t=p_vdrStartScript">Start-Skript</a> auf – nur wenn eines eingestellt ist.</li>
                <li><b>Fernbedienung</b> öffnet die Fernbedienung des osd2web-Plugins (<code>http://&lt;IP&gt;:&lt;osd2web-Port&gt;/fb.html</code>)
                    in einem Dialog. Der Knopf ist nur aktiv, wenn
                   <ul>
@@ -364,7 +387,8 @@ export const sections = [
          <div id="h_p_startPage" class="help-param">
             <h5>Startseite</h5>
             <p>Die Seite, die beim Aufruf der Weboberfläche ohne Seitenadresse (z.B. über ein Lesezeichen auf die
-            Startadresse) geöffnet wird.</p>
+            Startadresse) geöffnet wird. Mit <i>zuletzt besuchte Seite</i> geht es dort weiter, wo du in diesem
+            Browser aufgehört hast (inkl. Reiter, z.B. Timer › Suchtimer).</p>
          </div>
          <div id="h_p_defaultVDRuuid" class="help-param">
             <h5>Standard-VDR</h5>
@@ -481,6 +505,14 @@ export const sections = [
             <h5>Skript für den Mailversand</h5>
             <p>Das Programm, über das epgd Mails verschickt (Standard: <code>epgd-sendmail</code> im bin-Verzeichnis
             des epgd). Es muss auf dem epgd-Host den Mailversand erledigen können.</p>
+         </div>
+         <div id="h_p_vdrStartScript" class="help-param">
+            <h5>Skript zum Starten eines VDR</h5>
+            <p>Für VDRs, deren Rechner immer läuft, VDR selbst aber nur bei Bedarf gestartet wird. Ist der Host erreichbar und
+            nur der SVDRP-Port zu, ruft <b>VDR starten</b> (Übersicht und Einstellungen › VDRs) dieses Programm mit Name, IP
+            und UUID des VDR auf; die Ausgabe wird angezeigt, ein Exit-Code ungleich 0 gilt als Fehler. Mitgeliefert wird
+            <code>epgd-startvdr</code> im bin-Verzeichnis des epgd, es startet per ssh als root <code>systemctl start vdr</code>
+            (dafür muss sich der Benutzer von epghttpd per Schlüssel auf dem VDR-Host anmelden können). Leer = aus.</p>
          </div>
          <div id="h_p_eloquence" class="help-param">
             <h5>Log-Ausgaben</h5>
