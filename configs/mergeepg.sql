@@ -252,8 +252,14 @@ END IF;
 *   a similar duration is searched (no title check - the stored lvr functions
 *   are far too expensive for all events of all days, and the start times of
 *   the external providers are nearly identical), its picture references
-*   replace the ones of the event - only events changed since the last run
-*   are checked
+*   replace the ones of the event - only pairs with a changed event or a
+*   changed donor since the last run are checked, split into two selects
+*   (driven by the changed events / by the changed donors) since a single
+*   select with GREATEST(ev.updsp, dn.updsp) can't use an index and checks
+*   all events against all donor events of the channel; the channel id is
+*   compared by >= and <= instead of = to get a range lookup over channel
+*   and start time for each row (with = only the channel part of the index
+*   is used), equal distances are decided by the donor id
 */
 drop temporary table if exists imgdonor;
 create temporary table imgdonor
@@ -264,21 +270,49 @@ create temporary table imgdonor
 ) engine = memory;
 insert ignore into imgdonor
 select
- ev.eventid, dn.eventid, dn.imagecount
+ c.eventid, c.donorid, c.imagecount
 from
- events ev
- inner join channelmap cm on (cm.channelid = ev.channelid and cm.merge = 3)
- inner join events dn on (dn.channelid = ev.channelid and dn.source = cm.source)
-where
- ev.source not in ('vdr', cm.source) and
- ifnull(ev.delflg, 'N') != 'Y' and ifnull(dn.delflg, 'N') != 'Y' and
- dn.imagecount > 0 and
- ev.starttime + ev.duration > unix_timestamp() and
- dn.starttime between ev.starttime - 60 and ev.starttime + 60 and
- (dn.duration+1) / (ev.duration+1) * 100 between 50 and 200 and
- GREATEST(ev.updsp, dn.updsp) >= lastrun - 5
+(
+ /* changed events */
+ select
+  ev.eventid, dn.eventid donorid, dn.imagecount, abs(dn.starttime - ev.starttime) dist
+ from
+  events ev
+  inner join channelmap cm on (cm.channelid = ev.channelid and cm.merge = 3)
+  inner join events dn force index (idxchannelidstarttime) on
+     (dn.channelid >= ev.channelid and dn.channelid <= ev.channelid and
+      dn.starttime between ev.starttime - 60 and ev.starttime + 60)
+ where
+  dn.source = cm.source and
+  ev.updsp >= lastrun - 5 and
+  ev.source not in ('vdr', cm.source) and
+  ifnull(ev.delflg, 'N') != 'Y' and ifnull(dn.delflg, 'N') != 'Y' and
+  dn.imagecount > 0 and
+  ev.starttime + ev.duration > unix_timestamp() and
+  dn.starttime between ev.starttime - 60 and ev.starttime + 60 and
+  (dn.duration+1) / (ev.duration+1) * 100 between 50 and 200
+ union
+ /* changed donors */
+ select straight_join
+  ev.eventid, dn.eventid, dn.imagecount, abs(dn.starttime - ev.starttime)
+ from
+  channelmap cm
+  inner join events dn on (dn.source = cm.source and dn.channelid = cm.channelid)
+  inner join events ev force index (idxchannelidstarttime) on
+     (ev.channelid >= dn.channelid and ev.channelid <= dn.channelid and
+      ev.starttime between dn.starttime - 60 and dn.starttime + 60)
+ where
+  cm.merge = 3 and
+  dn.updsp >= lastrun - 5 and
+  ev.source not in ('vdr', cm.source) and
+  ifnull(ev.delflg, 'N') != 'Y' and ifnull(dn.delflg, 'N') != 'Y' and
+  dn.imagecount > 0 and
+  ev.starttime + ev.duration > unix_timestamp() and
+  dn.starttime between ev.starttime - 60 and ev.starttime + 60 and
+  (dn.duration+1) / (ev.duration+1) * 100 between 50 and 200
+) c
 order by
- ev.eventid, abs(dn.starttime - ev.starttime);
+ c.eventid, c.dist, c.donorid;
 /* drop references which differ from the donor ones */
 delete r from
  imagerefs r

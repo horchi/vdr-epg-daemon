@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.7"
+#define _VERSION     "1.4.8"
 #define VERSION_DATE "21.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-21: version 1.4.8 (horchi)
+   - Bugfix: improved EPG merge speed (the picture merge mode 3 had high database load)
 
 2026-11-21: version 1.4.7 (horchi)
    - Added:  live TV in the browser
