@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.16"
+#define _VERSION     "1.4.17"
 #define VERSION_DATE "22.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-22: version 1.4.17 (horchi)
+   - Bugfix: webfrontend, program: quick times jumped back to today instead of staying on the shown day
 
 2026-11-22: version 1.4.16 (horchi)
    - Bugfix: epglv was installed to the plugin dir of the client lib instead of the one of the server

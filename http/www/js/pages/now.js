@@ -3,10 +3,10 @@
 import { state } from '../state.js';
 import { get, post } from '../api.js';
 import { busy, toastError, stickyBar } from '../ui.js';
-import { now, nowUnix, unixTime, formatTime, formatDate, progressOf, toLocalInput, fromLocalInput, textToHtml } from '../utils.js';
+import { toDate, nowUnix, unixTime, formatTime, formatDate, progressOf, toLocalInput, fromLocalInput, textToHtml } from '../utils.js';
 import { channelBadge, doneBadge } from '../data.js';
 import { icon } from '../icons.js';
-import { foreignKey, ctrlScroll, tileInNextRow, focusTile, autoRefresh, replaceBox } from '../gridtools.js';
+import { quickTimeAt, foreignKey, ctrlScroll, tileInNextRow, focusTile, autoRefresh, replaceBox } from '../gridtools.js';
 import { showEvent } from '../eventDetail.js';
 import { liveButton } from '../player.js';
 import { groupSelect, currentGroup, inGroup } from '../groupfilter.js';
@@ -31,13 +31,16 @@ function quickTimes() {
    return list;
 }
 
-// 'HH:MM' -> unix time; if more than one hour in the past -> tomorrow
+// 'HH:MM' -> unix time on the day of the shown time; a night time (before NIGHT_END)
+//   chosen from the day (from NIGHT_END on) is the night after it -> next day
 
-function timeOfToday(hhmm) {
+const NIGHT_END = 6;                  // [h]
+
+function quickTimeFrom(base, hhmm) {
    const [h, m] = hhmm.split(':').map(Number);
-   const d = now();
+   const d = toDate(base || nowUnix());
 
-   if (h < d.getHours() - 1)
+   if (h < NIGHT_END && d.getHours() >= NIGHT_END)
       d.setDate(d.getDate() + 1);
 
    d.setHours(h, m || 0, 0, 0);
@@ -164,7 +167,7 @@ async function setTime(type, time, silent = false) {
       current.type = type;
    }
    else {
-      return setTime('@time', timeOfToday(type));
+      return setTime('@time', quickTimeFrom(current.time, type));
    }
 
    if (!$page)
@@ -178,7 +181,7 @@ async function setTime(type, time, silent = false) {
    // mark the current selection: @Now/@Next, a quick search or a quick time matching the time
 
    const sel = type !== '@time' ? type
-      : quickTimes().find((q) => q.value[0] !== '@' && timeOfToday(q.value) === current.time)?.value || '';
+      : quickTimeAt(quickTimes().filter((q) => q.value[0] !== '@'), current.time);
    const qtSel = quickTimes().some((q) => q.value === sel) ? sel : '';
 
    $page.find('button[data-type]').removeClass('active').filter((i, b) => $(b).attr('data-type') === sel).addClass('active');
