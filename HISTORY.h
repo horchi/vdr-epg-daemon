@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.13"
+#define _VERSION     "1.4.14"
 #define VERSION_DATE "21.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-21: version 1.4.14 (horchi)
+   - Added:  web frontend, program: remaining time of running events and production year on the cards
 
 2026-11-21: version 1.4.13 (horchi)
    - Added:  new overview page (running recordings, next timers, latest recordings, notes, VDRs, disk space)

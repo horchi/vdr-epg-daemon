@@ -510,7 +510,7 @@ int cEpgHttpd::initDb()
    //
    // select e.useid, e.channelid,
    //        e.imagecount, e.title, e.shorttext, e.shortdescription,
-   //        e.starttime, e.duration, e.category, e.genre, e.tipp, e.numrating
+   //        e.starttime, e.duration, e.category, e.genre, e.tipp, e.numrating, e.year
    //    from eventsviewplain e, (select channelid, max(channelname) channelname, min(ord) ord, max(visible) visible from channelmap group by channelid) c
    //      where
    //        e.channelid = c.channelid
@@ -540,6 +540,7 @@ int cEpgHttpd::initDb()
    selectEventsAt->bind("Genre", cDBS::bndOut, ", ");
    selectEventsAt->bind("Tipp", cDBS::bndOut, ", ");
    selectEventsAt->bind("Numrating", cDBS::bndOut, ", ");
+   selectEventsAt->bind("Year", cDBS::bndOut, ", ");
    selectEventsAt->build(" from eventsviewplain e, (select channelid, max(channelname) channelname, min(ord) ord, max(visible) visible from %s group by channelid) c where ", mapDb->TableName());
    selectEventsAt->build("e.%s = c.%s and c.visible & 1",
                          useeventsDb->getField("ChannelId")->getDbName(),
@@ -555,7 +556,7 @@ int cEpgHttpd::initDb()
    //
    // select e.useid, e.channelid,
    //        e.imagecount, e.title, e.shorttext, e.shortdescription,
-   //        e.starttime, e.duration, e.category, e.genre, e.tipp, e.numrating
+   //        e.starttime, e.duration, e.category, e.genre, e.tipp, e.numrating, e.year
    //    from eventsviewplain e, (select distinct channelid, channelname, ord, visible from channelmap) c
    //      where
    //        e.channelid = c.channelid
@@ -585,6 +586,7 @@ int cEpgHttpd::initDb()
    selectEventsStartInRange->bind("Genre", cDBS::bndOut, ", ");
    selectEventsStartInRange->bind("Tipp", cDBS::bndOut, ", ");
    selectEventsStartInRange->bind("Numrating", cDBS::bndOut, ", ");
+   selectEventsStartInRange->bind("Year", cDBS::bndOut, ", ");
    selectEventsStartInRange->build(" from eventsviewplain e, (select channelid, max(channelname) channelname, min(ord) ord, max(visible) visible from %s group by channelid) c where ", mapDb->TableName());
    selectEventsStartInRange->build("e.%s = c.%s and c.visible & 1",
                                    useeventsDb->getField("ChannelId")->getDbName(),
@@ -600,7 +602,7 @@ int cEpgHttpd::initDb()
    //
    // select e.useid, e.channelid,
    //        e.imagecount, e.title, e.shorttext, e.shortdescription, e.starttime,
-   //        e.duration, e.category, e.genre, e.tipp, e.numrating
+   //        e.duration, e.category, e.genre, e.tipp, e.numrating, e.year
    //   from
    //      (select
    //         min(concat(e.starttime,e.channelid,e.source)) PK,
@@ -636,6 +638,7 @@ int cEpgHttpd::initDb()
    selectEventsNext->bind("Genre", cDBS::bndOut, ", ");
    selectEventsNext->bind("Tipp", cDBS::bndOut, ", ");
    selectEventsNext->bind("Numrating", cDBS::bndOut, ", ");
+   selectEventsNext->bind("Year", cDBS::bndOut, ", ");
    selectEventsNext->build(" from (select min(concat(e.%s, e.%s, e.%s)) PK, e.%s, c.%s",
                            useeventsDb->getField("STARTTIME")->getDbName(),
                            useeventsDb->getField("CHANNELID")->getDbName(),

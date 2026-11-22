@@ -257,8 +257,16 @@ function renderEvents(events) {
 function updateProgress(card, e) {
    const p = progressOf(e.starttime, e.duration);
 
-   if (p !== null)
+   if (p !== null) {
       $(card).find('.progress > div').css('width', p + '%');
+      $(card).find('.ev-rest').text(restText(e));
+   }
+}
+
+// remaining time of a running event: 'noch 42 Min.'
+
+function restText(e) {
+   return 'noch ' + Math.max(0, Math.round((e.starttime + e.duration - nowUnix()) / 60)) + ' ' + tr.minutes;
 }
 
 function eventCard(e) {
@@ -278,7 +286,9 @@ function eventCard(e) {
          channelBadge(e.channelid, { showName: false }),
          $('<div class="ev-when">').append($time,
             progress !== null
-               ? $('<div class="progress">').append($('<div>').css('width', progress + '%'))
+               ? $('<div class="ev-prog">').append(
+                  $('<div class="progress">').append($('<div>').css('width', progress + '%')),
+                  $('<span class="ev-rest">').text(restText(e)))
                : $('<div class="ev-date">').text(formatDate(e.starttime))),
          liveButton(e)),
       $('<div class="ev-body">').append(
@@ -286,6 +296,6 @@ function eventCard(e) {
          $('<div class="ev-title">').text(e.title).append(
             e.numrating ? $('<span class="rate">').addClass('rate' + e.numrating) : null),
          $('<div class="ev-desc">').append(
-            e.genre ? $('<span class="ev-genre">').text(e.genre) : null,
+            e.genre || e.year ? $('<span class="ev-genre">').text([e.genre, e.year].filter(Boolean).join(' · ')) : null,
             desc ? textToHtml(desc) : null)));
 }

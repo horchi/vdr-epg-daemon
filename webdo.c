@@ -1540,6 +1540,7 @@ int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
          addFieldToJson(oEvtData, useeventsDb, "SHORTTEXT");
          addFieldToJson(oEvtData, useeventsDb, "SHORTDESCRIPTION");
          addFieldToJson(oEvtData, useeventsDb, "NUMRATING");
+         addFieldToJson(oEvtData, useeventsDb, "YEAR");
          addFieldToJson(oEvtData, useeventsDb, "TIPP");
          addFieldToJson(oEvtData, useeventsDb, "IMAGECOUNT");
 

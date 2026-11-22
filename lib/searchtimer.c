@@ -1059,6 +1059,7 @@ int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, 
       addFieldToJson(oData, useeventsDb, "SHORTTEXT");
       addFieldToJson(oData, useeventsDb, "SHORTDESCRIPTION");
       addFieldToJson(oData, useeventsDb, "NUMRATING");
+      addFieldToJson(oData, useeventsDb, "YEAR");
       addFieldToJson(oData, useeventsDb, "TIPP");
       addFieldToJson(oData, useeventsDb, "IMAGECOUNT");
 
