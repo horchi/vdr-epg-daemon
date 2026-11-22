@@ -1619,34 +1619,107 @@ int cEpgHttpd::doTimerJobs(MHD_Connection* tcp, json_t* obj)
 
 int cEpgHttpd::doDoneTimers(MHD_Connection* tcp, json_t* obj)
 {
+   // optional parameters:
+   //   limit  - only the newest <limit> entries (0 -> all)
+   //   search - only entries with search text in title, shorttext, search timer name or expression
+
+   static const char* fields[] = { "ID", "STATE", "STARTTIME", "DURATION", "TITLE", "SHORTTEXT", "CHANNELID",
+                                   "AUTOTIMERID", "AUTOTIMERNAME", "EXPRESSION", "INFO", nullptr };
+   static const char* searchFields[] = { "TITLE", "SHORTTEXT", "AUTOTIMERNAME", "EXPRESSION", nullptr };
+
+   int limit = std::max(getIntParameter(tcp, "limit", 0), 0);
+   const char* search = getStrParameter(tcp, "search", "");
+
+   cDbValue searchValue("search", cDBS::ffAscii, 300);
+   cDbValue limitValue("limit", cDBS::ffInt, 0);
+   cDbValue countValue("count", cDBS::ffInt, 0);
+
+   if (!isEmpty(search))
+   {
+      std::string like = "%";
+
+      for (const char* p = search; *p; p++)   // escape the wildcards of LIKE
+      {
+         if (*p == '%' || *p == '_' || *p == '\\')
+            like += '\\';
+         like += *p;
+      }
+
+      like += "%";
+      searchValue.setValue(like.c_str());
+   }
+
+   limitValue.setValue(limit);
+
+   auto addWhere = [&](cDbStatement* stmt)
+   {
+      if (isEmpty(search))
+         return;
+
+      for (int i = 0; searchFields[i]; i++)
+         stmt->bindCmp(0, searchFields[i], &searchValue, "like", i ? " or " : " where (");
+
+      stmt->build(")");
+   };
+
+   // total count (of the matching entries)
+
+   int total {0};
+   cDbStatement countStmt(timersDoneDb);
+
+   countStmt.build("select ");
+   countStmt.bindTextFree("count(*)", &countValue, cDBS::bndOut);
+   countStmt.build(" from %s", timersDoneDb->TableName());
+   addWhere(&countStmt);
+
+   if (countStmt.prepare() != success)
+      return buildResponse(obj, MHD_HTTP_INTERNAL_SERVER_ERROR, "Query of done timers failed");
+
+   if (countStmt.find())
+      total = countValue.getIntValue();
+
+   countStmt.freeResult();
+
+   // entries, newest first
+
+   cDbStatement selectStmt(timersDoneDb);
+
+   selectStmt.build("select ");
+
+   for (int i = 0; fields[i]; i++)
+      selectStmt.bind(fields[i], cDBS::bndOut, i ? ", " : nullptr);
+
+   selectStmt.build(" from %s", timersDoneDb->TableName());
+   addWhere(&selectStmt);
+   selectStmt.build(" order by %s desc", timersDoneDb->getField("STARTTIME")->getDbName());
+
+   if (limit > 0)
+   {
+      selectStmt.build(" limit");
+      selectStmt.bind(&limitValue, cDBS::bndIn);
+   }
+
+   if (selectStmt.prepare() != success)
+      return buildResponse(obj, MHD_HTTP_INTERNAL_SERVER_ERROR, "Query of done timers failed");
+
    json_t* oTimer = json_array();
 
    timersDoneDb->clear();
 
-   // query pending and failed timers ...
-
-   for (int found = selectDoneTimers->find(); found; found = selectDoneTimers->fetch())
+   for (int found = selectStmt.find(); found; found = selectStmt.fetch())
    {
       json_t* oData = json_object();
 
-      addFieldToJson(oData, timersDoneDb, "ID");
-      addFieldToJson(oData, timersDoneDb, "STATE");
-      addFieldToJson(oData, timersDoneDb, "STARTTIME");
-      addFieldToJson(oData, timersDoneDb, "DURATION");
-      addFieldToJson(oData, timersDoneDb, "TITLE");
-      addFieldToJson(oData, timersDoneDb, "SHORTTEXT");
-      addFieldToJson(oData, timersDoneDb, "CHANNELID");
-      addFieldToJson(oData, timersDoneDb, "AUTOTIMERID");
-      addFieldToJson(oData, timersDoneDb, "AUTOTIMERNAME");
-      addFieldToJson(oData, timersDoneDb, "EXPRESSION");
-      addFieldToJson(oData, timersDoneDb, "INFO");
+      for (int i = 0; fields[i]; i++)
+         addFieldToJson(oData, timersDoneDb, fields[i]);
 
       json_array_append_new(oTimer, oData);
    }
 
-   selectDoneTimers->freeResult();
+   selectStmt.freeResult();
 
    json_object_set_new(obj, "donetimers", oTimer);
+   json_object_set_new(obj, "total", json_integer(total));
 
    return MHD_HTTP_OK;
 }
@@ -1994,12 +2067,43 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
             addFieldToJson(oData, timerDb->getValue(def->getField(i)));
       }
 
-      addFieldToJson(oData, useeventsDb, "TITLE");
-      addFieldToJson(oData, useeventsDb, "SHORTTEXT");
-      addFieldToJson(oData, useeventsDb, "SHORTDESCRIPTION");
-      addFieldToJson(oData, useeventsDb, "CATEGORY");
-      addFieldToJson(oData, useeventsDb, "GENRE");
-      addFieldToJson(oData, useeventsDb, "NUMRATING");
+      if (!useeventsDb->getValue("USEID")->isNull())
+      {
+         addFieldToJson(oData, useeventsDb, "TITLE");
+         addFieldToJson(oData, useeventsDb, "SHORTTEXT");
+         addFieldToJson(oData, useeventsDb, "SHORTDESCRIPTION");
+         addFieldToJson(oData, useeventsDb, "CATEGORY");
+         addFieldToJson(oData, useeventsDb, "GENRE");
+         addFieldToJson(oData, useeventsDb, "NUMRATING");
+      }
+      else
+      {
+         // event already deleted (finished timers are kept longer than the events),
+         //   take title from the done entry or at least from the file name
+
+         int found {no};
+
+         if (!timerDb->getValue("DONEID")->isNull())
+         {
+            timersDoneDb->clear();
+            timersDoneDb->setValue("ID", timerDb->getIntValue("DONEID"));
+
+            if ((found = timersDoneDb->find()))
+            {
+               addFieldToJson(oData, timersDoneDb, "TITLE");
+               addFieldToJson(oData, timersDoneDb, "SHORTTEXT");
+            }
+
+            timersDoneDb->reset();
+         }
+
+         if (!found && !timerDb->getValue("FILE")->isEmpty())
+         {
+            const char* file = timerDb->getStrValue("FILE");
+            const char* p = strrchr(file, '~');
+            json_object_set_new(oData, "title", json_string(p ? p+1 : file));
+         }
+      }
 
       // done info of the search timer, only if the event still exists (e.g. not for old finished timers)
 

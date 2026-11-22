@@ -985,19 +985,6 @@ int cEpgHttpd::initDb()
 
    status += selectPendingTimerActions->prepare();
 
-   // select *, inssp, updsp
-   //   from timersdone
-
-   selectDoneTimers = new cDbStatement(timersDoneDb);
-
-   selectDoneTimers->build("select ");
-   selectDoneTimers->bindAllOut();
-   selectDoneTimers->bind("INSSP", cDBS::bndOut, ", ");
-   selectDoneTimers->bind("UPDSP", cDBS::bndOut, ", ");
-   selectDoneTimers->build(" from %s", timersDoneDb->TableName());
-
-   status += selectDoneTimers->prepare();
-
    // select comptitle, compshorttext, episodecompshortname, episodecomppartname, state, channelid, starttime
    //   from timersdone
    //   where state in ('R','Q','C')
@@ -1318,7 +1305,6 @@ int cEpgHttpd::exitDb()
    delete selectSeriesEpisode;       selectSeriesEpisode = 0;
    delete selectSeriesMedia;         selectSeriesMedia = 0;
    delete selectPendingTimerActions; selectPendingTimerActions = 0;
-   delete selectDoneTimers;          selectDoneTimers = 0;
    delete selectDoneKeys;            selectDoneKeys = 0;
    delete selectDoneVersion;         selectDoneVersion = 0;
    delete selectActiveVdrs;          selectActiveVdrs = 0;

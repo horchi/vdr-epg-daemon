@@ -263,6 +263,7 @@ function recentJobsTab($body) {
 
 function historyTab($body) {
    const canEdit = hasRight(rights.timerEdit);
+   const $info = $('<span class="dl-info">');
 
    const list = dataList({
       columns: [
@@ -281,14 +282,59 @@ function historyTab($body) {
       editMode: canEdit,
       empty: trt.empty,
       pageSize: pageSize(),
+      filterText: (t) => [t.title, t.shorttext, t.autotimername, t.expression, channelName(t.channelid), trt.doneStates[t.state]].join(' '),
+      filterHint: trt.historySearchHint,
+      onFilterEnter: (text) => {
+         // search on the server only if not all entries are loaded (or a server search is active)
+         if (text === q.search || (!q.search && q.total <= list.rows().length))
+            return;
+         q.search = text;
+         reload();
+      },
       onRowClick: (t) => showDoneTimer(t.id),
       rowActions: (t) => canEdit ? [rowButton('trash', tr.del, () => deleteTimers([t.id], 'data/store-donetimers'))] : [],
       bulkActions: canEdit ? [{ icon: 'trash', label: tr.del, run: (rows) => deleteTimers(rows.map((r) => r.id), 'data/store-donetimers') }] : [],
-      tools: [toolButton('refresh', tr.reload, () => reload())]
+      tools: [$info, toolButton('refresh', tr.reload, () => reload())]
    });
 
+   // the server sends only the newest entries, 'load all' or a search (enter in the filter) fetches the rest
+
+   const q = { all: false, search: '', total: 0 };
+
+   function updateInfo(count) {
+      $info.empty();
+
+      if (q.search)
+         $info.append($('<span class="dim">').text(trt.historySearch.replace('$1', q.search)),
+            toolButton('close', trt.historySearchClear, () => { q.search = ''; reload(); }));
+
+      if (q.total > count)
+         $info.append($('<span class="dim">').text(trt.historyLoaded.replace('$1', count).replace('$2', q.total)),
+            toolButton('down', trt.historyLoadAll, () => { q.all = true; reload(); }));
+   }
+
    $body.append(list.$el);
-   const reload = async () => list.setRows(await load('data/donetimers', 'donetimers'));
+
+   const reload = async () => {
+      const args = new URLSearchParams();
+
+      if (!q.all)
+         args.set('limit', 10 * pageSize());
+      if (q.search)
+         args.set('search', q.search);
+
+      try {
+         const data = await busy(get('data/donetimers?' + args));
+         const rows = data.donetimers || [];
+         q.total = data.total ?? rows.length;
+         list.setRows(rows);
+         updateInfo(rows.length);
+      }
+      catch (e) {
+         toastError(e);
+      }
+   };
+
    return { reload };
 }
 

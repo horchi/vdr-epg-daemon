@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.17"
+#define _VERSION     "1.4.18"
 #define VERSION_DATE "22.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,11 @@
 
 /*
  * ------------------------------------
+
+2026-11-22: version 1.4.18 (horchi)
+   - Bugfix: TheTVDB scraper wrote series data also to events with the same id on other channels
+   - Bugfix: webfrontend, recent jobs: finished timers without event showed no title
+   - Added:  webfrontend, timer history: loads only the newest entries, 'load all' and search over the whole history
 
 2026-11-22: version 1.4.17 (horchi)
    - Bugfix: webfrontend, program: quick times jumped back to today instead of staying on the shown day

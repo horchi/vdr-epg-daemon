@@ -556,6 +556,8 @@ img { max-width: 100%; }
 .dl-spacer { flex: 1; }
 .dl-bulk { display: flex; gap: 6px; }
 .dl-bulk:not(.active) { display: none; }
+.dl-info { display: flex; align-items: center; gap: 6px; }
+.dl-info:empty { display: none; }
 .dl-th-filter, .dl th.dl-has-filter { white-space: nowrap; }
 .dl th .dl-col-filter { margin-left: 8px; height: 26px; padding: 0 6px; font-size: 12px; text-transform: none; letter-spacing: 0; font-weight: 400; max-width: 170px; }
 .dl-col-filter-m { display: none; }
@@ -634,8 +636,9 @@ img { max-width: 100%; }
    .dl-edit-tools .btn { width: 34px; padding: 0; justify-content: center; }
    .dl-group-sel { max-width: 150px; }
    .dl-count, .dl-spacer { display: none; }
-   .dl-tools > .btn span, .dl-bulk .btn span { display: none; }
-   .dl-tools > .btn, .dl-bulk .btn { width: 34px; padding: 0; justify-content: center; }
+   .dl-tools > .btn span, .dl-bulk .btn span, .dl-info .btn span { display: none; }
+   .dl-tools > .btn, .dl-bulk .btn, .dl-info .btn { width: 34px; padding: 0; justify-content: center; }
+   .dl-info > span { display: none; }
    .dl-bulk::before { font-size: 12px; }
    .dl, .dl tbody, .dl tr, .dl td { display: block; }
    .dl { border: 0; background: none; }

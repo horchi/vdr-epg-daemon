@@ -8,6 +8,7 @@
 //      editMode: true,  // selection only after 'Bearbeiten', with 'select all' and 'select group'
 //      tools: [jQuery], empty: 'text', filterText(row) -> string,
 //      pageSize: n      // render only n rows at once (sort and filter still work on all rows)
+//      onFilterEnter(text), filterHint: 'text'   // enter in the filter field (e.g. search on the server)
 //   });
 //   $parent.append(list.$el); list.setRows(rows);
 
@@ -160,6 +161,9 @@ export function dataList(o) {
          .appendTo($bulk);
 
    $filter.on('input', () => { page = 0; renderBody(); });
+
+   if (o.onFilterEnter)
+      $filter.attr('title', o.filterHint || null).on('keydown', (ev) => { if (ev.key === 'Enter') o.onFilterEnter($filter.val().trim()); });
 
    $tbody.on('click', 'tr', function (ev) {
       if ($(ev.target).closest('button, a, input, label').length)

@@ -294,7 +294,6 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       cDbStatement* selectTimerByEventId {};
       cDbStatement* selectAllSearchTimer {};
       cDbStatement* selectPendingTimerActions {};
-      cDbStatement* selectDoneTimers {};
       cDbStatement* selectDoneKeys {};
       cDbStatement* selectDoneVersion {};
       cDbStatement* selectMovie {};
