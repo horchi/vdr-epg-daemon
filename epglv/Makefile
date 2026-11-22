@@ -22,11 +22,27 @@ CPP_FLAGS := $(CPP_FLAGS_$(ARCH)) -Wall \
 
 CC := gcc
 
-MYSQL_PLGDIR := $(shell $(SQLCFG) --plugindir)
+# plugin dir of the server (mariadb_config/mysql_config --plugindir reports the one of the client lib!)
+#  - can be set by MYSQL_PLGDIR in Make.config or on the command line
+#  - otherwise ask the local server binary, fallback to the client config
+
+ifndef MYSQL_PLGDIR
+  SQLSERVER := $(firstword $(wildcard /usr/sbin/mariadbd /usr/sbin/mysqld /usr/libexec/mariadbd /usr/libexec/mysqld) $(shell which mariadbd mysqld 2>/dev/null))
+  ifneq ($(SQLSERVER),)
+    MYSQL_PLGDIR := $(patsubst %/,%,$(shell $(SQLSERVER) --verbose --help 2>/dev/null | awk '/^plugin[-_]dir /{print $$2; exit}'))
+  endif
+  ifeq ($(MYSQL_PLGDIR),)
+    MYSQL_PLGDIR := $(shell $(SQLCFG) --plugindir)
+  endif
+endif
+
 TARGET  = mysqlepglv.so
 OBJS    = src/epglvbase.o src/epglv.o
 
 all: $(TARGET)
+
+show-plugindir:
+	@echo $(MYSQL_PLGDIR)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CPP_FLAGS) -pipe -O3 -shared -o $(TARGET) $(OBJS)

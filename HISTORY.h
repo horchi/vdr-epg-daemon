@@ -4,7 +4,7 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.15"
+#define _VERSION     "1.4.16"
 #define VERSION_DATE "22.11.2026"
 #define DB_API       8
 
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-22: version 1.4.16 (horchi)
+   - Bugfix: epglv was installed to the plugin dir of the client lib instead of the one of the server
 
 2026-11-22: version 1.4.15 (horchi)
    - Added:  webfrontend EPG views: events already recorded or planned on another channel/time are marked

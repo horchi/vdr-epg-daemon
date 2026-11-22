@@ -15,6 +15,11 @@ Compiling:
    make
    make install
 
+   The lib is installed to the plugin dir of the local MySQL/MariaDB server
+   (plugin_dir of 'mariadbd --verbose --help'). If no server is installed on the
+   build host or the dir is wrong, set it by MYSQL_PLGDIR (Make.config or
+   'make install MYSQL_PLGDIR=...'), check it by 'make show-plugindir'.
+
 Installing UDFs in MySQL:
 -------------------------
 
