@@ -12,9 +12,7 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
  TODOs
 -----------------------------------
 
-=+ webif EPG Ansichbt jede Minute aktualisieren
 ++ VDR crashed beim löschen einer aktiven sofort Aufnahme ab und zu?
-== Overview Seite (nächste Timer, letzte Aufnahmen, VDRs, Platz, ...)
 += bei Nachrichten messages Tabelle optional, konfigurierbar zusätzlich Email Notifications versenden
 += Timer Job Check im epg2vdr geht nicht wenn epgd busy
 += am OSD Option um eine Sendung als „bereits aufgezeichnet“ markieren
@@ -24,8 +22,7 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
 
 ++ Halbautomatischer Abgleich mit yavdr channel Quelle
 ++ channlemap im web bearbeiten (Auswahl pro User ermöglichen)
-=+ Suchtimer löschen als eigenen Dialog anzeigen und alle darüber erstellten Timer anzeigen, damit die auch in einem
-   Rutsch mitgelöscht werden können
+=+ Suchtimer löschen als eigenen Dialog anzeigen und alle darüber erstellten Timer anzeigen, damit die auch in einem Rutsch mitgelöscht werden können
 ++ SSH-Shell zu einem VDR in einem Dialog der VDRs-Seite
    In epghttpd per WebSocket (MHD upgrade) + forkpty(ssh) + xterm.js nur mit Login und eigenem Benutzerrecht, möglichst HTTPS
 =+ am Suchtimer im WEB die erledigten Timer aus timersdone anzeigen (ist schon über 'testen' erledigt?)
@@ -47,6 +44,8 @@ Braucht man dass wirklich?
  Fertig:
 -----------------------------------
 
+== Overview Seite (nächste Timer, letzte Aufnahmen, VDRs, Platz, ...)
+== webif EPG Ansicht jede Minute aktualisieren
 == Channel/Aufnahme im Browser abspielen (ggf. auch streamen)
    (Aufnahme H.264 und SD/MPEG-2 per HLS erledigt; offen: UHD/H.265, Spulen über den erzeugten Bereich hinaus, Live-TV)
 == Anzeige des verbleibenden Platzes für Aufnahmen in HH:MM

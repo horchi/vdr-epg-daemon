@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.14"
-#define VERSION_DATE "21.11.2026"
+#define _VERSION     "1.4.15"
+#define VERSION_DATE "22.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -17,8 +17,12 @@
 /*
  * ------------------------------------
 
+2026-11-22: version 1.4.15 (horchi)
+   - Added:  webfrontend EPG views: events already recorded or planned on another channel/time are marked
+   - Added:  webfrontend event dialog: mark an event as 'already recorded'
+
 2026-11-21: version 1.4.14 (horchi)
-   - Added:  web frontend, program: remaining time of running events and production year on the cards
+   - Added:  webfrontend, program: remaining time of running events and production year on the cards
 
 2026-11-21: version 1.4.13 (horchi)
    - Added:  new overview page (running recordings, next timers, latest recordings, notes, VDRs, disk space)

@@ -5,7 +5,7 @@ import { get, post, mediaUrl } from '../api.js';
 import { busy, toast, toastError, dialog, confirmBox, stickyBar } from '../ui.js';
 import { formatDateTime, sizeText, agoText } from '../utils.js';
 import { icon } from '../icons.js';
-import { vdrState, startButton } from '../vdrstate.js';
+import { vdrState, startButton, remoteButton } from '../vdrstate.js';
 import { field, checkbox, select } from '../forms.js';
 import { loadProfile, loadChannels, loadVdrs } from '../data.js';
 import { md5 } from '../lib/md5.js';
@@ -723,40 +723,10 @@ function vdrsTab($body) {
             $('<span class="badge vdr-state">').text(isEpgd ? 'epgd' : v.state || '?')),
          $('<dl class="kv">').append(kv),
          isEpgd ? null : $('<div class="btn-row">').append(
-            remoteButton(v),
+            remoteButton(v, ''),
             startButton(v, st, 'btn-ok'),
             $('<span class="dl-spacer">'),
             $('<button type="button" class="btn btn-danger">').append(icon('trash'), $('<span>').text(tr.del)).on('click', () => remove(v))));
-   }
-
-   // remote control of the osd2web plugin (<ip>:<port>/fb.html), enabled if the VDR
-   //   is attached and the osd2web listener answers
-
-   function remoteButton(v) {
-      const $btn = $('<button type="button" class="btn" disabled>').append(icon('remote'), $('<span>').text('Fernbedienung'))
-         .attr('title', 'osd2web nicht verfügbar');
-
-      if (v.state !== 'attached' || !(v.osd2webp > 0) || !v.ip)
-         return $btn;
-
-      const url = 'http://' + v.ip + ':' + v.osd2webp + '/fb.html';
-
-      $btn.attr('title', 'Prüfe osd2web …');
-
-      fetch(url, { mode: 'no-cors', cache: 'no-store', signal: AbortSignal.timeout(4000) })
-         .then(() => $btn.prop('disabled', false).attr('title', 'Fernbedienung von ' + (v.name || v.ip) + ' öffnen')
-            .on('click', () => openRemote(v, url)))
-         .catch(() => $btn.attr('title', 'osd2web auf ' + v.ip + ':' + v.osd2webp + ' nicht erreichbar'));
-
-      return $btn;
-   }
-
-   function openRemote(v, url) {
-      dialog({
-         title: 'Fernbedienung – ' + (v.name || v.ip),
-         cls: 'dlg-remote',
-         content: $('<iframe class="remote-frame" allow="fullscreen">').attr('src', url).attr('title', 'Fernbedienung')
-      });
    }
 
    async function remove(v) {

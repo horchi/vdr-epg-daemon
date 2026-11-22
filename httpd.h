@@ -149,6 +149,8 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int doRecHlsState(MHD_Connection* tcp, json_t* obj);
       int doRecHlsStop(MHD_Connection* tcp, json_t* obj);
       MHD_Result serveHls(MHD_Connection* tcp, const char* url);
+      MHD_Result serveRemote(MHD_Connection* tcp, const char* url);
+      static void stopRemoteTunnels();
       static void hlsHousekeeping(int all = 0);
       static json_t* streamParameterOptions(const char* name);
       void initLiveStreamUrl();
@@ -159,7 +161,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int storeChannels(json_t* jobj, json_t* obj);
       int deleteTimerJobs(json_t* jInData, json_t* response);
       int deleteVdrs(json_t* jInData, json_t* response);
-      int deleteDoneTimers(json_t* jInData, json_t* response);
+      int storeDoneTimers(json_t* jInData, json_t* response);
       int storeTimerJob(json_t* jobj, json_t* obj);
       int storeSearchTimer(json_t* jobj, json_t* obj);
       int storeParameters(json_t* jInData, json_t* response);
@@ -172,6 +174,9 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       // tools
 
       int modifyCreateTimer(cDbRow* timerRow);
+      void fillDoneFromEvent(char state, const char* channelname);
+      int updateDoneCache();
+      char getDoneState();
 
       // query requests
 
@@ -290,6 +295,8 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       cDbStatement* selectAllSearchTimer {};
       cDbStatement* selectPendingTimerActions {};
       cDbStatement* selectDoneTimers {};
+      cDbStatement* selectDoneKeys {};
+      cDbStatement* selectDoneVersion {};
       cDbStatement* selectMovie {};
       cDbStatement* selectMovieActors {};
       cDbStatement* selectMovieMedia {};
@@ -316,6 +323,13 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       cDbValue imageid;
       cDbValue matchDensityTitle;
       cDbValue matchDensityShorttext;
+
+      // timersdone keys (title + shorttext) with their state, to mark events
+      //   already recorded or planned in the EPG views
+
+      std::map<std::string,char> doneCache;
+      long doneCacheCount {na};
+      long doneCacheUpdSp {na};
 
       // just pointer to the values of cDbTable instances. Don't free them ;)
 

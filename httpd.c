@@ -77,6 +77,7 @@ cEpgHttpd::UserRight cEpgHttpd::userrights[] =
    { "/data/rechlsstate",       umRecordings             },
    { "/data/rechlsstop",        umRecordings             },
    { "/data/rechls",            umRecordings             },     // playlist and segments (prefix)
+   { "/data/osd2web",           umAll                    },     // proxy to the osd2web remote control (prefix)
    { "/data/livehlsstart",      umRecordings             },     // live TV via streamdev (state/stop/segments as rechls*)
    { "/data/channelswitch",     umAll                    },
    { "/data/hitkey",            umAll                    },
@@ -171,6 +172,7 @@ int cEpgHttpd::init()
 #else
    int mhdFlags = MHD_USE_SELECT_INTERNALLY;
 #endif
+   mhdFlags |= MHD_ALLOW_UPGRADE;      // websocket of the osd2web remote control (webremote.c)
    singleton = this;
 
    // init python lib
@@ -327,6 +329,8 @@ int cEpgHttpd::init()
 int cEpgHttpd::exit()
 {
    singleton = 0;
+
+   stopRemoteTunnels();
 
    if (daemon)
       MHD_stop_daemon(daemon);
@@ -541,6 +545,10 @@ int cEpgHttpd::initDb()
    selectEventsAt->bind("Tipp", cDBS::bndOut, ", ");
    selectEventsAt->bind("Numrating", cDBS::bndOut, ", ");
    selectEventsAt->bind("Year", cDBS::bndOut, ", ");
+   selectEventsAt->bind("CompTitle", cDBS::bndOut, ", ");
+   selectEventsAt->bind("CompShortText", cDBS::bndOut, ", ");
+   selectEventsAt->bind("EpisodeCompShortName", cDBS::bndOut, ", ");
+   selectEventsAt->bind("EpisodeCompPartName", cDBS::bndOut, ", ");
    selectEventsAt->build(" from eventsviewplain e, (select channelid, max(channelname) channelname, min(ord) ord, max(visible) visible from %s group by channelid) c where ", mapDb->TableName());
    selectEventsAt->build("e.%s = c.%s and c.visible & 1",
                          useeventsDb->getField("ChannelId")->getDbName(),
@@ -587,6 +595,10 @@ int cEpgHttpd::initDb()
    selectEventsStartInRange->bind("Tipp", cDBS::bndOut, ", ");
    selectEventsStartInRange->bind("Numrating", cDBS::bndOut, ", ");
    selectEventsStartInRange->bind("Year", cDBS::bndOut, ", ");
+   selectEventsStartInRange->bind("CompTitle", cDBS::bndOut, ", ");
+   selectEventsStartInRange->bind("CompShortText", cDBS::bndOut, ", ");
+   selectEventsStartInRange->bind("EpisodeCompShortName", cDBS::bndOut, ", ");
+   selectEventsStartInRange->bind("EpisodeCompPartName", cDBS::bndOut, ", ");
    selectEventsStartInRange->build(" from eventsviewplain e, (select channelid, max(channelname) channelname, min(ord) ord, max(visible) visible from %s group by channelid) c where ", mapDb->TableName());
    selectEventsStartInRange->build("e.%s = c.%s and c.visible & 1",
                                    useeventsDb->getField("ChannelId")->getDbName(),
@@ -639,6 +651,10 @@ int cEpgHttpd::initDb()
    selectEventsNext->bind("Tipp", cDBS::bndOut, ", ");
    selectEventsNext->bind("Numrating", cDBS::bndOut, ", ");
    selectEventsNext->bind("Year", cDBS::bndOut, ", ");
+   selectEventsNext->bind("CompTitle", cDBS::bndOut, ", ");
+   selectEventsNext->bind("CompShortText", cDBS::bndOut, ", ");
+   selectEventsNext->bind("EpisodeCompShortName", cDBS::bndOut, ", ");
+   selectEventsNext->bind("EpisodeCompPartName", cDBS::bndOut, ", ");
    selectEventsNext->build(" from (select min(concat(e.%s, e.%s, e.%s)) PK, e.%s, c.%s",
                            useeventsDb->getField("STARTTIME")->getDbName(),
                            useeventsDb->getField("CHANNELID")->getDbName(),
@@ -982,6 +998,38 @@ int cEpgHttpd::initDb()
 
    status += selectDoneTimers->prepare();
 
+   // select comptitle, compshorttext, episodecompshortname, episodecomppartname, state, channelid, starttime
+   //   from timersdone
+   //   where state in ('R','Q','C')
+
+   selectDoneKeys = new cDbStatement(timersDoneDb);
+
+   selectDoneKeys->build("select ");
+   selectDoneKeys->bind("COMPTITLE", cDBS::bndOut);
+   selectDoneKeys->bind("COMPSHORTTEXT", cDBS::bndOut, ", ");
+   selectDoneKeys->bind("EPISODECOMPSHORTNAME", cDBS::bndOut, ", ");
+   selectDoneKeys->bind("EPISODECOMPPARTNAME", cDBS::bndOut, ", ");
+   selectDoneKeys->bind("STATE", cDBS::bndOut, ", ");
+   selectDoneKeys->bind("CHANNELID", cDBS::bndOut, ", ");
+   selectDoneKeys->bind("STARTTIME", cDBS::bndOut, ", ");
+   selectDoneKeys->build(" from %s where %s in ('%c','%c','%c')", timersDoneDb->TableName(),
+                         timersDoneDb->getField("STATE")->getDbName(),
+                         tdsRecordingDone, tdsTimerRequested, tdsTimerCreated);
+
+   status += selectDoneKeys->prepare();
+
+   // select count(id), max(updsp)
+   //   from timersdone
+
+   selectDoneVersion = new cDbStatement(timersDoneDb);
+
+   selectDoneVersion->build("select ");
+   selectDoneVersion->bind("ID", cDBS::bndOut, "count(");
+   selectDoneVersion->bind("UPDSP", cDBS::bndOut, "), max(");
+   selectDoneVersion->build(") from %s", timersDoneDb->TableName());
+
+   status += selectDoneVersion->prepare();
+
    // select channelname
    //    from channelmap
    //    where channelid = ?
@@ -1271,6 +1319,8 @@ int cEpgHttpd::exitDb()
    delete selectSeriesMedia;         selectSeriesMedia = 0;
    delete selectPendingTimerActions; selectPendingTimerActions = 0;
    delete selectDoneTimers;          selectDoneTimers = 0;
+   delete selectDoneKeys;            selectDoneKeys = 0;
+   delete selectDoneVersion;         selectDoneVersion = 0;
    delete selectActiveVdrs;          selectActiveVdrs = 0;
    delete selectRecordingDirs;       selectRecordingDirs = 0;
    delete selectRecordingByPath;     selectRecordingByPath = 0;
@@ -1719,7 +1769,7 @@ int cEpgHttpd::performPostData(const char* url, MemoryStruct* data)
       else if (strcmp(url, "/data/delete-timerjobs") == 0)
          statusCode = deleteTimerJobs(jInData, response);
       else if (strcmp(url, "/data/store-donetimers") == 0)
-         statusCode = deleteDoneTimers(jInData, response);
+         statusCode = storeDoneTimers(jInData, response);
       else if (strcmp(url, "/data/save-timer") == 0)
          statusCode = storeTimerJob(jInData, response);
       else if (strcmp(url, "/data/save-searchtimer") == 0)
@@ -1904,6 +1954,9 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
 
       if (strncmp(url, "/data/rechls/", 13) == 0)                     // HLS playlist / segments of a recording
          return cEpgHttpd::singleton->serveHls(tcp, url);
+
+      if (strncmp(url, "/data/osd2web/", 14) == 0)                    // osd2web remote control (http and websocket)
+         return cEpgHttpd::singleton->serveRemote(tcp, url);
 
       if (strstr(url, "/data") == url)                                // data requested ...
          statusCode = cEpgHttpd::singleton->performDataRequest(tcp, url, &data);

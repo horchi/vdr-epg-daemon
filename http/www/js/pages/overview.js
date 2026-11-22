@@ -12,7 +12,7 @@ import { autoRefresh } from '../gridtools.js';
 import { showEvent, showRecording } from '../eventDetail.js';
 import { openTimerDialog } from '../timerDialog.js';
 import { playRecording } from '../player.js';
-import { vdrState, startButton } from '../vdrstate.js';
+import { vdrState, startButton, remoteButton } from '../vdrstate.js';
 import { renderDisks, updateDiskTimes, diskList, mbPerMinute, hoursText } from '../disks.js';
 import { prepare as prepareRecording } from './records.js';
 import { messagePlain } from './timers.js';
@@ -353,5 +353,6 @@ function vdrRow(v, canStart) {
             v.uuid === state.currentVdr?.uuid ? $('<span class="badge">').text('ausgewählt') : null,
             !v.isEpgd && !v.shareinweb ? $('<span class="badge">').attr('title', 'Timer und Aufnahmen dieses VDR sind im Web nicht sichtbar').text('nicht freigegeben') : null),
          $('<div class="dim small">').text([ver, ...info].filter(Boolean).join(' · '))),
+      v.isEpgd ? null : remoteButton(v, 'btn-sm btn-icon-only', true),
       v.isEpgd ? null : startButton(v, st));
 }

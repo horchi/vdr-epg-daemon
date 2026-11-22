@@ -53,7 +53,7 @@ OBJS += scraper/tvdbscraper/tvdbseries.o
 OBJS += scraper/moviedbscraper/themoviedbscraper.o scraper/moviedbscraper/moviedbmovie.o
 OBJS += scraper/moviedbscraper/moviedbactor.o
 
-HTTPOBJS += epgdconfig.o webstore.o webdo.o webstream.o webauth.o webtools.o httpd.o svdrpclient.o
+HTTPOBJS += epgdconfig.o webstore.o webdo.o webstream.o webremote.o webauth.o webtools.o httpd.o svdrpclient.o
 
 # rules:
 
@@ -162,6 +162,7 @@ webdo.o         :  webdo.c       	 $(HEADER) httpd.h
 webauth.o       :  webauth.c       	 $(HEADER) httpd.h
 webtools.o      :  webtools.c    	 $(HEADER) httpd.h
 webstream.o     :  webstream.c   	 $(HEADER) httpd.h
+webremote.o     :  webremote.c   	 $(HEADER) httpd.h
 
 SCRHEADER = lib/curl.h
 

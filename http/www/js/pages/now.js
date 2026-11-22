@@ -4,7 +4,7 @@ import { state } from '../state.js';
 import { get, post } from '../api.js';
 import { busy, toastError, stickyBar } from '../ui.js';
 import { now, nowUnix, unixTime, formatTime, formatDate, progressOf, toLocalInput, fromLocalInput, textToHtml } from '../utils.js';
-import { channelBadge } from '../data.js';
+import { channelBadge, doneBadge } from '../data.js';
 import { icon } from '../icons.js';
 import { foreignKey, ctrlScroll, tileInNextRow, focusTile, autoRefresh, replaceBox } from '../gridtools.js';
 import { showEvent } from '../eventDetail.js';
@@ -279,6 +279,7 @@ function eventCard(e) {
    const $time = $('<div class="ev-time">').append(
       $('<b>').text(formatTime(e.starttime)), ' – ', formatTime(end) + ' ' + tr.oClock,
       e.timerid ? $('<span class="badge badge-timer">').attr('title', tr.pages.timer.timerList).html(icon('record')) : null,
+      doneBadge(e),
       e.tipp ? $('<span class="badge badge-tipp">').text(e.tipp) : null);
 
    return $('<li class="event-card" tabindex="0">').attr('data-id', e.id).append(

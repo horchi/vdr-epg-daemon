@@ -61,6 +61,7 @@ class cSearchTimer
 
       cDbStatement* prepareSearchStatement(cDbRow* searchTimer);
       int matchCriterias(cDbRow* searchTimer, cDbRow* event);
+      std::string matchKey();
       int isAlreadyDone(int repeatfields, json_t* obj = 0, int silent = no);
       int createTimer(int id);
       int modifyCreateTimer(cDbRow* timerRow, int& newid, int createRetry = no);

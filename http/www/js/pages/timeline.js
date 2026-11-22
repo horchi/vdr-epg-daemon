@@ -9,7 +9,7 @@ import { state } from '../state.js';
 import { get, mediaUrl } from '../api.js';
 import { busy, toastError } from '../ui.js';
 import { nowUnix, unixTime, toDate, formatTime, formatDate, toLocalInput, fromLocalInput, progressOf, leadText } from '../utils.js';
-import { channelBadge } from '../data.js';
+import { channelBadge, doneBadge } from '../data.js';
 import { quickTimes, quickTimeAt, timeOnDay, foreignKey, ctrlScroll, autoRefresh, mergeEvents } from '../gridtools.js';
 import { icon, iconButton } from '../icons.js';
 import { showEvent } from '../eventDetail.js';
@@ -405,6 +405,7 @@ function eventBox(e) {
          $('<div class="tl-ev-line">').append(
             $('<b class="tl-ev-time">').text(formatTime(e.starttime)),
             e.timerid ? $('<span class="badge badge-timer">').html(icon('record')) : null,
+            doneBadge(e),
             e.tipp ? $('<span class="badge badge-tipp">').text(e.tipp) : null,
             $('<span class="tl-ev-title">').text(e.title)),
          sub ? $('<div class="tl-ev-sub">').text(sub) : null));

@@ -65,12 +65,108 @@ int cEpgHttpd::storeChannels(json_t* jInData, json_t* response)
 }
 
 //***************************************************************************
-// Delete Done Timer(s)
+// Fill Done Timer From Event
+//  -> fill the timersdone row by the current useevents row
 //***************************************************************************
 
-int cEpgHttpd::deleteDoneTimers(json_t* jInData, json_t* response)
+void cEpgHttpd::fillDoneFromEvent(char state, const char* channelname)
+{
+   timersDoneDb->clear();
+   timersDoneDb->setCharValue("STATE", state);
+   timersDoneDb->setValue("SOURCE", "webif");
+   timersDoneDb->setValue("CHANNELID", useeventsDb->getStrValue("CHANNELID"));
+   timersDoneDb->setValue("STARTTIME", useeventsDb->getIntValue("STARTTIME"));
+   timersDoneDb->setValue("DURATION", useeventsDb->getIntValue("DURATION"));
+   timersDoneDb->setValue("TITLE", useeventsDb->getStrValue("TITLE"));
+   timersDoneDb->setValue("COMPTITLE", useeventsDb->getStrValue("COMPTITLE"));
+
+   if (!useeventsDb->getValue("SHORTTEXT")->isEmpty())
+      timersDoneDb->setValue("SHORTTEXT", useeventsDb->getStrValue("SHORTTEXT"));
+   if (!useeventsDb->getValue("COMPSHORTTEXT")->isEmpty())
+      timersDoneDb->setValue("COMPSHORTTEXT", useeventsDb->getStrValue("COMPSHORTTEXT"));
+
+   if (!useeventsDb->getValue("LONGDESCRIPTION")->isEmpty())
+      timersDoneDb->setValue("LONGDESCRIPTION", useeventsDb->getStrValue("LONGDESCRIPTION"));
+   if (!useeventsDb->getValue("COMPLONGDESCRIPTION")->isEmpty())
+      timersDoneDb->setValue("COMPLONGDESCRIPTION", useeventsDb->getStrValue("COMPLONGDESCRIPTION"));
+
+   if (!useeventsDb->getValue("EPISODECOMPNAME")->isEmpty())
+      timersDoneDb->setValue("EPISODECOMPNAME", useeventsDb->getStrValue("EPISODECOMPNAME"));
+   if (!useeventsDb->getValue("EPISODECOMPSHORTNAME")->isEmpty())
+      timersDoneDb->setValue("EPISODECOMPSHORTNAME", useeventsDb->getStrValue("EPISODECOMPSHORTNAME"));
+
+   if (!useeventsDb->getValue("EPISODECOMPPARTNAME")->isEmpty())
+      timersDoneDb->setValue("EPISODECOMPPARTNAME", useeventsDb->getStrValue("EPISODECOMPPARTNAME"));
+   if (!useeventsDb->getValue("EPISODELANG")->isEmpty())
+      timersDoneDb->setValue("EPISODELANG", useeventsDb->getStrValue("EPISODELANG"));
+   if (!useeventsDb->getValue("EPISODESEASON")->isEmpty())
+      timersDoneDb->setValue("EPISODESEASON", useeventsDb->getIntValue("EPISODESEASON"));
+   if (!useeventsDb->getValue("EPISODEPART")->isEmpty())
+      timersDoneDb->setValue("EPISODEPART", useeventsDb->getIntValue("EPISODEPART"));
+
+   if (!isEmpty(channelname))
+      timersDoneDb->setValue("CHANNELNAME", channelname);
+}
+
+//***************************************************************************
+// Store Done Timer(s)
+//  -> { "delete": [ id, ... ] }         remove rows of timersdone
+//  -> { "recorded": [ eventid, ... ] }  mark events as 'already recorded'
+//***************************************************************************
+
+int cEpgHttpd::storeDoneTimers(json_t* jInData, json_t* response)
 {
    json_t* idArray = json_object_get(jInData, "delete");
+   json_t* recArray = json_object_get(jInData, "recorded");
+
+   // ---------------------------
+   // mark events as recorded
+
+   if (recArray && json_is_array(recArray))
+   {
+      int count {0};
+
+      for (size_t i = 0; i < json_array_size(recArray); ++i)
+      {
+         long eventid = json_integer_value(json_array_get(recArray, i));
+         const char* channelname = "";
+
+         useeventsDb->clear();
+         useeventsDb->setValue("USEID", eventid);
+
+         if (!selectEvent->find())
+         {
+            selectEvent->freeResult();
+            return buildResponse(response, MHD_HTTP_NOT_FOUND, "Event '%ld' not found, aborting request!", eventid);
+         }
+
+         // already marked or recorded?
+
+         updateDoneCache();
+
+         if (getDoneState() == tdsRecordingDone)
+         {
+            selectEvent->freeResult();
+            continue;
+         }
+
+         mapDb->clear();
+         mapDb->setValue("CHANNELID", useeventsDb->getStrValue("CHANNELID"));
+
+         if (selectChannelFromMap->find())
+            channelname = mapDb->getStrValue("CHANNELNAME");
+
+         fillDoneFromEvent(tdsRecordingDone, channelname);
+         timersDoneDb->setValue("INFO", "marked as recorded in the web interface");
+         timersDoneDb->insert();
+
+         selectChannelFromMap->freeResult();
+         selectEvent->freeResult();
+         count++;
+      }
+
+      return buildResponse(response, MHD_HTTP_OK, "marked %d event(s) as recorded", count);
+   }
 
    // ---------------------------
    // delete done timers by id
@@ -283,41 +379,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
 
          if (timerid == na && manualTimer2Done && *type != ttView)
          {
-            timersDoneDb->clear();
-            timersDoneDb->setCharValue("STATE", tdsTimerRequested);
-            timersDoneDb->setValue("SOURCE", "webif");
-            timersDoneDb->setValue("CHANNELID", useeventsDb->getStrValue("CHANNELID"));
-            timersDoneDb->setValue("STARTTIME", useeventsDb->getIntValue("STARTTIME"));
-            timersDoneDb->setValue("DURATION", useeventsDb->getIntValue("DURATION"));
-            timersDoneDb->setValue("TITLE", useeventsDb->getStrValue("TITLE"));
-            timersDoneDb->setValue("COMPTITLE", useeventsDb->getStrValue("COMPTITLE"));
-
-            if (!useeventsDb->getValue("SHORTTEXT")->isEmpty())
-               timersDoneDb->setValue("SHORTTEXT", useeventsDb->getStrValue("SHORTTEXT"));
-            if (!useeventsDb->getValue("COMPSHORTTEXT")->isEmpty())
-               timersDoneDb->setValue("COMPSHORTTEXT", useeventsDb->getStrValue("COMPSHORTTEXT"));
-
-            if (!useeventsDb->getValue("LONGDESCRIPTION")->isEmpty())
-               timersDoneDb->setValue("LONGDESCRIPTION", useeventsDb->getStrValue("LONGDESCRIPTION"));
-            if (!useeventsDb->getValue("COMPLONGDESCRIPTION")->isEmpty())
-               timersDoneDb->setValue("COMPLONGDESCRIPTION", useeventsDb->getStrValue("COMPLONGDESCRIPTION"));
-
-            if (!useeventsDb->getValue("EPISODECOMPNAME")->isEmpty())
-               timersDoneDb->setValue("EPISODECOMPNAME", useeventsDb->getStrValue("EPISODECOMPNAME"));
-            if (!useeventsDb->getValue("EPISODECOMPSHORTNAME")->isEmpty())
-               timersDoneDb->setValue("EPISODECOMPSHORTNAME", useeventsDb->getStrValue("EPISODECOMPSHORTNAME"));
-
-            if (!useeventsDb->getValue("EPISODECOMPPARTNAME")->isEmpty())
-               timersDoneDb->setValue("EPISODECOMPPARTNAME", useeventsDb->getStrValue("EPISODECOMPPARTNAME"));
-            if (!useeventsDb->getValue("EPISODELANG")->isEmpty())
-               timersDoneDb->setValue("EPISODELANG", useeventsDb->getStrValue("EPISODELANG"));
-            if (!useeventsDb->getValue("EPISODESEASON")->isEmpty())
-               timersDoneDb->setValue("EPISODESEASON", useeventsDb->getIntValue("EPISODESEASON"));
-            if (!useeventsDb->getValue("EPISODEPART")->isEmpty())
-               timersDoneDb->setValue("EPISODEPART", useeventsDb->getIntValue("EPISODEPART"));
-
-            if (!isEmpty(channelname))
-               timersDoneDb->setValue("CHANNELNAME", channelname);
+            fillDoneFromEvent(tdsTimerRequested, channelname);
 
             timersDoneDb->insert();
             doneid = timersDoneDb->getLastInsertId();

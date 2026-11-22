@@ -80,6 +80,19 @@ export function channelLogo(id) {
       .on('error', function () { $(this).replaceWith($('<span class="channel-name">').text(name)); });
 }
 
+// marker for an event which is already recorded ('R') or planned by a timer
+//   on another channel / time ('Q', 'C') – see 'donestate' of data/events
+
+export function doneBadge(e) {
+   if (e.donestate === 'R')
+      return $('<span class="badge badge-done">').attr('title', tr.pages.eventDetail.alreadyRecorded).html(icon('check'));
+
+   if (!e.timerid && (e.donestate === 'Q' || e.donestate === 'C'))
+      return $('<span class="badge badge-planned">').attr('title', tr.pages.eventDetail.plannedOther).html(icon('record'));
+
+   return null;
+}
+
 // opts.showName: show the name beside the logo (default: profile setting 'logoShowName'),
 //   without a logo (or if it fails to load) the name is shown anyway
 

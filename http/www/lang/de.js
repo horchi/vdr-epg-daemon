@@ -147,6 +147,11 @@ export default {
         eventDetail: {
             record: "Aufnehmen",
             repeat: "Wiederholungen",
+            alreadyRecorded: 'bereits aufgezeichnet',
+            plannedOther: 'Timer für eine andere Ausstrahlung geplant',
+            markRecorded: 'Als bereits aufgezeichnet markieren',
+            markedRecorded: 'Als bereits aufgezeichnet markiert',
+            markRecordedConfirm: '„$1“ als bereits aufgezeichnet markieren? Suchtimer nehmen die Sendung dann nicht mehr auf.',
             ch_switch: "umschalten",
             play: "abspielen",
             eventNext: "nachfolgend",

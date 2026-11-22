@@ -112,6 +112,8 @@ img { max-width: 100%; }
 .badge .icon { width: 12px; height: 12px; }
 .badge-tipp { background: var(--accent); color: var(--accent-text); }
 .badge-timer { color: var(--danger); padding: 0; }
+.badge-done { color: var(--ok); padding: 0; }
+.badge-planned { color: var(--danger); opacity: .5; padding: 0; }
 
 .progress { height: 4px; border-radius: 2px; background: var(--bg-hover); overflow: hidden; }
 .progress > div { height: 100%; background: var(--accent); }
@@ -1267,6 +1269,7 @@ a.ov-tile:hover { border-color: var(--accent); text-decoration: none; }
 .ov-dot.vs-half { background: transparent; border: 2px solid var(--ok); }
 .ov-dot.vs-off { background: var(--text-dim); opacity: .5; }
 .ov-vdr.offline .ov-title { color: var(--text-dim); }
+.ov-vdr .btn-icon-only span { display: none; }
 .ov-disks .disks { grid-template-columns: minmax(0, 1fr); margin: 0; }
 .ov-disks .disk { background: var(--bg-elev2); }
 

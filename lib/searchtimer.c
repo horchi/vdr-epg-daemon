@@ -9,6 +9,7 @@
 #include "searchtimer.h"
 
 #include <list>
+#include <set>
 
 //***************************************************************************
 //
@@ -1029,6 +1030,26 @@ int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, 
    if (!(select = prepareSearchStatement(searchTimer)))
       return fail;
 
+   // first pass: collect start time and title of all matches on non SD channels,
+   //   a SD match with the same start time and title (the SD variant of a HD channel) is hidden
+
+   std::set<std::string> hdMatches;
+
+   useeventsDb->clear();
+
+   for (int res = select->find(); res; res = select->fetch())
+   {
+      useeventsDb->find();  // get all fields ..
+
+      if (!matchCriterias(searchTimer, useeventsDb->getRow()))
+         continue;
+
+      if (!isEmpty(mapDb->getStrValue("FORMAT")) && strcasecmp(mapDb->getStrValue("FORMAT"), "SD") != 0)
+         hdMatches.insert(matchKey());
+   }
+
+   select->freeResult();
+
    json_t* oEvents = json_array();
 
    useeventsDb->clear();
@@ -1038,6 +1059,9 @@ int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, 
       useeventsDb->find();  // get all fields ..
 
       if (!matchCriterias(searchTimer, useeventsDb->getRow()))
+         continue;
+
+      if (strcasecmp(mapDb->getStrValue("FORMAT"), "SD") == 0 && hdMatches.count(matchKey()))
          continue;
 
       count++;
@@ -1089,6 +1113,15 @@ int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, 
    json_object_set_new(obj, "events", oEvents);
 
    return success;
+}
+
+//***************************************************************************
+// Match Key (start time and title of the current event)
+//***************************************************************************
+
+std::string cSearchTimer::matchKey()
+{
+   return std::to_string(useeventsDb->getIntValue("STARTTIME")) + "|" + useeventsDb->getStrValue("COMPTITLE");
 }
 
 //***************************************************************************

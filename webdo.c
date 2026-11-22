@@ -1302,6 +1302,11 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
 
    data->modTime = eventsUpdSp->getIntValue();
 
+   // the 'done' state (recorded / planned) is part of the event as well
+
+   updateDoneCache();
+   data->modTime = std::max(data->modTime, (time_t)doneCacheUpdSp);
+
    // the picture may be replaced without changing the event (channelmap merge 3),
    //  so its reference has to be part of the modification time as well
 
@@ -1380,6 +1385,11 @@ int cEpgHttpd::doEvent(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
          addFieldToJson(oEvtData, timerDb, "ID", no, "TIMERID");
 
       selectTimerByEventId->freeResult();
+
+      // already recorded or planned by another timer?
+
+      if (char ds = getDoneState())
+         json_object_set_new(oEvtData, "donestate", json_stringn(&ds, 1));
 
       // epispode data
 
@@ -1525,6 +1535,7 @@ int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
       }
 
       useeventsDb->setValue("ChannelId", channelidPar);
+      updateDoneCache();
 
       for (int found = select->find(); found; found = select->fetch())
       {
@@ -1554,6 +1565,11 @@ int cEpgHttpd::doEvents(MHD_Connection* tcp, json_t* obj)
             addFieldToJson(oEvtData, timerDb, "ID", no, "TIMERID");
 
          selectTimerByEventId->freeResult();
+
+         // already recorded or planned by another timer?
+
+         if (char ds = getDoneState())
+            json_object_set_new(oEvtData, "donestate", json_stringn(&ds, 1));
 
          json_array_append_new(oEvent, oEvtData);
       }
@@ -1668,6 +1684,157 @@ int cEpgHttpd::doDoneTimer(MHD_Connection* tcp, json_t* obj)
    timersDoneDb->reset();
 
    return MHD_HTTP_OK;
+}
+
+//***************************************************************************
+// Done Cache
+//  -> keys (title / shorttext) of the timersdone table with their state,
+//     to mark events which are already recorded ('R') or planned ('Q', 'C')
+//     by a timer on another channel or time. Matching like the search timer
+//     repeat check by 'title' and 'folge' (comptitle / compshorttext or the
+//     episode names). Events without shorttext match only for movies,
+//     beside that the airing itself (channel and start time) matches always.
+//***************************************************************************
+
+static std::string doneCompShort(const char* title, const char* shorttext)
+{
+   // like eventsviewplain: no shorttext if equal to the title or a 'S01...' season tag
+
+   if (isEmpty(shorttext) || (title && strcmp(title, shorttext) == 0))
+      return "";
+
+   if (shorttext[0] == 'S' && isdigit(shorttext[1]))
+      return "";
+
+   return shorttext;
+}
+
+static std::string doneAiringKey(const char* channelid, long starttime)
+{
+   return std::string("@") + (channelid ? channelid : "") + '\t' + std::to_string(starttime);
+}
+
+static void doneKeysOf(const char* compTitle, const char* epiShortName,
+                       const char* compShort, const char* epiPartName,
+                       std::vector<std::string>& keys)
+{
+   std::vector<std::string> titles;
+   std::vector<std::string> shorts;
+
+   if (!isEmpty(compTitle))    titles.push_back(compTitle);
+   if (!isEmpty(epiShortName)) titles.push_back(epiShortName);
+
+   std::string cs = doneCompShort(compTitle, compShort);
+
+   if (!cs.empty())            shorts.push_back(cs);
+   if (!isEmpty(epiPartName))  shorts.push_back(epiPartName);
+
+   if (shorts.empty())
+      shorts.push_back("");
+
+   for (const auto& t : titles)
+      for (const auto& sh : shorts)
+         keys.push_back(t + '\t' + sh);
+}
+
+int cEpgHttpd::updateDoneCache()
+{
+   timersDoneDb->clear();
+
+   if (!selectDoneVersion->find())
+   {
+      selectDoneVersion->freeResult();
+      return fail;
+   }
+
+   long count = timersDoneDb->getIntValue("ID");
+   long updsp = timersDoneDb->getIntValue("UPDSP");
+
+   selectDoneVersion->freeResult();
+
+   if (count == doneCacheCount && updsp == doneCacheUpdSp)
+      return success;
+
+   doneCache.clear();
+   timersDoneDb->clear();
+
+   for (int f = selectDoneKeys->find(); f; f = selectDoneKeys->fetch())
+   {
+      std::vector<std::string> keys;
+      char state = timersDoneDb->getStrValue("STATE")[0];
+
+      doneKeysOf(timersDoneDb->getStrValue("COMPTITLE"), timersDoneDb->getStrValue("EPISODECOMPSHORTNAME"),
+                 timersDoneDb->getStrValue("COMPSHORTTEXT"), timersDoneDb->getStrValue("EPISODECOMPPARTNAME"),
+                 keys);
+
+      keys.push_back(doneAiringKey(timersDoneDb->getStrValue("CHANNELID"), timersDoneDb->getIntValue("STARTTIME")));
+
+      for (const auto& k : keys)
+      {
+         auto it = doneCache.find(k);
+
+         if (it == doneCache.end())
+            doneCache[k] = state;
+         else if (state == tdsRecordingDone)       // 'recorded' wins over 'planned'
+            it->second = state;
+      }
+   }
+
+   selectDoneKeys->freeResult();
+
+   doneCacheCount = count;
+   doneCacheUpdSp = updsp;
+
+   tell(eloDetail, "Loaded %zu keys of %ld done timers", doneCache.size(), count);
+
+   return success;
+}
+
+//***************************************************************************
+// Get Done State (of the current useevents row)
+//  -> 'R' recorded, 'Q' / 'C' timer planned, 0 unknown
+//***************************************************************************
+
+char cEpgHttpd::getDoneState()
+{
+   std::vector<std::string> keys;
+   char result {0};
+
+   // the airing itself
+
+   auto it = doneCache.find(doneAiringKey(useeventsDb->getStrValue("CHANNELID"), useeventsDb->getIntValue("STARTTIME")));
+
+   if (it != doneCache.end())
+   {
+      result = it->second;
+
+      if (result == tdsRecordingDone)
+         return result;
+   }
+
+   doneKeysOf(useeventsDb->getStrValue("COMPTITLE"), useeventsDb->getStrValue("EPISODECOMPSHORTNAME"),
+              useeventsDb->getStrValue("COMPSHORTTEXT"), useeventsDb->getStrValue("EPISODECOMPPARTNAME"),
+              keys);
+
+   bool movie = useeventsDb->hasValue("CATEGORY", "Spielfilm");
+
+   for (const auto& k : keys)
+   {
+      if (k.back() == '\t' && !movie)              // no shorttext, title only is too vague
+         continue;
+
+      auto it = doneCache.find(k);
+
+      if (it == doneCache.end())
+         continue;
+
+      result = it->second;
+
+      if (result == tdsRecordingDone)
+         break;
+   }
+
+   return result;
 }
 
 //***************************************************************************

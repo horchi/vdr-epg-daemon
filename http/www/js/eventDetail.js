@@ -1,10 +1,10 @@
 // Event detail (modal) – data/event?id=... or data/event?channelid=...&time=...
 
 import { state, hasRight, rights } from './state.js';
-import { get, mediaUrl, fallbackImg } from './api.js';
-import { busy, toast, toastError } from './ui.js';
+import { get, post, mediaUrl, fallbackImg } from './api.js';
+import { busy, toast, toastError, confirmBox } from './ui.js';
 import { formatTime, formatDate, formatDateTime, progressOf, textToHtml, leadText, pipeList, nowUnix } from './utils.js';
-import { channelBadge, switchChannel, createSwitchTimer } from './data.js';
+import { channelBadge, doneBadge, switchChannel, createSwitchTimer } from './data.js';
 import { icon, iconButton } from './icons.js';
 import { playRecording, playLiveEvent, canLive } from './player.js';
 import { openTimerDialog, openSearchTimerDialog, searchEvents, renderResults } from './timerDialog.js';
@@ -167,6 +167,7 @@ function frame() {
       iconButton('film', 'Im Browser abspielen').addClass('ed-stream').on('click', () => playRecording(event)),
       iconButton('live', 'Live im Browser ansehen').addClass('ed-live')
          .on('click', () => playLiveEvent(event)),
+      iconButton('check', tre.markRecorded).addClass('ed-mark-rec').on('click', doMarkRecorded),
       iconButton('repeat', tre.repeat).addClass('ed-repeat').on('click', () => {
          repeats = true;
          repeatsCache = null;
@@ -371,6 +372,23 @@ function doRecord() {
       openSearchTimerDialog({ expression: e.title, searchfields: 1, channelids: e.channelid });
 }
 
+async function doMarkRecorded() {
+   const name = event.title + (event.shorttext ? ' – ' + event.shorttext : '');
+
+   if (!await confirmBox(tre.markRecordedConfirm.replace('$1', name), tre.markRecorded))
+      return;
+
+   const $btn = $dlg.find('.ed-mark-rec').prop('disabled', true);
+
+   try {
+      await busy(post('data/store-donetimers', { recorded: [event.id] }));
+      toast(tre.markedRecorded);
+      $(window).trigger('timers:changed');           // reloads the event and the EPG views
+   }
+   catch (e) { toastError(e); }
+   finally { $btn.prop('disabled', false); }
+}
+
 async function doPlay() {
    try {
       if (kind === 'rec')
@@ -479,6 +497,7 @@ function render() {
    $d.find('.ed-prev').toggle(isRec ? !!ctx.prev : ctx.list ? !!listNeighbor(-1) : kind === 'event' && e.starttime - 500 >= p.minEventTime);
    $d.find('.ed-next').toggle(isRec ? !!ctx.next : ctx.list ? !!listNeighbor(1) : kind === 'event' && e.starttime + e.duration + 500 <= p.maxEventTime);
    $d.find('.ed-rec-edit').toggle(canEditRec && !!ctx.rename);
+   $d.find('.ed-mark-rec').toggle(kind === 'event' && !!e.id && e.donestate !== 'R' && hasRight(rights.timerEdit));
    $d.find('.ed-repeat').toggle(hasRight(rights.searchTimer) && !!e.title);
    $d.find('.ed-rec-del').toggle(canEditRec && !!ctx.remove);
 
@@ -611,6 +630,7 @@ function renderTop(e, sc, media, ep) {
          $('<div class="ed-rating">').append(
             e.numrating ? $('<span class="rate">').addClass('rate' + e.numrating) : null,
             e.tipp ? $('<span class="badge badge-tipp">').text(e.tipp) : null,
+            doneBadge(e)?.append(' ', $('<span>').text(e.donestate === 'R' ? tre.alreadyRecorded : tre.plannedOther)),
             e.txtrating ? $('<span class="ed-txtrating">').text(e.txtrating) : null,
             e.shortreview ? $('<span>').text(e.shortreview) : null),
          stars.children().length ? stars : null,
