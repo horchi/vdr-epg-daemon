@@ -37,7 +37,7 @@ class cSearchTimer
       int updateSearchTimers(int force = yes, const char* reason = "");
       int checkTimers();
 
-      int getSearchMatches(cDbRow* searchTimer, json_t* obj, int start = 0, int max = na);
+      int getSearchMatches(cDbRow* searchTimer, json_t* obj, int start = 0, int max = na, int hideDone = no);
       int getDoneFor(cDbRow* searchTimer, cDbRow* useevent, json_t* obj);
       int checkTimerConflicts(std::string& mailBody);
       int getUsedTransponderAt(time_t lStartTime, time_t lEndTime, std::string& mailBody);

@@ -8,7 +8,7 @@ import { get, post } from '../api.js';
 import { busy, toast, toastError, dialog, stickyBar } from '../ui.js';
 import { icon } from '../icons.js';
 import { field } from '../forms.js';
-import { searchForm, searchEvents, renderResults, openSearchTimerDialog, deleteTimers } from '../timerDialog.js';
+import { searchForm, searchEvents, renderResults, openSearchTimerDialog, deleteSearchTimer } from '../timerDialog.js';
 import tr from '../../lang/de.js';
 
 const trs = tr.pages.search;
@@ -213,7 +213,7 @@ async function saveSearch(asCopy = false) {
 }
 
 async function deleteSearch() {
-   if (await deleteTimers([parseInt(pg.current.id, 10)], 'data/save-searchtimer')) {
+   if (await deleteSearchTimer(pg.current)) {
       pg.current = null;
       await loadSavedList('');
       renderActions(true);

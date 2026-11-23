@@ -41,7 +41,7 @@ function buildLayout() {
    $('<header class="topbar">').append(
       $('<button type="button" class="btn btn-icon btn-flat nav-toggle">').attr('title', 'Menü').html(icon('menu'))
          .on('click', () => $('body').toggleClass('nav-open')),
-      $('<a class="brand" href="#now">').append($('<img alt="">').attr('src', 'images/epgd-4x.png'), $('<span>').text('EPGd')),
+      $('<a class="brand">').append($('<img alt="">').attr('src', 'images/epgd-4x.png'), $('<span>').text('EPGd')),
       $nav,
       $('<div class="topbar-right">').append(
          $('<button type="button" class="btn btn-icon btn-flat theme-toggle">').on('click', () => { cycleMode(); renderThemeToggle(); }),
@@ -68,7 +68,23 @@ function renderThemeToggle() {
       .attr({ title: themeLabels[mode], 'aria-label': themeLabels[mode] });
 }
 
+// the logo leads to the page of the profile setting 'logoPage' (stored as 'menu_<page>')
+
+const pageAlias = { timerList: 'timers', searchTimerList: 'timers', profile: 'settings' };
+
+function renderBrand() {
+   let id = String(state.profile.logoPage || '').replace(/^menu_/, '');
+   id = pageAlias[id] || id;
+
+   if (!pages[id] || (pages[id].right && !hasRight(pages[id].right)))
+      id = 'now';
+
+   $('.topbar .brand').attr({ href: '#' + id, title: pages[id].label });
+}
+
 function renderMenu() {
+   renderBrand();
+
    const $nav = $('#nav').empty();
 
    if (!state.login.rights)
@@ -117,9 +133,8 @@ function route() {
    if (!state.login.rights)
       return $content.empty();
 
-   const startAlias = { timerList: 'timers', searchTimerList: 'timers', profile: 'settings' };
    let start = String(state.profile.startPage || '').replace(/^menu_/, '');
-   start = startAlias[start] || start;
+   start = pageAlias[start] || start;
 
    // start page 'last': the page visited last in this browser (incl. tab etc.)
 
@@ -192,6 +207,7 @@ async function init() {
       })
       .on('vdrs:loaded', renderVdrs)
       .on('theme:changed', renderThemeToggle)
+      .on('profile:changed', renderBrand)
 
    try {
       await busy(loadProfile());

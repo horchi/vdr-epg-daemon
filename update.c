@@ -1778,6 +1778,9 @@ void cEpgd::loop()
       if (!doShutDown())
          evaluateEpisodes();
 
+      if (!doShutDown())
+         markChangedEpisodeRecordings();        // scrap recordings again if their constabel data changed
+
       if (!doShutDown() && procUser)            // call user procedure if defined
          procUser->call();
 

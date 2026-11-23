@@ -4,6 +4,7 @@
 import { get, apiUrl } from './api.js';
 import { busy, toast, toastError, dialog } from './ui.js';
 import { icon } from './icons.js';
+import { nowUnix } from './utils.js';
 
 //   canStart: a start script is configured (data/vdrs -> 'vdrstart')
 //   -> { online, text, cls, action: { label, title } | null }
@@ -28,6 +29,32 @@ export function vdrState(v, canStart) {
          return { online: false, text: 'getrennt', cls: 'vs-off',
                   action: v.mac ? { label: 'Wecken', title: 'Wake on LAN an ' + v.mac } : null };
    }
+}
+
+// State of the epgd (row 'epgd' of data/vdrs, 'statesince' -> start of the current state)
+//   while busy with events, match or scraping epg2vdr pauses and takes timer jobs only afterwards
+//   -> { busy, blocking, long, text, wait }   jobs: number of pending timer jobs (or null)
+
+const EPGD_BUSY = {
+   'busy (events)':   { label: 'EPG-Update', long: true },     // download of the EPG, minutes
+   'busy (match)':    { label: 'Abgleich' },                   // merge, seconds
+   'busy (scraping)': { label: 'Scraping' },
+   'busy (images)':   { label: 'Bilder', free: true }           // epg2vdr doesn't pause
+};
+
+export function epgdState(v, jobs = null) {
+   const b = EPGD_BUSY[v.state];
+
+   if (!b)
+      return { busy: false, blocking: false, long: false, text: v.state || '?', wait: null };
+
+   const secs = v.statesince ? Math.max(0, nowUnix() - v.statesince) : 0;
+   const long = !b.free && (b.long || secs >= 60);
+   const since = secs ? ' seit ' + (secs < 60 ? secs + ' s' : Math.round(secs / 60) + ' min') : '';
+   const wait = b.free ? null : jobs ? (jobs === 1 ? '1 Timer-Auftrag wartet' : jobs + ' Timer-Aufträge warten') + ' bis der epgd fertig ist'
+      : long ? 'Timer-Aufträge werden erst danach übernommen' : null;
+
+   return { busy: true, blocking: !b.free, long, text: v.state + ' – ' + b.label + since, wait };
 }
 
 export function startButton(v, st, cls = 'btn-sm') {

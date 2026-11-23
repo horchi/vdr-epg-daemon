@@ -5,7 +5,7 @@ import { get, post, mediaUrl } from '../api.js';
 import { busy, toast, toastError, dialog, confirmBox, stickyBar } from '../ui.js';
 import { formatDateTime, sizeText, agoText } from '../utils.js';
 import { icon } from '../icons.js';
-import { vdrState, startButton, remoteButton } from '../vdrstate.js';
+import { vdrState, epgdState, startButton, remoteButton } from '../vdrstate.js';
 import { field, checkbox, select } from '../forms.js';
 import { loadProfile, loadChannels, loadVdrs } from '../data.js';
 import { md5 } from '../lib/md5.js';
@@ -135,17 +135,19 @@ function profileTab($body) {
 
       // start page (stored as 'menu_<page>')
 
-      const startPages = ['overview', 'now', 'magazine', 'timeline', 'timerList', 'records', 'search'].map((k) =>
-         ({ value: 'menu_' + k, label: k === 'timerList' ? tr.menu.timer : tr.menu[k] }))
-         .concat({ value: 'menu_last', label: 'zuletzt besuchte Seite' });
+      const menuPages = ['overview', 'now', 'magazine', 'timeline', 'timerList', 'records', 'search'].map((k) =>
+         ({ value: 'menu_' + k, label: k === 'timerList' ? tr.menu.timer : tr.menu[k] }));
+      const startPages = menuPages.concat({ value: 'menu_last', label: 'zuletzt besuchte Seite' });
 
       const $start = select(startPages, val('startPage') || 'menu_now');
+      const $logoPage = select(menuPages, val('logoPage') || 'menu_now');
       const $defVdr = select([{ value: '', label: '(erster VDR)' }, ...vdrOpts(false)], val('defaultVDRuuid'));
       const $quick = $('<textarea class="input" rows="5">').val(String(val('quickTimes')).replace(/~/g, '\n'));
       const $maxList = $('<input type="number" class="input input-num" min="1" max="999">').val(val('maxListEntries'));
       const $constabel = $('<input class="input" placeholder="https://www.eplists.de/eplist.cgi?action=login&login=…&secret=…">').val(val('constabelLoginPath'));
 
       controls.startPage = () => $start.val();
+      controls.logoPage = () => $logoPage.val();
       controls.defaultVDRuuid = () => $defVdr.val() || '';
       controls.quickTimes = () => $quick.val().split('\n').map((l) => l.trim()).filter(Boolean).join('~');
       controls.maxListEntries = () => $maxList.val();
@@ -202,7 +204,7 @@ function profileTab($body) {
       const initial = Object.fromEntries(Object.entries(controls).map(([k, g]) => [k, g()]));
 
       const labels = {
-         startPage: 'Startseite', quickTimes: 'Schnellzeiten', maxListEntries: 'Max. Einträge',
+         startPage: 'Startseite', logoPage: 'Seite hinter dem Logo', quickTimes: 'Schnellzeiten', maxListEntries: 'Max. Einträge',
          mailReceiver: trp.mailReceiver, chFormat: trt.chFormat
       };
 
@@ -210,6 +212,7 @@ function profileTab($body) {
          appearanceCard(),
          card('Oberfläche',
             hfield('Startseite', $start, 'p_startPage'),
+            hfield('Seite hinter dem Logo', $logoPage, 'p_logoPage'),
             hfield('Standard-VDR', $defVdr, 'p_defaultVDRuuid'),
             hfield('Schnellzeiten (eine pro Zeile)', $('<div class="stack">').append($quick,
                $('<p class="dim small">').text('Bezeichnung=hh:mm, z.B. Primetime=20:15 – mit „!“ (Primetime=!20:15) keine Linie im Magazin. '
@@ -670,10 +673,21 @@ function vdrsTab($body) {
       $grid);
 
    let canStart = false;          // start script configured
+   let jobs = null;               // pending timer jobs (shown at the epgd while it is busy)
+   let pollTimer = null;          // refresh of the epgd card while it is busy (no push from the server)
+   let watchUntil = 0;            // after 'EPG-Update starten' poll until the epgd reports busy
+   let stopped = false;
+
+   const POLL = 5000;             // [ms]
+
+   async function loadJobs() {
+      const tj = hasRight(rights.timer) ? await get('data/timers?notaction=A').catch(() => null) : null;
+      jobs = tj ? (tj.timers || []).length : null;
+   }
 
    async function load() {
       try {
-         const data = await busy(get('data/vdrs?all=1&probe=1'));
+         const [data] = await busy(Promise.all([get('data/vdrs?all=1&probe=1'), loadJobs()]));
          canStart = !!data.vdrstart;
          const vdrs = Object.entries(data.vdrs || {}).map(([uuid, v]) => ({ uuid, ...v }))
             .sort((a, b) => (a.uuid === 'epgd' ? -1 : b.uuid === 'epgd' ? 1 : 0)
@@ -684,19 +698,58 @@ function vdrsTab($body) {
 
          if (!vdrs.length)
             $grid.append($('<p class="dim">').text(tr.error.noData));
+
+         schedule(data.vdrs?.epgd);
       }
       catch (e) { toastError(e); }
+   }
+
+   // silent refresh of the epgd card only (without probing the VDRs)
+
+   async function poll() {
+      pollTimer = null;
+
+      if (stopped)
+         return;
+
+      if (document.hidden)
+         return schedule({ state: 'busy' });
+
+      try {
+         const [data] = await Promise.all([get('data/vdrs?all=1'), loadJobs()]);
+         const v = data.vdrs?.epgd;
+
+         if (stopped)
+            return;
+
+         if (v)
+            $grid.children('.epgd-card').replaceWith(vdrCard({ uuid: 'epgd', ...v }));
+
+         schedule(v);
+      }
+      catch (e) { schedule({ state: 'busy' }); }      // retry, the epgd may be restarting
+   }
+
+   function schedule(v) {
+      clearTimeout(pollTimer);
+      pollTimer = null;
+
+      if (!stopped && v && ((v.state || '').startsWith('busy') || Date.now() < watchUntil))
+         pollTimer = setTimeout(poll, POLL);
    }
 
    function vdrCard(v) {
       const isEpgd = v.uuid === 'epgd';
       const st = isEpgd ? null : vdrState(v, canStart);
+      const es = isEpgd ? epgdState(v, jobs) : null;
       const kv = [];
       const add = (label, value) => value !== undefined && value !== null && value !== '' && kv.push($('<dt>').text(label), $('<dd>').append(value));
 
       add('UUID', $('<code class="small">').text(v.uuid));
       add('Version', v.version);
-      add('Status', isEpgd ? v.state : st.text + (v.state && v.state !== 'attached' ? ' (' + v.state + ')' : ''));
+      add('Status', isEpgd ? $('<span>').append($('<span>').toggleClass('state-wait', es.long).toggleClass('state-ok', v.state === 'standby').text(es.text),
+         es.wait ? $('<div class="small state-wait">').text(es.wait) : null)
+         : $('<span>').toggleClass('state-ok', v.state === 'attached').text(st.text + (v.state && v.state !== 'attached' ? ' (' + v.state + ')' : '')));
       add('Master', v.master === 'Y' ? 'ja' : v.master === 'n' ? 'nein' : null);
       add('Aktiv', v.lastupdate ? $('<span>').attr('title', formatDateTime(v.lastupdate)).text(agoText(v.lastupdate)) : null);
       add('IP', v.ip);
@@ -718,15 +771,30 @@ function vdrsTab($body) {
             $('<span class="dim small">').text(sizeText(used) + ' von ' + sizeText(v.videototal) + ', frei ' + sizeText(v.videofree || 0))));
       }
 
-      return $('<section class="card settings-card vdr-card">').toggleClass('attached', v.state === 'attached').append(
+      return $('<section class="card settings-card vdr-card">').toggleClass('attached', v.state === 'attached').toggleClass('epgd-card', isEpgd).append(
          $('<h3 class="vdr-head">').append(icon(isEpgd ? 'disk' : 'tv'), $('<span>').text(v.name || v.uuid),
             $('<span class="badge vdr-state">').text(isEpgd ? 'epgd' : v.state || '?')),
          $('<dl class="kv">').append(kv),
-         isEpgd ? null : $('<div class="btn-row">').append(
+         isEpgd ? $('<div class="btn-row">').append(
+            $('<button type="button" class="btn">').attr('title', 'Startet jetzt den EPG-Update-Lauf (Download bei den Providern, Abgleich, ...), sonst automatisch alle UpdateTime Stunden.\nNur im Zustand standby möglich.')
+               .prop('disabled', v.state !== 'standby').append(icon('refresh'), $('<span>').text('EPG-Update starten'))
+               .on('click', () => updateEpg())) :
+         $('<div class="btn-row">').append(
             remoteButton(v, ''),
             startButton(v, st, 'btn-ok'),
             $('<span class="dl-spacer">'),
             $('<button type="button" class="btn btn-danger">').append(icon('trash'), $('<span>').text(tr.del)).on('click', () => remove(v))));
+   }
+
+   async function updateEpg() {
+      try {
+         const res = await busy(get('data/updateepg'));
+         if (res.result && res.result.state != 200) throw new Error(res.result.message);
+         toast('EPG-Update gestartet, das dauert einige Minuten');
+         watchUntil = Date.now() + 30000;      // the epgd needs some seconds to report busy
+         schedule({ state: 'busy' });
+      }
+      catch (e) { toastError(e); }
    }
 
    async function remove(v) {
@@ -745,6 +813,11 @@ function vdrsTab($body) {
    }
 
    load();
+
+   return () => {
+      stopped = true;
+      clearTimeout(pollTimer);
+   };
 }
 
 // ---------------------------------------------------------------------------

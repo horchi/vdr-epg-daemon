@@ -249,6 +249,7 @@ class cEpgd : public cFrame, public cSystemNotification
 
       int evaluateEpisodes();
       int updateEpisodes();
+      int markChangedEpisodeRecordings();
       int lookupSeriesDataForRecording(cDbRow* recording, cTVDBManager::SeriesLookupData& lookupData);
 
       // scraper stuff

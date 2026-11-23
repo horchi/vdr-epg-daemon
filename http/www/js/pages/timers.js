@@ -8,7 +8,7 @@ import { channelBadge, channelName, channelLogo } from '../data.js';
 import { icon } from '../icons.js';
 import { dataList, rowButton } from '../lib/datalist.js';
 import { hhmmToStr } from '../forms.js';
-import { openTimerDialog, openSearchTimerDialog, deleteTimers, renderResults } from '../timerDialog.js';
+import { openTimerDialog, openSearchTimerDialog, deleteTimers, deleteTimerRows, deleteSearchTimer, renderResults } from '../timerDialog.js';
 import { showEvent, showDoneTimer } from '../eventDetail.js';
 import tr from '../../lang/de.js';
 
@@ -158,8 +158,8 @@ function timersTab($body) {
       rowCls: (t) => t.active ? '' : 'inactive',
       onRowClick: (t) => canEdit && openTimerDialog(t),
       rowActions: (t) => canEdit && !'DF'.includes((t.state || '').toUpperCase())
-         ? [rowButton('edit', tr.edit, () => openTimerDialog(t)), rowButton('trash', tr.del, () => deleteTimers([t.id]))] : [],
-      bulkActions: canEdit ? [{ icon: 'trash', label: tr.del, run: (rows) => deleteTimers(rows.map((r) => r.id)) }] : [],
+         ? [rowButton('edit', tr.edit, () => openTimerDialog(t)), rowButton('trash', tr.del, () => deleteTimerRows([t]))] : [],
+      bulkActions: canEdit ? [{ icon: 'trash', label: tr.del, run: (rows) => deleteTimerRows(rows) }] : [],
       tools: [
          canEdit ? toolButton('plus', trt.newTimer, () => openTimerDialog({})) : null,
          toolButton('refresh', tr.reload, () => reload())
@@ -190,7 +190,7 @@ function searchTimersTab($body) {
       rowActions: (t) => [
          rowButton('down', t.type === 'S' ? tr.pages.search.search : trp.timerList, () => showSearchTimerHits(t)),
          canEdit ? rowButton('edit', tr.edit, () => openSearchTimerDialog(t)) : null,
-         canEdit ? rowButton('trash', tr.del, () => deleteTimers([t.id], 'data/save-searchtimer')) : null],
+         canEdit ? rowButton('trash', tr.del, () => deleteSearchTimer(t)) : null],
       tools: [
          canEdit ? toolButton('plus', trt.newTimer, () => openSearchTimerDialog({ searchfields: 1 })) : null,
          toolButton('refresh', tr.reload, () => reload()),

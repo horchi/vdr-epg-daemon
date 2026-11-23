@@ -41,12 +41,143 @@ export async function saveTimer(data) {
    changed();
 }
 
+function confirmText(count) {
+   return tr.confirmDelete + (count > 1 ? ' (' + count + tr.entries + ')' : '');
+}
+
 export async function deleteTimers(ids, url = 'data/save-timer') {
-   if (!ids.length || !await confirmBox(tr.confirmDelete + (ids.length > 1 ? ' (' + ids.length + tr.entries + ')' : '')))
+   if (!ids.length || !await confirmBox(confirmText(ids.length)))
       return false;
 
+   return postDelete(url, { delete: ids });
+}
+
+// delete timers (rows of data/timers), for timers with an entry in the job history
+//   (timersdone) ask whether to remove it too, a kept entry blocks search timers
+
+export async function deleteTimerRows(rows) {
+   if (!rows.length)
+      return false;
+
+   if (!rows.some((t) => t.doneid))
+      return deleteTimers(rows.map((t) => t.id));
+
+   const cb = checkbox(trt.deleteDone, false);
+   const ok = await new Promise((resolve) => {
+      let result = false;
+      dialog({
+         content: [$('<p>').text(confirmText(rows.length)), cb.$el, $('<p class="dim">').text(trt.deleteDoneHint)],
+         buttons: [
+            { text: tr.no },
+            { text: tr.yes, primary: true, click: () => { result = true; } }
+         ],
+         onClose: () => resolve(result)
+      });
+   });
+
+   if (!ok)
+      return false;
+
+   return postDelete('data/save-timer', { delete: rows.map((t) => t.id), deletedone: cb.$cb.prop('checked') ? 1 : 0 });
+}
+
+// delete a search timer, its pending/running timers are listed and can be deleted
+//   in one go (running ones are unchecked by default, deleting them stops the recording)
+
+export async function deleteSearchTimer(st) {
+   const id = parseInt(st.id, 10);
+
+   // stored search never creates timers, without timer rights they can't be deleted here
+
+   if (st.type === 'S' || !hasRight(rights.timerEdit))
+      return deleteTimers([id], 'data/save-searchtimer');
+
+   let timers;
+
    try {
-      await postResult(url, { delete: ids });
+      const res = await busy(get('data/timers?state=P,R&autotimerid=' + id));
+      timers = (res.timers || []).filter((t) => (t.action || '').toUpperCase() !== 'D')
+         .sort((a, b) => (a.day - b.day) || (a.starttime - b.starttime));
+   }
+   catch (e) {
+      toastError(e);
+      return false;
+   }
+
+   const boxes = [];
+   const $c = $('<div class="st-del">').append($('<p>').text(trt.deleteSearchTimer.replace('$1', st.name || st.expression)));
+
+   if (!timers.length)
+      $c.append($('<p class="dim">').text(trt.deleteSearchTimerNoTimers));
+   else {
+      const all = checkbox(trt.deleteSearchTimerAll.replace('$1', timers.length), false);
+      const $ul = $('<ul class="st-del-list">');
+
+      const syncAll = () => {
+         const n = boxes.filter(($b) => $b.prop('checked')).length;
+         all.$cb.prop('checked', n === boxes.length).prop('indeterminate', n > 0 && n < boxes.length);
+      };
+
+      for (const t of timers) {
+         const running = (t.state || '').toUpperCase() === 'R';
+         const $cb = $('<input type="checkbox">').prop('checked', !running).on('change', syncAll);
+         boxes.push($cb);
+
+         $('<li>').append($('<label>').append(
+            $cb,
+            $('<span class="sd-when">').text((t.day ? formatDate(t.day) : '–') + ' ' + hhmmToStr(t.starttime)),
+            $('<span class="sd-logo">').append(channelLogo(t.channelid)),
+            $('<span class="sd-title">').append($('<b>').text(t.title || ''), t.shorttext ? $('<span class="dim">').text(' – ' + t.shorttext) : null),
+            running ? $('<span class="sd-running">').text(trt.running) : null,
+            $('<span class="dim small">').text(state.vdrs[t.vdruuid]?.name || '')))
+            .appendTo($ul);
+      }
+
+      all.$cb.on('change', () => { boxes.forEach(($b) => $b.prop('checked', all.$cb.prop('checked'))); all.$cb.prop('indeterminate', false); });
+      syncAll();
+      $c.append(all.$el, $ul, $('<p class="dim small">').text(trt.deleteSearchTimerHint));
+   }
+
+   const ok = await new Promise((resolve) => {
+      let result = false;
+      dialog({
+         title: tr.pages.timer.searchTimerList + ' ' + tr.del.toLowerCase(),
+         content: $c,
+         cls: 'dlg-wide',
+         buttons: [
+            { text: tr.cancel },
+            { text: tr.del, cls: 'btn-danger', primary: true, click: () => { result = true; } }
+         ],
+         onClose: () => resolve(result)
+      });
+   });
+
+   if (!ok)
+      return false;
+
+   const ids = timers.filter((t, i) => boxes[i]?.prop('checked')).map((t) => parseInt(t.id, 10));
+
+   // search timer first, so it can't schedule the event again in between
+
+   try {
+      await postResult('data/save-searchtimer', { delete: [id] });
+
+      if (ids.length)
+         await postResult('data/save-timer', { delete: ids });
+
+      changed(tr.dataDeleted);
+      return true;
+   }
+   catch (e) {
+      toastError(e);
+      $(window).trigger('timers:changed');
+      return false;
+   }
+}
+
+async function postDelete(url, data) {
+   try {
+      await postResult(url, data);
       changed(tr.dataDeleted);
       return true;
    }
@@ -276,7 +407,7 @@ export async function openTimerDialog(t = {}) {
    const buttons = [];
 
    if (t.id)
-      buttons.push({ text: tr.del, cls: 'btn-danger', click: ($d) => { deleteTimers([parseInt(t.id, 10)]).then((ok) => ok && $d[0].close()); return false; } });
+      buttons.push({ text: tr.del, cls: 'btn-danger', click: ($d) => { deleteTimerRows([t]).then((ok) => ok && $d[0].close()); return false; } });
 
    if (!t.id && hasRight(rights.searchTimer))
       buttons.push({ text: tr.pages.timer.searchTimerList, click: () => {
@@ -480,8 +611,12 @@ export function searchEvents(data, max) {
 export async function openSearchTimerDialog(t = {}) {
    const p = state.profile;
    const { $form, getData } = await searchForm(t);
-   const $results = $('<div class="st-results">').appendTo($form);
+   const hideDone = checkbox(trt.testHideDone, true);
+   const $results = $('<div class="st-results">');
    const runSearch = searchEvents;
+
+   $form.append($('<div class="st-test-opt">').append(hideDone.$el.attr('title', trt.testHideDoneHint)), $results);
+   hideDone.$cb.on('change', () => $results.children().length && test());
 
    async function test() {
       const data = getData();
@@ -490,7 +625,7 @@ export async function openSearchTimerDialog(t = {}) {
          return;
 
       try {
-         const res = await runSearch(data, p.maxListEntries || 100);
+         const res = await runSearch({ ...data, hidedone: hideDone.$cb.prop('checked') ? 1 : 0 }, p.maxListEntries || 100);
          renderResults($results, res);
          $results[0].scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
@@ -520,7 +655,7 @@ export async function openSearchTimerDialog(t = {}) {
 
    if (t.id) {
       buttons.push({ text: tr.del, cls: 'btn-danger', click: ($d) => {
-         deleteTimers([parseInt(t.id, 10)], 'data/save-searchtimer').then((ok) => ok && $d[0].close());
+         deleteSearchTimer(t).then((ok) => ok && $d[0].close());
          return false;
       } });
       buttons.push({ text: tr.copy, click: ($d) => {
@@ -565,7 +700,8 @@ export function renderResults($target, res, opts = {}) {
          $('<span class="rl-when">').text(formatDate(e.starttime) + ' ' + formatTime(e.starttime)),
          $('<span class="rl-ch rl-logo">').append(channelLogo(e.channelid)),
          $('<span class="rl-title">').append($('<b>').text(e.title), e.shorttext ? $('<span class="dim">').text(' – ' + e.shorttext) : null),
-         recState ? $('<span class="badge rl-done">').attr('title', (e.dones || []).map((d) => trt.doneStates[d.state] || d.state).join(', ')).text(recState) : null)
+         recState ? $('<span class="badge rl-done">').attr('title', (e.dones || []).map((d) => trt.doneStates[d.state] || d.state).join(', '))
+            .append((e.dones || []).flatMap((d, i) => [i ? document.createTextNode(' ') : null, $('<span>').addClass('done-' + d.state).text(d.state)[0]]).filter(Boolean)) : null)
          .on('click', async () => {
             if (opts.onClick)
                return opts.onClick(e);

@@ -30,7 +30,8 @@ export const profileDefaults = {
    logoShowName: 0,
    defaultVDRuuid: '',
    quickTimes: '',
-   startPage: 'menu_now'
+   startPage: 'menu_now',
+   logoPage: 'menu_now'
 };
 
 export const state = {

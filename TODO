@@ -12,25 +12,24 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
  TODOs
 -----------------------------------
 
-++ VDR crashed beim löschen einer aktiven sofort Aufnahme ab und zu?
-+= bei Nachrichten messages Tabelle optional, konfigurierbar zusätzlich Email Notifications versenden
-+= Timer Job Check im epg2vdr geht nicht wenn epgd busy
-+= am OSD Option um eine Sendung als „bereits aufgezeichnet“ markieren
-+= am OSD aus Event einen Suchtimer erstellen lassen
-+= auf events Tabelle scrap stamp mit constable stamp vergleichen und durch setzen von scrnew neu scrapen lassen
-+= 'nach'-scrapen der Aufnahmen verbessern (auf neue Daten der recordinglist stützen) view von Christian
+++ VDR crashed beim löschen einer aktiven Sofort-Aufnahme ab und zu?
 
 ++ Halbautomatischer Abgleich mit yavdr channel Quelle
 ++ channlemap im web bearbeiten (Auswahl pro User ermöglichen)
-=+ Suchtimer löschen als eigenen Dialog anzeigen und alle darüber erstellten Timer anzeigen, damit die auch in einem Rutsch mitgelöscht werden können
+
+++ WEBIF Seite zum bearbeiten der Aufnahmen (Name, Genre, Category, Serien-Titel, User-ScrapIDs)
+   Bearbeitung auch in Gruppen also mit einem Dialog für alle ausgewählten, für ganze Folgen einer Serie oder Staffel
+    -> klären, wie wird das zu den Aufzeichnungen auf der Platte asugerollt
+++ Dialog zur Scrap-Zuordnung einer Aufnahme im WEBIF (Film/Serie/Episode suchen bzw. ID eingeben)
+   epghttpd setzt SCRINFOMOVIEID/SCRINFOSERIESID/SCRINFOEPISODEID und SCRNEW = 1 in recordinglist, epgd scrapt neu
+   -> ersetzt die scrapinfo Dateien (bisher nur über scraper2vdr eingelesen)
+
++= am OSD Option um eine Sendung als „bereits aufgezeichnet“ markieren
++= am OSD aus Event einen Suchtimer erstellen lassen
+
 ++ SSH-Shell zu einem VDR in einem Dialog der VDRs-Seite
    In epghttpd per WebSocket (MHD upgrade) + forkpty(ssh) + xterm.js nur mit Login und eigenem Benutzerrecht, möglichst HTTPS
-=+ am Suchtimer im WEB die erledigten Timer aus timersdone anzeigen (ist schon über 'testen' erledigt?)
-   dabei die Option zum  einzeln oder komplett löschen lassen anbieten
-++ WEBIF Seite zum bearbeiten def Aufnahmen (Genre, Category, Serien-Titel, User-ScrapIDs)
-   Bearbeitung in in Gruppen also mit einem Click für alle ausgewählten, für ganze Folgen einer Serie oder Staffel
-++ im WebIf Sendung als „bereits aufgezeichnet“ markieren
-++ Beim löschen eines Timers fragen ob die passenden Einträge aus der timersdone mit gelöscht werden sollen
+   Nur über Konfig Option aktivierbar
 
 --------------------------------------------------------
 Braucht man dass wirklich?
@@ -38,12 +37,16 @@ Braucht man dass wirklich?
 
 ++ Titel (Namen des Aufzeichnung) im Timer-Dialog bearbeitbar machen
     -> http://www.vdr-portal.de/board1-news/board2-vdr-news/p1269286-announce-easteregg-epgd-epghttpd-1-0-0-beta1-jetzt-mit-web-serientimer-unterst%C3%BCtzung/#post1269286
-++ hits bei Suchtimern aufteilen nach alle und aktiven Timern
 
 -----------------------------------
  Fertig:
 -----------------------------------
 
+== recordinglist: Aufnahmen mit geänderten constable Daten (episodes.state 'C', updsp > scrsp) per scrnew neu scrapen lassen
+== Suchtimer löschen als eigenen Dialog anzeigen und alle darüber erstellten Timer anzeigen, damit die auch in einem Rutsch mitgelöscht werden können
+== Beim löschen eines Timers fragen ob die passenden Einträge aus der timersdone mit gelöscht werden sollen
+
+== im WebIf Sendung als „bereits aufgezeichnet“ markieren
 == Overview Seite (nächste Timer, letzte Aufnahmen, VDRs, Platz, ...)
 == webif EPG Ansicht jede Minute aktualisieren
 == Channel/Aufnahme im Browser abspielen (ggf. auch streamen)

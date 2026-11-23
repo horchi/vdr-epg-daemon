@@ -12,7 +12,7 @@ import { autoRefresh } from '../gridtools.js';
 import { showEvent, showRecording } from '../eventDetail.js';
 import { openTimerDialog } from '../timerDialog.js';
 import { playRecording } from '../player.js';
-import { vdrState, startButton, remoteButton } from '../vdrstate.js';
+import { vdrState, epgdState, startButton, remoteButton } from '../vdrstate.js';
 import { renderDisks, updateDiskTimes, diskList, mbPerMinute, hoursText } from '../disks.js';
 import { prepare as prepareRecording } from './records.js';
 import { messagePlain } from './timers.js';
@@ -169,7 +169,7 @@ function renderTiles(d) {
 
    if (d.epgd)
       $t.append(tile(null, 'refresh', 'EPG-Update', d.epgd.lastupdate ? agoText(d.epgd.lastupdate) : '–',
-         d.epgd.nextupdate ? 'nächstes ' + agoText(d.epgd.nextupdate) : null, d.epgd.state === 'busy' ? 'ov-busy' : ''));
+         d.epgd.nextupdate ? 'nächstes ' + agoText(d.epgd.nextupdate) : null, (d.epgd.state || '').startsWith('busy') ? 'ov-busy' : ''));
 }
 
 // ---------------------------------------------------------------------------
@@ -331,17 +331,18 @@ function vdrList(d) {
       || (b.lastupdate || 0) - (a.lastupdate || 0)).slice(0, MAX_VDRS - (d.epgd ? 1 : 0));
 
    if (d.epgd)
-      $ul.append(vdrRow({ ...d.epgd, isEpgd: true }));
+      $ul.append(vdrRow({ ...d.epgd, isEpgd: true, jobs: d.jobs?.length || 0 }));
 
    return $ul.append(vdrs.map((v) => vdrRow(v, d.vdrStart)));
 }
 
 function vdrRow(v, canStart) {
    const ver = (v.version || '').replace(/-GIT\w+/, '').replace(/ \(.*\)$/, '');
-   const st = v.isEpgd ? { online: v.state !== 'detached', cls: v.state !== 'detached' ? 'vs-on' : 'vs-off', action: null }
+   const es = v.isEpgd ? epgdState(v, v.jobs) : null;
+   const st = v.isEpgd ? { online: v.state !== 'detached', cls: es.blocking ? (es.long ? 'vs-busy-long' : 'vs-busy') : v.state !== 'detached' ? 'vs-on' : 'vs-off', action: null }
       : vdrState(v, canStart);
    const info = v.isEpgd
-      ? ['Status ' + (v.state || '?'), v.lastmerge ? 'Merge ' + agoText(v.lastmerge) : '']
+      ? ['Status ' + es.text, v.lastmerge ? 'Merge ' + agoText(v.lastmerge) : '']
       : [st.text + (!st.online && v.lastupdate ? ' · zuletzt ' + agoText(v.lastupdate) : ''),
          v.tunercount ? v.tunercount + ' Tuner' : ''];
 
@@ -352,7 +353,8 @@ function vdrRow(v, canStart) {
             v.isEpgd ? $('<span class="badge">').text('epgd') : null,
             v.uuid === state.currentVdr?.uuid ? $('<span class="badge">').text('ausgewählt') : null,
             !v.isEpgd && !v.shareinweb ? $('<span class="badge">').attr('title', 'Timer und Aufnahmen dieses VDR sind im Web nicht sichtbar').text('nicht freigegeben') : null),
-         $('<div class="dim small">').text([ver, ...info].filter(Boolean).join(' · '))),
+         $('<div class="dim small">').text([ver, ...info].filter(Boolean).join(' · ')),
+         es?.wait ? $('<div class="small state-wait">').text(es.wait) : null),
       v.isEpgd ? null : remoteButton(v, 'btn-sm btn-icon-only', true),
       v.isEpgd ? null : startButton(v, st));
 }

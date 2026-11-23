@@ -145,6 +145,8 @@ export function render($content, params = {}) {
 
    if (params.ch && m.rows[params.ch])
       scrollToChannel(params.ch);
+
+   restoreInfo();
 }
 
 export function destroy() {
@@ -453,7 +455,7 @@ async function onKey(ev) {
    const inGrid = cur && m.$scroll[0].contains(cur);
 
    if (key === 'Escape' && m.selected) {
-      closeInfo();
+      closeInfo(true);
       return;
    }
 
@@ -574,6 +576,42 @@ function focusEvent(el) {
 const INFO_KEY = 'timeline.info';
 const infoModes = { auto: 'Infofeld: automatisch (große Fenster)', on: 'Infofeld: immer', off: 'Infofeld: aus (Detail-Dialog)' };
 
+// open/closed per device: the event shown in the panel, restored when the page is opened again
+
+const INFO_EVENT_KEY = 'timeline.infoEvent';
+
+function storeInfoEvent(id) {
+   try { id ? localStorage.setItem(INFO_EVENT_KEY, id) : localStorage.removeItem(INFO_EVENT_KEY); }
+   catch (e) { /* no storage */ }
+}
+
+function restoreInfo() {
+   let id = null;
+
+   try { id = localStorage.getItem(INFO_EVENT_KEY); }
+   catch (e) { /* no storage */ }
+
+   if (!id || !infoFits())
+      return;
+
+   const page = m;
+   m.selected = id;
+   m.$scroll.find('.tl-ev[data-id="' + CSS.escape(id) + '"]').addClass('selected');
+
+   get('data/event?id=' + encodeURIComponent(id))
+      .then((d) => {
+         if (page !== m || m.selected !== id)
+            return;
+
+         d.event ? renderInfo(d.event) : closeInfo(true);
+      })
+      .catch((e) => {
+         if (page === m && m.selected === id)
+            closeInfo(e.status === 404);              // event gone -> forget it
+         if (e.status !== 404) toastError(e);
+      });
+}
+
 function infoMode() {
    try { return infoModes[localStorage.getItem(INFO_KEY)] ? localStorage.getItem(INFO_KEY) : 'auto'; }
    catch (e) { return 'auto'; }
@@ -612,6 +650,7 @@ function select($ev) {
    m.$scroll.find('.tl-ev.selected').removeClass('selected');
    $ev.addClass('selected');
    m.selected = id;
+   storeInfoEvent(id);
 
    renderInfo($ev.data('event'));                      // at once with the list data ..
 
@@ -622,9 +661,14 @@ function select($ev) {
       .catch((e) => { if (e.status !== 404) toastError(e); });
 }
 
-function closeInfo() {
+// forget: closed by the user (button, Esc), else only hidden (window too small, mode changed)
+
+function closeInfo(forget = false) {
    if (!m)
       return;
+
+   if (forget)
+      storeInfoEvent(null);
 
    m.selected = null;
    m.$scroll.find('.tl-ev.selected').removeClass('selected');
@@ -655,7 +699,7 @@ function renderInfo(e) {
                liveButton(e),
                $('<button type="button" class="btn tl-info-details">').attr('title', 'Details')
                   .append(icon('info'), $('<span>').text('Details')).on('click', () => showEvent(e.id)),
-               iconButton('close', 'Schließen').on('click', closeInfo))),
+               iconButton('close', 'Schließen').on('click', () => closeInfo(true)))),
          $('<div class="tl-info-title">').text(e.title),
          e.shorttext && e.shorttext !== e.title ? $('<div class="tl-info-short">').text(e.shorttext) : null,
          facts ? $('<div class="tl-info-facts">').text(facts) : null,

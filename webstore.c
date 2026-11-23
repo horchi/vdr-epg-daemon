@@ -211,9 +211,10 @@ int cEpgHttpd::deleteTimerJobs(json_t* jInData, json_t* response)
       json_t* obj = json_array_get(idArray, i);
       long id = json_integer_value(obj);
 
-      // delete olny if not assumed in meanwhile!
+      // delete only if not assumed in meanwhile, or (assumed) already over at the VDR
+      //   -> E(rror), D(eleted) or F(inished), never a P(ending) or R(unning) timer
 
-      timerDb->deleteWhere("id = %ld and (action != 'A' or state = 'E')", id);  // taAssumed
+      timerDb->deleteWhere("id = %ld and (action != 'A' or state in ('E','D','F'))", id);  // taAssumed
    }
 
    return buildResponse(response, MHD_HTTP_OK, "done");
@@ -272,6 +273,7 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
    if (idArray && json_is_array(idArray))
    {
       int length = json_array_size(idArray);
+      bool deleteDone = getIntFromJson(jInData, "deletedone", no);
 
       for (int i = 0; i < length; ++i)
       {
@@ -291,6 +293,15 @@ int cEpgHttpd::storeTimerJob(json_t* jInData, json_t* response)
          }
 
          selectTimerById->freeResult();
+
+         // optional remove the timersdone entry too, without it a search timer
+         //   may create a timer for this event again (a 'D'eleted entry blocks this)
+
+         if (deleteDone && !timerDb->getValue("DONEID")->isNull())
+         {
+            timersDoneDb->deleteWhere("id = %ld", timerDb->getIntValue("DONEID"));
+            timerDb->getValue("DONEID")->setNull();
+         }
 
          timerDb->setCharValue("ACTION", taDelete);
          timerDb->setValue("SOURCE", "webif");

@@ -102,6 +102,8 @@ export const sections = [
             <tr><th>Ein</th><td>immer das Infofeld – am Handy in kompakter Form</td></tr>
             <tr><th>Aus</th><td>immer die Detailansicht</td></tr>
          </table>
+         <p>Ein offenes Infofeld bleibt offen: beim nächsten Aufruf der Zeitleiste zeigt es wieder die zuletzt gewählte
+         Sendung (gespeichert je Browser), bis es über <b>Schließen</b> bzw. Esc geschlossen wird.</p>
          <h4>Tastatur</h4>
          <table class="help-table">
             <tr><th>← / →</th><td>vorherige / nächste Sendung des Kanals (die erste Taste wählt die Sendung links im Bild)</td></tr>
@@ -389,6 +391,11 @@ export const sections = [
             <p>Die Seite, die beim Aufruf der Weboberfläche ohne Seitenadresse (z.B. über ein Lesezeichen auf die
             Startadresse) geöffnet wird. Mit <i>zuletzt besuchte Seite</i> geht es dort weiter, wo du in diesem
             Browser aufgehört hast (inkl. Reiter, z.B. Timer › Suchtimer).</p>
+         </div>
+         <div id="h_p_logoPage" class="help-param">
+            <h5>Seite hinter dem Logo</h5>
+            <p>Die Seite, die ein Klick auf das Logo oben links öffnet (Vorgabe: Programm). So kann z.B. die
+            Startseite auf <i>zuletzt besuchte Seite</i> stehen und das Logo trotzdem immer zur Zeitleiste führen.</p>
          </div>
          <div id="h_p_defaultVDRuuid" class="help-param">
             <h5>Standard-VDR</h5>

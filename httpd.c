@@ -71,6 +71,7 @@ cEpgHttpd::UserRight cEpgHttpd::userrights[] =
    { "/data/searchtimers",      umAll                    },
    { "/data/updatesearchtimer", umAll                    },
    { "/data/updaterecordings",  umAll                    },
+   { "/data/updateepg",         umConfigEdit             },
    { "/data/replayrecording",   umRecordings             },
    { "/data/recstreaminfo",     umRecordings             },
    { "/data/rechlsstart",       umRecordings             },
@@ -1595,6 +1596,8 @@ int cEpgHttpd::performDataRequest(MHD_Connection* tcp, const char* url, MemorySt
          statusCode = doUpdateSearchtimer(tcp, response);
       else if (strcmp(method, "updaterecordings") == 0)
          statusCode = doUpdateRecordingTable(tcp, response);
+      else if (strcmp(method, "updateepg") == 0)
+         statusCode = doUpdateEpg(tcp, response);
       else if (strcmp(method, "wakeupvdr") == 0)
          statusCode = doWakeupVdr(tcp, response);
       else if (strcmp(method, "renamerecording") == 0)
@@ -2050,7 +2053,7 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
 // Trigger Epgd
 //***************************************************************************
 
-int cEpgHttpd::triggerEpgd()
+int cEpgHttpd::triggerEpgd(int signal)
 {
    int pid = na;
 
@@ -2069,8 +2072,13 @@ int cEpgHttpd::triggerEpgd()
 
    if (pid > 0)
    {
-      if (kill(pid, SIGUSR1) == 0)
-         tell(eloInfo, "Triggered searchtimer update at %s", EPGDNAME);
+      if (kill(pid, signal) != 0)
+      {
+         tell("Error: Sending signal %d to %s (pid %d) failed, %s", signal, EPGDNAME, pid, strerror(errno));
+         return fail;
+      }
+
+      tell(eloInfo, "Triggered %s at %s", signal == SIGHUP ? "EPG update" : "searchtimer update", EPGDNAME);
    }
 
    return success;

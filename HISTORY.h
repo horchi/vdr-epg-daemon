@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.18"
-#define VERSION_DATE "22.11.2026"
+#define _VERSION     "1.4.19"
+#define VERSION_DATE "23.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,13 @@
 
 /*
  * ------------------------------------
+
+2026-11-23: version 1.4.19 (horchi)
+   - Added:  webfrontend, delete timer: optionally remove its entry from the job history too
+   - Added:  webfrontend, page VDRs - busy state of the epgd with duration, waiting timer jobs are shown
+   - Added:  webfrontend, page VDRs - button to start the EPG update
+   - Added:  webfrontend, delete search timer: dialog lists its timers to delete them in one go
+   - Added:  recordings are scraped again when their constabel episode data changed
 
 2026-11-22: version 1.4.18 (horchi)
    - Bugfix: TheTVDB scraper wrote series data also to events with the same id on other channels

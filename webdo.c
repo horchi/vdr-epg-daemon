@@ -221,6 +221,19 @@ int cEpgHttpd::doUpdateSearchtimer(MHD_Connection* tcp, json_t* obj)
 }
 
 //***************************************************************************
+// Do Update EPG
+//  -> start the EPG update of the epgd (download, merge, ...) now, as on 'UpdateTime'
+//***************************************************************************
+
+int cEpgHttpd::doUpdateEpg(MHD_Connection* tcp, json_t* obj)
+{
+   if (triggerEpgd(SIGHUP) != success)
+      return buildResponse(obj, MHD_HTTP_INTERNAL_SERVER_ERROR, "Triggering the epgd failed, see syslog");
+
+   return buildResponse(obj, MHD_HTTP_OK, "done");
+}
+
+//***************************************************************************
 // Do Update Recording Table
 //***************************************************************************
 
@@ -1155,6 +1168,11 @@ int cEpgHttpd::doVdrs(MHD_Connection* tcp, json_t* obj)
                 !vdrDb->getValue(def->getField(i))->isNull())
                 addFieldToJson(o, vdrDb->getValue(def->getField(i)));
          }
+
+         // the epgd row is written on each state change -> start of the current state
+
+         if (strcmp(uuid, "epgd") == 0)
+            json_object_set_new(o, "statesince", json_integer(vdrDb->getIntValue("UPDSP")));
 
          if (probe && strcmp(uuid, "epgd") != 0 && !vdrDb->hasValue("STATE", "attached") && svdrp > 0
              && !isEmpty(vdrDb->getStrValue("IP")))
@@ -2332,6 +2350,7 @@ int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
 
    int start = getIntFromJson(jInData, "start", 0);
    int dMax = getIntFromJson(jInData, "max", na);  // na -> alle, 0 - nur zählen, > 0 - limit
+   int hideDone = getIntFromJson(jInData, "hidedone", no);  // only matches a timer would be created for
 
    // with id, use searchtimer ...
 
@@ -2341,7 +2360,7 @@ int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
       searchTimer->clear();
       searchTimer->setValue("ID", id);
       searchTimer->setValue("NAME", name);
-      search->getSearchMatches(searchTimer, response, start, dMax);
+      search->getSearchMatches(searchTimer, response, start, dMax, hideDone);
       delete searchTimer;
       return MHD_HTTP_OK;
    }
@@ -2368,7 +2387,7 @@ int cEpgHttpd::doSearch(json_t* jInData, json_t* response)
       getFieldFromJson(jInData, searchTimer, def->getField(i)->getName(), jName);
    }
 
-   search->getSearchMatches(searchTimer, response, start, dMax);
+   search->getSearchMatches(searchTimer, response, start, dMax, hideDone);
 
    delete searchTimer;
 

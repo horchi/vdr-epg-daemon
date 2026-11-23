@@ -75,6 +75,17 @@ export default {
             historySearch: "Suche: $1",
             historySearchClear: "Suche aufheben",
             historySearchHint: "Enter sucht in der gesamten Historie",
+            deleteDone: "Auch den Eintrag in der Auftragshistorie löschen",
+            deleteDoneHint: "Ohne Haken bleibt der Eintrag als 'gelöscht' in der Auftragshistorie, Suchtimer legen für diese Sendung (auch zu anderen Terminen) keinen neuen Timer mehr an. "
+                + "Mit Haken wird der Eintrag entfernt, ein Suchtimer darf die Sendung später wieder einplanen.",
+            deleteSearchTimer: "Suchtimer '$1' löschen?",
+            deleteSearchTimerNoTimers: "Über diesen Suchtimer sind keine anstehenden Timer angelegt.",
+            deleteSearchTimerAll: "Auch die über ihn angelegten Timer löschen ($1)",
+            deleteSearchTimerHint: "Laufende Timer sind nicht vorausgewählt, ihr Löschen beendet die Aufnahme. Nicht gewählte Timer bleiben erhalten.",
+            running: "läuft",
+            testHideDone: "Testen: nur Treffer, für die ein Timer angelegt würde",
+            testHideDoneHint: "Berücksichtigt wie der Suchtimer die Auftragshistorie und die Wiederholungsprüfung: bereits aufgenommene/geplante Sendungen und ihre Wiederholungen werden ausgeblendet, "
+                + "Sendungen mit vorhandenem Timer bleiben sichtbar. Ohne Haken werden alle Treffer der Suche gezeigt.",
             lifetime: "Lebenszeit",
             prio: "Priorität",
             inactive: "Inaktiv",

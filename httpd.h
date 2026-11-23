@@ -8,6 +8,7 @@
 #pragma once
 
 #include <sys/types.h>
+#include <signal.h>
 #include <arpa/inet.h>
 
 #include <stdio.h>            // before microhttpd.h
@@ -136,6 +137,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
 
       int doChannelSwitch(MHD_Connection* tcp, json_t* obj);
       int doUpdateSearchtimer(MHD_Connection* tcp, json_t* obj);
+      int doUpdateEpg(MHD_Connection* tcp, json_t* obj);
       int doUpdateRecordingTable(MHD_Connection* tcp, json_t* obj);
       int doWakeupVdr(MHD_Connection* tcp, json_t* obj);
 
@@ -221,7 +223,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int triggerVdr(const char* ip, unsigned int port, const char* trg,
                      const char* plug = 0, const char* options = 0, char* res = 0);
 
-      int triggerEpgd();
+      int triggerEpgd(int signal = SIGUSR1);   // SIGUSR1: searchtimer update, SIGHUP: EPG update
       int wakeupVdr(const char* uuid);
 
       // static

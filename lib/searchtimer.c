@@ -989,7 +989,11 @@ int cSearchTimer::matchCriterias(cDbRow* searchTimer, cDbRow* event)
 // Get Search Matches
 //***************************************************************************
 
-int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, int max)
+//  hideDone: only the matches the search timer would create a timer for (or already has one),
+//            like updateSearchTimers() matches already done (timersdone) and their repetitions
+//            in the result are skipped
+
+int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, int max, int hideDone)
 {
    cDbStatement* select = 0;
    long searchtimerid = searchTimer->getIntValue("ID");
@@ -1051,6 +1055,8 @@ int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, 
    select->freeResult();
 
    json_t* oEvents = json_array();
+   int repeatFields = searchTimer->getIntValue("REPEATFIELDS");
+   std::set<std::string> newMatches;
 
    useeventsDb->clear();
 
@@ -1063,6 +1069,35 @@ int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, 
 
       if (strcasecmp(mapDb->getStrValue("FORMAT"), "SD") == 0 && hdMatches.count(matchKey()))
          continue;
+
+      if (hideDone && repeatFields > 0)
+      {
+         timerDb->clear();
+         timerDb->setValue("EVENTID", useeventsDb->getIntValue("USEID"));
+         timerDb->setValue("CHANNELID", useeventsDb->getStrValue("CHANNELID"));
+
+         bool planned = selectTimerByEventId->find();
+         selectTimerByEventId->freeResult();
+
+         if (!planned)
+         {
+            if (isAlreadyDone(repeatFields, nullptr, yes))
+               continue;
+
+            // a timer created in this run would block the later repetitions of the event
+
+            if (repeatFields & sfTitle || repeatFields & sfFolge)
+            {
+               std::string key = useeventsDb->getStrValue("COMPTITLE");
+
+               if (repeatFields & sfFolge)
+                  key += std::string("|") + useeventsDb->getStrValue("COMPSHORTTEXT");
+
+               if (!newMatches.insert(key).second)
+                  continue;
+            }
+         }
+      }
 
       count++;
 
@@ -1087,7 +1122,7 @@ int cSearchTimer::getSearchMatches(cDbRow* searchTimer, json_t* obj, int start, 
       addFieldToJson(oData, useeventsDb, "TIPP");
       addFieldToJson(oData, useeventsDb, "IMAGECOUNT");
 
-      isAlreadyDone(searchTimer->getIntValue("REPEATFIELDS"), oData, yes);
+      isAlreadyDone(repeatFields, oData, yes);
 
       // timer for this Event pending?
 

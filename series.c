@@ -178,6 +178,40 @@ int cEpgd::evaluateEpisodes()
 }
 
 //***************************************************************************
+// Mark Changed Episode Recordings
+//  -> recordings referencing a constabel episode which was added or changed
+//     ('C') after the last scrap get SCRNEW = 1 and are scraped again
+//     (updsp alone is set on each download of the file, therefore check the state)
+//***************************************************************************
+
+int cEpgd::markChangedEpisodeRecordings()
+{
+   if (!EpgdConfig.seriesEnabled || !EpgdConfig.scrapRecordings)
+      return done;
+
+   if (connection->query("update %s r, %s e set r.%s = 1"
+                         " where r.%s = e.%s and r.%s = e.%s and r.%s = e.%s"
+                         " and e.%s = '%c' and e.%s > ifnull(r.%s, 0) and ifnull(r.%s, 0) = 0",
+                         recordingListDb->TableName(), episodeDb->TableName(),
+                         recordingListDb->getField("SCRNEW")->getDbName(),
+                         recordingListDb->getField("EPISODECOMPNAME")->getDbName(), episodeDb->getField("COMPNAME")->getDbName(),
+                         recordingListDb->getField("EPISODECOMPPARTNAME")->getDbName(), episodeDb->getField("COMPPARTNAME")->getDbName(),
+                         recordingListDb->getField("EPISODELANG")->getDbName(), episodeDb->getField("LANG")->getDbName(),
+                         episodeDb->getField("STATE")->getDbName(), cEpisodeFile::esChanged,
+                         episodeDb->getField("UPDSP")->getDbName(), recordingListDb->getField("SCRSP")->getDbName(),
+                         recordingListDb->getField("SCRNEW")->getDbName()) != success)
+      return fail;
+
+   int count = mysql_affected_rows(connection->getMySql());
+   connection->queryReset();
+
+   if (count > 0)
+      tell(eloInfo, "CONSTABEL: %d recording(s) with changed episode data marked for a new scrap", count);
+
+   return success;
+}
+
+//***************************************************************************
 // Lookup Series Data
 //***************************************************************************
 

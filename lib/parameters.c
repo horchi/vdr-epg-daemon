@@ -70,6 +70,7 @@ cParameters::Parameter cParameters::parameters[] =
    { "@",        "chFormat",                       ptAscii,   "",                         "^.{0,150}$",           no,    yes },
    { "@",        "defaultVDRuuid",                 ptAscii,   "",                         "^.{0,150}$",           no,    yes },
    { "@",        "startPage",                      ptAscii,   "menu_magazine",            "^.{0,150}$",           no,    yes },
+   { "@",        "logoPage",                       ptAscii,   "menu_now",                 "^.{0,150}$",           no,    yes },
    { "@",        "timerDefaultVDRuuid",            ptAscii,   "",                         "^.{0,150}$",           no,    yes },
    { "@",        "quickTimes",                     ptAscii,   "Jetzt=@Now~Nächste=@Next~PrimeTime=20:20~EarlyNight=!22:20~MidNight=!00:00~LateNight=!02:00~Tipp=@TagesTipps~Action=@Action",
                                                                                     "^(~?[^=]+=!?(([0-1]?[0-9]|2[0-4]):[0-5]?[0-9]|@Now|@Next|@[A-Za-z0-9]*))*$",
