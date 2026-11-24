@@ -57,9 +57,25 @@ export async function loadChannels() {
       order.push(id);
    });
 
+   // keep the groups together, even if the stored order is not grouped yet (e.g. new channels from the VDR)
+
+   const grouped = groupSort(order, (id) => list[id].group);
+
    state.channels = list;
-   state.channelOrder = order;
+   state.channelOrder = grouped;
+   state.channelsRegrouped = grouped.some((id, i) => id !== order[i]);
    $(window).trigger('channels:loaded');
+}
+
+// stable sort by group, the groups in the order of their first appearance, channels without group last
+
+export function groupSort(list, groupOf = (r) => r.group) {
+   const order = [];
+
+   list.forEach((r) => { const g = groupOf(r); if (g && !order.includes(g)) order.push(g); });
+
+   const rank = (g) => g ? order.indexOf(g) : order.length;
+   return list.map((r, i) => ({ r, i })).sort((a, b) => rank(groupOf(a.r)) - rank(groupOf(b.r)) || a.i - b.i).map((x) => x.r);
 }
 
 export const channelName = (id) => state.channels[id]?.name || id;

@@ -39,7 +39,8 @@ export const state = {
    profile: { ...profileDefaults },
    timeOffset: null,               // ms between browser and server time zone
    channels: {},                   // channelid -> channel
-   channelOrder: [],
+   channelOrder: [],               // ordered by the groups
+   channelsRegrouped: false,       // stored order differs from the grouped one (not yet saved)
    vdrs: {},                       // uuid -> vdr
    currentVdr: null,
    backTo: null                    // { hash, label, page } – link back to the page we came from (e.g. overview)

@@ -1242,17 +1242,7 @@ int cEpgHttpd::doProxy(MHD_Connection* tcp, json_t* obj, MemoryStruct* data)
 
    data->clear();
 
-   if (strcasecmp(typeId, "vdr") == 0)
-   {
-      // const char* uuidPar = getStrParameter(tcp, "uuid");
-
-      // todo Jörg: Könntest du hier über SVDRP und LSTE alle Kanäle
-      //    holen und einfach als Textliste zurückgeben
-
-      return buildResponse(obj, MHD_HTTP_NOT_IMPLEMENTED, "not implemented yet");
-   }
-
-   else if (strcasecmp(typeId, "channelpedia") == 0)
+   if (strcasecmp(typeId, "channelpedia") == 0)
    {
       asprintf(&url, "http://channelpedia.yavdr.com/gen/%s", getStrParameter(tcp, "path", ""));
    }

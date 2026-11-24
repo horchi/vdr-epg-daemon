@@ -7,7 +7,7 @@ import { formatDateTime, sizeText, agoText } from '../utils.js';
 import { icon } from '../icons.js';
 import { vdrState, epgdState, startButton, remoteButton } from '../vdrstate.js';
 import { field, checkbox, select } from '../forms.js';
-import { loadProfile, loadChannels, loadVdrs } from '../data.js';
+import { loadProfile, loadChannels, loadVdrs, groupSort } from '../data.js';
 import { md5 } from '../lib/md5.js';
 import { getTheme, setTheme, accents } from '../theme.js';
 import tr from '../../lang/de.js';
@@ -277,17 +277,6 @@ function appearanceCard() {
 //   name and group are maintained by the epg2vdr master from the VDR channels (read only here),
 //   the list is ordered by the groups, a channel can be moved only within its group
 
-// stable sort by group, the groups in the order of their first appearance, channels without group last
-
-function groupSort(list) {
-   const order = [];
-
-   list.forEach((r) => { if (r.group && !order.includes(r.group)) order.push(r.group); });
-
-   const rank = (g) => g ? order.indexOf(g) : order.length;
-   return list.map((r, i) => ({ r, i })).sort((a, b) => rank(a.r.group) - rank(b.r.group) || a.i - b.i).map((x) => x.r);
-}
-
 function channelsTab($body) {
    const trc = tr.pages.editChannels;
    let rows = state.channelOrder.map((id) => {
@@ -297,12 +286,10 @@ function channelsTab($body) {
    let ref = null;           // reference list [{ id, name }]
    let dirty = false;
 
-   // order not yet grouped (e.g. after the groups were taken from the VDR) -> group and ask to save
+   // stored order not yet grouped (e.g. after the groups were taken from the VDR) -> already grouped
+   //   by loadChannels, ask to save
 
-   const grouped = groupSort(rows);
-   const regrouped = grouped.some((r, i) => r !== rows[i]);
-
-   rows = grouped;
+   const regrouped = state.channelsRegrouped;
    dirty = regrouped;
 
    const $filter = $('<input type="search" class="input" placeholder="Filter (Name, Gruppe oder ID) …">').on('input', renderList);
@@ -466,20 +453,11 @@ function channelsTab($body) {
 
    function referenceDialog() {
       const $text = $('<textarea class="input" rows="10" placeholder="channels.conf hier einfügen …">');
-      const vdrButtons = Object.values(state.vdrs).map((v) =>
-         $('<button type="button" class="btn">').append(icon('tv'), $('<span>').text(v.name)).on('click', async () => {
-            try {
-               const data = await busy(get('data/proxy?id=vdr&uuid=' + encodeURIComponent(v.uuid), { as: 'text' }));
-               $text.val(data);
-            }
-            catch (e) { toastError(e); }
-         }));
 
       dialog({
          title: trc.menu.referenceList, cls: 'dlg-form dlg-wide',
          content: $('<div class="form">').append(
-            $('<p class="dim small">').text('Kanalliste (Format channels.conf) eines VDR laden oder einfügen. Danach lässt sich die Reihenfolge übernehmen.'),
-            vdrButtons.length ? field('Von VDR laden', $('<div class="btn-row">').append(vdrButtons)) : null,
+            $('<p class="dim small">').text('Kanalliste (Format channels.conf) eines VDR einfügen. Danach lässt sich die Reihenfolge übernehmen.'),
             field(trc.menu.insertAsText, $text)),
          buttons: [
             { text: tr.cancel },
