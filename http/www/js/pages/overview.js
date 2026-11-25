@@ -26,6 +26,7 @@ const MAX_VDRS = 10;
 let $page = null;
 let stopRefresh = null;
 let loadSeq = 0;
+let masonry = null;
 
 export function render($content) {
    destroy();
@@ -44,6 +45,8 @@ export function render($content) {
 export function destroy() {
    stopRefresh?.();
    stopRefresh = null;
+   masonry?.disconnect();
+   masonry = null;
    $(window).off('.overview');
    $page = null;
 }
@@ -211,6 +214,39 @@ function renderCards(d) {
       updateDiskTimes($disks, d.recs || [], d.vdrs);
       $g.append(card('Speicherplatz', 'disk', null, $disks, 'ov-disks'));
    }
+
+   layoutMasonry($g);
+}
+
+// masonry – the grid has fine rows (grid-auto-rows), each card spans as many as its height needs,
+//   so cards move up into the gap below a shorter neighbour; follows height changes (images, refresh)
+
+function layoutMasonry($g) {
+   const grid = $g[0];
+
+   masonry?.disconnect();
+   let frame = 0;
+
+   // applied in the next frame - changing the layout inside the observer callback triggers
+   //   'ResizeObserver loop completed with undelivered notifications'
+
+   const apply = () => {
+      frame = 0;
+      const cs = getComputedStyle(grid);
+      const row = parseFloat(cs.gridAutoRows) || 1;
+      const gap = parseFloat(cs.columnGap) || 0;
+
+      for (const el of grid.children) {
+         const span = 'span ' + Math.max(1, Math.ceil((el.getBoundingClientRect().height + gap) / row));
+
+         if (el.style.gridRowEnd !== span)
+            el.style.gridRowEnd = span;
+      }
+   };
+
+   masonry = new ResizeObserver(() => { frame ||= requestAnimationFrame(apply); });
+
+   $g.children().each((_, el) => masonry.observe(el));
 }
 
 function runningList(timers) {

@@ -5,8 +5,9 @@
  *
  * Proxy for the remote control of the osd2web plugin (fb.html of the VDR)
  *
- *   GET data/osd2web/<uuid>/<file>       -> http://<ip>:<osd2webp>/<file>
- *   GET data/osd2web/<uuid>/ (Upgrade)   -> websocket tunnel to ws://<ip>:<osd2webp>
+ *   GET data/osd2web/<uuid>/<path>       -> http://<ip>:<osd2webp>/<path>
+ *                                           (fb.html and the web frontend skins/<skin>/...)
+ *   GET data/osd2web/<uuid>/... (Upgrade) -> websocket tunnel to ws://<ip>:<osd2webp>
  *
  *   osd2web is plain http, on a https web frontend the browser blocks it (mixed content),
  *   by the proxy the remote control has the origin (and the TLS) of the web frontend
@@ -245,8 +246,8 @@ MHD_Result cEpgHttpd::serveRemote(MHD_Connection* tcp, const char* url)
    std::string file = slash == std::string::npos ? "" : rest.substr(slash + 1);
 
    if (uuid.empty() || uuid.find_first_not_of("0123456789abcdefABCDEF-") != std::string::npos
-       || file.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-") != std::string::npos
-       || file.find("..") != std::string::npos)
+       || file.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-/") != std::string::npos
+       || file.find("..") != std::string::npos || file.find("//") != std::string::npos || file[0] == '/')
       return remoteAnswer(tcp, MHD_HTTP_NOT_FOUND, "{}");
 
    // only to the osd2web of a known VDR
@@ -385,14 +386,19 @@ MHD_Result cEpgHttpd::serveRemote(MHD_Connection* tcp, const char* url)
    {
       contentType = "application/javascript; charset=utf-8";
 
-      // the websocket of fb.js goes to host and port of the page -> to this proxy (same path as the page)
+      // the websocket of fb.js and of the web frontend (skin.js, minified) goes to host and port
+      //   of the page -> to this proxy (path of the page, the tunnel ignores the path behind the uuid)
 
-      const char* wsUrl = "\"ws://\" + location.hostname + \":\" + location.port";
-      size_t pos = body.find(wsUrl);
+      const char* wsUrls[] = { "\"ws://\" + location.hostname + \":\" + location.port", "\"ws://\"+location.host" };
 
-      if (pos != std::string::npos)
-         body.replace(pos, strlen(wsUrl), "(location.protocol == \"https:\" ? \"wss://\" : \"ws://\") + location.host"
-                      " + location.pathname.replace(/[^\\/]*$/, \"\")");
+      for (const char* wsUrl : wsUrls)
+      {
+         size_t pos = body.find(wsUrl);
+
+         if (pos != std::string::npos)
+            body.replace(pos, strlen(wsUrl), "(location.protocol == \"https:\" ? \"wss://\" : \"ws://\") + location.host"
+                         " + location.pathname.replace(/[^\\/]*$/, \"\")");
+      }
    }
    else if (strcmp(sfx, "svg") == 0)
       contentType = "image/svg+xml";

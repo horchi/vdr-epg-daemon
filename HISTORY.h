@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.20"
-#define VERSION_DATE "24.11.2026"
+#define _VERSION     "1.4.21"
+#define VERSION_DATE "25.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-25: version 1.4.21 (horchi)
+   - Change: webfrontend, overview: status tiles combined in one box
 
 2026-11-24: version 1.4.20 (horchi)
    - Bugfix: webfrontend, program pages: channels of a group were split if their stored order was not grouped yet

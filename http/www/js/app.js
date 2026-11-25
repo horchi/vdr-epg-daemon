@@ -42,6 +42,7 @@ function buildLayout() {
       $('<button type="button" class="btn btn-icon btn-flat nav-toggle">').attr('title', 'Menü').html(icon('menu'))
          .on('click', () => $('body').toggleClass('nav-open')),
       $('<a class="brand">').append($('<img alt="">').attr('src', 'images/epgd-4x.png'), $('<span>').text('EPGd')),
+      $('<a class="btn btn-icon btn-flat home-link" href="#overview">').attr({ title: tr.menu.overview, 'aria-label': tr.menu.overview }).html(icon('home')),
       $nav,
       $('<div class="topbar-right">').append(
          $('<button type="button" class="btn btn-icon btn-flat theme-toggle">').on('click', () => { cycleMode(); renderThemeToggle(); }),

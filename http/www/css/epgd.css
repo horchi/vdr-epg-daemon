@@ -166,10 +166,10 @@ img { max-width: 100%; }
 .vdr-select { display: flex; align-items: center; gap: 6px; color: var(--text-dim); font-size: 13px; }
 .vdr-select select { height: 30px; }
 
-.nav-toggle { display: none; }
+.nav-toggle, .home-link { display: none; }
 
 @media (max-width: 900px) {
-   .nav-toggle { display: inline-flex; }
+   .nav-toggle, .home-link { display: inline-flex; }
    .brand span, .vdr-select > span, .user .btn span { display: none; }
    .topbar { gap: 6px; padding: 0 6px; }
    .vdr-select select { max-width: 110px; }
@@ -180,6 +180,7 @@ img { max-width: 100%; }
       transform: translateX(-100%); transition: transform .2s;
    }
    .nav a { padding: 10px 12px; }
+   .nav a[data-page="overview"] { display: none; }   /* reachable by .home-link */
    body.nav-open .nav { transform: none; box-shadow: var(--shadow); }
 
    /* backdrop below the open menu (and the top bar), a tap on it closes the menu */
@@ -1234,24 +1235,29 @@ html:has(dialog[open]) { overflow: hidden; }
 /* ---------------------------------------------------------------------------
    page overview */
 
-.ov-tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; margin-bottom: 14px; }
-.ov-tile {
-   display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 12px 14px; color: var(--text);
+/* key figures in one box, the cells divided by lines (shadow up and left, clipped at the box edge) */
+
+.ov-tiles {
+   display: flex; flex-wrap: wrap; margin-bottom: 14px; overflow: hidden;
    background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius);
 }
-a.ov-tile:hover { border-color: var(--accent); text-decoration: none; }
+.ov-tile {
+   flex: 1 1 170px; display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 12px 14px; color: var(--text);
+   box-shadow: -1px 0 0 var(--border), 0 -1px 0 var(--border);
+}
+a.ov-tile:hover { background: var(--bg-hover); text-decoration: none; }
 .ov-tile-head { display: flex; align-items: center; gap: 6px; color: var(--text-dim); font-size: 13px; }
 .ov-tile-head .icon { width: 16px; height: 16px; }
 .ov-tile-value { font-size: 21px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ov-tile-sub { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ov-tile.ov-rec { border-color: var(--danger); }
 .ov-tile.ov-rec .ov-tile-head, .ov-tile.ov-rec .ov-tile-value { color: var(--danger); }
 .ov-tile.ov-warn .ov-tile-head, .ov-tile.ov-warn .ov-tile-value { color: #e3b341; }
 .ov-tile.ov-busy .ov-tile-head .icon { animation: ov-spin 2s linear infinite; color: var(--accent); }
 
 @keyframes ov-spin { to { transform: rotate(360deg); } }
 
-.ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(440px, 100%), 1fr)); gap: 12px; align-items: start; }
+.ov-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(440px, 100%), 1fr)); column-gap: 12px;
+           grid-auto-rows: 2px; align-items: start; }   /* masonry: row spans set by overview.js, the column gap is the vertical gap too */
 .ov-card { padding: 14px 16px; min-width: 0; }
 .ov-card-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
 .ov-card-head > .icon { color: var(--accent); }
@@ -1282,7 +1288,8 @@ a.ov-tile:hover { border-color: var(--accent); text-decoration: none; }
 .ov-main .small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ov-row .rec-thumb { width: 72px; height: 41px; }
 
-.ov-note { display: flex; align-items: flex-start; gap: 10px; padding: 5px 6px; }
+.ov-note { display: flex; align-items: flex-start; gap: 10px; padding: 5px 6px; min-width: 0; }
+.ov-note > .ov-main > a, .ov-note > .ov-main > b { overflow-wrap: anywhere; }
 .ov-note > .icon { margin-top: 2px; }
 .ov-note a { font-weight: 600; }
 .ov-note:not(.state-E):not(.msg-E):not(.msg-F):not(.state-wait):not(.msg-W) > .icon { color: var(--text-dim); }
@@ -1300,8 +1307,7 @@ a.ov-tile:hover { border-color: var(--accent); text-decoration: none; }
 .ov-disks .disk { background: var(--bg-elev2); }
 
 @media (max-width: 640px) {
-   .ov-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-   .ov-tile { padding: 10px 12px; }
+   .ov-tile { flex-basis: 130px; padding: 10px 12px; }
    .ov-tile-value { font-size: 18px; }
    .ov-card { padding: 12px; }
    .ov-logo { width: 44px; }
