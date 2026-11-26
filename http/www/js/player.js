@@ -39,9 +39,10 @@ function missingText(d) {
    const where = 'Auf dem epgd-Server »' + (d.host || '?') + '«';
 
    if (d.missing === 'libx264')
-      return where + ' fehlt im ffmpeg der Encoder »libx264«, er wird für Aufnahmen in ' + (d.neededfor || '?')
-         + ' gebraucht. Abhilfe: das ffmpeg der Distribution (Paket »' + (d.package || 'ffmpeg') + '«)'
-         + ' oder ein mit --enable-libx264 gebautes ffmpeg installieren, danach epghttpd neu starten.';
+      return where + ' gibt es keinen Video-Encoder (VAAPI oder libx264), er wird für ' + (d.neededfor || '?')
+         + ' gebraucht. Abhilfe: VAAPI-Treiber der GPU (Intel bis Haswell »i965-va-driver«, neuer »intel-media-va-driver«)'
+         + ' oder das ffmpeg der Distribution (Paket »' + (d.package || 'ffmpeg') + '«) mit libx264 installieren,'
+         + ' danach epghttpd neu starten.';
 
    return where + ' fehlt das Programm »' + d.missing + '« (nicht im PATH von epghttpd gefunden).'
       + ' Abhilfe: Paket »' + (d.package || 'ffmpeg') + '« installieren, danach ist kein Neustart nötig.';
@@ -408,7 +409,12 @@ export async function playLive(e) {
             message('Der Live-Stream wurde beendet (z.B. Tuner für eine Aufnahme gebraucht) – ' +
                     'mit »● Live« neu starten.', true);
       }
-      catch (err) { }
+      catch (err) {
+         if (err.status === 404 && !closed) {      // session gone (e.g. epghttpd restarted)
+            session = null;
+            message('Der Live-Stream wurde beendet (epghttpd neu gestartet?) – mit »● Live« neu starten.', true);
+         }
+      }
    }, 10000);
 
    // live button: jump to the live edge, restart after the end of the stream

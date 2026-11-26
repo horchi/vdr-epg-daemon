@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.21"
-#define VERSION_DATE "25.11.2026"
+#define _VERSION     "1.4.22"
+#define VERSION_DATE "26.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-26: version 1.4.22 (horchi)
+   - Change: minor improvement of streaming error messages
 
 2026-11-25: version 1.4.21 (horchi)
    - Change: webfrontend, overview: status tiles combined in one box

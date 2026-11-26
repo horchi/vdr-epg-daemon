@@ -277,6 +277,25 @@ static void encoderArgs(const StreamEncoding& enc, int segDuration,
 }
 
 //***************************************************************************
+// Encoding Reason
+//   why the video has to be encoded (for the hint if no encoder is available)
+//***************************************************************************
+
+static const char* encodingReason(const std::string& video, int interlaced, int noIdr)
+{
+   if (video == "mpeg2video")
+      return "MPEG-2 (SD)";
+
+   if (interlaced)
+      return "interlaced H.264 (1080i)";
+
+   if (noIdr)
+      return "H.264 without IDR frames (e.g. ARD)";
+
+   return "scaling down (parameter streamMaxHeight)";
+}
+
+//***************************************************************************
 // H.264 without IDR frames (e.g. the ARD channels, open GOP with I slices only)
 //   the browsers can't decode segments which don't start with an IDR frame -> encode
 //***************************************************************************
@@ -491,10 +510,12 @@ int cEpgHttpd::doRecStreamInfo(MHD_Connection* tcp, json_t* obj)
       json_object_set_new(obj, "missing", json_string("libx264"));
       json_object_set_new(obj, "package", json_string("ffmpeg"));
       json_object_set_new(obj, "host", json_string(getHostName()));
-      json_object_set_new(obj, "neededfor", json_string(video == "mpeg2video" ? "MPEG-2 (SD)" : "interlaced H.264 (1080i)"));
+      const char* reason = encodingReason(video, interlaced, noIdr);
+
+      json_object_set_new(obj, "neededfor", json_string(reason));
       return buildResponse(obj, MHD_HTTP_SERVICE_UNAVAILABLE,
-                           "ffmpeg on the epgd host '%s' has no encoder 'libx264' (needed for %s recordings)",
-                           getHostName(), video == "mpeg2video" ? "MPEG-2 (SD)" : "interlaced H.264");
+                           "No video encoder on the epgd host '%s' (VAAPI or libx264), needed for %s",
+                           getHostName(), reason);
    }
 
    json_object_set_new(obj, "transcode", json_boolean(transcode));
@@ -1184,8 +1205,14 @@ int cEpgHttpd::doRecHlsState(MHD_Connection* tcp, json_t* obj)
             json_object_set_new(obj, "missing", json_string("libx264"));
             json_object_set_new(obj, "package", json_string("ffmpeg"));
             json_object_set_new(obj, "host", json_string(getHostName()));
-            json_object_set_new(obj, "neededfor", json_string(probe["video"] == "mpeg2video" ? "MPEG-2 (SD)" : "interlaced H.264 (1080i)"));
-            return buildResponse(obj, MHD_HTTP_SERVICE_UNAVAILABLE, "No video encoder on the epgd host '%s' (VAAPI or libx264)", getHostName());
+            const std::string& field = probe["fieldorder"];
+            int interlaced = field != "progressive" && (field != "unknown" && !field.empty()
+                                                        || atoi(probe["height"].c_str()) >= 1080);    // as liveScript
+            const char* reason = encodingReason(probe["video"], interlaced, probe["idr"] == "0");
+
+            json_object_set_new(obj, "neededfor", json_string(reason));
+            return buildResponse(obj, MHD_HTTP_SERVICE_UNAVAILABLE, "No video encoder on the epgd host '%s' (VAAPI or libx264), needed for %s",
+                                 getHostName(), reason);
          }
 
          if (probe.count("error"))
