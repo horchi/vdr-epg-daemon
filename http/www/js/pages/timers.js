@@ -436,12 +436,14 @@ function messagesTab($body) {
    const list = dataList({
       columns: [
          { key: 'type', label: 'Typ', cls: 'col-state',
-           render: (m) => stateBadge(typeIcons[m.type] || 'info', trm.messageTypes[m.type] || m.type, 'msg-' + m.type), sort: (m) => m.type },
+           render: (m) => stateBadge(typeIcons[m.type] || 'info', trm.messageTypes[m.type] || m.type, 'msg-' + m.type), sort: (m) => m.type,
+           filter: { value: (m) => m.type || '', label: (k) => trm.messageTypes[k] || k || '–' } },
          { key: 'time', label: 'Zeit', cls: 'col-time', sortDefault: -1, render: (m) => formatDateTime(m.updsp), sort: (m) => m.updsp },
          { key: 'title', label: tr.pages.eventDetail.title, cls: 'col-title',
            render: (m) => $('<div class="cell-title">').append($('<b>').text(m.title || ''), messageBody(m)),
            sort: (m) => (m.title || '').toLowerCase() },
-         { key: 'state', label: 'Status', cls: 'col-num', render: (m) => trm.messageStates[m.state] || m.state, sort: (m) => m.state }
+         { key: 'state', label: 'Status', cls: 'col-num', render: (m) => trm.messageStates[m.state] || m.state, sort: (m) => m.state,
+           filter: { value: (m) => m.state || '', label: (k) => trm.messageStates[k] || k || '–' } }
       ],
       filterText: (m) => [m.title, messagePlain(m), m.type].join(' '),
       selectable: true,
