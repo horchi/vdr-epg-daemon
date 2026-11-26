@@ -659,7 +659,7 @@ function vdrsTab($body) {
    const POLL = 5000;             // [ms]
 
    async function loadJobs() {
-      const tj = hasRight(rights.timer) ? await get('data/timers?notaction=A').catch(() => null) : null;
+      const tj = hasRight(rights.timer) ? await get('data/timers?dones=0&notaction=A').catch(() => null) : null;
       jobs = tj ? (tj.timers || []).length : null;
    }
 

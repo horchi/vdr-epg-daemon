@@ -167,7 +167,7 @@ function timersTab($body) {
    });
 
    $body.append(list.$el);
-   const reload = async () => list.setRows(await load('data/timers?state=P,R', 'timers'));
+   const reload = async () => list.setRows(await load('data/timers?dones=0&state=P,R', 'timers'));
    return { reload };
 }
 
@@ -223,7 +223,7 @@ async function showSearchTimerHits(st) {
          renderResults($c, await busy(post('data/search', q)));
       }
       else {
-         const timers = await load('data/timers?state=P,R&autotimerid=' + st.id, 'timers');
+         const timers = await load('data/timers?dones=0&state=P,R&autotimerid=' + st.id, 'timers');
          const $ul = $('<ul class="result-list">').appendTo($c);
 
          if (!timers.length)
@@ -257,7 +257,7 @@ function recentJobsTab($body) {
    });
 
    $body.append(list.$el);
-   const reload = async () => list.setRows(await load('data/timers?state=D,F,E&action=A', 'timers'));
+   const reload = async () => list.setRows(await load('data/timers?dones=0&state=D,F,E&action=A', 'timers'));
    return { reload };
 }
 
@@ -352,7 +352,7 @@ function jobsTab($body) {
    });
 
    $body.append(list.$el);
-   const reload = async () => list.setRows(await load('data/timers?notaction=A', 'timers'));
+   const reload = async () => list.setRows(await load('data/timers?dones=0&notaction=A', 'timers'));
    return { reload };
 }
 

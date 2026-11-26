@@ -63,9 +63,9 @@ async function load(quiet = false) {
 
    const work = Promise.all([
       safe(get('data/vdrs?all=1&probe=1')),
-      canTimer ? safe(get('data/timers?state=P,R&action=A')) : null,
-      canTimer ? safe(get('data/timers?state=E&action=A')) : null,
-      canTimer ? safe(get('data/timers?notaction=A')) : null,
+      canTimer ? safe(get('data/timers?dones=0&state=P,R&action=A')) : null,
+      canTimer ? safe(get('data/timers?dones=0&state=E&action=A')) : null,
+      canTimer ? safe(get('data/timers?dones=0&notaction=A')) : null,
       canRecs ? safe(get('data/recordings')) : null,
       safe(get('data/messages')),
       hasRight(rights.searchTimer) ? safe(get('data/searchtimers')) : null

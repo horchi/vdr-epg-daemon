@@ -95,7 +95,7 @@ export async function deleteSearchTimer(st) {
    let timers;
 
    try {
-      const res = await busy(get('data/timers?state=P,R&autotimerid=' + id));
+      const res = await busy(get('data/timers?dones=0&state=P,R&autotimerid=' + id));
       timers = (res.timers || []).filter((t) => (t.action || '').toUpperCase() !== 'D')
          .sort((a, b) => (a.day - b.day) || (a.starttime - b.starttime));
    }
@@ -289,7 +289,7 @@ export async function openTimerDialog(t = {}) {
 
    if (t.id && t.vdruuid === undefined && t.weekdays === undefined) {
       try {
-         const data = await busy(get('data/timers?state=P,R'));
+         const data = await busy(get('data/timers?dones=0&state=P,R'));
          const full = (data.timers || []).find((x) => x.id == t.id);
          if (full) t = { ...t, ...full };
       }

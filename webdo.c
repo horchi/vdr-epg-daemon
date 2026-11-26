@@ -2035,6 +2035,11 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
    const char* nstate = getStrParameter(tcp, "notstate", "");
    const char* naction = getStrParameter(tcp, "notaction", "");
 
+   // 'dones=0' skips the done info of search timer timers - it costs one query over all
+   //   timersdone rows per timer and the web frontend does not use it
+
+   int withDones = getIntParameter(tcp, "dones", yes);
+
    timerDb->clear();
 
    // timerIncState.setValue(incState);
@@ -2115,7 +2120,7 @@ int cEpgHttpd::doTimers(MHD_Connection* tcp, json_t* obj)
 
       // done info of the search timer, only if the event still exists (e.g. not for old finished timers)
 
-      if (!timerDb->getValue("AUTOTIMERID")->isNull() && !useeventsDb->getValue("USEID")->isNull())
+      if (withDones && !timerDb->getValue("AUTOTIMERID")->isNull() && !useeventsDb->getValue("USEID")->isNull())
       {
          // useeventsDb->find();   // get all fields
 
