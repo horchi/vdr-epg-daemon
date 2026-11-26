@@ -209,7 +209,7 @@ async function init() {
       .on('hashchange', route)
       .on('login:changed', () => {
          $('dialog.dlg-event').each(function () { this.close(); });
-         state.login.rights ? busy(reloadUserData()).catch(toastError) : (renderMenu(), route(), ensureLogin());
+         state.login.rights ? busy(reloadUserData()).catch(toastError) : (renderMenu(), renderVdrs(), route(), ensureLogin());
       })
       .on('vdrs:loaded', renderVdrs)
       .on('theme:changed', renderThemeToggle)
