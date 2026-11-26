@@ -79,15 +79,24 @@ function stateBadge(name, text, cls = '') {
 }
 
 // a pending action (not 'A' = in sync) wins over the timer state; key 'a:X' / 's:X' since
-//   both use 'F' and 'D' with different meanings
+//   both use 'F' and 'D' with different meanings. A deactivated timer in sync is 'i:' - it
+//   never starts, 'waiting for start' would be misleading.
 
 function timerStateKey(t) {
    const action = (t.action || 'A').toUpperCase();
-   return action !== 'A' ? 'a:' + action : 's:' + (t.state || 'U').toUpperCase();
+
+   if (action !== 'A')
+      return 'a:' + action;
+
+   return +t.active === 0 && 'PU'.includes((t.state || 'U').toUpperCase()) ? 'i:' : 's:' + (t.state || 'U').toUpperCase();
 }
 
 function timerStateText(key) {
    const [kind, code] = key.split(':');
+
+   if (kind === 'i')
+      return trt.timerInactive;
+
    return (kind === 'a' ? trt.timerActions[code] : trt.timerStates[code]) || code;
 }
 
@@ -97,6 +106,9 @@ function timerState(t) {
 
    if (key.startsWith('a:'))
       return stateBadge('wait', timerStateText(key), 'state-wait');
+
+   if (key === 'i:')
+      return stateBadge('close', timerStateText(key), 'state-inactive');
 
    return stateBadge(timerStateIcons[code] || 'help', timerStateText(key), 'state-' + code);
 }
