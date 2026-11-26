@@ -178,9 +178,11 @@ export function prepare(r) {
    const folders = segs.map(decodeName);
    const vdr = state.vdrs[r.vdruuid];
 
-   // VDRs without common recording folder get their own root folder
+   // VDRs without common recording folder get their own root folder - with only one VDR there
+   //   is nothing to tell apart, so no extra level (only VDRs shared in web deliver recordings,
+   //   data/recordings joins on SHAREINWEB; the value comes as string)
 
-   if (vdr && !vdr.usecommonrecfolder && Object.values(state.vdrs).some((v) => v.usecommonrecfolder))
+   if (vdr && !vdr.usecommonrecfolder && Object.values(state.vdrs).filter((v) => +v.shareinweb).length > 1)
       folders.unshift('VDR – ' + vdr.name);
 
    r.folders = folders;
@@ -450,12 +452,16 @@ async function removeRecs(recs) {
 // ---------------------------------------------------------------------------
 // rename / move – VDR expects the new name relative to the video dir with '~' as separator
 
+// the root folder 'VDR – name' exists only in the web frontend, never send it to the VDR
+
+const withoutVdrRoot = (path) => path.replace(/^VDR – [^/]*\/?/, '');
+
 function allFolderPaths() {
    const paths = new Set();
    for (const r of pg.recs)
       for (let i = 1; i <= r.folders.length; i++)
          paths.add(r.folders.slice(0, i).join('/'));
-   return [...paths].filter((p) => !p.startsWith('VDR – ')).sort();
+   return [...new Set([...paths].map(withoutVdrRoot))].filter(Boolean).sort();
 }
 
 function folderDatalist(id) {
@@ -463,7 +469,7 @@ function folderDatalist(id) {
 }
 
 function renameDialog(r) {
-   const $folder = $('<input class="input" list="rec-folders" autocomplete="off">').val(r.folderPath.replace(/^VDR – [^/]*\/?/, ''));
+   const $folder = $('<input class="input" list="rec-folders" autocomplete="off">').val(withoutVdrRoot(r.folderPath));
    const $name = $('<input class="input">').val(r.displayName);
 
    dialog({
@@ -486,7 +492,7 @@ function renameDialog(r) {
 }
 
 function moveDialog(recs) {
-   const $folder = $('<input class="input" list="rec-folders" autocomplete="off">').val(pg.path.join('/'));
+   const $folder = $('<input class="input" list="rec-folders" autocomplete="off">').val(withoutVdrRoot(pg.path.join('/')));
 
    dialog({
       title: recs.length + (recs.length === 1 ? ' Aufnahme' : ' Aufnahmen') + ' verschieben', cls: 'dlg-form',
