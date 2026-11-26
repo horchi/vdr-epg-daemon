@@ -172,7 +172,7 @@ img { max-width: 100%; }
 
 @media (max-width: 900px) {
    .nav-toggle, .home-link { display: inline-flex; }
-   .brand span, .vdr-select > .vdr-link, .user .btn span { display: none; }
+   .brand span, .user .btn span { display: none; }
    .topbar { gap: 6px; padding: 0 6px; }
    .vdr-select select { max-width: 110px; }
    .nav {
