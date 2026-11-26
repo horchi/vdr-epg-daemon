@@ -78,14 +78,27 @@ function stateBadge(name, text, cls = '') {
    return $('<span class="state">').addClass(cls).append(icon(name), $('<span>').text(text));
 }
 
-function timerState(t) {
+// a pending action (not 'A' = in sync) wins over the timer state; key 'a:X' / 's:X' since
+//   both use 'F' and 'D' with different meanings
+
+function timerStateKey(t) {
    const action = (t.action || 'A').toUpperCase();
-   const st = (t.state || 'U').toUpperCase();
+   return action !== 'A' ? 'a:' + action : 's:' + (t.state || 'U').toUpperCase();
+}
 
-   if (action !== 'A')
-      return stateBadge('wait', trt.timerActions[action] || action, 'state-wait');
+function timerStateText(key) {
+   const [kind, code] = key.split(':');
+   return (kind === 'a' ? trt.timerActions[code] : trt.timerStates[code]) || code;
+}
 
-   return stateBadge(timerStateIcons[st] || 'help', trt.timerStates[st] || st, 'state-' + st);
+function timerState(t) {
+   const key = timerStateKey(t);
+   const code = key.slice(2);
+
+   if (key.startsWith('a:'))
+      return stateBadge('wait', timerStateText(key), 'state-wait');
+
+   return stateBadge(timerStateIcons[code] || 'help', timerStateText(key), 'state-' + code);
 }
 
 function titleCell(t, evId) {
@@ -116,17 +129,21 @@ async function editSearchTimerById(id) {
 
 function timerColumns() {
    return [
-      { key: 'channel', label: tr.channel, cls: 'col-channel', render: (t) => channelBadge(t.channelid), sort: (t) => channelName(t.channelid) },
-      { key: 'state', label: 'Status', cls: 'col-state', render: (t) => $('<div>').append(timerState(t), t.info ? $('<div class="dim small">').text(t.info) : null), sort: (t) => (t.action || '') + (t.state || '') },
+      { key: 'channel', label: tr.channel, cls: 'col-channel', render: (t) => channelBadge(t.channelid), sort: (t) => channelName(t.channelid),
+        filter: { value: (t) => t.channelid || '', label: (k) => k ? channelName(k) : '–' } },
+      { key: 'state', label: 'Status', cls: 'col-state', render: (t) => $('<div>').append(timerState(t), t.info ? $('<div class="dim small">').text(t.info) : null), sort: (t) => (t.action || '') + (t.state || ''),
+        filter: { value: timerStateKey, label: timerStateText } },
       { key: 'start', label: trt.startTime, cls: 'col-time', sortDefault: 1,
         render: (t) => $('<div>').append($('<div>').text(t.day ? formatDate(t.day, 'full') : '–'),
            $('<b>').text(hhmmToStr(t.starttime) + ' – ' + hhmmToStr(t.endtime))),
-        sort: (t) => String(t.day || 0).padStart(12, '0') + pad4(t.starttime) },
+        sort: (t) => String(t.day || 0).padStart(12, '0') + pad4(t.starttime),
+        filter: { value: (t) => t.day || '', label: (k) => k ? formatDate(+k, 'full') : '–', sortByValue: true } },
       { key: 'title', label: tr.pages.eventDetail.title, cls: 'col-title', render: (t) => titleCell(t, t.eventid), sort: (t) => (t.title || '').toLowerCase() },
       { key: 'vdr', label: 'VDR', cls: 'col-vdr',
         render: (t) => $('<div>').append($('<div>').append(t.type === 'V' ? icon('tv') : null, ' ', vdrName(t.vdruuid)),
            $('<div class="dim small">').text((t.directory ? t.directory + '~' : '') + (t.file || ''))),
-        sort: (t) => vdrName(t.vdruuid) }
+        sort: (t) => vdrName(t.vdruuid),
+        filter: { value: (t) => t.vdruuid || '', label: vdrName } }
    ];
 }
 

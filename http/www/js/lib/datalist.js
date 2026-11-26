@@ -3,6 +3,7 @@
 //   const list = dataList({
 //      columns:  [{ key, label, render(row) -> jQuery|string, sort(row) -> value, cls, sortDefault: 1|-1,
 //                   filter: { value(row) -> key, label(key) -> text } }],   // select in the column header
+//                   (filter.sortByValue: options ordered by key instead of label, e.g. dates)
 //      rowCls(row), rowActions(row) -> [jQuery buttons], onRowClick(row, ev),
 //      selectable: true, bulkActions: [{ icon, label, run(rows) }],
 //      editMode: true,  // selection only after 'Bearbeiten', with 'select all' and 'select group'
@@ -65,8 +66,10 @@ export function dataList(o) {
          counts.set(k, (counts.get(k) || 0) + 1);
       }
 
+      const byValue = !!cols[i].filter.sortByValue;
+
       return [...counts].map(([k, n]) => ({ key: k, n, label: cols[i].filter.label?.(k) ?? k }))
-         .sort((a, b) => a.label.localeCompare(b.label));
+         .sort((a, b) => byValue ? a.key.localeCompare(b.key, undefined, { numeric: true }) : a.label.localeCompare(b.label));
    }
 
    function fillFilterSelects() {
