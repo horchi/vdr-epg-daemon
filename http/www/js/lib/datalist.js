@@ -210,7 +210,9 @@ export function dataList(o) {
    function updateBulk() {
       const n = rows.filter((r) => selected.has(r)).length;
       $el.toggleClass('dl-editing', editing && !!o.selectable).toggleClass('dl-edit-off', !editing);
-      $bulk.toggleClass('active', n > 0 || (o.editMode && editing)).find('> .btn').prop('disabled', n === 0);
+      // toggleClass() needs a real boolean - with undefined (no editMode) it toggles on every call
+
+      $bulk.toggleClass('active', n > 0 || (!!o.editMode && editing)).find('> .btn').prop('disabled', n === 0);
       $bulk.attr('data-count', n || (o.editMode && editing ? '0' : ''));
 
       // group selection with the counts of the (text) filtered rows
