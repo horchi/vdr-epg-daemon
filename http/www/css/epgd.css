@@ -1007,7 +1007,7 @@ img { max-width: 100%; }
 .help-toc a { padding: 7px 12px; border-radius: var(--radius-sm); color: var(--text-dim); }
 .help-toc a:hover { background: var(--bg-hover); color: var(--text); text-decoration: none; }
 .help-toc a.active { color: var(--accent); background: var(--bg-hover); }
-.help-body { display: grid; gap: 12px; min-width: 0; }
+.help-body { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; }
 .help-section { scroll-margin-top: calc(var(--topbar-h) + 12px); line-height: 1.55; }
 .help-section h2 { font-size: 19px; margin-bottom: 8px; color: var(--accent); }
 .help-section h4 { margin: 14px 0 4px; }
@@ -1045,9 +1045,14 @@ img { max-width: 100%; }
 .help-popup ul { padding-left: 20px; }
 
 @media (max-width: 760px) {
-   .page-help { grid-template-columns: minmax(0, 1fr); }
-   .help-toc { position: static; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding-bottom: 4px; }
+   /* the chapters stay below the top bar while scrolling, like the tab bar of the timers page;
+      block instead of grid: in a grid row of its own the sticky bar could not leave that row */
+   .page-help { display: block; }
+   .help-toc { position: sticky; top: var(--topbar-h); z-index: 20; display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 6px 0; margin-bottom: 10px; background: var(--bg); }
+   .page-help [id] { scroll-margin-top: var(--topbar-h); }   /* + 70px of help.js -> below the chapters */
    .help-toc a { white-space: nowrap; border: 1px solid var(--border); border-radius: 16px; padding: 5px 12px; font-size: 13.5px; }
+   .help-table { display: block; max-width: 100%; overflow-x: auto; }
+   .help-table th { white-space: normal; }
 }
 
 /* ------------------------------------------------------------------------ theme */
