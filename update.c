@@ -28,6 +28,7 @@ bool cEpgd::shutdown {false};
 bool cEpgd::epgTrigger {false};
 bool cEpgd::searchTimerTrigger {false};
 bool cEpgd::recTableFixTrigger {false};
+bool cEpgd::eloquenceTrigger {false};
 
 //***************************************************************************
 // Signal Handler
@@ -43,6 +44,9 @@ void cEpgd::triggerF(int aSignal)
 
    else if (aSignal == SIGUSR2)
       recTableFixTrigger = true;
+
+   else if (aSignal == SIGURG)
+      eloquenceTrigger = true;
 }
 
 //***************************************************************************
@@ -974,19 +978,7 @@ int cEpgd::initDb()
 
    // wakeupVdr("920654A9-28C8-439B-97F2-F6F3A7A2C583");
 
-   // eloquence
-
-   char elo[255+TB] {};
-   getParameter("epgd", "eloquence", elo);
-   EpgdConfig.eloquence = Elo::stringToEloquence(elo);
-
-   if (EpgdConfig.argEloquence != (Eloquence)na)
-   {
-      EpgdConfig.eloquence = EpgdConfig.argEloquence;
-      EpgdConfig.argEloquence = (Eloquence)na;
-   }
-
-   tell(eloInfo, "Info: Eloquence set to '%s' => 0x%04x", elo, EpgdConfig.eloquence);
+   loadEloquence();
 
    // ----------------------------------------------------------
    // init parameter 'mergeStart' (used by merge procedure)
@@ -1639,6 +1631,14 @@ void cEpgd::loop()
          if (!dbConnected())
             continue;
 
+         // eloquence changed by the webif
+
+         if (eloquenceTrigger)
+         {
+            eloquenceTrigger = false;
+            loadEloquence();
+         }
+
          // all 15 minutes perform timer conflict check
 
          if (!doShutDown() && lastTccCheckAt < time(0) - 15*tmeSecondsPerMinute)
@@ -1836,6 +1836,25 @@ void cEpgd::loop()
    }
 
    setState(Es::esStopped);
+}
+
+//***************************************************************************
+// Load Eloquence
+//***************************************************************************
+
+void cEpgd::loadEloquence()
+{
+   char elo[255+TB] {};
+   getParameter("epgd", "eloquence", elo);
+   EpgdConfig.eloquence = Elo::stringToEloquence(elo);
+
+   if (EpgdConfig.argEloquence != (Eloquence)na)
+   {
+      EpgdConfig.eloquence = EpgdConfig.argEloquence;
+      EpgdConfig.argEloquence = (Eloquence)na;
+   }
+
+   tell(eloAlways, "Info: Eloquence set to '%s' => 0x%04x", elo, EpgdConfig.eloquence);
 }
 
 //***************************************************************************

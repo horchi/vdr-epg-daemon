@@ -449,7 +449,7 @@ int cEpgHttpd::initDb()
       EpgdConfig.argEloquence = eloNone;
    }
 
-   tell(eloInfo, "Info: Eloquence set to '%s' => 0x%04x", elo, EpgdConfig.eloquence);
+   tell(eloAlways, "Info: Eloquence set to '%s' => 0x%04x", elo, EpgdConfig.eloquence);
 
    // ----------
    // select *
@@ -2078,7 +2078,8 @@ int cEpgHttpd::triggerEpgd(int signal)
          return fail;
       }
 
-      tell(eloInfo, "Triggered %s at %s", signal == SIGHUP ? "EPG update" : "searchtimer update", EPGDNAME);
+      tell(eloInfo, "Triggered %s at %s", signal == SIGHUP ? "EPG update"
+           : signal == SIGURG ? "eloquence reload" : "searchtimer update", EPGDNAME);
    }
 
    return success;
@@ -2580,7 +2581,7 @@ int main(int argc, char** argv)
       EpgdConfig.logstdout = logstdout;
 
    EpgdConfig.argEloquence = _eloquence;
-   EpgdConfig.eloquence = _eloquence == eloNone ? (Eloquence)(eloError|eloWarning|eloInfo) : _eloquence;
+   EpgdConfig.eloquence = _eloquence == eloNone ? (Eloquence)(eloError|eloWarning) : _eloquence;
    EpgdConfig.logName = "epghttpd";
    EpgdConfig.logFacility = Syslog::toCode("user");
 

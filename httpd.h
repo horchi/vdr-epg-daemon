@@ -223,7 +223,7 @@ class cEpgHttpd : public cFrame, public cWebTools, public cSystemNotification
       int triggerVdr(const char* ip, unsigned int port, const char* trg,
                      const char* plug = 0, const char* options = 0, char* res = 0);
 
-      int triggerEpgd(int signal = SIGUSR1);   // SIGUSR1: searchtimer update, SIGHUP: EPG update
+      int triggerEpgd(int signal = SIGUSR1);   // SIGUSR1: searchtimer update, SIGHUP: EPG update, SIGURG: reload eloquence
       int wakeupVdr(const char* uuid);
 
       // static

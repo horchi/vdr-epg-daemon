@@ -90,6 +90,7 @@ const char* toCase(Case cs, char* str);
 
 enum Eloquence
 {
+   eloAlways         = 0x00000,
    eloError          = 0x00001,
    eloWarning        = 0x00002,
    eloInfo           = 0x00004,

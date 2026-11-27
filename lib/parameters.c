@@ -50,7 +50,7 @@ cParameters::Parameter cParameters::parameters[] =
 
    { "epgd",     "maxEventTime",                   ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   yes },
    { "epgd",     "minEventTime",                   ptTime,    "0",                        "^[0-9]{1,20}$",        yes,   yes },
-   { "epgd",     "eloquence",                      ptBitMask, "Error,Warning,Info",       "",                      no,   yes },
+   { "epgd",     "eloquence",                      ptBitMask, "Error,Warning",            "",                      no,   yes },
 
    { "epgd",     "md5",                            ptAscii,   "",                         "^.{0,150}$",           yes,   no  },
 

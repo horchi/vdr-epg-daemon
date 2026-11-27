@@ -138,6 +138,7 @@ class cEpgd : public cFrame, public cSystemNotification
       static void downF(int signal) { tell(eloWarning, "Shutdown triggered with signal %d", signal); shutdown = true; }
       static bool doShutDown()      { return shutdown; }
       static void triggerF(int aSignal);
+      void loadEloquence();
 
       int wakeupVdr(const char* uuid);
       int triggerVdrs(const char* trg, const char* plug = 0, const char* options = 0);
@@ -279,4 +280,5 @@ class cEpgd : public cFrame, public cSystemNotification
       static bool epgTrigger;
       static bool searchTimerTrigger;
       static bool recTableFixTrigger;
+      static bool eloquenceTrigger;
 };

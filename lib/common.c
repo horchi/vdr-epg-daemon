@@ -163,7 +163,8 @@ void vtell(Eloquence elo, const char* format, va_list more)
    }
    else
    {
-      if (elo & eloError)         syslog(LOG_ERR, "%s", t);
+      if (elo == eloAlways)       syslog(LOG_NOTICE, "%s", t);
+      else if (elo & eloError)    syslog(LOG_ERR, "%s", t);
       else if (elo & eloWarning)  syslog(LOG_WARNING, "%s", t);
       else if (elo & eloInfo)     syslog(LOG_NOTICE, "%s", t);
       else if (elo & eloDetail)   syslog(LOG_INFO, "%s", t);

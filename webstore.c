@@ -781,7 +781,18 @@ int cEpgHttpd::storeParameters(json_t* jInData, json_t* response)
          }
 
          if (setParameter(owner, name, value) == success)
+         {
             stored++;
+
+            // apply the eloquence immediately, here and at the epgd
+
+            if (strcmp(owner, "epgd") == 0 && strcmp(name, "eloquence") == 0)
+            {
+               EpgdConfig.eloquence = Elo::stringToEloquence(value);
+               tell(eloAlways, "Info: Eloquence set to '%s' => 0x%04x", value, EpgdConfig.eloquence);
+               triggerEpgd(SIGURG);
+            }
+         }
          else
          {
             json_array_append_new(oFails, json_integer(i));

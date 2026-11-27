@@ -161,7 +161,7 @@ int main(int argc, char** argv)
       EpgdConfig.logstdout = logstdout;
 
    EpgdConfig.argEloquence = _eloquence;
-   EpgdConfig.eloquence = _eloquence == eloNone ? (Eloquence)(eloError|eloWarning|eloInfo) : _eloquence;
+   EpgdConfig.eloquence = _eloquence == eloNone ? (Eloquence)(eloError|eloWarning) : _eloquence;
    EpgdConfig.logFacility = logfacility;
    EpgdConfig.logName = "epgd";
 
@@ -208,6 +208,7 @@ int main(int argc, char** argv)
    ::signal(SIGHUP,  cEpgd::triggerF);
    ::signal(SIGUSR1, cEpgd::triggerF);
    ::signal(SIGUSR2, cEpgd::triggerF);
+   ::signal(SIGURG,  cEpgd::triggerF);   // reload eloquence
 
    // do work ...
 
