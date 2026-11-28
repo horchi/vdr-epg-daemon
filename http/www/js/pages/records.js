@@ -179,10 +179,9 @@ export function prepare(r) {
    const vdr = state.vdrs[r.vdruuid];
 
    // VDRs without common recording folder get their own root folder - with only one VDR there
-   //   is nothing to tell apart, so no extra level (only VDRs shared in web deliver recordings,
-   //   data/recordings joins on SHAREINWEB; the value comes as string)
+   //   is nothing to tell apart, so no extra level (state.vdrs holds only the VDRs shared in web)
 
-   if (vdr && !vdr.usecommonrecfolder && Object.values(state.vdrs).filter((v) => +v.shareinweb).length > 1)
+   if (vdr && !vdr.usecommonrecfolder && Object.keys(state.vdrs).length > 1)
       folders.unshift('VDR – ' + vdr.name);
 
    r.folders = folders;
