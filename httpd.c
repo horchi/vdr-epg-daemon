@@ -1985,8 +1985,8 @@ MHD_Result cEpgHttpd::dispatcher(void* cls, MHD_Connection* tcp,
    // header
 
    char* server {0};
-   asprintf(&server, "epghttpd/%s from %s\n", VERSION, VERSION_DATE);
-   addHeaderItem(response, "Server", "server");
+   asprintf(&server, "epghttpd/%s (%s)", VERSION, VERSION_DATE);   // product/version (comment)
+   addHeaderItem(response, "Server", server);
 
    if (strcmp(method, "POST") == 0)
       addHeaderItem(response, "Cache-Control", "max-age=0, must-revalidate");
