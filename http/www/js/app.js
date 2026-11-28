@@ -46,7 +46,7 @@ function buildLayout() {
       $nav,
       $('<div class="topbar-right">').append(
          $('<button type="button" class="btn btn-icon btn-flat theme-toggle">').on('click', () => { cycleMode(); renderThemeToggle(); }),
-         $('<label class="vdr-select">').append($('<a class="vdr-link">').text('VDR'), $('<select class="input">')
+         $('<div class="vdr-select">').append($('<a class="btn btn-flat vdr-link">').append(icon('tv'), $('<span>').text('VDR')), $('<select class="input">')
             .on('change', function () { selectVdr(this.value); })),
          $('<div class="user">'))
    ).appendTo(document.body);
@@ -123,7 +123,8 @@ function renderVdrs() {
    // 'VDR' leads to the VDR list (wake up, start) - plain text without the right to open it
 
    const canEdit = hasRight(rights.configEdit);
-   $('.vdr-link').attr({ href: canEdit ? '#settings?tab=vdrs' : null, title: canEdit ? 'VDRs anzeigen / wecken' : null });
+   $('.vdr-link').attr({ href: canEdit ? '#settings?tab=vdrs' : null, title: canEdit ? 'VDRs anzeigen / wecken' : null })
+      .toggleClass('disabled', !canEdit);
 }
 
 // ---------------------------------------------------------------------------

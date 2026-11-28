@@ -165,8 +165,8 @@ img { max-width: 100%; }
 .topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
 .vdr-select { display: flex; align-items: center; gap: 6px; color: var(--text-dim); font-size: 13px; }
 .vdr-select select { height: 30px; }
-.vdr-link { color: inherit; }
-.vdr-link[href]:hover { color: var(--accent); }
+.vdr-link.disabled { cursor: default; color: var(--text-dim); }
+.vdr-link.disabled:hover { background: transparent; }
 
 .nav-toggle, .home-link { display: none; }
 
