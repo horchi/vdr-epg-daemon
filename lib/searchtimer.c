@@ -1339,18 +1339,41 @@ int cSearchTimer::isAlreadyDone(int repeatfields, json_t* obj, int silent)
    selectDoneTimer->build(" %s not in ('F','J')",      // mysql ignoring case by default!
                           timersDoneDb->getField("STATE")->getDbName());
 
+   // plain column compares (instead of field(..., ifnull(col, ...))) to allow
+   //   the use of the indices (index merge), 'nullAs' is the value a NULL column
+   //   is compared as - the compare values are compressed (only A-Z, 0-9, umlauts),
+   //   no quoting needed
+
+   auto eq = [](const char* col, const char* nullAs, const char* value) -> std::string
+   {
+      if (strcasecmp(value, nullAs) == 0)                     // mysql ignoring case by default!
+         return "(" + std::string(col) + " is null or " + col + " = '" + value + "')";
+
+      return std::string(col) + " = '" + value + "'";
+   };
+
    if (repeatfields & sfTitle || repeatfields & sfFolge)  // 'Folge' vergleichen und 'Titel' nicht macht keinen Sinn
    {
-      selectDoneTimer->build(" and (field('%s', ifnull(comptitle,''),ifnull(episodecompshortname,'')) > 0"
-                             "   or field('%s',ifnull(comptitle,''),ifnull(episodecompshortname,'NoShortnameAvailable')) > 0)",
-                             useeventsDb->getStrValue("COMPTITLE"), useeventsDb->getStrValue("EPISODECOMPSHORTNAME"));
+      const char* title = useeventsDb->getStrValue("COMPTITLE");
+      const char* shortName = useeventsDb->getStrValue("EPISODECOMPSHORTNAME");
+
+      selectDoneTimer->build(" and (%s or %s or %s or %s)",
+                             eq("comptitle", "", title).c_str(),
+                             eq("episodecompshortname", "", title).c_str(),
+                             eq("comptitle", "", shortName).c_str(),
+                             eq("episodecompshortname", "NoShortnameAvailable", shortName).c_str());
    }
 
    if (repeatfields & sfFolge)
    {
-      selectDoneTimer->build(" and (field('%s',ifnull(compshorttext,'NoShortnameAvailable'),ifnull(episodecomppartname,'NoShortnameAvailable')) > 0"
-                             "   or field('%s',ifnull(compshorttext,'NoShortnameAvailable'),ifnull(episodecomppartname,'NoShortnameAvailable')) > 0)",
-                             useeventsDb->getStrValue("COMPSHORTTEXT"), useeventsDb->getStrValue("EPISODECOMPPARTNAME"));
+      const char* shortText = useeventsDb->getStrValue("COMPSHORTTEXT");
+      const char* partName = useeventsDb->getStrValue("EPISODECOMPPARTNAME");
+
+      selectDoneTimer->build(" and (%s or %s or %s or %s)",
+                             eq("compshorttext", "NoShortnameAvailable", shortText).c_str(),
+                             eq("episodecomppartname", "NoShortnameAvailable", shortText).c_str(),
+                             eq("compshorttext", "NoShortnameAvailable", partName).c_str(),
+                             eq("episodecomppartname", "NoShortnameAvailable", partName).c_str());
    }
 
    if (selectDoneTimer->prepare() != success)

@@ -4,8 +4,8 @@
  * -----------------------------------
  */
 
-#define _VERSION     "1.4.23"
-#define VERSION_DATE "27.11.2026"
+#define _VERSION     "1.4.24"
+#define VERSION_DATE "28.11.2026"
 #define DB_API       8
 
 #ifdef GIT_REV
@@ -16,6 +16,9 @@
 
 /*
  * ------------------------------------
+
+2026-11-28: version 1.4.24 (horchi)
+   - Change: faster check of already recorded events (timer list, search timer runs)
 
 2026-11-27: version 1.4.23 (horchi)
    - Change: log eloquence is applied immediately when stored in the webfrontend

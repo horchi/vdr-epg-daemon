@@ -1206,7 +1206,7 @@ int cEpgHttpd::doRecHlsState(MHD_Connection* tcp, json_t* obj)
             json_object_set_new(obj, "package", json_string("ffmpeg"));
             json_object_set_new(obj, "host", json_string(getHostName()));
             const std::string& field = probe["fieldorder"];
-            int interlaced = field != "progressive" && (field != "unknown" && !field.empty()
+            int interlaced = field != "progressive" && ((field != "unknown" && !field.empty())
                                                         || atoi(probe["height"].c_str()) >= 1080);    // as liveScript
             const char* reason = encodingReason(probe["video"], interlaced, probe["idr"] == "0");
 

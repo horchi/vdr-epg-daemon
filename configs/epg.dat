@@ -785,6 +785,7 @@ Table timersdone
 Index TimersDone
 {
    checkdoubles         ""  COMPTITLE, COMPSHORTTEXT
+   episodedoubles       ""  EPISODECOMPSHORTNAME, EPISODECOMPPARTNAME
 }
 
 // ----------------------------------------------------------------
