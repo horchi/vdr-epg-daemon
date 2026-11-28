@@ -46,7 +46,7 @@ function buildLayout() {
       $nav,
       $('<div class="topbar-right">').append(
          $('<button type="button" class="btn btn-icon btn-flat theme-toggle">').on('click', () => { cycleMode(); renderThemeToggle(); }),
-         $('<label class="vdr-select">').append($('<span>').text('VDR'), $('<select class="input">')
+         $('<label class="vdr-select">').append($('<a class="vdr-link">').text('VDR'), $('<select class="input">')
             .on('change', function () { selectVdr(this.value); })),
          $('<div class="user">'))
    ).appendTo(document.body);
@@ -119,6 +119,11 @@ function renderVdrs() {
 
    $sel.val(state.currentVdr?.uuid || '');
    $('.vdr-select').toggle(Object.keys(state.vdrs).length > 0);
+
+   // 'VDR' leads to the VDR list (wake up, start) - plain text without the right to open it
+
+   const canEdit = hasRight(rights.configEdit);
+   $('.vdr-link').attr({ href: canEdit ? '#settings?tab=vdrs' : null, title: canEdit ? 'VDRs anzeigen / wecken' : null });
 }
 
 // ---------------------------------------------------------------------------
@@ -204,7 +209,7 @@ async function init() {
       .on('hashchange', route)
       .on('login:changed', () => {
          $('dialog.dlg-event').each(function () { this.close(); });
-         state.login.rights ? busy(reloadUserData()).catch(toastError) : (renderMenu(), route(), ensureLogin());
+         state.login.rights ? busy(reloadUserData()).catch(toastError) : (renderMenu(), renderVdrs(), route(), ensureLogin());
       })
       .on('vdrs:loaded', renderVdrs)
       .on('theme:changed', renderThemeToggle)
