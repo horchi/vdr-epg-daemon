@@ -12,8 +12,6 @@ Erste Spalte 'Backend', Zweite Spalte 'Frontend'
  TODOs
 -----------------------------------
 
-++ VDR crashed beim löschen einer aktiven Sofort-Aufnahme ab und zu?
-
 ++ Halbautomatischer Abgleich mit yavdr channel Quelle
 ++ channlemap im web bearbeiten (Auswahl pro User ermöglichen)
 
