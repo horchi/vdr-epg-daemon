@@ -50,6 +50,7 @@ export function dataList(o) {
             colFilter.set(i, this.value);
             $colSelects.get(i).forEach(($o) => $o.val(this.value));
             page = 0;
+            dropHiddenFromSelection();
             renderBody();
          });
 
@@ -160,7 +161,7 @@ export function dataList(o) {
          })
          .appendTo($bulk);
 
-   $filter.on('input', () => { page = 0; renderBody(); });
+   $filter.on('input', () => { page = 0; dropHiddenFromSelection(); renderBody(); });
 
    if (o.onFilterEnter)
       $filter.attr('title', o.filterHint || null).on('keydown', (ev) => { if (ev.key === 'Enter') o.onFilterEnter($filter.val().trim()); });
@@ -207,10 +208,22 @@ export function dataList(o) {
       return list;
    }
 
+   // selected rows hidden by a changed filter leave the selection - bulk actions act on what is shown
+
+   function dropHiddenFromSelection() {
+      const shownRows = new Set(visibleRows());
+
+      for (const r of selected)
+         if (!shownRows.has(r))
+            selected.delete(r);
+   }
+
    function updateBulk() {
       const n = rows.filter((r) => selected.has(r)).length;
       $el.toggleClass('dl-editing', editing && !!o.selectable).toggleClass('dl-edit-off', !editing);
-      $bulk.toggleClass('active', n > 0 || (o.editMode && editing)).find('> .btn').prop('disabled', n === 0);
+      // toggleClass() needs a real boolean - with undefined (no editMode) it toggles on every call
+
+      $bulk.toggleClass('active', n > 0 || (!!o.editMode && editing)).find('> .btn').prop('disabled', n === 0);
       $bulk.attr('data-count', n || (o.editMode && editing ? '0' : ''));
 
       // group selection with the counts of the (text) filtered rows
