@@ -132,7 +132,9 @@ export default {
                 'C': 'Timer wurde erstellt und muss noch von einem VDR übernommen werden',
                 'D': 'Timer wurde gelöscht und muss noch im VDR gelöscht werden',
                 'F': 'Zuweisung Timer an VDR fehlgeschlagen',
-                'M': 'Timer wurde verändert und muss noch vom VDR verarbeitet werden'
+                'M': 'Timer wurde verändert und muss noch vom VDR verarbeitet werden',
+                'J': 'Sendezeit hat sich geändert, Timer wurde angepasst und muss noch vom VDR übernommen werden',
+                'T': 'Sendung nicht mehr im EPG, Timer wurde verworfen und muss noch im VDR gelöscht werden'
             },
             doneStates: {
                 'f': 'Timer konnte nicht erstellt werden',
