@@ -89,6 +89,7 @@ export default {
             lifetime: "Lebenszeit",
             prio: "Priorität",
             inactive: "Inaktiv",
+            timerInactive: "deaktiviert",
             newTimer: "Neuen Timer anlegen",
             namingMode: "Ermittlung des Dateinamens",
             namingModes: ["VDR", "Auto", "Constable", "Serie", "Kategorisiert", "Usermode", "Template"],
